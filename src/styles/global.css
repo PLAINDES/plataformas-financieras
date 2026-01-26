@@ -1,0 +1,953 @@
+/* src/styles/global.css */
+
+/* ============================================
+   VARIABLES CSS
+   ============================================ */
+:root {
+  /* Primary Colors */
+  --kt-primary: #009ef7;
+  --kt-primary-inverse: #ffffff;
+  --bs-primary: #009ef7;
+  
+  /* Secondary Colors */
+  --bs-secondary: #7B1FA2;
+  
+  /* Grays */
+  --bs-gray-700: #5E6278;
+  --bs-gray: #90A4AE;
+  --bs-dark: #181C32;
+  --bs-black: #000000;
+  --kt-text-gray-400: #B5B5C3;
+  
+  /* Background Colors */
+  --bs-white: #FFFFFF;
+  --bs-light: #F5F8FA;
+}
+
+/* ============================================
+   RESET Y BASE
+   ============================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #ffffff;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* ============================================
+   HEADER STYLES
+   ============================================ */
+.landing-header {
+  transition: all 0.3s ease;
+}
+
+.landing-header.sticky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px 60px !important;
+}
+
+.landing-header .menu .menu-link {
+  color: #181C32;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+  font-size: 14px;
+}
+
+.landing-header .menu .menu-link:hover,
+.landing-header .menu .menu-link.active {
+  color: var(--kt-primary);
+}
+
+.header .active {
+  border: 1px solid #009ef7 !important;
+}
+
+.header .active-report {
+  border: 1px solid #7B1FA2 !important;
+  color: #7B1FA2 !important;
+}
+
+.header .active-report span {
+  color: #7B1FA2 !important;
+}
+
+@media (min-width: 992px) {
+  .header {
+    height: 65px;
+  }
+}
+
+/* ============================================
+   MOBILE MENU
+   ============================================ */
+/* Overlay */
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 998;
+}
+
+/* Drawer */
+.mobile-menu-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  background: #fff;
+  z-index: 999;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+/* Visible */
+.mobile-menu-drawer.open {
+  transform: translateX(0);
+}
+
+/* Menu content */
+.mobile-menu-drawer .menu {
+  padding-top: 40px; /* 👈 más arriba, no centrado */
+}
+
+/* Active state - mobile */
+.mobile-menu-drawer .nav-link.mobile-active {
+  background-color: rgba(0, 158, 247, 0.12); /* celeste suave */
+  color: #009ef7; /* azul Metronic */
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+/* Hover */
+.mobile-menu-drawer .nav-link:hover {
+  background-color: rgba(0, 158, 247, 0.08);
+}
+
+
+
+
+
+/* ============================================
+   LANDING SECTIONS
+   ============================================ */
+
+
+.bs-section-2 {
+  background-color: #FAFAFA;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.bs-section-2 img {
+  opacity: 0.4;
+}
+
+.bs-section-3 {
+  padding-bottom: 5rem;
+  background-color: #FFFFFF;
+}
+
+/* Section Headers */
+.bs-section-header {
+  margin-bottom: 2.5rem;
+}
+
+.bs-section-header .bs-section-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.bs-section-header .bs-section-text {
+  color: #000000d7;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 2.5rem;
+}
+
+/* Container Titles */
+.bs-container-title {
+  margin-bottom: 1rem;
+}
+
+.bs-container-title h2 {
+  font-size: 1.75rem;
+}
+
+.bs-container-title span {
+  font-size: 1rem;
+}
+
+/* ============================================
+   CARD STYLES - BS-CARD-1
+   ============================================ */
+.bs-card-1 {
+  border-radius: 15px;
+  margin: 1rem;
+  transition: all 0.3s ease;
+}
+
+/* Active card state */
+.bs-card-1.active-card {
+  border: 2px solid var(--kt-primary) !important;
+  box-shadow: 0 0.5rem 1.5rem 0.5rem rgba(0, 158, 247, 0.2) !important;
+  transform: scale(1.02);
+}
+
+.bs-card-1.active-card .bs-card-title {
+  color: var(--kt-primary);
+}
+
+.bs-card-1 .card-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.bs-card-1 .card-body .bs-card-image {
+  height: 180px;
+  background-color: #E1F5FE;
+  margin-bottom: 1.9rem;
+  border-radius: 15px;
+  text-align: center;
+  position: relative;
+}
+
+.bs-card-1 .card-body .bs-card-image img {
+  width: 100%;
+  max-height: 100%;
+  padding: 15px;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+.bs-card-1 .card-body .bs-card-label {
+  margin-bottom: 1.5rem;
+}
+
+.bs-card-1 .card-body .bs-card-label .bs-card-label-text {
+  display: inline-block;
+}
+
+.bs-card-1 .card-body .bs-card-label span {
+  max-width: 100%;
+  background-color: #ECEFF1;
+  padding: 0.3rem 0.7rem;
+  font-weight: 300;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.bs-card-1 .card-body .bs-card-label .bs-card-label-ribbon {
+  background-color: #3700b3;
+  display: inline-block;
+  transform: rotate(37deg);
+  color: #fff;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.75rem;
+  margin-top: -15px;
+  position: absolute;
+  font-size: 0.75rem;
+  margin-left: -25px;
+}
+
+.bs-card-1 .card-body .bs-card-title {
+  font-size: 1.7rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  line-height: 25px;
+}
+
+.bs-card-1 .card-body .bs-card-text {
+  overflow-y: auto;
+  height: 180px;
+  font-size: 1.3rem;
+  color: #90A4AE;
+  font-weight: 100;
+  line-height: 1.8rem;
+  margin-bottom: 1.2rem;
+}
+
+.bs-card-1 .card-footer {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+}
+
+.bs-card-1 .card-footer .btn {
+  background-color: transparent;
+  color: #90A4AE;
+}
+
+.bs-card-1 .card-footer .btn i {
+  color: #90A4AE;
+}
+
+.bs-card-1:hover {
+  margin-bottom: 2rem;
+  margin-top: -1rem;
+  transition: 0.2s;
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1.5rem 0.5rem rgba(0, 0, 0, 0.075);
+}
+
+.bs-card-1:hover .bs-card-image {
+  background-color: #C5CAE9;
+}
+
+/* ============================================
+   CARD STYLES - BS-CARD-2
+   ============================================ */
+.bs-card-2 {
+  border-radius: 15px;
+  margin: 1.5rem;
+  transition: all 0.3s ease;
+  background-color: white;
+  box-shadow: 0 0.5rem 1.5rem 0.5rem rgba(0, 0, 0, 0.075);
+}
+
+.bs-card-2 .bs-card-image {
+  padding: 25px;
+  background-color: #E0F7FA;
+  width: 90px;
+  border-radius: 15px;
+  text-align: center;
+  
+}
+
+.bs-card-2 .bs-card-image i {
+  color: #009ef7;
+  font-size: 2.2rem;
+}
+
+.bs-card-2 .bs-card-ribbon {
+  background-color: #3700b3;
+  display: inline-block;
+  color: #fff;
+  padding: 0.2rem 0.65rem;
+  border-radius: 0.75rem;
+  margin-top: -5px;
+  position: absolute;
+  font-size: 0.75rem;
+  margin-left: 60px;
+}
+
+.bs-card-2 .bs-card-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  line-height: 25px;
+}
+
+.bs-card-2 .bs-card-text {
+  font-size: 1.4rem;
+  color: #90A4AE;
+  font-weight: 100;
+  line-height: 1.8rem;
+}
+
+.bs-card-2 .card-body {
+  padding: 3.5rem 2.5rem;
+}
+
+.bs-card-2 .card-footer button {
+  background-color: transparent;
+  color: #90A4AE;
+}
+
+.bs-card-2 .card-footer button i {
+  color: #90A4AE;
+}
+
+.bs-card-2:hover {
+  box-shadow: 0 0.5rem 1.5rem 0.5rem rgba(0, 0, 0, 0.075);
+  transform: translateY(-5px);
+}
+
+.bs-card-2:hover button {
+  color: var(--kt-primary-inverse);
+  border-color: var(--kt-primary);
+  background-color: var(--kt-primary);
+}
+
+.bs-card-2:hover button i {
+  color: var(--kt-primary-inverse);
+}
+
+/* ============================================
+   CARD STYLES - BS-CARD-3
+   ============================================ */
+.bs-card-3 {
+  margin-bottom: 1.75rem;
+  border-left: 4px solid var(--bs-primary);
+  border-radius: 0px;
+}
+
+.bs-card-3 .card-title {
+  font-size: 1.5rem;
+}
+
+.bs-card-3 .card-body {
+  padding: 1rem 1.25rem;
+}
+
+/* ============================================
+   CARD STYLES - BS-CARD-4
+   ============================================ */
+.bs-card-4 {
+  margin-bottom: 1.75rem;
+  border-left: 4px solid var(--bs-primary);
+  border-radius: 0px;
+}
+
+.bs-card-4 .card-image {
+  height: 50px;
+  margin-bottom: 1rem;
+}
+
+.bs-card-4 .card-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.bs-card-4 .card-caption {
+  color: #90A4AE;
+  margin-bottom: 0.5rem;
+}
+
+.bs-card-4 .card-label {
+  background-color: #ECEFF1;
+  font-size: 1rem;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+}
+
+.bs-card-4 .card-body {
+  padding: 1rem 1.25rem;
+}
+
+/* ============================================
+   ADMIN CARDS - BS-CARD-A1
+   ============================================ */
+.bs-card-a1 {
+  margin-bottom: 1rem;
+}
+
+.bs-card-a1 .card-header {
+  min-height: 50px;
+  padding: 1.25rem 1.75rem;
+  border-bottom: none;
+}
+
+.bs-card-a1 .card-header .card-title {
+  margin: 0;
+}
+
+.bs-card-a1 .card-header .card-title i {
+  font-size: 1.5rem;
+  color: var(--bs-black);
+}
+
+.bs-card-a1 .card-body {
+  padding: 1.25rem 1.75rem;
+}
+
+.bs-card-a1 .card-body span {
+  font-size: 1rem;
+  line-height: 16px;
+  color: var(--bs-gray);
+}
+
+.bs-card-a1 .card-footer {
+  padding: 1.25rem 1.75rem;
+  border-top: none;
+}
+
+.bs-card-a1 .card-footer h2 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+/* ============================================
+   REPORT CARDS - BS-CARD-RP1
+   ============================================ */
+.bs-card-rp1 {
+  height: 190px;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 15px;
+  transition: all 0.2s ease;
+}
+
+.bs-card-rp1 .card-body {
+  text-align: center;
+}
+
+.bs-card-rp1 .card-body .card-icon {
+  padding: 1rem;
+  background-color: #ede7f6;
+  border-radius: 50%;
+  width: 75px;
+  height: 75px;
+  margin: auto;
+  margin-bottom: 1rem;
+}
+
+.bs-card-rp1 .card-body .card-icon i {
+  font-size: 2rem;
+  margin: auto;
+  margin-top: 10px;
+}
+
+.bs-card-rp1 .card-body .card-text {
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.bs-card-rp1:hover,
+.bs-card-rp1.active {
+  border: 2px solid #3f51b5;
+  cursor: pointer;
+}
+
+.bs-card-rp1:hover i,
+.bs-card-rp1.active i {
+  color: #3f51b5;
+}
+
+.bs-card-rp1:hover .card-text,
+.bs-card-rp1.active .card-text {
+  color: #3f51b5;
+  font-weight: 500;
+}
+
+/* Checkbox Cards */
+.bs-check-1:checked + label {
+  border: 2px solid #3f51b5;
+}
+
+.bs-check-1:checked + label i {
+  color: #3f51b5;
+}
+
+.bs-check-1:checked + label .card-text {
+  color: #3f51b5;
+  font-weight: 500;
+}
+
+/* ============================================
+   PANELS
+   ============================================ */
+.bs-panel-2 {
+  position: sticky;
+  top: 220px;
+  padding: 10px 0px;
+  background-color: #e1f5fe;
+  text-align: center;
+  padding: 3rem 5.25rem;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  margin-bottom: 2rem;
+}
+
+.bs-panel-2 i {
+  font-size: 5rem;
+  color: var(--kt-primary-inverse);
+  margin-bottom: 2rem;
+}
+
+.bs-panel-2 h2 {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+.bs-panel-2 .btn {
+  padding-left: 5rem !important;
+  padding-right: 5rem !important;
+  max-width: 100%;
+}
+
+.bs-panel-3 {
+  margin-bottom: 2rem;
+}
+
+.bs-panel-3 .card-body {
+  padding: 0;
+}
+
+.bs-panel-3 .card-body .panel-side {
+  padding: 1.25rem 1.5rem;
+}
+
+.bs-panel-3 .card-body .panel-side h3 {
+  font-weight: 500;
+}
+
+.bs-panel-3 .card-body .panel-header {
+  padding: 1.25rem 1.5rem;
+}
+
+.bs-panel-3 .card-body .panel-header h2 {
+  font-size: 2rem;
+  margin-bottom: 0;
+}
+
+.bs-panel-3 .card-body .panel-header span {
+  color: var(--kt-text-gray-400);
+}
+
+.bs-panel-3 .card-body .panel-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.bs-panel-3 .card-body .panel-item {
+  align-items: center;
+  display: flex;
+  margin-bottom: 2rem;
+}
+
+.bs-panel-3 .card-body .panel-item .panel-icon {
+  width: 50px;
+  height: 50px;
+  padding: 1rem;
+  margin-right: 1rem;
+  text-align: center;
+}
+
+.bs-panel-3 .card-body .panel-item .panel-icon i {
+  font-size: 1.5rem;
+}
+
+.bs-panel-3 .card-body .panel-item strong {
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.bs-panel-3 .card-body .panel-item span {
+  font-size: 1.25rem;
+  color: var(--kt-text-gray-400);
+  font-weight: 400;
+}
+
+.bs-panel-3 .card-body .panel-item .bs-fa-green {
+  background-color: aquamarine;
+}
+
+.bs-panel-3 .card-body .panel-item .bs-fa-green i {
+  color: green;
+}
+
+.bs-panel-3 .card-body .panel-item .bs-fa-blue {
+  background-color: lightblue;
+}
+
+.bs-panel-3 .card-body .panel-item .bs-fa-blue i {
+  color: blue;
+}
+
+.bs-panel-3 .card-body .panel-item .bs-fa-light {
+  background-color: lightcyan;
+}
+
+.bs-panel-3 .card-body .panel-item .bs-fa-light i {
+  color: steelblue;
+}
+
+/* ============================================
+   ACCORDION
+   ============================================ */
+.bs-accordion-1 .accordion-title {
+  font-size: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.bs-accordion-1 .accordion-title i {
+  margin-right: 0.75rem;
+  font-size: 1rem;
+}
+
+.bs-accordion-1 .accordion-title div {
+  background-color: #FFFDE7;
+  display: inline;
+  padding: 0.5rem;
+  color: #607D8B;
+}
+
+.bs-accordion-1 .accordion-item {
+  margin-bottom: 1.5rem;
+  background-color: transparent;
+  border: 1px solid #7E8299;
+  border-radius: 10px;
+}
+
+.bs-accordion-1 .accordion-item .accordion-button {
+  background-color: transparent;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  font-weight: 600;
+}
+
+.bs-accordion-1 .accordion-item .accordion-button i {
+  margin-right: 1rem;
+  font-size: 1.5rem;
+  transform: rotate(-45deg);
+  opacity: 0.75;
+  color: var(--bs-primary);
+}
+
+.bs-accordion-1 .accordion-button:not(.collapsed) {
+  background-color: transparent;
+}
+
+/* ============================================
+   CONTENT SECTIONS
+   ============================================ */
+.bs-content-1 .bs-content-title {
+  font-size: 4rem;
+  font-weight: 700;
+}
+
+.bs-content-1 .bs-content-text {
+  font-size: 1.6rem;
+  color: var(--bs-gray-700);
+  font-weight: 400;
+}
+
+.bs-content-1 .form-control {
+  background-color: transparent;
+  border-color: var(--bs-dark);
+  font-weight: 400;
+}
+
+/* ============================================
+   MODALS
+   ============================================ */
+.bs-modal-1 .bs-modal-text {
+  font-size: 1.2rem;
+  color: #5E6278;
+  font-weight: 400;
+  line-height: 2rem;
+  margin-bottom: 2rem;
+  opacity: 0.8;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.bs-landing-footer {
+  background-color: #2d205f;
+  color: white;
+}
+
+/* ============================================
+   DATA TABLES
+   ============================================ */
+table.dataTable.cell-border thead th,
+table.dataTable.cell-border thead td,
+table.dataTable.cell-border tbody th,
+table.dataTable.cell-border tbody td,
+table.cell-border thead th,
+table.cell-border thead td,
+table.cell-border tbody th,
+table.cell-border tbody td {
+  border-top: 1px solid #e4e6ef;
+  border-right: 1px solid #e4e6ef;
+}
+
+table.dataTable.cell-border thead tr th:first-child,
+table.dataTable.cell-border thead tr td:first-child,
+table.dataTable.cell-border tbody tr th:first-child,
+table.dataTable.cell-border tbody tr td:first-child,
+table.cell-border thead tr th:first-child,
+table.cell-border thead tr td:first-child,
+table.cell-border tbody tr th:first-child,
+table.cell-border tbody tr td:first-child {
+  border-left: 1px solid #e4e6ef;
+}
+
+table.cell-border,
+table.dataTable.cell-border {
+  border-bottom: 1px solid #e4e6ef !important;
+}
+
+/* ============================================
+   UTILITIES
+   ============================================ */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.text-white-50 {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================
+   EDITABLE CONTENT
+   ============================================ */
+.editable-text:hover,
+.editable-image-container img:hover {
+  outline: 2px dashed var(--kt-primary);
+  outline-offset: 4px;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: var(--bs-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #0086d6;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background-color: #e4e6ef;
+  color: #181C32;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* ============================================
+   FORM CONTROLS
+   ============================================ */
+.form-control {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e4e6ef;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.1);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #181C32;
+}
+
+/* ============================================
+   MENU DROPDOWN
+   ============================================ */
+.menu-sub-dropdown {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   LOADING STATES
+   ============================================ */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (min-width: 992px) {
+  .hidden-desktop {
+    display: none !important;
+  }
+  
+  .landing-header {
+    /* Desktop specific styles */
+  }
+}
+
+@media only screen and (max-width: 992px) {
+  .hidden-mobile {
+    display: none !important;
+    
+  }
+  
+  .landing-header {
+    padding: 20px !important;
+  }
+  
+  .header .active {
+    border: 0 !important;
+  }
+  
+  .bs-panel-2 {
+    padding: 2rem 1rem;
+  }
+  
+  .bs-content-1 .bs-content-title {
+    font-size: 3rem;
+  }
+}
+
+/* ============================================
+   SELECT2 (si lo usas)
+   ============================================ */
+.select2-container {
+  box-sizing: border-box;
+  display: inline-block;
+  margin: 0;
+  position: relative;
+  vertical-align: middle;
+}
+
+/* ============================================
+   CAROUSEL/SLIDER (Tiny Slider)
+   ============================================ */
+.tns.tns-default .tns-outer {
+  margin: 0 -1rem;
+}
+
+.logo-default{
+  max-height: 50px;
+}
