@@ -24,17 +24,16 @@ interface FormField {
 }
 
 interface ContactSectionProps {
-  content: {
+  content?: {
     title?: string;
     subtitle?: string;
     imageUrl?: string;
     form?: ContactFormConfig;
   };
-  onSave?: (data: EditableContent) => Promise<void>;
+  onSave?: (content: EditableContent) => Promise<void>;
 }
 
-
-export function ContactSection({content, onSave}: ContactSectionProps) {
+export function ContactSection({ content = {}, onSave }: ContactSectionProps) {
   
   const [isFlipped, setIsFlipped] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
@@ -57,20 +56,15 @@ export function ContactSection({content, onSave}: ContactSectionProps) {
     });
   };
 
-  const handleSaveContent = async (editableContent: EditableContent) => {
-    await onSave({
-      section: 'contact',
-      field: editableContent.id,
-      value: editableContent.value,
-    });
-  };
-
   const handleSaveFormConfig = async (config: ContactFormConfig) => {
-    await onSave({
-      section: 'contact',
-      field: 'formConfig',
-      value: config,
-    });
+    if (onSave) {
+      await onSave({
+        id: 'contact_form',
+        type: 'object',
+        value: config,
+        section: 'contact',
+      });
+    }
   };
 
   return (
@@ -85,23 +79,23 @@ export function ContactSection({content, onSave}: ContactSectionProps) {
                 <div className="mb-5">
                   <EditableText 
                     content={{ 
-                      value: content.title ?? '', 
-                      id: 'title', 
+                      value: content.title || '', 
+                      id: 'contact_title', 
                       type: 'text', 
                       section: 'contact' 
                     }}
-                    onSave={onSave} 
+                    onSave={onSave || (async () => {})} 
                     as="h2" 
                     className="fs-5 fs-md-4 fw-semibold text-dark mb-2 mb-md-3" 
                   />
                   <EditableText 
                     content={{ 
-                      value: content.subtitle ?? '', 
-                      id: 'subtitle', 
+                      value: content.subtitle || '', 
+                      id: 'contact_subtitle', 
                       type: 'text', 
                       section: 'contact' 
                     }}
-                    onSave={onSave} 
+                    onSave={onSave || (async () => {})} 
                     as="p" 
                     className="text-muted mb-0" 
                   />
@@ -109,7 +103,11 @@ export function ContactSection({content, onSave}: ContactSectionProps) {
 
                 {/* Formulario Editable */}
                 <EditableForm
-                  config={content.form || { fields: [], submitButtonText: 'Enviar', successMessage: '¡Mensaje enviado con éxito!' }}
+                  config={content.form || { 
+                    fields: [], 
+                    submitButtonText: 'Enviar', 
+                    successMessage: '¡Mensaje enviado con éxito!' 
+                  }}
                   onSaveConfig={handleSaveFormConfig}
                   onSubmit={handleSubmit}
                   formData={formData}
@@ -122,12 +120,12 @@ export function ContactSection({content, onSave}: ContactSectionProps) {
               <div className="text-center">
                 <EditableImage 
                   content={{ 
-                    value: content.imageUrl ?? '', 
-                    id: 'contact-image', 
+                    value: content.imageUrl || '', 
+                    id: 'contact_imageUrl', 
                     type: 'image', 
                     section: 'contact' 
                   }} 
-                  onSave={handleSaveContent} 
+                  onSave={onSave || (async () => {})} 
                   alt='Imagen de contacto' 
                   className='img-fluid object-fit-contain img-max-h-600' 
                 />
@@ -175,37 +173,37 @@ export function ContactSection({content, onSave}: ContactSectionProps) {
                       
                       <EditableText 
                         content={{ 
-                          value: "¿Necesitas ayuda?", 
-                          id: 'contact-mobile-title', 
+                          value: content.title || "¿Necesitas ayuda?", 
+                          id: 'contact_title', 
                           type: 'text', 
                           section: 'contact' 
                         }}
-                        onSave={handleSaveContent} 
+                        onSave={onSave || (async () => {})} 
                         as="h2" 
-                        className="h4 fw-bold  mb-2" 
+                        className="h4 fw-bold mb-2" 
                       />
                       <EditableText 
                         content={{ 
-                          value: "Estamos aquí para responder tus preguntas", 
-                          id: 'contact-mobile-subtitle', 
+                          value: content.subtitle || "Estamos aquí para responder tus preguntas", 
+                          id: 'contact_subtitle', 
                           type: 'text', 
                           section: 'contact' 
                         }}
-                        onSave={handleSaveContent} 
+                        onSave={onSave || (async () => {})} 
                         as="p" 
-                        className=" mb-4 small px-3" 
+                        className="mb-4 small px-3" 
                       />
                       
                       {/* Imagen que ocupa más espacio */}
                       <div className="w-100 px-3">
                         <EditableImage 
                           content={{ 
-                            value: content.imageUrl ?? '', 
-                            id: 'contact-mobile-image', 
+                            value: content.imageUrl || '', 
+                            id: 'contact_imageUrl', 
                             type: 'image', 
                             section: 'contact' 
                           }} 
-                          onSave={handleSaveContent} 
+                          onSave={onSave || (async () => {})} 
                           alt='Contacto' 
                           className='img-fluid rounded-3'
                           style={{ maxHeight: '300px', width: '100%', objectFit: 'contain' }}
@@ -261,7 +259,11 @@ export function ContactSection({content, onSave}: ContactSectionProps) {
                     {/* Formulario Editable - Mobile Version */}
                     <div className="flex-grow-1 d-flex flex-column" style={{ minHeight: 0 }}>
                       <EditableForm
-                        config={content.form || { fields: [], submitButtonText: 'Enviar', successMessage: '¡Mensaje enviado con éxito!' }}
+                        config={content.form || { 
+                          fields: [], 
+                          submitButtonText: 'Enviar', 
+                          successMessage: '¡Mensaje enviado con éxito!' 
+                        }}
                         onSaveConfig={handleSaveFormConfig}
                         onSubmit={handleSubmit}
                         formData={formData}

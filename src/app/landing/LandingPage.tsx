@@ -70,6 +70,11 @@ export function LandingPage({
     loadData();
   }, []);
 
+  // Helper para buscar content por slug
+  const findContentBySlug = (slug: string) => {
+    return data?.page.contents.find(c => c.slug === slug);
+  };
+
   // Handler genérico para guardar contenido
   const handleSaveContent = async (editableContent: EditableContent) => {
     if (!getToken) {
@@ -78,7 +83,6 @@ export function LandingPage({
     }
 
     try {
-      // Extraer el contentId del campo id
       const contentId = getContentIdFromEditable(editableContent);
       
       if (!contentId) {
@@ -86,22 +90,23 @@ export function LandingPage({
         return;
       }
 
-      // Obtener el contenido actual para preservar otros campos
       const currentContent = getCurrentContentData(editableContent.section);
+      const fieldName = getFieldName(editableContent.id);
       
-      // Actualizar solo el campo específico
+      // El valor puede ser un string, number, object, etc.
       const updatedData = {
         ...currentContent,
-        [getFieldName(editableContent.id)]: editableContent.value,
+        [fieldName]: editableContent.value,
       };
-      console.log('Updating content ID', contentId, 'with data:', updatedData);
+      
+      console.log('Updating content ID', contentId, 'field', fieldName, 'with data:', updatedData);
+      
       await cmsService.updateContent(
         contentId,
         { data: updatedData, status: 'published' },
         getToken()
       );
 
-      // Recargar datos
       loadData();
       
     } catch (error) {
@@ -110,118 +115,212 @@ export function LandingPage({
     }
   };
 
-  // Helpers para mapear EditableContent a content_id real
   const getContentIdFromEditable = (editable: EditableContent): number | null => {
     if (!data) return null;
     console.log('Getting content ID for editable:', editable);
     
-    // Buscar la sección correspondiente
-    const section = data.page.sections.find(s => s.name === `${editable.section}-home`);
-    console.log('Found section:', section);
-    if (!section || !section.contents[0]) return null;
-    console.log('Found content ID:', section.contents[0].content.id, 'for editable:', editable);
-    return section.contents[0].content.id;
+    const content = findContentBySlug(`${editable.section}-home`) || findContentBySlug(editable.section);
+    console.log('Found content:', content);
+    
+    if (!content) return null;
+    
+    console.log('Found content ID:', content.id, 'for editable:', editable);
+    return content.id;
   };
 
   const getCurrentContentData = (sectionName: string): Record<string, any> => {
     if (!data) return {};
 
-    const section = data.page.sections.find(s => s.name === `${sectionName}-home`);
-    if (!section || !section.contents[0]) return {};
+    const content = findContentBySlug(`${sectionName}-home`) || findContentBySlug(sectionName);
+    if (!content) return {};
 
-    return section.contents[0].content.data;
+    return content.data;
   };
 
   const getFieldName = (editableId: string): string => {
-    // "hero_title" -> "title"
     const parts = editableId.split('_');
     return parts[parts.length - 1];
   };
 
+  const handleSaveCollection = async <T extends CollectionItem>(
+    collectionData: EditableCollectionData<T>
+  ) => {
+    if (!getToken) {
+      console.error('No token available');
+      return;
+    }
 
-const handleSaveCollection = async <T extends CollectionItem>(
-  collectionData: EditableCollectionData<T>
-) => {
-  if (!getToken) {
-    console.error('No token available');
-    return;
-  }
+    try {
+      console.log('Saving collection:', collectionData);
 
-  try {
-    console.log('Saving collection:', collectionData);
+      switch (collectionData.section) {
+        case 'products': {
+          // Estructura anidada: categories > products
+          const productsContent = findContentBySlug("products");
+          if (!productsContent) {
+            console.error('Products content not found');
+            return;
+          }
 
-    // ACTUALIZAR CADA ITEM INDIVIDUALMENTE
-    const promises = collectionData.items.map((item, index) => {
-      const contentId = (item as any).contentId;
-      
-      if (!contentId) {
-        console.error('Item missing contentId:', item);
-        return Promise.resolve();
+          const currentData = productsContent.data;
+          const categoryId = collectionData.id === 'products-kapital' ? 'cat-kapital' : 'cat-valora';
+          
+          // Actualizar la categoría específica
+          const updatedCategories = currentData.categories.map((cat: any) => {
+            if (cat.id === categoryId) {
+              return {
+                ...cat,
+                products: collectionData.items.map((item) => {
+                  const { contentId, order, ...productData } = item as any;
+                  return productData;
+                })
+              };
+            }
+            return cat;
+          });
+
+          await cmsService.updateContent(
+            productsContent.id,
+            { 
+              data: {
+                ...currentData,
+                categories: updatedCategories
+              },
+              status: 'published' 
+            },
+            getToken()
+          );
+
+          console.log('Products updated successfully');
+          break;
+        }
+
+        case 'platforms': {
+          // Array simple: items
+          const platformsContent = findContentBySlug("platforms");
+          if (!platformsContent) {
+            console.error('Platforms content not found');
+            return;
+          }
+
+          const currentData = platformsContent.data;
+          
+          const updatedData = {
+            ...currentData,
+            items: collectionData.items.map((item) => {
+              const { contentId, order, title, ...itemData } = item as any;
+              // Mantener 'name' en lugar de 'title'
+              return itemData;
+            })
+          };
+
+          await cmsService.updateContent(
+            platformsContent.id,
+            { 
+              data: updatedData,
+              status: 'published' 
+            },
+            getToken()
+          );
+
+          console.log('Platforms updated successfully');
+          break;
+        }
+
+        case 'clients': {
+          // Array simple: logos
+          const clientsContent = findContentBySlug("clients");
+          if (!clientsContent) {
+            console.error('Clients content not found');
+            return;
+          }
+
+          const currentData = clientsContent.data;
+          
+          const updatedData = {
+            ...currentData,
+            logos: collectionData.items.map((item) => {
+              const { contentId, order, ...logoData } = item as any;
+              return logoData;
+            })
+          };
+
+          await cmsService.updateContent(
+            clientsContent.id,
+            { 
+              data: updatedData,
+              status: 'published' 
+            },
+            getToken()
+          );
+
+          console.log('Clients updated successfully');
+          break;
+        }
+
+        case 'team': {
+          // Manejar las tres colecciones del team
+          const teamContent = findContentBySlug("team");
+          if (!teamContent) {
+            console.error('Team content not found');
+            return;
+          }
+
+          const currentData = teamContent.data;
+          
+          // Determinar qué campo actualizar basado en el ID
+          let fieldName = '';
+          if (collectionData.id === 'team-authors') {
+            fieldName = 'authors';
+          } else if (collectionData.id === 'team-developmentTeam') {
+            fieldName = 'developmentTeam';
+          } else if (collectionData.id === 'team-collaborators') {
+            fieldName = 'collaborators';
+          } else {
+            console.error('Unknown team collection:', collectionData.id);
+            return;
+          }
+
+          const updatedData = {
+            ...currentData,
+            [fieldName]: collectionData.items.map((item) => {
+              const { contentId, order, ...memberData } = item as any;
+              return memberData;
+            })
+          };
+
+          await cmsService.updateContent(
+            teamContent.id,
+            { 
+              data: updatedData,
+              status: 'published' 
+            },
+            getToken()
+          );
+
+          console.log(`Team ${fieldName} updated successfully`);
+          break;
+        }
+
+        default: {
+          console.error(`Unknown collection section: ${collectionData.section}`);
+          return;
+        }
       }
 
-      // Preparar los datos - remover campos internos
-      const { contentId: _, id, ...itemData } = item as any;
+      // Recargar datos después de guardar
+      loadData();
       
-      const dataToSave = {
-        ...itemData,
-        order: index  // Actualizar el orden
-      };
-
-      console.log(`Updating content ${contentId} with:`, dataToSave);
-
-      return cmsService.updateContent(
-        contentId,
-        { 
-          data: dataToSave,
-          status: 'published' 
-        },
-        getToken()
-      );
-    });
-
-    await Promise.all(promises);
-    console.log('All items updated successfully');
-    
-    loadData();
-    
-  } catch (error) {
-    console.error('Error saving collection:', error);
-    throw error;
-  }
-};
-
-  /**
-   * Mapea el ID de la colección al nombre del campo en la API
-   * Ajusta estos nombres según la estructura de tu backend
-   */
-  const getCollectionFieldName = (collectionId: string): string => {
-    const fieldMap: Record<string, string> = {
-      // ClientsSection
-      'clients_logos': 'logos',  // o el nombre que uses en tu API
-      
-      // ProductsSection
-      'products-kapital': 'items',  // ajusta según tu API
-      'products-valora': 'items',   // ajusta según tu API
-      
-      // Agrega más mapeos según necesites
-      'platform_cards': 'cards',
-      'team_members': 'members',
-    };
-    
-    // Si no hay mapeo, intentar extraer el último segmento
-    // "clients_logos" -> "logos"
-    if (fieldMap[collectionId]) {
-      return fieldMap[collectionId];
+    } catch (error) {
+      console.error('Error saving collection:', error);
+      throw error;
     }
-    
-    const parts = collectionId.split('_');
-    return parts[parts.length - 1];
   };
 
   if (loading) return <div>Loading...</div>;
   if (!data) return <div>Error</div>;
 
-  //MENU
+  // MENU
   const headerMenu = data.menus?.header_landing?.items ?? [];
   const menuItems: MenuItem[] = headerMenu.map(item => ({
     id: item.id,
@@ -232,70 +331,37 @@ const handleSaveCollection = async <T extends CollectionItem>(
     order: item.order ?? 0
   }));
 
-  //HERO
-  const heroSection = data.page.sections.find(section => section.name === "hero-home");
-  const heroData = heroSection?.contents[0]?.content.data;
+  // HERO
+  const heroContent = findContentBySlug("hero-home");
+  const heroData = heroContent?.data;
   
-  //PLATFORM
-  const platformSection = data.page.sections.find(section => section.name === "platform");
-  const platformData = platformSection?.contents.map(content => content.content.data);
+  // PLATFORMS
+  const platformsContent = findContentBySlug("platforms");
+  const platformsData = platformsContent?.data;
 
-  //CTA
-  const ctaSection = data.page.sections.find(section => section.name === "cta-home");
-  const ctaData = ctaSection?.contents[0]?.content.data;
+  // CTA
+  const ctaContent = findContentBySlug("cta-home");
+  const ctaData = ctaContent?.data;
 
-  //Client
-  const clientsSection = data.page.sections.find(section => section.name === "clients-home");
-  const contents = clientsSection?.contents ?? [];
+  // CLIENTS
+  const clientsContent = findContentBySlug("clients");
+  const clientsData = clientsContent?.data;
 
-  const clientTitle = contents.find(item => item.content.slug === "clients-title")?.content.data.text
- 
-  const clientsLogos = contents.filter(item => item.content.slug === "clients-logos").map(item => item.content.data);
+  // BENEFITS
+  const benefitsContent = findContentBySlug("benefits-home");
+  const benefitsData = benefitsContent?.data;
 
-  //Benefits
-  const benefitsSection = data.page.sections.find(section => section.name === "benefits-home");
-  const benefitsData = benefitsSection?.contents[0]?.content.data;
+  // PRODUCTS
+  const productsContent = findContentBySlug("products");
+  const productsData = productsContent?.data;
 
-  //Products
-  const productsKapitalSection = data.page.sections.find(section => section.name === "products-kapital");
-  const productsKapitalData = productsKapitalSection?.contents.map(content => ({
-  ...content.content.data,
-  id: content.content.slug,           // ID para React key
-  contentId: content.content.id,      // ← ID del content en la API
-  order: content.order
-}));
+  // TEAM
+  const teamContent = findContentBySlug("team");
+  const teamData = teamContent?.data;
 
-  const productsValoraSection = data.page.sections.find(section => section.name === "products-valora");
-  const productsValoraData = productsValoraSection?.contents.map(content => ({
-  ...content.content.data,
-  id: content.content.slug,           // ID para React key
-  contentId: content.content.id,      // ← ID del content en la API
-  order: content.order
-}));
-
-  const productsData = {
-    kapital: {
-      id: 'products-kapital',
-      section: 'products-kapital',
-      items: productsKapitalData || [],
-    },
-    valora: {
-      id: 'products-valora',
-      section: 'products-valora',
-      items: productsValoraData || [],
-    },
-  };
-
-  //Team
-  const teamSection = data.page.sections.find(section => section.name === "team-home");
-  const teamData = teamSection?.contents[0]?.content.data;
-
-  //Contact
-  const contactSection = data.page.sections.find(section => section.name === "contact-home");
-  const contactData = contactSection?.contents[0]?.content.data;
-
-
-
+  // CONTACT
+  const contactContent = findContentBySlug("contact-home");
+  const contactData = contactContent?.data;
 
   return (
     <div className="landing-page">
@@ -314,7 +380,11 @@ const handleSaveCollection = async <T extends CollectionItem>(
           onSave={handleSaveContent}
         />
 
-        <PlatformCardsSection cards={platformData} />
+        <PlatformCardsSection 
+          content={platformsData} 
+          onSave={handleSaveContent}
+          onSaveCollection={handleSaveCollection}
+        />
 
         <CTASection
           content={ctaData}
@@ -323,23 +393,34 @@ const handleSaveCollection = async <T extends CollectionItem>(
         />
 
         <ClientsSection
-          content={clientTitle}
-          clients={clientsLogos}
+          content={clientsData}
           onSave={handleSaveContent}
+          onSaveCollection={handleSaveCollection}
         />
       </div>
 
-      <BenefitsSection content={benefitsData} isAdmin={isAdmin} onSave={handleSaveContent} />
-      <ProductsSection content={productsData}  onSave={handleSaveContent} onSaveCollection={handleSaveCollection} />
+      <BenefitsSection 
+        content={benefitsData} 
+        isAdmin={isAdmin} 
+        onSave={handleSaveContent} 
+      />
+      
+      <ProductsSection 
+        content={productsData} 
+        onSave={handleSaveContent} 
+        onSaveCollection={handleSaveCollection} 
+      />
+      
       <TeamSection
-      title={teamData.title}
-      authors={teamData.authors}
-      developmentTeam={teamData.developmentTeam}
-      collaborators={teamData.collaborators}
-      onSave={handleSaveContent}
-    />
+        content={teamData}
+        onSave={handleSaveContent}
+        onSaveCollection={handleSaveCollection}
+      />
 
-      <ContactSection content={contactData} onSave={handleSaveContent} />
+      <ContactSection 
+        content={contactData} 
+        onSave={handleSaveContent} 
+      />
 
       <ScrollTop />
     </div>

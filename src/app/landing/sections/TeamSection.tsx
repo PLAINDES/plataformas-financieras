@@ -11,20 +11,18 @@ interface TeamMember extends CollectionItem {
   image?: string;
 }
 
-interface SectionTitle {
-  name: string;
-  caption: string;
-}
-
 interface TeamSectionProps {
-  title?: SectionTitle;
-  authors?: TeamMember[];
-  developmentTeam?: TeamMember[];
-  collaborators?: TeamMember[];
+  content?: {
+    title?: string;
+    authors?: TeamMember[];
+    developmentTeam?: TeamMember[];
+    collaborators?: TeamMember[];
+  };
   onSave: (content: EditableContent) => Promise<void>;
+  onSaveCollection?: <T extends CollectionItem>(collectionData: EditableCollectionData<T>) => Promise<void>;
 }
 
-export default function TeamSection({ title, authors, developmentTeam, collaborators, onSave }: TeamSectionProps) {
+export default function TeamSection({ content, onSave, onSaveCollection }: TeamSectionProps) {
   
   const [openSection, setOpenSection] = useState<string | null>(null);
   const { isAdmin } = useAuthContext();
@@ -33,37 +31,34 @@ export default function TeamSection({ title, authors, developmentTeam, collabora
     setOpenSection(openSection === section ? null : section);
   };
 
-  // Handlers para guardar
-  const handleSaveTitle = async (content: EditableContent) => {
-    await onSave({
-      section: 'team',
-      field: id,
-      value: value,
-    });
-  };
-
   const handleSaveAuthors = async (data: EditableCollectionData<TeamMember>) => {
-    await onSave({
-      section: 'team',
-      field: 'authors',
-      items: data.items,
-    });
+    if (onSaveCollection) {
+      await onSaveCollection({
+        ...data,
+        id: 'team-authors',
+        section: 'team',
+      });
+    }
   };
 
   const handleSaveDevelopmentTeam = async (data: EditableCollectionData<TeamMember>) => {
-    await onSave({
-      section: 'team',
-      field: 'developmentTeam',
-      items: data.items,
-    });
+    if (onSaveCollection) {
+      await onSaveCollection({
+        ...data,
+        id: 'team-developmentTeam',
+        section: 'team',
+      });
+    }
   };
 
   const handleSaveCollaborators = async (data: EditableCollectionData<TeamMember>) => {
-    await onSave({
-      section: 'team',
-      field: 'collaborators',
-      items: data.items,
-    });
+    if (onSaveCollection) {
+      await onSaveCollection({
+        ...data,
+        id: 'team-collaborators',
+        section: 'team',
+      });
+    }
   };
 
   // Función para crear nuevos items
@@ -71,14 +66,14 @@ export default function TeamSection({ title, authors, developmentTeam, collabora
     id: `author-${Date.now()}`,
     name: 'Nuevo Autor',
     caption: 'Descripción del autor',
-    order: authors ? authors.length : 0,
+    order: content?.authors ? content.authors.length : 0,
   });
 
   const createNewDevelopmentMember = (): TeamMember => ({
     id: `dev-${Date.now()}`,
     name: 'Nuevo Miembro',
     caption: '',
-    order: developmentTeam ? developmentTeam.length : 0,
+    order: content?.developmentTeam ? content.developmentTeam.length : 0,
   });
 
   const createNewCollaborator = (): TeamMember => ({
@@ -87,7 +82,7 @@ export default function TeamSection({ title, authors, developmentTeam, collabora
     caption: 'Descripción',
     description: 'Área o departamento',
     image: 'images/logo.png',
-    order: collaborators ? collaborators.length : 0,
+    order: content?.collaborators ? content.collaborators.length : 0,
   });
 
   const sectionBg = { background: 'linear-gradient(to bottom right, #f8f9fa, #e9ecef)' };
@@ -100,16 +95,15 @@ export default function TeamSection({ title, authors, developmentTeam, collabora
         {/* Header Editable */}
         <div className="text-start mb-4 mb-md-5">
           <EditableText 
-            content={{ value: title?.name || '', id: 'title', type: 'text', section: 'team' }}
+            content={{ 
+              value: content?.title || '', 
+              id: 'team_title', 
+              type: 'text', 
+              section: 'team' 
+            }}
             onSave={onSave} 
             as="h2" 
             className="fs-5 fs-md-4 fw-semibold text-dark mb-2 mb-md-3" 
-          />
-          <EditableText 
-            content={{ value: title?.caption || '', id: 'caption', type: 'text', section: 'team' }}
-            onSave={onSave} 
-            as="p" 
-            className="fs-6 fs-md-5 text-muted fw-bold mb-0" 
           />
         </div>
 
@@ -126,7 +120,12 @@ export default function TeamSection({ title, authors, developmentTeam, collabora
               </div>
               
               <EditableCollection
-                data={{ id: 'authors', items: authors || [], section: 'team', type: 'collection' }}
+                data={{ 
+                  id: 'team-authors', 
+                  items: content?.authors || [], 
+                  section: 'team', 
+                  type: 'collection' 
+                }}
                 onSave={handleSaveAuthors}
                 createNewItem={createNewAuthor}
                 addButtonText="Agregar Autor"
@@ -152,7 +151,12 @@ export default function TeamSection({ title, authors, developmentTeam, collabora
               <div className="card border-0 shadow-sm rounded-3 bg-white">
                 <div className="p-2 border-start border-3 border-primary ps-3">
                   <EditableCollection
-                    data={{ id: 'developmentTeam', items: developmentTeam || [], section: 'team', type: 'collection' }}
+                    data={{ 
+                      id: 'team-developmentTeam', 
+                      items: content?.developmentTeam || [], 
+                      section: 'team', 
+                      type: 'collection' 
+                    }}
                     onSave={handleSaveDevelopmentTeam}
                     createNewItem={createNewDevelopmentMember}
                     addButtonText="Agregar Miembro"
@@ -180,7 +184,12 @@ export default function TeamSection({ title, authors, developmentTeam, collabora
             </div>
 
             <EditableCollection
-              data={{ id: 'collaborators', items: collaborators || [], section: 'team', type: 'collection' }}
+              data={{ 
+                id: 'team-collaborators', 
+                items: content?.collaborators || [], 
+                section: 'team', 
+                type: 'collection' 
+              }}
               onSave={handleSaveCollaborators}
               createNewItem={createNewCollaborator}
               addButtonText="Agregar Colaborador"
@@ -232,7 +241,12 @@ export default function TeamSection({ title, authors, developmentTeam, collabora
             {openSection === 'authors' && (
               <div className="mt-3 animate-fade-in">
                 <EditableCollection
-                  data={{ id: 'authors', items: authors || [], section: 'team', type: 'collection' }}
+                  data={{ 
+                    id: 'team-authors', 
+                    items: content?.authors || [], 
+                    section: 'team', 
+                    type: 'collection' 
+                  }}
                   onSave={handleSaveAuthors}
                   createNewItem={createNewAuthor}
                   addButtonText="Agregar Autor"
@@ -283,7 +297,12 @@ export default function TeamSection({ title, authors, developmentTeam, collabora
                 <div className="card border-0 shadow-sm rounded-3 bg-white">
                   <div className="p-2">
                     <EditableCollection
-                      data={{ id: 'developmentTeam', items: developmentTeam || [], section: 'team', type: 'collection' }}
+                      data={{ 
+                        id: 'team-developmentTeam', 
+                        items: content?.developmentTeam || [], 
+                        section: 'team', 
+                        type: 'collection' 
+                      }}
                       onSave={handleSaveDevelopmentTeam}
                       createNewItem={createNewDevelopmentMember}
                       addButtonText="Agregar Miembro"
@@ -335,7 +354,12 @@ export default function TeamSection({ title, authors, developmentTeam, collabora
             {openSection === 'collaborators' && (
               <div className="mt-3 animate-fade-in">
                 <EditableCollection
-                  data={{ id: 'collaborators', items: collaborators || [], section: 'team', type: 'collection' }}
+                  data={{ 
+                    id: 'team-collaborators', 
+                    items: content?.collaborators || [], 
+                    section: 'team', 
+                    type: 'collection' 
+                  }}
                   onSave={handleSaveCollaborators}
                   createNewItem={createNewCollaborator}
                   addButtonText="Agregar Colaborador"

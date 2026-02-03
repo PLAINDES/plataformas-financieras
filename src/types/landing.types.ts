@@ -2,10 +2,22 @@
 
 import type { EditableContent } from './editable.types';
 import type { LinkData, VideoData, EditableCollectionData } from './editable-collection.types';
-import type { SectionResponse } from './api.types';
+
 // ============================================
-// HERO SECTION
+// API RESPONSE TYPES
 // ============================================
+
+export interface ContentResponse {
+  slug: string;
+  data: Record<string, any>;
+  status: string;
+  id: number;
+  page_id: number;
+  content_type_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MenuItemResponse {
   id: number;
   menu_id: number;
@@ -17,6 +29,7 @@ export interface MenuItemResponse {
   icon: string | null;
   order: number;
   is_visible: boolean;
+  slug?: string;
   created_at: string;
   updated_at: string;
 }
@@ -30,14 +43,15 @@ export interface MenuWithItems {
   items: MenuItemResponse[];
 }
 
-
-// src/types/landing.api.types.ts
 export interface LandingDataResponse {
   page: {
     id: number;
     title: string;
     slug: string;
     template: string;
+    parent_id: number | null;
+    status: string;
+    order: number;
     is_homepage: boolean;
     settings: {
       layout: string;
@@ -47,11 +61,14 @@ export interface LandingDataResponse {
     seo_title: string;
     seo_description: string;
     seo_image: string | null;
-    sections: SectionResponse[]; // Lista de secciones
+    contents: ContentResponse[]; // Lista directa de contents
     created_at: string;
     updated_at: string;
   };
-  menus: Record<string, any>;
+  menus: {
+    header_landing?: MenuWithItems;
+    footer_landing?: MenuWithItems;
+  };
   site: {
     site_key: string;
     name: string;
@@ -68,6 +85,9 @@ export interface LandingDataResponse {
   meta: any;
 }
 
+// ============================================
+// HERO SECTION
+// ============================================
 
 export interface HeroSectionData {
   title: EditableContent;
@@ -80,9 +100,6 @@ export interface HeroSectionData {
 // Legacy type (mantener por compatibilidad)
 export interface HeroContent {
   title: string;
-  description?: string;
-  ctaText?: string;
-  ctaUrl?: string;
 }
 
 // ============================================
@@ -133,7 +150,7 @@ export interface CTASectionData {
 
 // Legacy type
 export interface CTAContent {
-  description: string;
+  text: string;
   whatsappNumber: string;
 }
 

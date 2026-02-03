@@ -13,7 +13,7 @@ export class CMSService {
    * @param slug - Si no se proporciona, retorna la homepage
    */
   async getLandingData(): Promise<LandingDataResponse> {
-    const result = api.get<LandingDataResponse>(`${this.basePath}/landing`);
+    const result = api.get<LandingDataResponse>(`${this.basePath}/landing2`);
     return result;
   }
 

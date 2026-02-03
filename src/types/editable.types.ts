@@ -26,7 +26,6 @@ export interface CollectionItem {
 
 export interface EditableCollectionData<T extends CollectionItem = CollectionItem> {
   id: string;
-  section: string;
   items: T[];
 }
 

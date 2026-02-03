@@ -16,12 +16,6 @@ export function HeroSection({ content, onSave }: HeroSectionProps) {
     section: 'hero',
   };
 
-  const descriptionContent: EditableContent = {
-    id: 'hero_description',
-    type: 'text',
-    value: content.description || '',
-    section: 'hero',
-  };
 
   return (
     <div id="plataformas">
@@ -35,15 +29,6 @@ export function HeroSection({ content, onSave }: HeroSectionProps) {
                 as="h1"
                 className="bs-content-title"
               />
-              
-              {content.description && (
-                <EditableText
-                  content={descriptionContent}
-                  onSave={onSave}
-                  as="p"
-                  className="bs-content-description"
-                />
-              )}
             </div>
           </div>
         </div>

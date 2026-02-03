@@ -8,46 +8,103 @@ import type { EditableContent, EditableCollectionData, CollectionItem } from '..
 
 // Tipo para productos editables
 interface ProductItem extends CollectionItem {
-  contentId: number; 
   name: string;
   caption: string;
   price: number;
   typeName: string;
-  ribbon?: string | null;
   imageUrl?: string;
 }
 
 interface ProductsSectionProps {
   content: {
-    kapital: EditableCollectionData<ProductItem>;
-    valora: EditableCollectionData<ProductItem>;
+    title?: string;
+    categories?: Array<{
+      id: string;
+      label: string;
+      products: Array<{
+        id: string;
+        name: string;
+        caption: string;
+        price: number;
+        typeName: string;
+        ribbon?: string | null;
+        imageUrl?: string;
+      }>;
+    }>;
   };
   onSave: (content: EditableContent) => Promise<void>;
   onSaveCollection: (data: EditableCollectionData<ProductItem>) => Promise<void>;
-
 }
 
-
-
 export function ProductsSection({ content, onSave, onSaveCollection }: ProductsSectionProps) {
-
   const { isAdmin } = useAuthContext();
   const [activeTab, setActiveTab] = useState<'kapital' | 'valora'>('kapital');
   const [currentPage, setCurrentPage] = useState(0);
 
+  // Adaptar los datos del content a la estructura interna
+  const adaptContentToState = (rawContent: typeof content) => {
+    if (!rawContent || !rawContent.categories) {
+      return {
+        kapital: {
+          id: 'products-kapital',
+          section: 'products',
+          items: [],
+        },
+        valora: {
+          id: 'products-valora',
+          section: 'products',
+          items: [],
+        },
+      };
+    }
+
+    const kapitalCategory = rawContent.categories.find(cat => cat.id === 'cat-kapital');
+    const valoraCategory = rawContent.categories.find(cat => cat.id === 'cat-valora');
+
+    return {
+      kapital: {
+        id: 'products-kapital',
+        section: 'products',
+        items: kapitalCategory?.products?.map((p, index) => ({
+          ...p,
+          order: index
+        })) || [],
+      },
+      valora: {
+        id: 'products-valora',
+        section: 'products',
+        items: valoraCategory?.products?.map((p, index) => ({
+          ...p,
+          order: index
+        })) || [],
+      },
+    };
+  };
+
   // Estado editable
   const [titleData, setTitleData] = useState<EditableContent>({
-    id: 'products-title',
+    id: 'title',
     type: 'text',
-    value: 'Productos',
+    value: content?.title || 'Productos',
     section: 'products',
   });
 
-const [productosData, setProductosData] = useState<{
-  kapital: EditableCollectionData<ProductItem>;
-  valora: EditableCollectionData<ProductItem>;
-}>(content);
+  const [productosData, setProductosData] = useState<{
+    kapital: EditableCollectionData<ProductItem>;
+    valora: EditableCollectionData<ProductItem>;
+  }>(() => adaptContentToState(content));
 
+  // Actualizar cuando cambie el content
+  useEffect(() => {
+    console.log('Content changed:', content);
+    const newData = adaptContentToState(content);
+    console.log('Adapted data:', newData);
+    setProductosData(newData);
+    setTitleData(prev => ({
+      ...prev,
+      value: content?.title || 'Productos'
+    }));
+  }, [content]);
 
   const customStyles = {
     gradientText: {
@@ -64,6 +121,10 @@ const [productosData, setProductosData] = useState<{
   };
 
   const activeProducts = productosData[activeTab].items;
+
+  console.log('Active Tab:', activeTab);
+  console.log('Productos Data:', productosData);
+  console.log('Active Products:', activeProducts);
 
   // Paginación responsiva
   const getItemsPerPage = () => {
@@ -97,22 +158,6 @@ const [productosData, setProductosData] = useState<{
 
   const visibleProducts = getVisibleProducts();
   const isSingleCard = visibleProducts.length === 1;
-
-  // Handlers
-  const handleSaveTitle = async (content: EditableContent) => {
-    console.log('Saving title:', content);
-    setTitleData(content);
-    // TODO: Backend call
-  };
-
-  const handleSaveProducts = async (data: EditableCollectionData<ProductItem>) => {
-    console.log('Saving products:', data);
-    setProductosData({
-      ...productosData,
-      [activeTab]: data,
-    });
-    // TODO: Backend call
-  };
 
   const createNewProduct = (): ProductItem => ({
     id: `product_${Date.now()}`,

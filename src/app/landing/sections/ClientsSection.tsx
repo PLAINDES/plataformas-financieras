@@ -1,7 +1,6 @@
 // src/app/landing/sections/ClientsSection.tsx
 
-import { useState } from 'react';
-import type { ClientLogo } from "../../../types/landing.types";
+import { useState, useEffect } from 'react';
 import { EditableText } from "../../../components/editable/EditableText";
 import { EditableCollection, AdminControls } from "../../../components/editable/EditableCollection";
 import type { EditableContent, EditableCollectionData, CollectionItem } from '../../../types/editable.types';
@@ -14,61 +13,63 @@ interface ClientLogoEditable extends CollectionItem {
 }
 
 interface ClientsSectionProps {
-  content: string;
-  clients: ClientLogoEditable[];
-  onSave: (content: EditableContent) => Promise<void>;
+  content?: {
+    title?: string;
+    logos?: Array<{
+      id: string | number;
+      name: string;
+      imageUrl: string;
+      alt?: string;
+    }>;
+  };
+  onSave?: (content: EditableContent) => Promise<void>;
+  onSaveCollection?: <T extends CollectionItem>(data: EditableCollectionData<T>) => Promise<void>;
 }
+
 export function ClientsSection({ 
-  content, 
-  clients, 
-  onSave 
+  content = {},
+  onSave,
+  onSaveCollection,
 }: ClientsSectionProps) {
   const { isAdmin } = useAuthContext();
-  console.log('Rendering ClientsSection with clients:', content);
-  if (!clients || clients.length === 0) {
-    if (!isAdmin) return null;
-    
-    // Modo admin con lista vacía
-    return (
-      <div className="bs-section-2 text-secondary">
-        <div className="container">
-          <div className="text-center mb-4 mb-md-5">
-            <EditableText
-              content={{ 
-                value: content, 
-                id: 'text', 
-                type: 'text', 
-                section: 'clients' 
-              }}
-              onSave={onSave}
-              as="h2"
-              className="text-secondary mb-0 fw-normal fs-5 fs-md-3 fs-lg-3"
-            />
-          </div>
+  
+  // 1. ESTADO LOCAL: Inicializamos el estado con los logos de las props
+  const [items, setItems] = useState<ClientLogoEditable[]>(() => 
+    (content.logos || []).map((logo, index) => ({
+      ...logo,
+      id: String(logo.id),
+      order: index,
+    }))
+  );
 
-          <EditableCollection
-            data={{ id: 'clients', items: [], section: 'clients', type: 'collection' }}
-            onSave={handleSaveClients}
-            createNewItem={createNewClient}
-            addButtonText="Agregar Cliente"
-            emptyMessage="No hay clientes. Agrega uno para comenzar."
-            allowReorder={true}
-            className="d-flex flex-wrap justify-content-center align-items-center gap-5 px-3 px-md-5"
-            renderItem={(client, index, helpers) => (
-              <ClientLogoCard client={client} helpers={helpers} />
-            )}
-          />
-        </div>
-      </div>
-    );
-  }
+  // 2. SINCRONIZACIÓN: Si las props cambian externamente (ej: recarga de página), actualizamos el estado
+  useEffect(() => {
+    if (content.logos) {
+      setItems(content.logos.map((logo, index) => ({
+        ...logo,
+        id: String(logo.id),
+        order: index,
+      })));
+    }
+  }, [content.logos]);
 
   const handleSaveClients = async (data: EditableCollectionData<ClientLogoEditable>) => {
-    await onSave({
-      section: 'clients',
-      field: 'clients',
-      items: data.items,
-    });
+    console.log('Saving clients collection:', data);
+    
+    // 3. ACTUALIZACIÓN OPTIMISTA: Actualizamos la UI inmediatamente
+    setItems(data.items);
+
+    if (onSaveCollection) {
+      try {
+        await onSaveCollection({
+          ...data,
+          id: 'clients-logos',
+        });
+      } catch (error) {
+        console.error("Error al guardar en servidor:", error);
+        // Opcional: Revertir items si falla
+      }
+    }
   };
 
   const createNewClient = (): ClientLogoEditable => ({
@@ -76,8 +77,39 @@ export function ClientsSection({
     name: 'Nuevo Cliente',
     imageUrl: 'https://via.placeholder.com/140x40?text=Logo',
     alt: 'Logo del cliente',
-    order: clients.length,
+    order: items.length, // Usar items.length del estado actual
   });
+
+  const titleContent: EditableContent = {
+    id: 'clients_title',
+    type: 'text',
+    value: content.title || 'Ellos confiaron en nosotros',
+    section: 'clients',
+  };
+
+  // Renderizado común para evitar duplicación de código
+  const renderCollection = () => (
+    <EditableCollection
+      data={{
+        id: 'clients-logos',
+        section: 'clients',
+        items: items, // Usamos el estado local 'items'
+        type: 'collection'
+      }}
+      onSave={handleSaveClients}
+      createNewItem={createNewClient}
+      addButtonText="Agregar Cliente"
+      emptyMessage="No hay clientes. Agrega uno para comenzar."
+      allowReorder={true}
+      maxItems={20}
+      className="d-flex flex-wrap justify-content-center align-items-center gap-5 px-3 px-md-5"
+      renderItem={(client, index, helpers) => (
+        <ClientLogoCard client={client} helpers={helpers} />
+      )}
+    />
+  );
+
+  if ((!items || items.length === 0) && !isAdmin) return null;
 
   return (
     <div className="bs-section-2 text-secondary">
@@ -85,32 +117,15 @@ export function ClientsSection({
         {/* Title - Editable */}
         <div className="text-center mb-4 mb-md-5">
           <EditableText
-            content={{ 
-              value: content, 
-              id: 'text', 
-              type: 'text', 
-              section: 'clients' 
-            }}
-            onSave={onSave}
+            content={titleContent}
+            onSave={onSave || (async () => {})}
             as="h2"
             className="text-secondary mb-0 fw-normal fs-5 fs-md-3 fs-lg-3"
           />
         </div>
 
         {/* Clients Grid - Editable Collection */}
-        <EditableCollection
-          data={{ id: 'clients', items: clients, section: 'clients', type: 'collection' }}
-          onSave={handleSaveClients}
-          createNewItem={createNewClient}
-          addButtonText="Agregar Cliente"
-          emptyMessage="No hay clientes. Agrega uno para comenzar."
-          allowReorder={true}
-          maxItems={20}
-          className="d-flex flex-wrap justify-content-center align-items-center gap-5 px-3 px-md-5"
-          renderItem={(client, index, helpers) => (
-            <ClientLogoCard client={client} helpers={helpers} />
-          )}
-        />
+        {renderCollection()}
       </div>
 
       {/* Responsive Styles */}
@@ -120,12 +135,10 @@ export function ClientsSection({
           color: #adb5bd;
         }
 
-        /* Texto */
         .bs-section-2 h2 {
           color: #adb5bd;
         }
 
-        /* Logos */
         .bs-section-2 .client-logo {
           max-height: 30px;
           width: auto;
@@ -135,7 +148,6 @@ export function ClientsSection({
           transition: all 0.3s ease;
         }
 
-        /* Hover solo en desktop */
         @media (hover: hover) {
           .bs-section-2 .client-logo:hover {
             filter: grayscale(0%) brightness(1);
@@ -144,14 +156,12 @@ export function ClientsSection({
           }
         }
 
-        /* Tablet */
         @media (min-width: 768px) {
           .bs-section-2 .client-logo {
             max-height: 35px;
           }
         }
 
-        /* Mobile */
         @media (max-width: 767px) {
           .bs-section-2 {
             padding: 30px 0;
@@ -166,8 +176,7 @@ export function ClientsSection({
           }
         }
 
-                @media (max-width: 575px) {
-        
+        @media (max-width: 575px) {
           .bs-section-2 {
             padding: 25px 0;
           }
@@ -184,7 +193,7 @@ export function ClientsSection({
             gap: 1rem !important;
           }
 
-           .client-logo-wrapper.editing {
+          .client-logo-wrapper.editing {
             min-width: 100%;
             max-width: 100%;
             margin-bottom: 1rem;
@@ -199,14 +208,12 @@ export function ClientsSection({
             padding: 4px 8px;
           }
 
-          /* En móvil, mostrar controles siempre (sin hover) */
           .admin-controls-overlay {
-            opacity: 1;
-            pointer-events: auto;
+            opacity: 1 !important;
+            pointer-events: auto !important;
           }
         }
 
-        /* Estilos para modo edición */
         .client-logo-wrapper {
           position: relative;
           min-width: 70px;
@@ -217,12 +224,13 @@ export function ClientsSection({
           border: 2px dashed #ffc107;
           border-radius: 8px;
           padding: 12px;
-          background: rgba(255, 255, 255, 0.05);
-          min-width: 200px;
+          background: rgba(40, 40, 40, 0.95); /* Fondo más oscuro para legibilidad */
+          min-width: 240px;
           max-width: 300px;
+          z-index: 100; /* Z-index alto para estar sobre todo */
+          box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
-        /* Controles de admin - overlay con hover */
         .admin-controls-overlay {
           position: absolute;
           top: 0;
@@ -232,6 +240,7 @@ export function ClientsSection({
           opacity: 0;
           transition: opacity 0.2s ease;
           pointer-events: none;
+          z-index: 2;
         }
 
         .client-logo-wrapper:hover .admin-controls-overlay {
@@ -239,26 +248,6 @@ export function ClientsSection({
           pointer-events: auto;
         }
 
-        /* Fondo semi-transparente al hacer hover (opcional) */
-        .client-logo-wrapper:hover::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.05);
-          border-radius: 4px;
-          z-index: 1;
-        }
-
-        .client-logo-wrapper:not(.editing):hover .client-logo {
-          filter: grayscale(0%) brightness(1);
-          opacity: 0.6;
-          transform: scale(1.08);
-        }
-
-        /* Formulario de edición responsive */
         .edit-client-form {
           width: 100%;
         }
@@ -273,9 +262,10 @@ export function ClientsSection({
           max-height: 50px;
           object-fit: contain;
           margin: 8px 0;
+          background: rgba(255,255,255,0.1);
+          padding: 4px;
+          border-radius: 4px;
         }
-
-
       `}</style>
     </div>
   );
@@ -291,16 +281,39 @@ interface ClientLogoCardProps {
 }
 
 function ClientLogoCard({ client, helpers }: ClientLogoCardProps) {
-  const [editedClient, setEditedClient] = useState(client);
+  const [editedClient, setEditedClient] = useState<ClientLogoEditable>(client);
   const { isAdmin } = useAuthContext();
+
+  useEffect(() => {
+    // Solo actualizamos si no estamos editando activamente para evitar sobrescribir lo que escribe el usuario
+    if (!helpers.isEditing) {
+      setEditedClient(client);
+    }
+  }, [client, helpers.isEditing]);
+
+  // Manejador seguro para guardar
+  const handleSaveClick = (e: React.MouseEvent) => {
+    e.preventDefault(); // Evitar submit de form accidental
+    e.stopPropagation(); // Evitar burbujeo
+    console.log("Guardando cliente...", editedClient);
+    helpers.onSaveItem(editedClient);
+  };
+
+  // Manejador seguro para cancelar
+  const handleCancelClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditedClient(client); // Revertir cambios locales
+    helpers.onCancelEdit();
+  };
 
   // Modo edición
   if (helpers.isEditing) {
     return (
-      <div className="client-logo-wrapper editing">
+      <div className="client-logo-wrapper editing" onClick={(e) => e.stopPropagation()}>
         <div className="edit-client-form">
           <div className="mb-2">
-            <label className="form-label small fw-bold text-white">Nombre del Cliente</label>
+            <label className="form-label small fw-bold text-white mb-1">Nombre</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -311,7 +324,7 @@ function ClientLogoCard({ client, helpers }: ClientLogoCardProps) {
           </div>
 
           <div className="mb-2">
-            <label className="form-label small fw-bold text-white">URL de la Imagen</label>
+            <label className="form-label small fw-bold text-white mb-1">URL Logo</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -322,17 +335,16 @@ function ClientLogoCard({ client, helpers }: ClientLogoCardProps) {
           </div>
 
           <div className="mb-2">
-            <label className="form-label small fw-bold text-white">Texto Alt (opcional)</label>
+            <label className="form-label small fw-bold text-white mb-1">Alt Text</label>
             <input
               type="text"
               className="form-control form-control-sm"
               value={editedClient.alt || ''}
               onChange={(e) => setEditedClient({ ...editedClient, alt: e.target.value })}
-              placeholder="Logo de la empresa"
+              placeholder="Descripción"
             />
           </div>
 
-          {/* Preview de la imagen */}
           {editedClient.imageUrl && (
             <div className="text-center mb-2">
               <img
@@ -346,17 +358,18 @@ function ClientLogoCard({ client, helpers }: ClientLogoCardProps) {
             </div>
           )}
 
-          {/* Botones de acción */}
           <div className="d-flex gap-2 justify-content-end mt-3">
             <button 
+              type="button" 
               className="btn btn-sm btn-secondary"
-              onClick={helpers.onCancelEdit}
+              onClick={handleCancelClick}
             >
               Cancelar
             </button>
             <button 
+              type="button"
               className="btn btn-sm btn-primary"
-              onClick={() => helpers.onSaveItem(editedClient)}
+              onClick={handleSaveClick}
             >
               Guardar
             </button>
@@ -378,16 +391,21 @@ function ClientLogoCard({ client, helpers }: ClientLogoCardProps) {
         alt={client.alt || client.name}
         className="client-logo img-fluid"
         onError={(e) => {
-          e.currentTarget.src = 'https://via.placeholder.com/140x40?text=Logo';
+          e.currentTarget.src = 'https://www.svgrepo.com/show/508699/landscape-placeholder.svg';
         }}
       />
       
-      {/* Controles de admin - aparecen al hacer hover */}
       {isAdmin && (
         <div className="admin-controls-overlay">
           <AdminControls
-            onEdit={helpers.onEdit}
-            onDelete={helpers.onDelete}
+            onEdit={(e) => {
+                if(e) e.stopPropagation();
+                helpers.onEdit();
+            }}
+            onDelete={(e) => {
+                if(e) e.stopPropagation();
+                helpers.onDelete();
+            }}
             onMoveUp={helpers.onMoveUp}
             onMoveDown={helpers.onMoveDown}
             canMoveUp={helpers.canMoveUp}

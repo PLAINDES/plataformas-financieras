@@ -1,6 +1,6 @@
 // src/components/editable/EditableCollection.tsx
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { CollectionItem, EditableCollectionData } from '../../types/editable.types';
 import { useAuthContext } from '../../hooks/useAuthContext';
 
@@ -48,6 +48,10 @@ export function EditableCollection<T extends CollectionItem>({
 
   
   const { isAdmin } = useAuthContext();
+  useEffect(() => {
+      setItems(data.items);
+      setEditingId(null);
+    }, [data.items]);
 
 
   const handleAdd = () => {

@@ -2,15 +2,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { EditableCollection, AdminControls } from '../../../components/editable/EditableCollection';
-import { EditableText } from '../../../components/editable/EditableText';
-import { EditableImage } from '../../../components/editable/EditableImage';
-import { EditableLink } from '../../../components/editable/EditableLink';
 import { useAuthContext } from '../../../hooks/useAuthContext';
-import type { EditableContent, VideoData, LinkData, EditableCollectionData, CollectionItem } from '../../../types/editable.types';
+import type { EditableContent, EditableCollectionData, CollectionItem } from '../../../types/editable.types';
 
-// Tipo para el card editable (extendido del legacy)
+// Tipo para el card editable
 interface PlatformCardItem extends CollectionItem {
-  title: string;
+  name: string;
+  title?: string; // Para compatibilidad interna
   caption: string;
   description?: string;
   imageUrl: string;
@@ -22,42 +20,83 @@ interface PlatformCardItem extends CollectionItem {
 }
 
 interface PlatformCardsSectionProps {
-  sectionTitle?: string;
-  sectionSubtitle?: string;
-  cards?: PlatformCardItem[];
+  content?: {
+    title?: string;
+    subtitle?: string;
+    items?: Array<{
+      id: string;
+      name: string;
+      caption: string;
+      description?: string;
+      imageUrl: string;
+      videoUrl: string;
+      hoverVideoUrl?: string;
+      ctaUrl?: string;
+      libraryUrl?: string;
+      ribbon?: string;
+    }>;
+  };
+  onSave?: (content: EditableContent) => Promise<void>;
+  onSaveCollection?: (data: EditableCollectionData<PlatformCardItem>) => Promise<void>;
 }
 
 export function PlatformCardsSection({
-  sectionTitle = '',
-  sectionSubtitle = '',
-  cards = [],
+  content = {},
+  onSave,
+  onSaveCollection,
 }: PlatformCardsSectionProps) {
   const { isAdmin } = useAuthContext();
   
-  // Convertir cards legacy a formato editable
+  // Convertir content.items a formato editable
   const [cardsData, setCardsData] = useState<EditableCollectionData<PlatformCardItem>>({
     id: 'platform-cards',
-    section: 'platform',
-    items: cards.map((card, index) => ({
+    section: 'platforms',
+    items: (content.items || []).map((card, index) => ({
       ...card,
-      order: card.order ?? index,
+      title: card.name, // Mapear name → title para compatibilidad interna
+      order: index,
       hoverVideoUrl: card.hoverVideoUrl || card.videoUrl,
     })),
   });
 
+  // Actualizar cuando cambie el content
+  useEffect(() => {
+    if (content.items) {
+      setCardsData({
+        id: 'platform-cards',
+        section: 'platforms',
+        items: content.items.map((card, index) => ({
+          ...card,
+          title: card.name,
+          order: index,
+          hoverVideoUrl: card.hoverVideoUrl || card.videoUrl,
+        })),
+      });
+    }
+  }, [content]);
+
   const [activeVideoUrl, setActiveVideoUrl] = useState<string>(cardsData.items[0]?.videoUrl || '');
-  const [activeVideoTitle, setActiveVideoTitle] = useState<string>(cardsData.items[0]?.title || '');
+  const [activeVideoTitle, setActiveVideoTitle] = useState<string>(cardsData.items[0]?.name || '');
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(cardsData.items[0]?.id || null);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
 
+  // Actualizar video activo cuando cambien los items
+  useEffect(() => {
+    if (cardsData.items.length > 0 && !activeVideoUrl) {
+      const firstCard = cardsData.items[0];
+      setActiveVideoUrl(firstCard.videoUrl);
+      setActiveVideoTitle(firstCard.name);
+      setHoveredCardId(firstCard.id);
+    }
+  }, [cardsData.items]);
+
   const handleCardClick = (card: PlatformCardItem, index: number) => {
     setActiveVideoUrl(card.videoUrl);
-    setActiveVideoTitle(card.title);
+    setActiveVideoTitle(card.name);
     setHoveredCardId(card.id);
     
-    // Centramos el card al hacer click
     scrollToCard(index);
     
     if (videoRef.current) {
@@ -70,7 +109,7 @@ export function PlatformCardsSection({
     if (window.innerWidth >= 992) {
       const videoUrl = card.hoverVideoUrl || card.videoUrl;
       setActiveVideoUrl(videoUrl);
-      setActiveVideoTitle(card.title);
+      setActiveVideoTitle(card.name);
       setHoveredCardId(card.id);
       if (videoRef.current) {
         videoRef.current.load();
@@ -79,7 +118,6 @@ export function PlatformCardsSection({
     }
   };
 
-  // Navegación del carrusel con centrado
   const scrollToCard = (index: number) => {
     if (!cardsContainerRef.current) return;
     
@@ -116,7 +154,6 @@ export function PlatformCardsSection({
     handleCardClick(cardsData.items[newIndex], newIndex);
   };
 
-  // Detectar scroll para actualizar indicador
   useEffect(() => {
     const container = cardsContainerRef.current;
     if (!container) return;
@@ -160,23 +197,28 @@ export function PlatformCardsSection({
 
   const handleSaveCards = async (data: EditableCollectionData<PlatformCardItem>) => {
     console.log('Saving platform cards:', data);
+    
+    // Actualizar estado local
     setCardsData(data);
     
     // Actualizar video activo si el card actual fue eliminado
     if (!data.items.find(item => item.id === hoveredCardId) && data.items.length > 0) {
       const firstCard = data.items[0];
       setActiveVideoUrl(firstCard.videoUrl);
-      setActiveVideoTitle(firstCard.title);
+      setActiveVideoTitle(firstCard.name);
       setHoveredCardId(firstCard.id);
     }
     
-    // TODO: Backend call
-    // await fetch('/api/content/platform', { method: 'PUT', body: JSON.stringify(data) });
+    // Llamar al handler del padre si existe
+    if (onSaveCollection) {
+      await onSaveCollection(data);
+    }
   };
 
   const createNewCard = (): PlatformCardItem => ({
     id: `card_${Date.now()}`,
     order: cardsData.items.length,
+    name: 'Nuevo Módulo',
     title: 'Nuevo Módulo',
     caption: 'Sistema de Gestión',
     description: 'Descripción del módulo',
@@ -192,13 +234,7 @@ export function PlatformCardsSection({
       <section className="platform-section">
         <div className="container-fluid px-3 px-md-4 px-lg-5">
           
-          {/* Títulos opcionales */}
-          {(sectionTitle || sectionSubtitle) && (
-            <div className="text-center mb-5">
-              {sectionTitle && <h2 className="fw-bold">{sectionTitle}</h2>}
-              {sectionSubtitle && <p className="text-muted">{sectionSubtitle}</p>}
-            </div>
-          )}
+   
 
           {/* Contenedor principal */}
           <div className="platform-content">
@@ -270,8 +306,6 @@ export function PlatformCardsSection({
                   >
                     <i className="bi bi-chevron-right"></i>
                   </button>
-
-            
                 </>
               )}
             </div>
@@ -280,7 +314,7 @@ export function PlatformCardsSection({
         </div>
       </section>
 
-      {/* Estilos con carrusel centrado en mobile y diseño horizontal en desktop */}
+      {/* Estilos (mantener los mismos) */}
       <style>{`
         .platform-section {
           padding: 3rem;
@@ -328,18 +362,12 @@ export function PlatformCardsSection({
           z-index: 10;
         }
 
-        /* ============================================ */
-        /* CARRUSEL WRAPPER CON CONTROLES */
-        /* ============================================ */
         .cards-container-wrapper {
           position: relative;
           width: 100%;
           order: 2;
         }
 
-        /* ============================================ */
-        /* CARRUSEL CENTRADO - MOBILE */
-        /* ============================================ */
         .cards-container {
           width: 100%;
           overflow-x: auto;
@@ -355,7 +383,6 @@ export function PlatformCardsSection({
           display: none;
         }
 
-        /* Mobile pequeño (<670px): Un solo card centrado */
         @media (max-width: 669px) {
           .cards-flex-wrapper {
             display: flex;
@@ -377,7 +404,6 @@ export function PlatformCardsSection({
           }
         }
 
-        /* Mobile medio/Tablet (670px - 991px): Dos cards visibles */
         @media (min-width: 670px) and (max-width: 991px) {
           .cards-flex-wrapper {
             display: flex;
@@ -420,7 +446,6 @@ export function PlatformCardsSection({
           overflow-y: auto;
         }
 
-        /* Mobile: destacar card activo */
         @media (max-width: 991.98px) {
           .video-card.active {
             border: 2px solid #0d6efd;
@@ -429,9 +454,6 @@ export function PlatformCardsSection({
           }
         }
 
-        /* ============================================ */
-        /* BOTONES DE NAVEGACIÓN */
-        /* ============================================ */
         .carousel-nav-btn {
           position: absolute;
           top: 50%;
@@ -470,58 +492,12 @@ export function PlatformCardsSection({
           right: 8px;
         }
 
-        /* Ocultar botones en desktop */
         @media (min-width: 992px) {
           .carousel-nav-btn {
             display: none;
           }
         }
 
-        /* ============================================ */
-        /* INDICADORES DE POSICIÓN */
-        /* ============================================ */
-        .carousel-indicators {
-          position: absolute;
-          bottom: -2.5rem;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          gap: 8px;
-          z-index: 15;
-        }
-
-        .carousel-indicator {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          border: none;
-          background: #cbd5e1;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          padding: 0;
-        }
-
-        .carousel-indicator:hover {
-          background: #94a3b8;
-          transform: scale(1.2);
-        }
-
-        .carousel-indicator.active {
-          background: #0d6efd;
-          width: 24px;
-          border-radius: 4px;
-        }
-
-        /* Ocultar indicadores en desktop */
-        @media (min-width: 992px) {
-          .carousel-indicators {
-            display: none;
-          }
-        }
-
-        /* ============================================ */
-        /* ESTILOS DE CARD */
-        /* ============================================ */
         .card-image-wrapper {
           position: relative;
           width: 100%;
@@ -620,16 +596,12 @@ export function PlatformCardsSection({
           color: #ffffff;
         }
 
-        /* ============================================ */
-        /* TABLET Y DESKTOP */
-        /* ============================================ */
         @media (min-width: 768px) {
           .video-wrapper {
             max-width: 90%;
           }
         }
 
-        /* Desktop: layout horizontal (MANTENER DISEÑO ORIGINAL) */
         @media (min-width: 992px) {
           .platform-content {
             flex-direction: row;
@@ -766,20 +738,16 @@ function PlatformCard({
     }
   };
 
-  // Modo edición: mostrar formulario compacto
   if (isEditing) {
     return <CardEditor card={card} onSave={helpers.onSaveItem} onCancel={helpers.onCancelEdit} />;
   }
 
-
-  // Modo normal
   return (
     <div
       className={`video-card ${isActive ? 'active' : ''}`}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
     >
-      {/* Admin Controls */}
       {helpers.onEdit && (
         <AdminControls
           onEdit={helpers.onEdit}
@@ -792,23 +760,20 @@ function PlatformCard({
         />
       )}
 
-      {/* Imagen */}
       <div className="card-image-wrapper">
         <div className="card-img-container">
           {card.ctaUrl ? (
             <a href={card.ctaUrl} target="_blank" rel="noopener noreferrer">
-              <img src={card.imageUrl} alt={card.title} />
+              <img src={card.imageUrl} alt={card.name} />
             </a>
           ) : (
-            <img src={card.imageUrl} alt={card.title} />
+            <img src={card.imageUrl} alt={card.name} />
           )}
         </div>
 
-        {/* Ribbon */}
         {card.ribbon && <div className="ribbon-badge">{card.ribbon}</div>}
       </div>
 
-      {/* Contenido */}
       <div className="card-content">
         <span className="card-caption">{card.caption}</span>
         {card.description && (
@@ -818,7 +783,6 @@ function PlatformCard({
         )}
       </div>
 
-      {/* Acciones */}
       <div className="card-actions">
         {card.ctaUrl ? (
           <>
@@ -877,7 +841,12 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
   const [formData, setFormData] = useState(card);
 
   const handleSubmit = () => {
-    onSave(formData);
+    // Asegurar que name y title estén sincronizados
+    const dataToSave = {
+      ...formData,
+      title: formData.name,
+    };
+    onSave(dataToSave);
   };
 
   return (
@@ -887,15 +856,14 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
       </h6>
 
       <div style={{ display: 'grid', gap: '0.75rem' }}>
-        {/* Título */}
         <div>
           <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
-            Título
+            Nombre
           </label>
           <input
             type="text"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value, title: e.target.value })}
             style={{
               width: '100%',
               padding: '6px 8px',
@@ -906,7 +874,6 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
           />
         </div>
 
-        {/* Caption */}
         <div>
           <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
             Caption
@@ -925,7 +892,6 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
           />
         </div>
 
-        {/* Descripción */}
         <div>
           <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
             Descripción
@@ -945,7 +911,6 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
           />
         </div>
 
-        {/* URL de imagen */}
         <div>
           <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
             Imagen URL
@@ -964,7 +929,6 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
           />
         </div>
 
-        {/* URL de video */}
         <div>
           <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
             Video URL
@@ -983,7 +947,6 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
           />
         </div>
 
-        {/* CTA URL */}
         <div>
           <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
             CTA URL (opcional)
@@ -1003,7 +966,6 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
           />
         </div>
 
-        {/* Library URL */}
         <div>
           <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
             Library URL (opcional)
@@ -1023,7 +985,6 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
           />
         </div>
 
-        {/* Ribbon */}
         <div>
           <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
             Ribbon (opcional)
@@ -1044,7 +1005,6 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
         </div>
       </div>
 
-      {/* Botones */}
       <div style={{ display: 'flex', gap: '6px', marginTop: '1rem' }}>
         <button
           onClick={onCancel}
