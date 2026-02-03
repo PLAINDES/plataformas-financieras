@@ -1,15 +1,14 @@
-// src/components/layout/Header.tsx
+// landingheader.tsx
 
 import { useState, useEffect } from 'react';
-import { Logo } from '../components/common/Logo';
-import { UserMenu } from '../components/common/UserMenu';
-import { MobileMenuToggle } from '../components/common/MobileMenuToggle';
-import { LoginModal } from '../auth/LoginModal';
-import { RegisterModal } from '../auth/RegisterModal';
-import { useAuthModal } from '../../hooks/useAuthModal';
-import type { MenuItem, Company, User, LoginCredentials } from '../../types';
-import { EditableImage } from '../editable/EditableImage';
-
+import { Logo } from '../../../components/components/common/Logo';
+import { UserMenu } from '../../../components/components/common/UserMenu';
+import { MobileMenuToggle } from '../../../components/components/common/MobileMenuToggle';
+import { LoginModal } from '../../../components/auth/LoginModal';
+import { RegisterModal } from '../../../components/auth/RegisterModal';
+import { useAuthModal } from '../../../hooks/useAuthModal';
+import type { MenuItem, Company, User, LoginCredentials } from '../../../types';
+import { EditableImage } from '../../../components/editable/EditableImage';
 
 
 interface RegisterData {
@@ -28,7 +27,7 @@ interface HeaderProps {
   onRegister: (data: RegisterData) => Promise<void>;
 }
 
-export function Header({ 
+export function LandingHeader({ 
   company, 
   menuItems, 
   user, 

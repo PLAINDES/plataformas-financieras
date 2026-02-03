@@ -2,10 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { BenefitsContent } from '../../../types/landing.types';
+import type { EditableContent } from '../../../types/editable.types';
+import { EditableText } from '../../../components/editable/EditableText';
 
 interface BenefitsSectionProps {
   content: BenefitsContent;
-  isAdmin: boolean;
+    onSave: (content: EditableContent) => Promise<void>;
+
 }
 
 // Tipos para los datos del gráfico
@@ -19,7 +22,7 @@ interface YearOption {
   year: number;
 }
 
-export function BenefitsSection({}: BenefitsSectionProps) {
+export function BenefitsSection({content, onSave}: BenefitsSectionProps) {
   // Estados para los filtros
   const [selectedIndustry, setSelectedIndustry] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<number | ''>('');
@@ -107,14 +110,12 @@ export function BenefitsSection({}: BenefitsSectionProps) {
               
               {/* Header */}
               <div className="text-center m-4 mb-md-7">
-                <h3 className="fw-semibold mb-3 fs-4">
-                 {/*   {content.title || '¿Qué tan riesgosa es su industria?'}   */}
-                  ¿Qué tan riesgosa es su industria?
-                </h3>
-                <p className="opacity-50 fs-6 fs-md-4 px-3 py-1">
-              {/*     {content.subtitle || ''}  */}
-                  Revise el riesgo en el que se encuentra su empresa
-                </p>
+                
+                <EditableText content={{  value: content.title,  id: 'title', type: 'text', section: 'benefits' }}
+                              onSave={onSave} as="h3" className="fw-semibold mb-3 fs-4" />
+
+                <EditableText content={{  value: content.subtitle,  id: 'subtitle', type: 'text', section: 'benefits' }}
+                              onSave={onSave} as="h3" className="opacity-50 fs-6 fs-md-4 px-3 py-1" />
 
               </div>
 

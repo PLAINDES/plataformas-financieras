@@ -2,10 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import type { EditableContent } from '../../types/editable.types';
+import { useAuthContext } from '../../hooks/useAuthContext';
 
 interface EditableTextProps {
   content: EditableContent;
-  isAdmin: boolean;
   onSave: (content: EditableContent) => Promise<void>;
   className?: string;
   as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'span' | 'div';
@@ -13,7 +13,6 @@ interface EditableTextProps {
 
 export function EditableText({
   content,
-  isAdmin,
   onSave,
   className = '',
   as: Component = 'p',
@@ -22,23 +21,45 @@ export function EditableText({
   const [value, setValue] = useState(content.value);
   const [isSaving, setIsSaving] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { isAdmin } = useAuthContext();
+
+
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
     }
   }, [isEditing]);
-  
+
+  // Cerrar al hacer clic fuera
+  useEffect(() => {
+    if (!isEditing) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        handleCancel();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isEditing]);
+
   const handleSave = async () => {
-    if (value === content.value) {
+    const hasContentChanged = value !== content.value;
+
+    if (!hasContentChanged) {
       setIsEditing(false);
       return;
     }
-    
+
     setIsSaving(true);
     try {
-      await onSave({ ...content, value });
+      await onSave({
+        ...content,
+        value,
+      });
       setIsEditing(false);
     } catch (error) {
       console.error('Error saving:', error);
@@ -48,12 +69,12 @@ export function EditableText({
       setIsSaving(false);
     }
   };
-  
+
   const handleCancel = () => {
     setValue(content.value);
     setIsEditing(false);
   };
-  
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && e.ctrlKey) {
       handleSave();
@@ -61,53 +82,117 @@ export function EditableText({
       handleCancel();
     }
   };
-  
+
+
+
   if (!isAdmin) {
-    return <Component className={className}>{content.value}</Component>;
+    return (
+      <Component className={className}>
+        {content.value}
+      </Component>
+    );
   }
-  
+
   if (isEditing) {
     return (
-      <div className={`editable-text-wrapper ${className}`} style={{ position: 'relative' }}>
+      <div 
+        ref={containerRef}
+        style={{ 
+          position: 'relative',
+          display: 'inline-block',
+          minWidth: '200px',
+          width: '100%',
+        }}
+      >
+        {/* Textarea de edición */}
         <textarea
           ref={inputRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="form-control"
-          rows={3}
           disabled={isSaving}
           style={{
             width: '100%',
-            resize: 'vertical',
-            fontFamily: 'inherit',
+            minHeight: '40px',
+            padding: '8px 10px',
+            border: '2px solid #3b82f6',
+            borderRadius: '6px',
             fontSize: 'inherit',
+            fontFamily: 'inherit',
             lineHeight: 'inherit',
+            resize: 'vertical',
+            outline: 'none',
+            backgroundColor: 'white',
+            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)',
           }}
+          rows={1}
         />
-        <div className="d-flex gap-2 mt-2">
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="btn btn-sm btn-primary"
-          >
-            {isSaving ? 'Guardando...' : 'Guardar'}
-          </button>
-          <button
-            onClick={handleCancel}
-            disabled={isSaving}
-            className="btn btn-sm btn-secondary"
-          >
-            Cancelar
-          </button>
+
+        {/* Panel compacto debajo */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            right: 0,
+            backgroundColor: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '6px',
+            padding: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            zIndex: 1000,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}
+        >
+          {/* Botones principales */}
+          <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+       
+            <button
+              onClick={handleCancel}
+              disabled={isSaving}
+              style={{
+                padding: '4px 10px',
+                border: '1px solid #d1d5db',
+                background: 'white',
+                borderRadius: '4px',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                color: '#6b7280',
+              }}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              style={{
+                padding: '4px 12px',
+                border: 'none',
+                background: isSaving ? '#9ca3af' : '#3b82f6',
+                color: 'white',
+                borderRadius: '4px',
+                fontSize: '0.75rem',
+                cursor: isSaving ? 'not-allowed' : 'pointer',
+                fontWeight: '500',
+              }}
+            >
+              {isSaving ? '...' : 'Guardar'}
+            </button>
+          </div>
+
+         
+
+          {/* Ayuda */}
+          <div style={{ fontSize: '0.65rem', color: '#9ca3af', textAlign: 'center' }}>
+            Ctrl+Enter = Guardar • Esc = Cancelar
+          </div>
         </div>
-        <small className="text-muted d-block mt-1">
-          Ctrl+Enter para guardar, Esc para cancelar
-        </small>
       </div>
     );
   }
-  
+
   return (
     <Component
       className={`${className} editable-text`}
@@ -116,9 +201,10 @@ export function EditableText({
         cursor: 'pointer',
         outline: '2px dashed transparent',
         transition: 'outline 0.2s',
+        position: 'relative',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.outline = '2px dashed #009ef7';
+        e.currentTarget.style.outline = '2px dashed #3b82f6';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.outline = '2px dashed transparent';

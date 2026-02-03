@@ -1,22 +1,7 @@
 // src/services/cms.service.ts
 
 import { api } from './api';
-import type {
-  LandingDataResponse,
-  PageResponse,
-  PageWithSections,
-  PageCreate,
-  PageUpdate,
-  SectionResponse,
-  SectionCreate,
-  SectionUpdate,
-  ContactMessageCreate,
-  ContactMessageUpdate,
-  ContactMessageResponse,
-  MediaCreate,
-  MediaResponse,
-  AdminDashboardStats
-} from '../types/api.types';
+import type { LandingDataResponse } from '../types/landing.types';
 
 export class CMSService {
   private readonly basePath = 'cms';
@@ -27,147 +12,69 @@ export class CMSService {
    * Obtiene todos los datos para renderizar la landing page
    * @param slug - Si no se proporciona, retorna la homepage
    */
-  async getLandingData(): Promise<{ sections: SectionResponse[] }> {
-    const res = await fetch('/landing');
-    return res.json();
+  async getLandingData(): Promise<LandingDataResponse> {
+    const result = api.get<LandingDataResponse>(`${this.basePath}/landing`);
+    return result;
   }
 
-
-  // ==================== PAGES (ADMIN) ====================
+  // ==================== SECTIONS (PÚBLICO/ADMIN) ====================
 
   /**
-   * Lista todas las páginas (solo admin)
+   * Obtiene contenidos de una sección para edición
+   * @param sectionId - ID de la sección
    */
-  async getAllPages(token: string, statusFilter?: 'draft' | 'published'): Promise<PageResponse[]> {
-    const params = statusFilter ? { status_filter: statusFilter } : {};
-    return api.get<PageResponse[]>(`${this.basePath}/pages`, { token, params });
+  async getSectionContents(sectionId: number): Promise<{
+    section: {
+      id: number;
+      name: string;
+      component: string;
+      order: number;
+      is_visible: boolean;
+      page_id: number;
+    };
+    contents: Array<{
+      section_content_id: number;
+      order: number;
+      is_visible: boolean;
+      content: {
+        id: number;
+        slug: string;
+        data: Record<string, any>;
+        status: string;
+        content_type_id: number;
+      };
+    }>;
+  }> {
+    return api.get(`${this.basePath}/sections/${sectionId}/contents`);
   }
 
-  /**
-   * Obtiene una página con sus secciones (solo admin)
-   */
-  async getPage(pageId: number, token: string): Promise<PageWithSections> {
-    return api.get<PageWithSections>(`${this.basePath}/pages/${pageId}`, { token });
-  }
+  // ==================== CONTENT UPDATES (ADMIN) ====================
 
   /**
-   * Crea una nueva página (solo admin)
+   * Actualiza el contenido de una sección
+   * @param contentId - ID del contenido a actualizar
+   * @param data - Nuevos datos del contenido
+   * @param token - Token de autenticación
    */
-  async createPage(data: PageCreate, token: string): Promise<PageResponse> {
-    return api.post<PageResponse>(`${this.basePath}/pages`, data, { token });
-  }
-
-  /**
-   * Actualiza una página (solo admin)
-   */
-  async updatePage(pageId: number, data: PageUpdate, token: string): Promise<PageResponse> {
-    return api.put<PageResponse>(`${this.basePath}/pages/${pageId}`, data, { token });
-  }
-
-  /**
-   * Elimina una página (solo admin)
-   */
-  async deletePage(pageId: number, token: string): Promise<void> {
-    await api.delete(`${this.basePath}/pages/${pageId}`, { token });
-  }
-
-  // ==================== SECTIONS (ADMIN) ====================
-
-  /**
-   * Crea una nueva sección (solo admin)
-   */
-  async createSection(data: SectionCreate, token: string): Promise<SectionResponse> {
-    return api.post<SectionResponse>(`${this.basePath}/sections`, data, { token });
-  }
-
-  /**
-   * Actualiza una sección (solo admin)
-   */
-  async updateSection(
-    sectionId: number, 
-    data: SectionUpdate, 
-    token: string
-  ): Promise<SectionResponse> {
-    return api.put<SectionResponse>(`${this.basePath}/sections/${sectionId}`, data, { token });
-  }
-
-  /**
-   * Elimina una sección (solo admin)
-   */
-  async deleteSection(sectionId: number, token: string): Promise<void> {
-    await api.delete(`${this.basePath}/sections/${sectionId}`, { token });
-  }
-
-  // ==================== CONTACT ====================
-
-  /**
-   * Crea un mensaje de contacto (público)
-   */
-  async createContactMessage(data: ContactMessageCreate): Promise<ContactMessageResponse> {
-    return api.post<ContactMessageResponse>(`${this.basePath}/contact`, data);
-  }
-
-  /**
-   * Lista mensajes de contacto (solo admin)
-   */
-  async getContactMessages(
-    token: string,
-    statusFilter?: 'unread' | 'read' | 'replied',
-    limit?: number
-  ): Promise<ContactMessageResponse[]> {
-    const params: Record<string, any> = {};
-    if (statusFilter) params.status_filter = statusFilter;
-    if (limit) params.limit = limit;
-    
-    return api.get<ContactMessageResponse[]>(`${this.basePath}/contact`, { token, params });
-  }
-
-  /**
-   * Actualiza el estado de un mensaje (solo admin)
-   */
-  async updateMessageStatus(
-    messageId: number,
-    data: ContactMessageUpdate,
-    token: string
-  ): Promise<ContactMessageResponse> {
-    return api.patch<ContactMessageResponse>(
-      `${this.basePath}/contact/${messageId}`,
-      data,
-      { token }
-    );
-  }
-
-  // ==================== MEDIA (ADMIN) ====================
-
-  /**
-   * Lista archivos media (solo admin)
-   */
-  async getMedia(
-    token: string,
-    folder?: string,
-    mimeType?: string
-  ): Promise<MediaResponse[]> {
-    const params: Record<string, any> = {};
-    if (folder) params.folder = folder;
-    if (mimeType) params.mime_type = mimeType;
-    
-    return api.get<MediaResponse[]>(`${this.basePath}/media`, { token, params });
-  }
-
-  /**
-   * Registra un nuevo archivo media (solo admin)
-   */
-  async createMedia(data: MediaCreate, token: string): Promise<MediaResponse> {
-    return api.post<MediaResponse>(`${this.basePath}/media`, data, { token });
-  }
-
-  // ==================== DASHBOARD (ADMIN) ====================
-
-  /**
-   * Obtiene estadísticas para el dashboard admin
-   */
-  async getDashboardStats(token: string): Promise<AdminDashboardStats> {
-    return api.get<AdminDashboardStats>(`${this.basePath}/dashboard/stats`, { token });
+  async updateContent(
+    contentId: number,
+    data: {
+      data: Record<string, any>;
+      status?: 'draft' | 'published';
+    },
+    token: string | null = null
+  ): Promise<{
+    success: boolean;
+    message: string;
+    content: {
+      id: number;
+      slug: string;
+      data: Record<string, any>;
+      status: string;
+      updated_at: string;
+    };
+  }> {
+    return api.put(`${this.basePath}/contents/${contentId}`, data, { token });
   }
 }
 

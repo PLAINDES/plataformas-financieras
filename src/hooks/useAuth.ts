@@ -18,6 +18,8 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const isAdmin = user?.role === 'admin' || user?.perfil === 1;
+
   // Cargar usuario desde localStorage al montar
   useEffect(() => {
     const loadUser = async () => {
@@ -165,12 +167,8 @@ export function useAuth() {
     return localStorage.getItem(AUTH_TOKEN_KEY);
   }, []);
 
-  /**
-   * Verificar si el usuario es admin
-   */
-  const isAdmin = useCallback((): boolean => {
-    return user?.role === 'admin' || user?.perfil === 1;
-  }, [user]);
+ 
+
 
   return {
     user,

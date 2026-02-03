@@ -1,13 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+// src/app/landing/sections/PlatformCardsSection.tsx
 
-interface PlatformCard {
-  id: string;
+import React, { useState, useEffect, useRef } from 'react';
+import { EditableCollection, AdminControls } from '../../../components/editable/EditableCollection';
+import { EditableText } from '../../../components/editable/EditableText';
+import { EditableImage } from '../../../components/editable/EditableImage';
+import { EditableLink } from '../../../components/editable/EditableLink';
+import { useAuthContext } from '../../../hooks/useAuthContext';
+import type { EditableContent, VideoData, LinkData, EditableCollectionData, CollectionItem } from '../../../types/editable.types';
+
+// Tipo para el card editable (extendido del legacy)
+interface PlatformCardItem extends CollectionItem {
   title: string;
   caption: string;
   description?: string;
   imageUrl: string;
   videoUrl: string;
-  hoverVideoUrl: string;
+  hoverVideoUrl?: string;
   ctaUrl?: string;
   libraryUrl?: string;
   ribbon?: string;
@@ -16,67 +24,168 @@ interface PlatformCard {
 interface PlatformCardsSectionProps {
   sectionTitle?: string;
   sectionSubtitle?: string;
-  cards?: PlatformCard[];
+  cards?: PlatformCardItem[];
 }
 
 export function PlatformCardsSection({
   sectionTitle = '',
   sectionSubtitle = '',
-  cards = [
-    {
-      id: '1',
-      title: 'Módulo Kapital',
-      caption: 'Sistema de Gestión',
-      description: 'Administra tus recursos de manera eficiente',
-      imageUrl: 'https://via.placeholder.com/300x200/4F46E5/ffffff?text=Kapital',
-      videoUrl: '/video/Modulo%20Kapital%20-%20Kapitals.mp4',
-      hoverVideoUrl: '/video/Modulo%20Kapital%20-%20Kapitals.mp4',
-      ctaUrl: 'https://example.com/curso1',
-      libraryUrl: 'https://example.com/biblioteca1',
-      ribbon: 'Nuevo'
-    },
-    {
-      id: '2',
-      title: 'Módulo Valora',
-      caption: 'Analytics Avanzado',
-      description: 'Visualiza datos en tiempo real',
-      imageUrl: 'https://via.placeholder.com/300x200/7C3AED/ffffff?text=Valora',
-      videoUrl: '/video/Modulo%20Valora%20-%20Valora.mp4',
-      hoverVideoUrl: '/video/Modulo%20Valora%20-%20Valora.mp4',
-      ctaUrl: 'https://example.com/curso2',
-      libraryUrl: 'https://example.com/biblioteca2'
-    }
-  ]
+  cards = [],
 }: PlatformCardsSectionProps) {
-  const [activeVideoUrl, setActiveVideoUrl] = useState<string>(cards[0]?.videoUrl || '');
-  const [activeVideoTitle, setActiveVideoTitle] = useState<string>(cards[0]?.title || '');
-  const [hoveredCardId, setHoveredCardId] = useState<string | null>(cards[0]?.id || null);
+  const { isAdmin } = useAuthContext();
+  
+  // Convertir cards legacy a formato editable
+  const [cardsData, setCardsData] = useState<EditableCollectionData<PlatformCardItem>>({
+    id: 'platform-cards',
+    section: 'platform',
+    items: cards.map((card, index) => ({
+      ...card,
+      order: card.order ?? index,
+      hoverVideoUrl: card.hoverVideoUrl || card.videoUrl,
+    })),
+  });
+
+  const [activeVideoUrl, setActiveVideoUrl] = useState<string>(cardsData.items[0]?.videoUrl || '');
+  const [activeVideoTitle, setActiveVideoTitle] = useState<string>(cardsData.items[0]?.title || '');
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(cardsData.items[0]?.id || null);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
   const videoRef = useRef<HTMLVideoElement>(null);
-  console.log("activeVideo",activeVideoUrl)
-  console.log("activeVideoTitle",activeVideoTitle)
+  const cardsContainerRef = useRef<HTMLDivElement>(null);
 
-
-  const handleCardClick = (videoUrl: string, title: string, cardId: string) => {
-    setActiveVideoUrl(videoUrl);
-    setActiveVideoTitle(title);
-    setHoveredCardId(cardId);
-    // Reproducir el video automáticamente
+  const handleCardClick = (card: PlatformCardItem, index: number) => {
+    setActiveVideoUrl(card.videoUrl);
+    setActiveVideoTitle(card.title);
+    setHoveredCardId(card.id);
+    
+    // Centramos el card al hacer click
+    scrollToCard(index);
+    
     if (videoRef.current) {
       videoRef.current.load();
       videoRef.current.play();
     }
   };
 
-  const handleCardHover = (videoUrl: string, title: string, cardId: string) => {
-    setActiveVideoUrl(videoUrl);
-    setActiveVideoTitle(title);
-    setHoveredCardId(cardId);
-    // Reproducir el video automáticamente
-    if (videoRef.current) {
-      videoRef.current.load();
-      videoRef.current.play();
+  const handleCardHover = (card: PlatformCardItem) => {
+    if (window.innerWidth >= 992) {
+      const videoUrl = card.hoverVideoUrl || card.videoUrl;
+      setActiveVideoUrl(videoUrl);
+      setActiveVideoTitle(card.title);
+      setHoveredCardId(card.id);
+      if (videoRef.current) {
+        videoRef.current.load();
+        videoRef.current.play();
+      }
     }
   };
+
+  // Navegación del carrusel con centrado
+  const scrollToCard = (index: number) => {
+    if (!cardsContainerRef.current) return;
+    
+    const container = cardsContainerRef.current;
+    const cardElements = container.querySelectorAll('.video-card-wrapper');
+    
+    if (cardElements[index]) {
+      const card = cardElements[index] as HTMLElement;
+      
+      const containerWidth = container.offsetWidth;
+      const cardWidth = card.offsetWidth;
+      const cardLeft = card.offsetLeft;
+      
+      const scrollPosition = cardLeft - (containerWidth / 2) + (cardWidth / 2);
+      
+      container.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+      });
+      
+      setCurrentIndex(index);
+    }
+  };
+
+  const handlePrevCard = () => {
+    const newIndex = currentIndex > 0 ? currentIndex - 1 : cardsData.items.length - 1;
+    scrollToCard(newIndex);
+    handleCardClick(cardsData.items[newIndex], newIndex);
+  };
+
+  const handleNextCard = () => {
+    const newIndex = currentIndex < cardsData.items.length - 1 ? currentIndex + 1 : 0;
+    scrollToCard(newIndex);
+    handleCardClick(cardsData.items[newIndex], newIndex);
+  };
+
+  // Detectar scroll para actualizar indicador
+  useEffect(() => {
+    const container = cardsContainerRef.current;
+    if (!container) return;
+
+    let timeoutId: any;
+
+    const handleScroll = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        const scrollLeft = container.scrollLeft;
+        const containerWidth = container.offsetWidth;
+        const cards = container.querySelectorAll('.video-card-wrapper');
+        
+        let closestIndex = 0;
+        let closestDistance = Infinity;
+        
+        cards.forEach((card, index) => {
+          const cardElement = card as HTMLElement;
+          const cardCenter = cardElement.offsetLeft + cardElement.offsetWidth / 2;
+          const containerCenter = scrollLeft + containerWidth / 2;
+          const distance = Math.abs(cardCenter - containerCenter);
+          
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = index;
+          }
+        });
+        
+        if (closestIndex !== currentIndex) {
+          setCurrentIndex(closestIndex);
+        }
+      }, 100);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeoutId);
+    };
+  }, [currentIndex, cardsData.items.length]);
+
+  const handleSaveCards = async (data: EditableCollectionData<PlatformCardItem>) => {
+    console.log('Saving platform cards:', data);
+    setCardsData(data);
+    
+    // Actualizar video activo si el card actual fue eliminado
+    if (!data.items.find(item => item.id === hoveredCardId) && data.items.length > 0) {
+      const firstCard = data.items[0];
+      setActiveVideoUrl(firstCard.videoUrl);
+      setActiveVideoTitle(firstCard.title);
+      setHoveredCardId(firstCard.id);
+    }
+    
+    // TODO: Backend call
+    // await fetch('/api/content/platform', { method: 'PUT', body: JSON.stringify(data) });
+  };
+
+  const createNewCard = (): PlatformCardItem => ({
+    id: `card_${Date.now()}`,
+    order: cardsData.items.length,
+    title: 'Nuevo Módulo',
+    caption: 'Sistema de Gestión',
+    description: 'Descripción del módulo',
+    imageUrl: 'https://via.placeholder.com/300x200/4F46E5/ffffff?text=Nuevo',
+    videoUrl: '/video/default.mp4',
+    hoverVideoUrl: '/video/default.mp4',
+    ctaUrl: 'https://example.com/curso',
+    libraryUrl: 'https://example.com/biblioteca',
+  });
 
   return (
     <>
@@ -91,11 +200,10 @@ export function PlatformCardsSection({
             </div>
           )}
 
-          {/* Contenedor principal con flex */}
+          {/* Contenedor principal */}
           <div className="platform-content">
             
             {/* Video Container */}
-            
             <div className="video-container">
               <div className="video-wrapper">
                 <div className="video-responsive">
@@ -107,9 +215,8 @@ export function PlatformCardsSection({
                     style={{ width: '100%', aspectRatio: '16 / 9', background: '#000' }}
                     muted
                     loop
-                  >
-                  
-                  </video>
+                    playsInline
+                  />
                   <div className="video-title-overlay">
                     <span className="badge bg-dark bg-opacity-75 px-3 py-2">
                       {activeVideoTitle}
@@ -120,36 +227,67 @@ export function PlatformCardsSection({
             </div>
 
             {/* Cards Container */}
-            <div className="cards-container">
-              <div className="cards-wrapper">
-                {cards.map((card) => (
-                  <PlatformCard
-                    key={card.id}
-                    card={card}
-                    onActivate={handleCardClick}
-                    onHover={handleCardHover}
-                    isActive={hoveredCardId === card.id}
-                  />
-                ))}
+            <div className="cards-container-wrapper">
+              <div className="cards-container" ref={cardsContainerRef}>
+                <EditableCollection
+                  data={cardsData}
+                  onSave={handleSaveCards}
+                  createNewItem={createNewCard}
+                  addButtonText="Agregar Card"
+                  maxItems={10}
+                  allowReorder={true}
+                  className="cards-flex-wrapper"
+                  renderItem={(card, index, helpers) => (
+                    <div className="video-card-wrapper" key={card.id}>
+                      <PlatformCard
+                        card={card}
+                        isActive={hoveredCardId === card.id}
+                        isEditing={helpers.isEditing}
+                        onActivate={() => handleCardClick(card, index)}
+                        onHover={() => handleCardHover(card)}
+                        helpers={helpers}
+                      />
+                    </div>
+                  )}
+                />
               </div>
+
+              {/* Controles de navegación - solo mobile/tablet */}
+              {cardsData.items.length > 1 && (
+                <>
+                  <button 
+                    className="carousel-nav-btn carousel-nav-prev"
+                    onClick={handlePrevCard}
+                    aria-label="Card anterior"
+                  >
+                    <i className="bi bi-chevron-left"></i>
+                  </button>
+                  
+                  <button 
+                    className="carousel-nav-btn carousel-nav-next"
+                    onClick={handleNextCard}
+                    aria-label="Card siguiente"
+                  >
+                    <i className="bi bi-chevron-right"></i>
+                  </button>
+
+            
+                </>
+              )}
             </div>
 
           </div>
         </div>
       </section>
 
+      {/* Estilos con carrusel centrado en mobile y diseño horizontal en desktop */}
       <style>{`
-        /* ===================================
-           ESTRUCTURA BASE
-           =================================== */
-        
         .platform-section {
           padding: 3rem;
           display: flex;
           align-items: center;
         }
 
-        /* Contenedor principal - Mobile First */
         .platform-content {
           display: flex;
           flex-direction: column;
@@ -157,10 +295,6 @@ export function PlatformCardsSection({
           width: 100%;
         }
 
-        /* ===================================
-           VIDEO
-           =================================== */
-        
         .video-container {
           width: 100%;
           display: flex;
@@ -194,81 +328,200 @@ export function PlatformCardsSection({
           z-index: 10;
         }
 
-        /* ===================================
-           CARDS - MOBILE SWIPE
-           =================================== */
-        
-        .cards-container {
+        /* ============================================ */
+        /* CARRUSEL WRAPPER CON CONTROLES */
+        /* ============================================ */
+        .cards-container-wrapper {
+          position: relative;
           width: 100%;
           order: 2;
+        }
+
+        /* ============================================ */
+        /* CARRUSEL CENTRADO - MOBILE */
+        /* ============================================ */
+        .cards-container {
+          width: 100%;
           overflow-x: auto;
           overflow-y: hidden;
           -webkit-overflow-scrolling: touch;
-          scrollbar-width: none; /* Firefox - Ocultar scrollbar */
-          -ms-overflow-style: none; /* IE y Edge - Ocultar scrollbar */
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          scroll-snap-type: x mandatory;
+          scroll-behavior: smooth;
         }
 
-        /* Ocultar scrollbar en Chrome, Safari y Opera */
         .cards-container::-webkit-scrollbar {
           display: none;
         }
 
-        .cards-wrapper {
-          display: flex;
-          flex-direction: row;
-          gap: 1rem;
-          padding: 0.5rem 0;
-          justify-content: flex-start;
-          /* Permitir scroll horizontal suave */
-          scroll-snap-type: x mandatory;
+        /* Mobile pequeño (<670px): Un solo card centrado */
+        @media (max-width: 669px) {
+          .cards-flex-wrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 1rem;
+            padding: 1rem calc(50% - 145px);
+            justify-content: flex-start;
+            width: max-content;
+            align-items: stretch;
+          }
+
+          .video-card-wrapper {
+            position: relative;
+            width: 290px;
+            flex: 0 0 auto;
+            scroll-snap-align: center;
+            scroll-snap-stop: always;
+            transition: transform 0.3s ease;
+          }
         }
 
-        /* ===================================
-           CARD COMPONENT
-           =================================== */
-        
+        /* Mobile medio/Tablet (670px - 991px): Dos cards visibles */
+        @media (min-width: 670px) and (max-width: 991px) {
+          .cards-flex-wrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 1.5rem;
+            padding: 1rem calc(50% - 160px);
+            justify-content: flex-start;
+            width: max-content;
+            align-items: stretch;
+          }
+
+          .video-card-wrapper {
+            position: relative;
+            width: 40vw;
+            max-width: 280px;
+            min-width: 240px;
+            flex: 0 0 auto;
+            scroll-snap-align: center;
+            transition: transform 0.3s ease;
+          }
+        }
+
         .video-card {
-          flex: 0 0 auto;
-          width: 260px;
           background: white;
           border-radius: 12px;
           cursor: pointer;
+          height: 100%;
           transition: all 0.3s ease;
           display: flex;
           flex-direction: column;
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
           border: 2px solid transparent;
-          scroll-snap-align: start; /* Snap en mobile */
+          position: relative;
         }
 
-        /* Estado activo en mobile al hacer click */
+        .video-card.editing {
+          border: 2px solid #f59e0b;
+          box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+          height: 100%;
+          overflow-y: auto;
+        }
+
+        /* Mobile: destacar card activo */
         @media (max-width: 991.98px) {
           .video-card.active {
             border: 2px solid #0d6efd;
-            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
             transform: scale(1.02);
           }
         }
 
-        /* Efecto hover SOLO para desktop */
+        /* ============================================ */
+        /* BOTONES DE NAVEGACIÓN */
+        /* ============================================ */
+        .carousel-nav-btn {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          border: none;
+          background: rgba(255, 255, 255, 0.95);
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+          cursor: pointer;
+          z-index: 20;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.25rem;
+          color: #1a1a1a;
+          transition: all 0.3s ease;
+        }
+
+        .carousel-nav-btn:hover {
+          background: rgba(255, 255, 255, 1);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+          transform: translateY(-50%) scale(1.05);
+        }
+
+        .carousel-nav-btn:active {
+          transform: translateY(-50%) scale(0.95);
+        }
+
+        .carousel-nav-prev {
+          left: 8px;
+        }
+
+        .carousel-nav-next {
+          right: 8px;
+        }
+
+        /* Ocultar botones en desktop */
         @media (min-width: 992px) {
-          .video-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-          }
-
-          /* Border persistente cuando está activo */
-          .video-card.active {
-            border: 2px solid #0d6efd;
-            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
-          }
-
-          /* Efecto hover adicional cuando ya está activo */
-          .video-card.active:hover {
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15), 0 0 0 3px rgba(13, 110, 253, 0.15);
+          .carousel-nav-btn {
+            display: none;
           }
         }
 
+        /* ============================================ */
+        /* INDICADORES DE POSICIÓN */
+        /* ============================================ */
+        .carousel-indicators {
+          position: absolute;
+          bottom: -2.5rem;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          gap: 8px;
+          z-index: 15;
+        }
+
+        .carousel-indicator {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          border: none;
+          background: #cbd5e1;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          padding: 0;
+        }
+
+        .carousel-indicator:hover {
+          background: #94a3b8;
+          transform: scale(1.2);
+        }
+
+        .carousel-indicator.active {
+          background: #0d6efd;
+          width: 24px;
+          border-radius: 4px;
+        }
+
+        /* Ocultar indicadores en desktop */
+        @media (min-width: 992px) {
+          .carousel-indicators {
+            display: none;
+          }
+        }
+
+        /* ============================================ */
+        /* ESTILOS DE CARD */
+        /* ============================================ */
         .card-image-wrapper {
           position: relative;
           width: 100%;
@@ -303,6 +556,7 @@ export function PlatformCardsSection({
           font-size: 0.75rem;
           font-weight: 600;
           box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+          z-index: 10;
         }
 
         .card-content {
@@ -366,44 +620,16 @@ export function PlatformCardsSection({
           color: #ffffff;
         }
 
-        /* Indicador de swipe en mobile */
-        @media (max-width: 991.98px) {
-          .cards-container::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 40px;
-            background: linear-gradient(to right, transparent, rgba(248, 249, 250, 0.8));
-            pointer-events: none;
-          }
-        }
-
-        /* ===================================
-           TABLET
-           ≥ 768px
-           =================================== */
-        
+        /* ============================================ */
+        /* TABLET Y DESKTOP */
+        /* ============================================ */
         @media (min-width: 768px) {
           .video-wrapper {
             max-width: 90%;
           }
-
-          .cards-wrapper {
-            justify-content: center;
-          }
-
-          .video-card {
-            width: 280px;
-          }
         }
 
-        /* ===================================
-           DESKTOP
-           ≥ 992px
-           =================================== */
-        
+        /* Desktop: layout horizontal (MANTENER DISEÑO ORIGINAL) */
         @media (min-width: 992px) {
           .platform-content {
             flex-direction: row;
@@ -415,7 +641,6 @@ export function PlatformCardsSection({
             flex: 1;
             order: 2;
             justify-content: flex-start;
-            
           }
 
           .video-wrapper {
@@ -424,15 +649,19 @@ export function PlatformCardsSection({
             top: 2rem;
           }
 
-          .cards-container {
+          .cards-container-wrapper {
             flex: 1;
             order: 1;
+          }
+
+          .cards-container {
             overflow-x: hidden;
+            overflow-y: auto;
             max-height: 80vh;
             padding-right: 0.5rem;
-            /* Mostrar scrollbar en desktop */
             scrollbar-width: thin;
             scrollbar-color: rgba(0,0,0,0.2) transparent;
+            scroll-snap-type: none;
           }
 
           .cards-container::-webkit-scrollbar {
@@ -449,37 +678,45 @@ export function PlatformCardsSection({
             border-radius: 3px;
           }
 
-          .cards-wrapper {
+          .cards-flex-wrapper {
+            display: flex;
             flex-direction: row;
             justify-content: center;
             gap: 1.5rem;
             height: 300px;
-            scroll-snap-type: none;
+            padding: 0;
+            width: 100%;
           }
 
-          .video-card {
+          .video-card-wrapper {
             width: 100%;
             max-width: 200px;
             margin: 0 auto;
             scroll-snap-align: none;
+            scroll-snap-stop: normal;
           }
 
-          .cards-container::after {
-            display: none;
+          .video-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+          }
+
+          .video-card.active {
+            border: 2px solid #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+          }
+
+          .video-card.active:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15), 0 0 0 3px rgba(13, 110, 253, 0.15);
           }
         }
 
-        /* ===================================
-           DESKTOP GRANDE
-           ≥ 1200px
-           =================================== */
-        
         @media (min-width: 1200px) {
           .platform-content {
             gap: 0rem;
           }
 
-          .video-card {
+          .video-card-wrapper {
             max-width: 250px;
           }
 
@@ -487,10 +724,7 @@ export function PlatformCardsSection({
             font-size: 0.8rem;
           }
           
-          .cards-wrapper {
-            flex-direction: row;
-            justify-content: center;
-            gap: 1.5rem;
+          .cards-flex-wrapper {
             height: 420px;
           }
         }
@@ -499,57 +733,79 @@ export function PlatformCardsSection({
   );
 }
 
-// Card Component
+// ============================================
+// CARD COMPONENT
+// ============================================
+
 interface PlatformCardProps {
-  card: PlatformCard;
-  onActivate: (videoUrl: string, title: string, cardId: string) => void;
-  onHover: (videoUrl: string, title: string, cardId: string) => void;
+  card: PlatformCardItem;
   isActive: boolean;
+  isEditing: boolean;
+  onActivate: () => void;
+  onHover: () => void;
+  helpers: any;
 }
 
-function PlatformCard({ card, onActivate, onHover, isActive }: PlatformCardProps) {
+function PlatformCard({
+  card,
+  isActive,
+  isEditing,
+  onActivate,
+  onHover,
+  helpers,
+}: PlatformCardProps) {
   const handleClick = () => {
-    // En mobile, siempre usar click
-    onActivate(card.videoUrl, card.title, card.id);
-  };
-
-  const handleMouseEnter = () => {
-    // Solo activar hover en desktop
-    if (window.innerWidth >= 992) {
-      onHover(card.hoverVideoUrl, card.title, card.id);
+    if (!isEditing) {
+      onActivate();
     }
   };
 
+  const handleMouseEnter = () => {
+    if (!isEditing && window.innerWidth >= 992) {
+      onHover();
+    }
+  };
+
+  // Modo edición: mostrar formulario compacto
+  if (isEditing) {
+    return <CardEditor card={card} onSave={helpers.onSaveItem} onCancel={helpers.onCancelEdit} />;
+  }
+
+
+  // Modo normal
   return (
     <div
       className={`video-card ${isActive ? 'active' : ''}`}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
     >
+      {/* Admin Controls */}
+      {helpers.onEdit && (
+        <AdminControls
+          onEdit={helpers.onEdit}
+          onDelete={helpers.onDelete}
+          onMoveUp={helpers.onMoveUp}
+          onMoveDown={helpers.onMoveDown}
+          canMoveUp={helpers.canMoveUp}
+          canMoveDown={helpers.canMoveDown}
+          position="top-right"
+        />
+      )}
+
       {/* Imagen */}
       <div className="card-image-wrapper">
         <div className="card-img-container">
           {card.ctaUrl ? (
             <a href={card.ctaUrl} target="_blank" rel="noopener noreferrer">
-              <img
-                src={card.imageUrl}
-                alt={card.title}
-              />
+              <img src={card.imageUrl} alt={card.title} />
             </a>
           ) : (
-            <img
-              src={card.imageUrl}
-              alt={card.title}
-            />
+            <img src={card.imageUrl} alt={card.title} />
           )}
         </div>
 
         {/* Ribbon */}
-        {card.ribbon && (
-          <div className="ribbon-badge">
-            {card.ribbon}
-          </div>
-        )}
+        {card.ribbon && <div className="ribbon-badge">{card.ribbon}</div>}
       </div>
 
       {/* Contenido */}
@@ -602,6 +858,224 @@ function PlatformCard({ card, onActivate, onHover, isActive }: PlatformCardProps
             </button>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// CARD EDITOR
+// ============================================
+
+interface CardEditorProps {
+  card: PlatformCardItem;
+  onSave: (updates: Partial<PlatformCardItem>) => Promise<void>;
+  onCancel: () => void;
+}
+
+function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
+  const [formData, setFormData] = useState(card);
+
+  const handleSubmit = () => {
+    onSave(formData);
+  };
+
+  return (
+    <div className="video-card editing" style={{ padding: '1rem', minWidth: '300px', maxWidth: '350px' }}>
+      <h6 style={{ marginBottom: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>
+        Editando Card
+      </h6>
+
+      <div style={{ display: 'grid', gap: '0.75rem' }}>
+        {/* Título */}
+        <div>
+          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+            Título
+          </label>
+          <input
+            type="text"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            style={{
+              width: '100%',
+              padding: '6px 8px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              fontSize: '0.8rem',
+            }}
+          />
+        </div>
+
+        {/* Caption */}
+        <div>
+          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+            Caption
+          </label>
+          <input
+            type="text"
+            value={formData.caption}
+            onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
+            style={{
+              width: '100%',
+              padding: '6px 8px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              fontSize: '0.8rem',
+            }}
+          />
+        </div>
+
+        {/* Descripción */}
+        <div>
+          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+            Descripción
+          </label>
+          <textarea
+            value={formData.description || ''}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            rows={2}
+            style={{
+              width: '100%',
+              padding: '6px 8px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              fontSize: '0.8rem',
+              resize: 'vertical',
+            }}
+          />
+        </div>
+
+        {/* URL de imagen */}
+        <div>
+          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+            Imagen URL
+          </label>
+          <input
+            type="url"
+            value={formData.imageUrl}
+            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+            style={{
+              width: '100%',
+              padding: '6px 8px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              fontSize: '0.75rem',
+            }}
+          />
+        </div>
+
+        {/* URL de video */}
+        <div>
+          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+            Video URL
+          </label>
+          <input
+            type="url"
+            value={formData.videoUrl}
+            onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+            style={{
+              width: '100%',
+              padding: '6px 8px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              fontSize: '0.75rem',
+            }}
+          />
+        </div>
+
+        {/* CTA URL */}
+        <div>
+          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+            CTA URL (opcional)
+          </label>
+          <input
+            type="url"
+            value={formData.ctaUrl || ''}
+            onChange={(e) => setFormData({ ...formData, ctaUrl: e.target.value })}
+            placeholder="https://..."
+            style={{
+              width: '100%',
+              padding: '6px 8px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              fontSize: '0.75rem',
+            }}
+          />
+        </div>
+
+        {/* Library URL */}
+        <div>
+          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+            Library URL (opcional)
+          </label>
+          <input
+            type="url"
+            value={formData.libraryUrl || ''}
+            onChange={(e) => setFormData({ ...formData, libraryUrl: e.target.value })}
+            placeholder="https://..."
+            style={{
+              width: '100%',
+              padding: '6px 8px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              fontSize: '0.75rem',
+            }}
+          />
+        </div>
+
+        {/* Ribbon */}
+        <div>
+          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+            Ribbon (opcional)
+          </label>
+          <input
+            type="text"
+            value={formData.ribbon || ''}
+            onChange={(e) => setFormData({ ...formData, ribbon: e.target.value })}
+            placeholder="Nuevo, Popular..."
+            style={{
+              width: '100%',
+              padding: '6px 8px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              fontSize: '0.75rem',
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Botones */}
+      <div style={{ display: 'flex', gap: '6px', marginTop: '1rem' }}>
+        <button
+          onClick={onCancel}
+          style={{
+            flex: 1,
+            padding: '6px',
+            border: '1px solid #d1d5db',
+            background: 'white',
+            borderRadius: '4px',
+            fontSize: '0.75rem',
+            cursor: 'pointer',
+          }}
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={handleSubmit}
+          style={{
+            flex: 1,
+            padding: '6px',
+            border: 'none',
+            background: '#3b82f6',
+            color: 'white',
+            borderRadius: '4px',
+            fontSize: '0.75rem',
+            cursor: 'pointer',
+            fontWeight: '500',
+          }}
+        >
+          Guardar
+        </button>
       </div>
     </div>
   );

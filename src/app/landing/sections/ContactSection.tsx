@@ -1,12 +1,44 @@
-import React from 'react';
+// src/app/landing/sections/ContactSection.tsx
 
-export function ContactSection() {
-  const [isFlipped, setIsFlipped] = React.useState(false);
-  const [formData, setFormData] = React.useState({
-    name: '',
-    email: '',
-    message: ''
-  });
+import React, { useState } from 'react';
+import { EditableText } from "../../../components/editable/EditableText";
+import { EditableImage } from '../../../components/editable/EditableImage';
+import { EditableForm } from '../../../components/editable/EditableForm';
+import type { EditableContent } from '../../../types/editable.types';
+import { useAuthContext } from '../../../hooks/useAuthContext';
+
+interface ContactFormConfig {
+  fields: FormField[];
+  submitButtonText: string;
+  successMessage: string;
+}
+
+interface FormField {
+  id: string;
+  name: string;
+  label: string;
+  type: 'text' | 'email' | 'textarea';
+  placeholder: string;
+  required: boolean;
+  rows?: number;
+}
+
+interface ContactSectionProps {
+  content: {
+    title?: string;
+    subtitle?: string;
+    imageUrl?: string;
+    form?: ContactFormConfig;
+  };
+  onSave?: (data: EditableContent) => Promise<void>;
+}
+
+
+export function ContactSection({content, onSave}: ContactSectionProps) {
+  
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [formData, setFormData] = useState<Record<string, string>>({});
+  const { isAdmin } = useAuthContext();
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
@@ -15,13 +47,29 @@ export function ContactSection() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Form submitted:', formData);
-    alert('¡Mensaje enviado! Nos pondremos en contacto contigo pronto.');
+    alert(content.form?.successMessage || 'Form submitted successfully');
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSaveContent = async (editableContent: EditableContent) => {
+    await onSave({
+      section: 'contact',
+      field: editableContent.id,
+      value: editableContent.value,
+    });
+  };
+
+  const handleSaveFormConfig = async (config: ContactFormConfig) => {
+    await onSave({
+      section: 'contact',
+      field: 'formConfig',
+      value: config,
     });
   };
 
@@ -35,70 +83,53 @@ export function ContactSection() {
             <div className="col-lg-6 d-flex align-items-center justify-content-center p-5 p-xl-8">
               <div className="w-100" style={{ maxWidth: '600px' }}>
                 <div className="mb-5">
-                  <h2 className="h3 fw-bold text-dark mb-2">Contacta con nosotros</h2>
-                  <p className="text-muted mb-0">¡Estamos aquí para ayudarte!</p>
+                  <EditableText 
+                    content={{ 
+                      value: content.title ?? '', 
+                      id: 'title', 
+                      type: 'text', 
+                      section: 'contact' 
+                    }}
+                    onSave={onSave} 
+                    as="h2" 
+                    className="fs-5 fs-md-4 fw-semibold text-dark mb-2 mb-md-3" 
+                  />
+                  <EditableText 
+                    content={{ 
+                      value: content.subtitle ?? '', 
+                      id: 'subtitle', 
+                      type: 'text', 
+                      section: 'contact' 
+                    }}
+                    onSave={onSave} 
+                    as="p" 
+                    className="text-muted mb-0" 
+                  />
                 </div>
 
-                <div className="card border-0 shadow-sm">
-                  <div className="card-body p-4">
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold small">Nombre y Apellido</label>
-                      <input 
-                        type="text" 
-                        name="name"
-                        className="form-control" 
-                        placeholder="Aquí va tu nombre"
-                        value={formData.name}
-                        onChange={handleChange}
-                      />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold small">Email</label>
-                      <input 
-                        type="email" 
-                        name="email"
-                        className="form-control" 
-                        placeholder="you@company.com"
-                        value={formData.email}
-                        onChange={handleChange}
-                      />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold small">Mensaje</label>
-                      <textarea 
-                        name="message"
-                        className="form-control" 
-                        rows={4} 
-                        placeholder="Escribe tu mensaje aquí..."
-                        value={formData.message}
-                        onChange={handleChange}
-                      ></textarea>
-                    </div>
-
-                    <button 
-                      type="button" 
-                      className="btn btn-primary w-100"
-                      onClick={handleSubmit}
-                    >
-                      Enviar Mensaje
-                    </button>
-                  </div>
-                </div>
+                {/* Formulario Editable */}
+                <EditableForm
+                  config={content.form || { fields: [], submitButtonText: 'Enviar', successMessage: '¡Mensaje enviado con éxito!' }}
+                  onSaveConfig={handleSaveFormConfig}
+                  onSubmit={handleSubmit}
+                  formData={formData}
+                  onChange={handleChange}
+                />
               </div>
             </div>
 
             <div className="col-lg-6 d-flex align-items-center justify-content-center bg-white p-5">
               <div className="text-center">
-                <img 
-                  src="images/web-contact.png" 
-                  alt="Contacto" 
-                  className="img-fluid"
-                  style={{ maxWidth: '100%', height: 'auto', maxHeight: '600px', objectFit: 'contain' }}
-                  onError={(e) => {
-                    e.currentTarget.src = 'https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=800&auto=format&fit=crop';
-                  }}
+                <EditableImage 
+                  content={{ 
+                    value: content.imageUrl ?? '', 
+                    id: 'contact-image', 
+                    type: 'image', 
+                    section: 'contact' 
+                  }} 
+                  onSave={handleSaveContent} 
+                  alt='Imagen de contacto' 
+                  className='img-fluid object-fit-contain img-max-h-600' 
                 />
               </div>
             </div>
@@ -106,14 +137,14 @@ export function ContactSection() {
 
           {/* Versión Mobile - Card con Flip */}
           <div className="d-lg-none w-100 px-3 py-4">
-            <div className="flip-card" style={{ perspective: '1000px', minHeight: '600px' }}>
+            <div className="flip-card" style={{ perspective: '1000px', minHeight: '650px' }}>
               <div 
                 className={`flip-card-inner ${isFlipped ? 'flipped' : ''}`}
                 style={{
                   position: 'relative',
                   width: '100%',
                   height: '100%',
-                  minHeight: '600px',
+                  minHeight: '650px',
                   transition: 'transform 0.6s',
                   transformStyle: 'preserve-3d',
                   transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
@@ -130,35 +161,63 @@ export function ContactSection() {
                     WebkitBackfaceVisibility: 'hidden'
                   }}
                 >
-                  <div className="card-body p-0 d-flex flex-column justify-content-between" style={{ height: '100%' }}>
-                    <div className="p-4 text-center flex-grow-1 d-flex flex-column justify-content-center bg-gradient" style={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                  <div className="card-body p-0 d-flex flex-column" style={{ height: '100%' }}>
+                    {/* Sección superior con gradiente y contenido */}
+                    <div className="flex-grow-1 d-flex flex-column justify-content-center align-items-center p-4 text-center bg-gradient" style={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      minHeight: '70%'
                     }}>
                       <div className="mb-4">
-                        <div className="mb-3">
-                          <svg width="64" height="64" fill="white" viewBox="0 0 24 24">
-                            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                          </svg>
-                        </div>
-                        <h2 className="h4 fw-bold text-white mb-2">¿Necesitas ayuda?</h2>
-                        <p className="text-white-50 mb-0 small">Estamos aquí para responder tus preguntas</p>
+                        <svg width="64" height="64" fill="white" viewBox="0 0 24 24">
+                          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                        </svg>
                       </div>
                       
-                      <img 
-                        src="images/web-contact.png" 
-                        alt="Contacto" 
-                        className="img-fluid rounded-3 mb-3"
-                        style={{ maxHeight: '250px', objectFit: 'contain' }}
-                        onError={(e) => {
-                          e.currentTarget.src = 'https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=600&auto=format&fit=crop';
+                      <EditableText 
+                        content={{ 
+                          value: "¿Necesitas ayuda?", 
+                          id: 'contact-mobile-title', 
+                          type: 'text', 
+                          section: 'contact' 
                         }}
+                        onSave={handleSaveContent} 
+                        as="h2" 
+                        className="h4 fw-bold  mb-2" 
                       />
+                      <EditableText 
+                        content={{ 
+                          value: "Estamos aquí para responder tus preguntas", 
+                          id: 'contact-mobile-subtitle', 
+                          type: 'text', 
+                          section: 'contact' 
+                        }}
+                        onSave={handleSaveContent} 
+                        as="p" 
+                        className=" mb-4 small px-3" 
+                      />
+                      
+                      {/* Imagen que ocupa más espacio */}
+                      <div className="w-100 px-3">
+                        <EditableImage 
+                          content={{ 
+                            value: content.imageUrl ?? '', 
+                            id: 'contact-mobile-image', 
+                            type: 'image', 
+                            section: 'contact' 
+                          }} 
+                          onSave={handleSaveContent} 
+                          alt='Contacto' 
+                          className='img-fluid rounded-3'
+                          style={{ maxHeight: '300px', width: '100%', objectFit: 'contain' }}
+                        />
+                      </div>
                     </div>
 
-                    <div className="p-4 bg-white">
+                    {/* Botón inferior */}
+                    <div className="p-4 bg-white" style={{ minHeight: '30%', display: 'flex', alignItems: 'center' }}>
                       <button 
                         onClick={handleFlip}
-                        className="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
+                        className="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 py-3"
                       >
                         <span>Enviar mensaje</span>
                         <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
@@ -181,67 +240,34 @@ export function ContactSection() {
                     transform: 'rotateY(180deg)'
                   }}
                 >
-                  <div className="card-body p-4 d-flex flex-column" style={{ height: '100%' }}>
-                    <div className="mb-4 d-flex align-items-center justify-content-between">
-                      <div>
-                        <h3 className="h5 fw-bold text-dark mb-1">Contáctanos</h3>
-                        <p className="text-muted mb-0 small">Completa el formulario</p>
+                  <div className="card-body p-3 d-flex flex-column" style={{ height: '100%' }}>
+                    {/* Header del formulario - compacto */}
+                    <div className="mb-2 d-flex align-items-center justify-content-between flex-shrink-0">
+                      <div className="flex-grow-1">
+                        <h3 className="h6 fw-bold text-dark mb-0">Contáctanos</h3>
+                        <p className="text-muted mb-0" style={{ fontSize: '0.75rem' }}>Completa el formulario</p>
                       </div>
                       <button 
                         onClick={handleFlip}
-                        className="btn btn-sm btn-outline-secondary rounded-circle p-0 d-flex align-items-center justify-content-center"
-                        style={{ width: '36px', height: '36px' }}
+                        className="btn btn-sm btn-outline-secondary rounded-circle p-0 d-flex align-items-center justify-content-center flex-shrink-0"
+                        style={{ width: '32px', height: '32px' }}
                       >
-                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
                         </svg>
                       </button>
                     </div>
 
-                    <div className="flex-grow-1 d-flex flex-column">
-                      <div className="mb-3">
-                        <label className="form-label fw-semibold small">Nombre y Apellido</label>
-                        <input 
-                          type="text" 
-                          name="name"
-                          className="form-control form-control-sm" 
-                          placeholder="Aquí va tu nombre"
-                          value={formData.name}
-                          onChange={handleChange}
-                        />
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="form-label fw-semibold small">Email</label>
-                        <input 
-                          type="email" 
-                          name="email"
-                          className="form-control form-control-sm" 
-                          placeholder="you@company.com"
-                          value={formData.email}
-                          onChange={handleChange}
-                        />
-                      </div>
-
-                      <div className="mb-3 flex-grow-1">
-                        <label className="form-label fw-semibold small">Mensaje</label>
-                        <textarea 
-                          name="message"
-                          className="form-control form-control-sm" 
-                          rows={5}
-                          placeholder="Escribe tu mensaje aquí..."
-                          value={formData.message}
-                          onChange={handleChange}
-                        ></textarea>
-                      </div>
-
-                      <button 
-                        type="button" 
-                        className="btn btn-primary w-100 mt-auto"
-                        onClick={handleSubmit}
-                      >
-                        Enviar Mensaje
-                      </button>
+                    {/* Formulario Editable - Mobile Version */}
+                    <div className="flex-grow-1 d-flex flex-column" style={{ minHeight: 0 }}>
+                      <EditableForm
+                        config={content.form || { fields: [], submitButtonText: 'Enviar', successMessage: '¡Mensaje enviado con éxito!' }}
+                        onSaveConfig={handleSaveFormConfig}
+                        onSubmit={handleSubmit}
+                        formData={formData}
+                        onChange={handleChange}
+                        mobileMode={true}
+                      />
                     </div>
                   </div>
                 </div>
@@ -275,6 +301,33 @@ export function ContactSection() {
           }
         }
 
+        /* Mejorar responsive del flip card en mobile */
+        @media (max-width: 575px) {
+          .flip-card {
+            min-height: 600px !important;
+          }
+          
+          .flip-card-inner {
+            min-height: 600px !important;
+          }
+          
+          .flip-card-front .card-body,
+          .flip-card-back .card-body {
+            padding: 1rem !important;
+          }
+          
+          .form-control-sm {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.6rem;
+          }
+        }
+
+        @media (min-width: 576px) and (max-width: 991.98px) {
+          .flip-card {
+            max-width: 600px;
+          }
+        }
+
         .btn {
           transition: all 0.3s ease;
         }
@@ -287,6 +340,10 @@ export function ContactSection() {
         .flip-card {
           margin: 0 auto;
           max-width: 500px;
+        }
+
+        .img-max-h-600 {
+          max-height: 600px;
         }
       `}</style>
     </section>

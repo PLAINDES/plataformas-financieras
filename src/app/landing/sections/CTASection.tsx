@@ -7,7 +7,7 @@ import type { EditableContent } from '../../../types/editable.types';
 interface CTASectionProps {
   content: CTAContent;
   isAdmin: boolean;
-  onSave: (content: CTAContent) => Promise<void>;
+  onSave: (content: EditableContent) => Promise<void>;
 }
 
 export function CTASection({
@@ -16,12 +16,7 @@ export function CTASection({
   onSave,
 }: CTASectionProps) {
 
-  const handleSaveDescription = async (editableContent: EditableContent) => {
-    await onSave({
-      ...content,
-      description: editableContent.value,
-    });
-  };
+
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent(
@@ -76,12 +71,11 @@ export function CTASection({
                   <EditableText
                     content={{ 
                       value: content.description, 
-                      id: 'cta-description', 
+                      id: 'description', 
                       type: 'text', 
                       section: 'cta' 
                     }}
-                    isAdmin={isAdmin}
-                    onSave={handleSaveDescription}
+                    onSave={onSave}
                     as="span"
                     className="fw-semibold"
                     
@@ -95,12 +89,11 @@ export function CTASection({
                 <EditableText
                   content={{ 
                     value: content.description, 
-                    id: 'cta-description', 
+                    id: 'description', 
                     type: 'text', 
                     section: 'cta' 
                   }}
-                  isAdmin={isAdmin}
-                  onSave={handleSaveDescription}
+                  onSave={onSave}
                   as="h3"
                   className="bs-content-text mb-0 text-center"
                 />

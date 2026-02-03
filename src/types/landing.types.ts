@@ -1,113 +1,278 @@
 // src/types/landing.types.ts
 
-export interface CTAContent {
-  description: string;
-  whatsappNumber?: string;
-}
-
-/**
- * Sección CMS real (backend-driven)
- */
-export interface CMSSection {
+import type { EditableContent } from './editable.types';
+import type { LinkData, VideoData, EditableCollectionData } from './editable-collection.types';
+import type { SectionResponse } from './api.types';
+// ============================================
+// HERO SECTION
+// ============================================
+export interface MenuItemResponse {
   id: number;
-  type: 'hero' | 'platform_cards' | 'cta' | 'clients' | string;
+  menu_id: number;
+  parent_id: number | null;
+  title: string;
+  url: string | null;
+  page_id: number | null;
+  target: '_self' | '_blank';
+  icon: string | null;
   order: number;
-  content: Record<string, any>;
+  is_visible: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-/**
- * Respuesta real del endpoint /cms/landing
- */
+export interface MenuWithItems {
+  id: number;
+  name: string;
+  label: string;
+  created_at: string;
+  updated_at: string;
+  items: MenuItemResponse[];
+}
+
+
+// src/types/landing.api.types.ts
 export interface LandingDataResponse {
-  pageId: number;
-  slug: string;
-  sections: CMSSection[];
-  menus?: MenuItem[];
-  company?: Company;
-  lastUpdated?: string;
+  page: {
+    id: number;
+    title: string;
+    slug: string;
+    template: string;
+    is_homepage: boolean;
+    settings: {
+      layout: string;
+      show_footer: boolean;
+      show_header: boolean;
+    };
+    seo_title: string;
+    seo_description: string;
+    seo_image: string | null;
+    sections: SectionResponse[]; // Lista de secciones
+    created_at: string;
+    updated_at: string;
+  };
+  menus: Record<string, any>;
+  site: {
+    site_key: string;
+    name: string;
+    branding: {
+      logo_url: string | null;
+      logo_alt: string | null;
+      favicon_url: string | null;
+    };
+    theme: {
+      primary_color: string;
+      theme: string;
+    };
+  } | null;
+  meta: any;
 }
 
 
+export interface HeroSectionData {
+  title: EditableContent;
+  subtitle?: EditableContent;
+  description?: EditableContent;
+  ctaButton: LinkData;
+  backgroundImage: EditableContent;
+}
+
+// Legacy type (mantener por compatibilidad)
+export interface HeroContent {
+  title: string;
+  description?: string;
+  ctaText?: string;
+  ctaUrl?: string;
+}
+
+// ============================================
+// PLATFORM SECTION
+// ============================================
+
+export interface PlatformSectionData {
+  title: EditableContent;
+  subtitle: EditableContent;
+  cards: EditableCollectionData<PlatformCardItem>;
+}
+
+export interface PlatformCardItem {
+  id: string;
+  order: number;
+  title: string;
+  caption: string;
+  description?: string;
+  imageUrl: string;
+  video: VideoData;
+  hoverVideo?: VideoData;
+  ctaLink?: LinkData;
+  libraryLink?: LinkData;
+  ribbon?: string;
+}
+
+// Legacy type
 export interface PlatformCard {
   id: string;
   title: string;
   description: string;
   caption: string;
   imageUrl: string;
-  videoUrl: string; // YouTube video ID
-  ctaUrl?: string;
+  videoUrl: string;
   disabled?: boolean;
-  ribbon?: string;
+}
+
+// ============================================
+// CTA SECTION
+// ============================================
+
+export interface CTASectionData {
+  title: EditableContent;
+  description: EditableContent;
+  whatsappButton: LinkData;
+  whatsappNumber: string;
+}
+
+// Legacy type
+export interface CTAContent {
+  description: string;
+  whatsappNumber: string;
+}
+
+// ============================================
+// CLIENTS SECTION
+// ============================================
+
+export interface ClientsSectionData {
+  title: EditableContent;
+  logos: EditableCollectionData<ClientLogo>;
 }
 
 export interface ClientLogo {
   id: string;
+  order?: number;
   name: string;
   imageUrl: string;
   alt: string;
+  websiteUrl?: string;
 }
 
-export interface HeroContent {
+// ============================================
+// BENEFITS SECTION
+// ============================================
+
+export interface BenefitsSectionData {
+  title: EditableContent;
+  subtitle: EditableContent;
+  items: EditableCollectionData<BenefitItem>;
+}
+
+export interface BenefitItem {
+  id: string;
+  order: number;
+  icon: string;
   title: string;
-  subtitle?: string;
   description: string;
-  ctaText?: string;
-  ctaUrl?: string;
+  imageUrl?: string;
 }
 
-export interface LandingSectionData {
-  hero: HeroContent;
-  platformCards: PlatformCard[];
-  clients: ClientLogo[];
-  whatsappNumber?: string;
-}
-
-export interface LandingSection {
-  id: string;
-  type: 'hero' | 'platform_cards' | 'clients';
-  content: any;
-}
-
-
-
+// Legacy type
 export interface BenefitsContent {
-  id: string;
   title: string;
   subtitle: string;
-  description?: string;
 }
 
-export interface IndustryData {
-  industry: string;
-  value: number;
-  label: 'Alto' | 'Medio' | 'Bajo';
-  year?: number;
+// ============================================
+// PRODUCTS SECTION
+// ============================================
+
+export interface ProductsSectionData {
+  title: EditableContent;
+  tabs: {
+    kapital: EditableCollectionData<ProductItem>;
+    valora: EditableCollectionData<ProductItem>;
+  };
 }
 
-export interface YearOption {
-  year: number;
-}
-
-export interface IndustryAPIResponse {
-  industries: string[];
-  years: YearOption[];
-  data: IndustryData[];
-}
-
-// Si necesitas tipos para el acordeón (comentado en el original)
-export interface AccordionItem {
+export interface ProductItem {
   id: string;
-  title: string;
-  description: string;
-  url?: string;
-  icon?: string;
+  order: number;
+  name: string;
+  caption: string;
+  price: number;
+  typeName: string;
+  imageUrl?: string;
+  ribbon?: string;
+  ctaLink?: LinkData;
+  features?: string[];
 }
 
-export interface AccordionSection {
-  title: string;
-  icon: string;
-  items: AccordionItem[];
+// ============================================
+// TEAM SECTION
+// ============================================
+
+export interface TeamSectionData {
+  title: EditableContent;
+  subtitle?: EditableContent;
+  members: EditableCollectionData<TeamMember>;
 }
 
+export interface TeamMember {
+  id: string;
+  order: number;
+  name: string;
+  role: string;
+  bio?: string;
+  imageUrl: string;
+  socialLinks?: {
+    linkedin?: string;
+    twitter?: string;
+    email?: string;
+  };
+}
 
-import type { MenuItem, Company } from './index';
+// ============================================
+// CONTACT SECTION
+// ============================================
+
+export interface ContactSectionData {
+  title: EditableContent;
+  subtitle?: EditableContent;
+  email: EditableContent;
+  phone: EditableContent;
+  address?: EditableContent;
+  socialLinks?: {
+    facebook?: string;
+    instagram?: string;
+    linkedin?: string;
+    twitter?: string;
+  };
+}
+
+// ============================================
+// HELPER TYPES
+// ============================================
+
+export interface SectionMeta {
+  id: string;
+  section: string;
+  enabled: boolean;
+  order: number;
+}
+
+// ============================================
+// FULL LANDING PAGE DATA
+// ============================================
+
+export interface LandingPageData {
+  hero: HeroSectionData;
+  platform: PlatformSectionData;
+  cta: CTASectionData;
+  clients: ClientsSectionData;
+  benefits: BenefitsSectionData;
+  products: ProductsSectionData;
+  team?: TeamSectionData;
+  contact?: ContactSectionData;
+  meta?: {
+    lastUpdated: string;
+    version: string;
+  };
+}

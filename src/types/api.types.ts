@@ -36,12 +36,36 @@ export interface UserCreate {
 // ==================== CMS - LANDING ====================
 
 // types/api.types.ts
+
+// Interface para los items del contenido (data variable)
+export interface SectionContentItem {
+  id: number;
+  order: number;
+  is_visible: boolean;
+  content: {
+    id: number;
+    slug: string;
+    status: string;
+    content_type_id: number;
+    data: any; // Aquí puedes ser más específico según la sección (Hero, Product, etc.)
+    created_at: string;
+    updated_at: string;
+  };
+}
+
+// Interface de la Sección corregida
 export interface SectionResponse {
   id: number;
-  type: string;
+  name: string;          // "hero-home", "platform", etc.
+  component: string;     // "HeroSection", "PlatformSection", etc.
   order: number;
-  content: any;
+  is_visible: boolean;
+  page_id: number;
+  contents: SectionContentItem[]; // Es una lista de contenidos
+  created_at: string;
+  updated_at: string;
 }
+
 
 
 export interface PageResponse {

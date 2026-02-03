@@ -1,135 +1,194 @@
-// src/components/editable/EditableImage.tsx
+// src/components/editable/EditableVideo.tsx
 
 import { useState, useRef } from 'react';
-import type { EditableContent } from '../../types/editable.types';
+import type { VideoData } from '../../types/editable.types';
 import { useAuthContext } from '../../hooks/useAuthContext';
 
-interface EditableImageProps {
-  content: EditableContent;
-  onSave: (content: EditableContent) => Promise<void>;
+interface EditableVideoProps {
+  video: VideoData;
+  onSave: (video: VideoData) => Promise<void>;
+  uploadEndpoint?: string;
   className?: string;
-  alt?: string;
-  uploadEndpoint?: string; // Ej: '/api/upload/image'
+  showControls?: boolean;
 }
 
-export function EditableImage({
-  content,
+export function EditableVideo({
+  video,
   onSave,
+  uploadEndpoint = '/api/upload/video',
   className = '',
-  alt = 'Image',
-  uploadEndpoint = '/api/upload/image',
-}: EditableImageProps) {
+  showControls = true,
+}: EditableVideoProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [imageUrl, setImageUrl] = useState(content.value);
-  const [previewUrl, setPreviewUrl] = useState(content.value);
+  const [videoData, setVideoData] = useState<VideoData>(video);
+  const [previewSrc, setPreviewSrc] = useState(video.src);
+  const [previewPoster, setPreviewPoster] = useState(video.poster);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMethod, setUploadMethod] = useState<'file' | 'url'>('file');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { isAdmin } = useAuthContext();
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const videoFileRef = useRef<HTMLInputElement>(null);
+  const posterFileRef = useRef<HTMLInputElement>(null);
+  const videoPreviewRef = useRef<HTMLVideoElement>(null);
+const { isAdmin } = useAuthContext();
+  const handleVideoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     // Validar tipo
+    if (!file.type.startsWith('video/')) {
+      alert('Por favor selecciona un video válido (mp4, webm, etc.)');
+      return;
+    }
+
+    // Validar tamaño (máx 100MB)
+    if (file.size > 100 * 1024 * 1024) {
+      alert('El video no debe superar 100MB');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      // Crear preview local con ObjectURL
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewSrc(objectUrl);
+
+      // Subir al servidor con progress
+      const formData = new FormData();
+      formData.append('video', file);
+
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = (e.loaded / e.total) * 100;
+          setUploadProgress(Math.round(percentComplete));
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          const uploadedUrl = data.url || data.videoUrl || data.path;
+
+          if (!uploadedUrl) {
+            throw new Error('El servidor no devolvió una URL válida');
+          }
+
+          setVideoData({ ...videoData, type: 'upload', src: uploadedUrl });
+          setPreviewSrc(uploadedUrl);
+          URL.revokeObjectURL(objectUrl);
+          alert('Video subido correctamente. Haz clic en "Guardar" para confirmar.');
+        } else {
+          throw new Error('Error al subir el video');
+        }
+        setIsUploading(false);
+      });
+
+      xhr.addEventListener('error', () => {
+        throw new Error('Error de red al subir el video');
+      });
+
+      xhr.open('POST', uploadEndpoint);
+      xhr.send(formData);
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      alert('Error al subir el video. Intenta nuevamente.');
+      setPreviewSrc(video.src);
+      setVideoData(video);
+      setIsUploading(false);
+    }
+  };
+
+  const handlePosterFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     if (!file.type.startsWith('image/')) {
       alert('Por favor selecciona una imagen válida');
       return;
     }
 
-    // Validar tamaño (máx 5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert('La imagen no debe superar 5MB');
       return;
     }
 
     setIsUploading(true);
-
     try {
-      // Crear preview local con ObjectURL (más eficiente que base64)
       const objectUrl = URL.createObjectURL(file);
-      setPreviewUrl(objectUrl);
+      setPreviewPoster(objectUrl);
 
-      // Subir al servidor
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch(uploadEndpoint, {
+      const response = await fetch('/api/upload/image', {
         method: 'POST',
         body: formData,
-        credentials: 'include', // Incluir cookies de sesión
+        credentials: 'include',
       });
 
-      if (!response.ok) {
-        throw new Error('Error al subir la imagen');
-      }
+      if (!response.ok) throw new Error('Error al subir poster');
 
       const data = await response.json();
       const uploadedUrl = data.url || data.imageUrl || data.path;
 
-      if (!uploadedUrl) {
-        throw new Error('El servidor no devolvió una URL válida');
-      }
-
-      // Actualizar con la URL del servidor
-      setImageUrl(uploadedUrl);
-      setPreviewUrl(uploadedUrl);
-
-      // Limpiar ObjectURL
+      setVideoData({ ...videoData, poster: uploadedUrl });
+      setPreviewPoster(uploadedUrl);
       URL.revokeObjectURL(objectUrl);
-
-      alert('Imagen subida correctamente. Haz clic en "Guardar" para confirmar.');
     } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Error al subir la imagen. Intenta nuevamente.');
-      setPreviewUrl(content.value);
-      setImageUrl(content.value);
+      console.error('Error uploading poster:', error);
+      alert('Error al subir el poster. Intenta nuevamente.');
+      setPreviewPoster(video.poster);
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleSave = async () => {
-    if (imageUrl === content.value) {
+    if (videoData.src === video.src && videoData.poster === video.poster) {
       setIsEditing(false);
-      return;
-    }
-
-    // Validar que sea una URL válida
-    try {
-      new URL(imageUrl);
-    } catch {
-      alert('Por favor ingresa una URL válida');
       return;
     }
 
     setIsSaving(true);
     try {
-      await onSave({ ...content, value: imageUrl });
+      await onSave(videoData);
       setIsEditing(false);
     } catch (error) {
       console.error('Error saving:', error);
       alert('Error al guardar. Intenta nuevamente.');
-      setImageUrl(content.value);
-      setPreviewUrl(content.value);
+      setVideoData(video);
+      setPreviewSrc(video.src);
+      setPreviewPoster(video.poster);
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleCancel = () => {
-    setImageUrl(content.value);
-    setPreviewUrl(content.value);
+    setVideoData(video);
+    setPreviewSrc(video.src);
+    setPreviewPoster(video.poster);
     setIsEditing(false);
     setUploadMethod('file');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    setUploadProgress(0);
+    if (videoFileRef.current) videoFileRef.current.value = '';
+    if (posterFileRef.current) posterFileRef.current.value = '';
   };
 
   if (!isAdmin) {
-    return <img src={content.value} alt={alt} className={className} />;
+    return (
+      <video
+        src={video.src}
+        poster={video.poster}
+        className={className}
+        controls={showControls}
+        style={{ width: '100%', aspectRatio: '16 / 9' }}
+      />
+    );
   }
 
   if (isEditing) {
@@ -161,7 +220,7 @@ export function EditableImage({
             borderRadius: '12px',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
             width: '90%',
-            maxWidth: '700px',
+            maxWidth: '800px',
             maxHeight: '90vh',
             overflow: 'auto',
           }}
@@ -177,7 +236,7 @@ export function EditableImage({
             }}
           >
             <h5 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600' }}>
-              Editar Imagen
+              Editar Video
             </h5>
             <button
               onClick={handleCancel}
@@ -191,9 +250,6 @@ export function EditableImage({
                 padding: '0',
                 width: '32px',
                 height: '32px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
               }}
             >
               ×
@@ -203,53 +259,47 @@ export function EditableImage({
           {/* Content */}
           <div style={{ padding: '20px' }}>
             {/* Preview */}
-            <div
-              style={{
-                marginBottom: '24px',
-                border: '2px dashed #d1d5db',
-                borderRadius: '12px',
-                padding: '20px',
-                backgroundColor: '#f9fafb',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '200px',
-                position: 'relative',
-              }}
-            >
-              {isUploading ? (
-                <div style={{ textAlign: 'center' }}>
+            <div style={{ marginBottom: '24px' }}>
+              <video
+                ref={videoPreviewRef}
+                src={previewSrc}
+                poster={previewPoster}
+                controls
+                style={{
+                  width: '100%',
+                  maxHeight: '400px',
+                  borderRadius: '8px',
+                  backgroundColor: '#000',
+                }}
+              />
+            </div>
+
+            {/* Progress Bar */}
+            {isUploading && uploadProgress > 0 && (
+              <div style={{ marginBottom: '20px' }}>
+                <div
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    backgroundColor: '#e5e7eb',
+                    borderRadius: '4px',
+                    overflow: 'hidden',
+                  }}
+                >
                   <div
                     style={{
-                      width: '48px',
-                      height: '48px',
-                      border: '4px solid #e5e7eb',
-                      borderTopColor: '#3b82f6',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite',
-                      margin: '0 auto 12px',
+                      width: `${uploadProgress}%`,
+                      height: '100%',
+                      backgroundColor: '#3b82f6',
+                      transition: 'width 0.3s ease',
                     }}
                   />
-                  <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>
-                    Subiendo imagen...
-                  </p>
                 </div>
-              ) : (
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  style={{
-                    maxWidth: '100%',
-                    maxHeight: '300px',
-                    borderRadius: '8px',
-                    objectFit: 'contain',
-                  }}
-                  onError={(e) => {
-                    e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="14"%3EImagen no válida%3C/text%3E%3C/svg%3E';
-                  }}
-                />
-              )}
-            </div>
+                <small style={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
+                  Subiendo: {uploadProgress}%
+                </small>
+              </div>
+            )}
 
             {/* Method Tabs */}
             <div
@@ -272,10 +322,9 @@ export function EditableImage({
                   fontWeight: uploadMethod === 'file' ? '600' : '400',
                   fontSize: '0.875rem',
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
                 }}
               >
-                📤 Subir archivo
+                📤 Subir video
               </button>
               <button
                 onClick={() => setUploadMethod('url')}
@@ -289,7 +338,6 @@ export function EditableImage({
                   fontWeight: uploadMethod === 'url' ? '600' : '400',
                   fontSize: '0.875rem',
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
                 }}
               >
                 🔗 URL externa
@@ -308,13 +356,13 @@ export function EditableImage({
                     color: '#374151',
                   }}
                 >
-                  Seleccionar imagen
+                  Seleccionar video
                 </label>
                 <input
-                  ref={fileInputRef}
+                  ref={videoFileRef}
                   type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
+                  accept="video/*"
+                  onChange={handleVideoFileChange}
                   disabled={isSaving || isUploading}
                   style={{
                     width: '100%',
@@ -325,8 +373,8 @@ export function EditableImage({
                     cursor: 'pointer',
                   }}
                 />
-                <small style={{ color: '#6b7280', fontSize: '0.75rem', display: 'block', marginTop: '6px' }}>
-                  Formatos: JPG, PNG, GIF, WebP • Máximo: 5MB
+                <small style={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '6px', display: 'block' }}>
+                  Formatos: MP4, WebM, OGG • Máximo: 100MB
                 </small>
               </div>
             )}
@@ -343,16 +391,16 @@ export function EditableImage({
                     color: '#374151',
                   }}
                 >
-                  URL de la imagen
+                  URL del video
                 </label>
                 <input
                   type="url"
-                  value={imageUrl}
+                  value={videoData.type === 'url' ? videoData.src : ''}
                   onChange={(e) => {
-                    setImageUrl(e.target.value);
-                    setPreviewUrl(e.target.value);
+                    setVideoData({ ...videoData, type: 'url', src: e.target.value });
+                    setPreviewSrc(e.target.value);
                   }}
-                  placeholder="https://ejemplo.com/imagen.jpg"
+                  placeholder="https://ejemplo.com/video.mp4"
                   disabled={isSaving || isUploading}
                   style={{
                     width: '100%',
@@ -360,43 +408,40 @@ export function EditableImage({
                     border: '1px solid #d1d5db',
                     borderRadius: '8px',
                     fontSize: '0.875rem',
-                    outline: 'none',
                   }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = '#3b82f6')}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = '#d1d5db')}
                 />
-                <small style={{ color: '#6b7280', fontSize: '0.75rem', display: 'block', marginTop: '6px' }}>
-                  Pega la URL completa de una imagen pública
-                </small>
               </div>
             )}
 
-            {/* Current URL Display */}
-            {imageUrl !== content.value && (
-              <div
+            {/* Poster */}
+            <div style={{ marginBottom: '20px' }}>
+              <label
                 style={{
-                  padding: '12px',
-                  backgroundColor: '#eff6ff',
-                  border: '1px solid #bfdbfe',
-                  borderRadius: '8px',
-                  marginBottom: '20px',
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  color: '#374151',
                 }}
               >
-                <strong style={{ fontSize: '0.75rem', color: '#1e40af', display: 'block', marginBottom: '4px' }}>
-                  Nueva URL:
-                </strong>
-                <code
-                  style={{
-                    fontSize: '0.75rem',
-                    color: '#1e3a8a',
-                    wordBreak: 'break-all',
-                    display: 'block',
-                  }}
-                >
-                  {imageUrl}
-                </code>
-              </div>
-            )}
+                Poster (opcional)
+              </label>
+              <input
+                ref={posterFileRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePosterFileChange}
+                disabled={isSaving || isUploading}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
           </div>
 
           {/* Footer */}
@@ -408,8 +453,6 @@ export function EditableImage({
               justifyContent: 'flex-end',
               gap: '12px',
               backgroundColor: '#f9fafb',
-              borderBottomLeftRadius: '12px',
-              borderBottomRightRadius: '12px',
             }}
           >
             <button
@@ -430,21 +473,15 @@ export function EditableImage({
             </button>
             <button
               onClick={handleSave}
-              disabled={isSaving || isUploading || imageUrl === content.value}
+              disabled={isSaving || isUploading}
               style={{
                 padding: '8px 20px',
                 border: 'none',
-                background:
-                  isSaving || isUploading || imageUrl === content.value
-                    ? '#9ca3af'
-                    : '#3b82f6',
+                background: isSaving || isUploading ? '#9ca3af' : '#3b82f6',
                 color: 'white',
                 borderRadius: '6px',
                 fontSize: '0.875rem',
-                cursor:
-                  isSaving || isUploading || imageUrl === content.value
-                    ? 'not-allowed'
-                    : 'pointer',
+                cursor: isSaving || isUploading ? 'not-allowed' : 'pointer',
                 fontWeight: '500',
               }}
             >
@@ -452,37 +489,24 @@ export function EditableImage({
             </button>
           </div>
         </div>
-
-        {/* Keyframes for spinner */}
-        <style>
-          {`
-            @keyframes spin {
-              from { transform: rotate(0deg); }
-              to { transform: rotate(360deg); }
-            }
-          `}
-        </style>
       </>
     );
   }
 
   return (
-    <div
-      style={{
-        position: 'relative',
-        display: 'inline-block',
-      }}
-    >
-      <img
-        src={content.value}
-        alt={alt}
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <video
+        src={video.src}
+        poster={video.poster}
         className={className}
+        controls={showControls}
         onClick={() => setIsEditing(true)}
         style={{
+          width: '100%',
+          aspectRatio: '16 / 9',
           cursor: 'pointer',
           outline: '2px dashed transparent',
           transition: 'outline 0.2s',
-          maxWidth: '100%',
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.outline = '2px dashed #3b82f6';
@@ -490,29 +514,8 @@ export function EditableImage({
         onMouseLeave={(e) => {
           e.currentTarget.style.outline = '2px dashed transparent';
         }}
-        title="Click para editar imagen"
+        title="Click para editar video"
       />
-      <div
-        style={{
-          position: 'absolute',
-          top: '8px',
-          right: '8px',
-          backgroundColor: 'rgba(59, 130, 246, 0.9)',
-          color: 'white',
-          padding: '4px 8px',
-          borderRadius: '4px',
-          fontSize: '0.75rem',
-          fontWeight: '500',
-          opacity: 0,
-          transition: 'opacity 0.2s',
-          pointerEvents: 'none',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.opacity = '1';
-        }}
-      >
-        📝 Editar
-      </div>
     </div>
   );
 }
