@@ -7,6 +7,7 @@ import { InternalLayout } from './components/layout/InternalLayout';
 import { useAuthContext } from './hooks/useAuthContext';
 import type { MenuItem } from './types';
 import ValoraPage from './app/valora/ValoraPage';
+import './App.css';
 
 const COMPANY = {
   id: 1,
@@ -39,10 +40,10 @@ function App() {
   return (
     <Routes>
       {/* Landing page - sin layout, maneja todo internamente */}
-      <Route 
-        path="/" 
+      <Route
+        path="/"
         element={
-          <LandingPage 
+          <LandingPage
             isAdmin={user?.role === 'admin'}
             company={COMPANY}
             user={user}
@@ -50,7 +51,7 @@ function App() {
             onLogin={login}
             onRegister={register}
           />
-        } 
+        }
       />
 
       {/* Páginas internas - con InternalLayout */}
@@ -59,7 +60,7 @@ function App() {
         <Route path="/valora" element={<ValoraPage />} />
       </Route>
 
-   
+
     </Routes>
   );
 }
