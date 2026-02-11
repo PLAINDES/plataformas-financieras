@@ -7,7 +7,8 @@ export function ScrollTop() {
 
   useEffect(() => {
     const toggleVisibility = () => {
-      if (window.pageYOffset > 300) {
+      // window.pageYOffset está depreciado, usamos window.scrollY
+      if (window.scrollY > 300) {
         setIsVisible(true);
       } else {
         setIsVisible(false);
@@ -25,39 +26,29 @@ export function ScrollTop() {
     });
   };
 
-  if (!isVisible) {
-    return null;
-  }
-
+  // Usamos clases de Tailwind para la transición de entrada/salida
   return (
     <div
       id="kt_scrolltop"
-      className="scrolltop"
       onClick={scrollToTop}
-      style={{
-        position: 'fixed',
-        bottom: '2rem',
-        right: '2rem',
-        width: '3rem',
-        height: '3rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'var(--bs-primary)',
-        borderRadius: '0.5rem',
-        cursor: 'pointer',
-        opacity: isVisible ? 1 : 0,
-        transition: 'opacity 0.3s',
-        zIndex: 1000,
-      }}
+      className={`
+        fixed bottom-8 right-8 z-[1000]
+        flex items-center justify-center
+        w-12 h-12 rounded-lg cursor-pointer
+        bg-blue-600 text-white
+        transition-all duration-300 ease-in-out
+        hover:bg-blue-700 hover:scale-110
+        ${isVisible ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}
+      `}
     >
-      <span className="svg-icon">
+      <span className="flex items-center justify-center">
         <svg 
           width="24" 
           height="24" 
           viewBox="0 0 24 24" 
           fill="none" 
           xmlns="http://www.w3.org/2000/svg"
+          className="currentColor"
         >
           <rect 
             opacity="0.5" 

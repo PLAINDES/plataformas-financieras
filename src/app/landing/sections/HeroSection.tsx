@@ -18,11 +18,11 @@ export function HeroSection({ content, onSave }: HeroSectionProps) {
 
 
   return (
-    <div id="plataformas">
-      <div className="d-flex flex-column flex-center w-100">
-        <div className="text-center bs-content-1">
-          <div className="row d-flex justify-content-center">
-            <div className="col-12 col-lg-10">
+    <div id="plataformas" className="pt-16">
+      <div className="flex flex-col items-center w-full">
+        <div className="text-center bs-content-1 w-full">
+          <div className="flex justify-center">
+            <div className="w-full lg:w-5/6">
               <EditableText
                 content={titleContent}
                 onSave={onSave}

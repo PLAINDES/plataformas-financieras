@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import './KapitalPage.css';
+import { NavBar } from './components/NavBar';
+import { MenuSidebar } from './components/MenuSidebar';
+import { FormSidebar }  from './components/FormSidebar';
+import { BalanceSheetBlock } from './components/BalanceSheetBlock';
+import { ResultCard } from './components/ResultCard';
+import { MethodologyView } from './components/MethodologyView';
+import { ReportDrawer } from './components/ReportDrawer';
+import { ReportView } from './components/ReportView';
 
 // Types
 interface FormData {
@@ -38,114 +45,27 @@ interface Results {
   developed: MarketResults;
 }
 
-// Component: Form Section
-const FormSection: React.FC<{
-  title: string;
-  number: number;
-  subtitle?: string;
-  children: React.ReactNode;
-  toggle?: boolean;
-  onToggle?: () => void;
-}> = ({ title, number, subtitle, children, toggle, onToggle }) => (
-  <>
-    <div className="card-header px-2 mt-2">
-      <div className="card-title">
-        <span className="badge bg-primary rounded-pill me-1 fs-3 px-3">{number}</span>
-        <div className="ms-2 me-auto lh-1">
-          <div className="fw-bold">
-            {title}
-            {toggle !== undefined && (
-              <label className="float-end ms-2">
-                <i 
-                  className={`fa-solid ${toggle ? 'fa-toggle-on' : 'fa-toggle-off'} fs-2 text-dark`}
-                  style={{ cursor: 'pointer' }}
-                  onClick={onToggle}
-                />
-              </label>
-            )}
-          </div>
-          {subtitle && <small>{subtitle}</small>}
-        </div>
-      </div>
-    </div>
-    <div className={`card-body px-2 pb-0 ${toggle !== undefined ? `collapse ${toggle ? 'show' : ''}` : ''}`}>
-      {children}
-    </div>
-  </>
-);
-
-// Component: Form Input
-const FormInput: React.FC<{
-  label: string;
+interface MethodologyItem {
   name: string;
-  type?: 'text' | 'select';
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-  options?: string[];
-  suffix?: string;
-  required?: boolean;
-  readOnly?: boolean;
-  placeholder?: string;
-  tooltip?: string;
-}> = ({ label, name, type = 'text', value, onChange, options, suffix, required, readOnly, placeholder, tooltip }) => (
-  <div className="mb-3 row">
-    <label className="col-lg-4 col-form-label">
-      {label}
-      {tooltip && <i className="fas fa-info-circle ms-1" title={tooltip} />}
-    </label>
-    <div className="col-lg-8">
-      <div className={suffix ? 'input-group' : ''}>
-        {type === 'select' ? (
-          <select className="form-select" name={name} value={value} onChange={onChange} required={required}>
-            <option value="">SELECCIONE</option>
-            {options?.map(item => <option key={item} value={item}>{item}</option>)}
-          </select>
-        ) : (
-          <input 
-            type="text" 
-            className="form-control" 
-            name={name} 
-            value={value} 
-            onChange={onChange} 
-            required={required}
-            readOnly={readOnly}
-            placeholder={placeholder}
-          />
-        )}
-        {suffix && <span className="input-group-text">{suffix}</span>}
-      </div>
-      {name === 'dc_ratio' && <div className="form-text">Ingrese como decimal (ej: 0.35 para 35%)</div>}
-      {name === 'effective_tax_rate' && <div className="form-text">Tasa efectiva real de impuestos de la empresa</div>}
-      {name === 'beta_levered' && <div className="form-text">Beta que refleja el riesgo financiero y operativo</div>}
-      {name === 'beta_unlevered' && <div className="form-text">Beta sin riesgo financiero, solo riesgo del negocio</div>}
-    </div>
-  </div>
-);
+  file: string;
+}
 
-// Component: Result Card
-const ResultCard: React.FC<{
-  icon: string;
-  title: string;
-  description: string;
-  value: string;
-}> = ({ icon, title, description, value }) => (
-  <div className="col">
-    <div className="card shadow-sm bs-card-a1">
-      <div className="card-header">
-        <h3 className="card-title">
-          <i className={icon} />
-        </h3>
-      </div>
-      <div className="card-body">
-        <span>{title}</span><br />
-        {description}
-      </div>
-      <div className="card-footer">
-        <h2>{value}</h2>
-      </div>
-    </div>
-  </div>
-);
+interface MethodologyCategory {
+  name: string;
+  products: MethodologyItem[];
+}
+
+interface ReportDesign {
+  id: string;
+  name: string;
+  content_id: string;
+}
+
+interface ReportContent {
+  id: string;
+  name: string;
+  edit: number;
+}
 
 // Main Component
 const KapitalPage: React.FC = () => {
@@ -157,19 +77,70 @@ const KapitalPage: React.FC = () => {
   });
 
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAsideMinimized, setIsAsideMinimized] = useState(false);
-  const [email, setEmail] = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [showMethodology, setShowMethodology] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [isReportDrawerOpen, setIsReportDrawerOpen] = useState(false);
+  const [reportUrl, setReportUrl] = useState<string>('');
   const [results, setResults] = useState<Results | null>(null);
   const [resultCurrency, setResultCurrency] = useState<'pen' | 'usd'>('pen');
+  const [projectUid, setProjectUid] = useState<string>('');
+  
+  // Analysis form state
+  const [analysisDC, setAnalysisDC] = useState('');
+  const [analysisKd, setAnalysisKd] = useState('');
+  const [analysisCurrency, setAnalysisCurrency] = useState('Dólares');
 
-  const dates = ['2024-Q1', '2024-Q2', '2024-Q3', '2024-Q4'];
-  const sectors = ['Tecnología', 'Finanzas', 'Manufactura', 'Servicios', 'Retail'];
-  const instruments = ['Bonos del Tesoro', 'Bonos Corporativos', 'Letras del Tesoro'];
-  const bonos = ['2025', '2026', '2027', '2028', '2029', '2030'];
-  const countries = ['Perú', 'Estados Unidos', 'Chile', 'Colombia', 'México'];
+  // Mock methodology data
+  const methodologyCategories: MethodologyCategory[] = [
+    {
+      name: 'Categoría 01',
+      products: [
+        { name: 'Curso 01', file: 'https://drive.google.com/file/d/1Esm2696i0XB6dAAjhgUUtrI0Z85hWywW/preview' },
+      ]
+    }
+  ];
+
+  // Mock report data
+  const reportDesigns: ReportDesign[] = [
+    { id: '1', name: 'Reporte Básico', content_id: 'basic' },
+    { id: '2', name: 'Reporte Detallado', content_id: 'detailed' },
+    { id: '3', name: 'Reporte Completo', content_id: 'complete' },
+  ];
+
+  const reportContents: ReportContent[] = [
+    { id: '1', name: 'Costo de capital del sector', edit: 0 },
+    { id: '2', name: 'Costo de capital de la empresa', edit: 0 },
+    { id: '3', name: 'Metodología explicada', edit: 0 },
+    { id: '4', name: '1 hora de consultoría', edit: 1 },
+  ];
+
+  const dates = [
+    '29/12/2017', '31/12/2018', '31/12/2019', '31/12/2020', '31/12/2021', 
+    '30/11/2022', '31/03/2024', '30/06/2024', '30/09/2024', '31/12/2024', 
+    '31/03/2025', '30/06/2025', '31/10/2025'
+  ];
+
+  const sectors = [
+    'Tecnología', 'Finanzas', 'Manufactura', 'Servicios', 'Retail', 'Publicidad',
+    'Aeroespacial/ Defensa', 'Transporte aéreo', 'Confección de ropa', 
+    'Automóviles y Camiones', 'Partes de Automóviles', 'Software (Sistema y aplicación)',
+    'Acero', 'Telecomunicaciones (Inalámbrico)', 'Equipamiento de telecomunicaciones',
+    'Servicios de telecomunicaciones'
+  ];
+
+  const instruments = ['Bonos EE.UU', 'Ajustar Rf según la duración del proyecto'];
+  const bonos = ['0.25 (3m)', '0.5 (6m)', '1', '2', '3', '5', '7', '10', '20', '30'];
+  const countries = [
+    'Perú', 'Estados Unidos', 'Chile', 'Colombia', 'México', 'Afganistán', 'Albania', 
+    'Alemania', 'Andorra', 'Angola', 'Antigua y Barbuda', 'Arabia Saudita', 'Argelia', 
+    'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaiyán', 'Bahamas', 'Bangladés'
+    // ... (rest of countries)
+  ];
   const currencies = ['USD', 'PEN', 'EUR'];
 
   const formatterx100p = (value: number): string => `${(value * 100).toFixed(2)}%`;
@@ -189,7 +160,7 @@ const KapitalPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setIsMobileMenuOpen(false); // Close mobile menu on submit
+    setIsFormOpen(false);
     
     setTimeout(() => {
       const mockResults: Results = {
@@ -198,243 +169,339 @@ const KapitalPage: React.FC = () => {
         developed: { cppc: 0.0745, kd: 0.0589, ke: 0.0821, koa: 0.0698 }
       };
       setResults(mockResults);
+      setProjectUid('demo-project-' + Date.now());
       setLoading(false);
       setShowResults(true);
+      setShowAnalysis(false);
+      setShowMethodology(false);
+      setIsMenuOpen(true); // Abrir menú automáticamente tras calcular
     }, 1500);
   };
 
+  const handleAnalysisSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    setTimeout(() => {
+      const dc = parseFloat(analysisDC) || 150;
+      const kd = parseFloat(analysisKd) || 6.54;
+      
+      if (results) {
+        const newResults: Results = {
+          ...results,
+          cppc: 0.0856 + (dc / 10000),
+          kd: kd / 100,
+        };
+        setResults(newResults);
+      }
+      setLoading(false);
+    }, 800);
+  };
+
+  const handleShowAnalysis = () => {
+    setShowResults(false);
+    setShowAnalysis(true);
+    setShowMethodology(false);
+    if (results) {
+      setAnalysisKd((results.kd * 100).toFixed(2));
+    }
+  };
+
+  const handleShowMethodology = () => {
+    setShowResults(false);
+    setShowAnalysis(false);
+    setShowMethodology(true);
+  };
+
+  const handleShowResults = () => {
+    setShowResults(true);
+    setShowAnalysis(false);
+    setShowMethodology(false);
+    setShowReport(false);
+  };
+
+  const handleGenerateReport = (reportId: string, contentIds: string[]) => {
+    const localReportUrl = `/files/Reporte-Detallado.pdf`;
+    
+    setReportUrl(localReportUrl);
+    setShowResults(false);
+    setShowAnalysis(false);
+    setShowMethodology(false);
+    setShowReport(true);
+    setIsReportDrawerOpen(false);
+  };
+
+  const getSelectedView = (): 'result' | 'analysis' | 'methodology' | '' => {
+    if (showMethodology) return 'methodology';
+    if (showAnalysis) return 'analysis';
+    if (showResults) return 'result';
+    return '';
+  };
+
   return (
-    <div className="kapital-page">
-      {/* Mobile Menu Button */}
-      <button 
-        className="mobile-menu-btn"
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-      >
-        <i className={`fas ${isMobileMenuOpen ? 'fa-times' : 'fa-bars'}`} />
-      </button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Navbar */}
+      <NavBar
+        onToggleMenu={() => setIsMenuOpen(!isMenuOpen)}
+        onToggleForm={() => setIsFormOpen(!isFormOpen)}
+        showUserMenu={showUserMenu}
+        setShowUserMenu={setShowUserMenu}
+        isMenuOpen={isMenuOpen}
+        isFormOpen={isFormOpen}
+        hasResults={!!results}
+      />
 
-      {/* Overlay for mobile */}
-      {isMobileMenuOpen && (
-        <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} />
-      )}
+      {/* Menu Sidebar (Left) */}
+      <MenuSidebar
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        selected={getSelectedView()}
+        onNavigate={(view) => {
+          if (view === 'result') handleShowResults();
+          else if (view === 'analysis') handleShowAnalysis();
+          else if (view === 'methodology') handleShowMethodology();
+        }}
+        onOpenReport={() => setIsReportDrawerOpen(true)}
+        hasResults={!!results}
+      />
+  
+      {/* Form Sidebar (Right) */}
+      <FormSidebar
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        formData={formData}
+        onInputChange={handleInputChange}
+        onSubmit={handleSubmit}
+        loading={loading}
+        dates={dates}
+        sectors={sectors}
+        instruments={instruments}
+        bonos={bonos}
+        countries={countries}
+        currencies={currencies}
+        hasResults={!!results}
+      />
 
-      {/* ASIDE - Sidebar */}
-      <div className={`aside ${isAsideMinimized ? 'minimized' : ''} ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-        {/* Primary sidebar */}
-        <div className="aside-primary">
-          <div className="aside-logo" id="kt_aside_logo">
-            <a href="/kapital">
-              <img alt="Logo" src="/assets/media/images/logo-kapital-small.png" className="h-35px" />
-            </a>
-          </div>
-
-          <div className="aside-nav" id="kt_aside_nav">
-            <div className="hover-scroll-overlay-y">
-              <ul className="nav flex-column" id="kt_aside_nav_tabs">
-                <li className="nav-item">
-                  <a className="nav-link active">
-                    <span className="svg-icon">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <rect x="2" y="2" width="9" height="9" rx="2" fill="currentColor" />
-                        <rect opacity="0.3" x="13" y="2" width="9" height="9" rx="2" fill="currentColor" />
-                        <rect opacity="0.3" x="13" y="13" width="9" height="9" rx="2" fill="currentColor" />
-                        <rect opacity="0.3" x="2" y="13" width="9" height="9" rx="2" fill="currentColor" />
-                      </svg>
-                    </span>
-                  </a>
-                </li>
-              </ul>
+      {/* Main Content */}
+<main className={`pt-16 transition-all duration-300 ${isFormOpen && !results  ? 'lg:pl-110' : 'lg:pl-0'} ${isMenuOpen ? 'lg:pr-64' : 'lg:pr-0'}`}>
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          {/* Loading State */}
+          {loading && (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 border-4 border-blue-200 rounded-full" />
+                <div className="absolute inset-0 border-4 border-blue-600 rounded-full animate-spin border-t-transparent" />
+              </div>
+              <p className="mt-4 text-lg font-medium text-gray-700">Calculando resultados...</p>
             </div>
-          </div>
+          )}
 
-          <div className="aside-footer">
-            <div className="position-relative">
-              <div className="cursor-pointer symbol" onClick={() => setShowUserMenu(!showUserMenu)}>
-                <img src="/assets/metronic/media/avatars/blank.png" alt="perfil" />
+          {/* Empty State */}
+          {!loading && !showResults && !showAnalysis && !showMethodology && !showReport && (
+            <div className="flex flex-col items-center justify-center py-20 px-6">
+              <div className="max-w-md text-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-blue-100 flex items-center justify-center">
+                  <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                  Bienvenido a la Calculadora WACC
+                </h2>
+                <p className="text-gray-600 leading-relaxed mb-6">
+                  Completa los inputs del formulario y presiona calcular para generar resultados instantáneos y análisis detallados.
+                </p>
+                <button
+                  onClick={() => setIsFormOpen(true)}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 shadow-lg transition-all"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Abrir Formulario
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* METHODOLOGY VIEW */}
+          {!loading && showMethodology && (
+            <MethodologyView categories={methodologyCategories} />
+          )}
+
+          {/* REPORT VIEW */}
+          {!loading && showReport && reportUrl && (
+            <ReportView reportUrl={reportUrl} reportId={projectUid} />
+          )}
+
+          {/* ANALYSIS VIEW */}
+          {!loading && showAnalysis && results && (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 mb-1">Sensibilidad de resultados</h1>
+                  <p className="text-gray-600">Análisis de la tasa de tu empresa</p>
+                </div>
+                {formData.typeId && (
+                  <select 
+                    className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    value={resultCurrency} 
+                    onChange={(e) => setResultCurrency(e.target.value as any)}
+                  >
+                    <option value="pen">PEN</option>
+                    <option value="usd">USD</option>
+                  </select>
+                )}
               </div>
 
-              {showUserMenu && (
-                <div className="menu show">
-                  <div className="menu-item px-3">
-                    <div className="menu-content">
-                      <div className="fw-bold">Usuario Demo</div>
-                      <a href="#" className="text-muted">usuario@demo.com</a>
-                    </div>
+              {/* Analysis Cards */}
+              <div className="grid lg:grid-cols-3 gap-6">
+                {/* Form Card */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                    <h3 className="text-base font-bold text-gray-900">Empresa/Sector</h3>
+                    <button 
+                      type="submit" 
+                      form="formSector"
+                      disabled={loading}
+                      className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    >
+                      Calcular
+                    </button>
                   </div>
-                  <div className="menu-item px-5">
-                    <a href="/kapital/proyectos" className="menu-link">Mis proyectos</a>
-                  </div>
-                  <div className="separator" />
-                  <div className="menu-item px-5">
-                    <a href="/auth/signout" className="menu-link">Cerrar sesión</a>
+                  <div className="p-6">
+                    <form id="formSector" onSubmit={handleAnalysisSubmit} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Relación D/C <span className="text-red-600">*</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          className="w-full px-3 py-2 text-sm text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                          value={analysisDC}
+                          onChange={(e) => setAnalysisDC(e.target.value)}
+                          placeholder="150" 
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Costo de Deuda (Kd) <span className="text-red-600">*</span>
+                        </label>
+                        <div className="flex gap-1">
+                          <select 
+                            className="w-28 px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            value={analysisCurrency}
+                            onChange={(e) => setAnalysisCurrency(e.target.value)}
+                            disabled={!formData.typeId}
+                          >
+                            <option value="Dólares">Dólares</option>
+                            <option value="Soles">Soles</option>
+                            
+                          </select>
+                          <div className="flex-1 flex ">
+                            <input 
+                              type="text" 
+                              className="flex-1 px-1 py-2 text-sm text-center border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                              value={analysisKd}
+                              onChange={(e) => setAnalysisKd(e.target.value)}
+                              required
+                            />
+                            <span className="inline-flex items-center px-2 text-xs font-bold text-gray-500 bg-gray-50 border border-l-0 border-gray-300 rounded-r-lg">
+                              %
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </form>
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
 
-        {/* Secondary sidebar - Form */}
-        <div className="aside-secondary">
-          <div className="aside-workspace">
-            <form className="formWACC p-3" onSubmit={handleSubmit}>
-              <div className="card shadow-none mb-5">
-                {/* Section 1: Industry */}
-                <FormSection title="Ingrese inputs de la industria" number={1}>
-                  <FormInput label="Fecha" name="date" type="select" value={formData.date} onChange={handleInputChange} options={dates} required />
-                  <FormInput label="Industria" name="sector" type="select" value={formData.sector} onChange={handleInputChange} options={sectors} required />
-                  <FormInput label="Tasa libre de riesgo" name="instrument" type="select" value={formData.instrument} onChange={handleInputChange} options={instruments} required />
-                  <FormInput label="Año del bono" name="bono" type="select" value={formData.bono} onChange={handleInputChange} options={bonos} required />
-                </FormSection>
-
-                {/* Section 2: Sector */}
-                <FormSection title="Ingrese inputs del sector" number={2}>
-                  <FormInput label="País" name="country" type="select" value={formData.country} onChange={handleInputChange} options={countries} required />
-                  <FormInput label="Devaluación" name="devaluation" value={formData.devaluation} onChange={handleInputChange} suffix="%" />
-                  <FormInput label="Tasa impositiva" name="tax" value={formData.tax} onChange={handleInputChange} suffix="%" />
-                </FormSection>
-
-                {/* Section 3: Company */}
-                <FormSection 
-                  title="Ingrese inputs de su empresa" 
-                  number={3}
-                  subtitle="En caso no posea estos datos puede eliminarlos"
-                  toggle={formData.typeId}
-                  onToggle={() => setFormData(prev => ({ ...prev, typeId: !prev.typeId }))}
-                >
-                  <div className="mb-3 row">
-                    <label className="col-lg-12 col-form-label">Costo de deuda</label>
-                    <div className="col-lg-12">
-                      <div className="input-group">
-                        <select className="input-group-text" name="currency" value={formData.currency} onChange={handleInputChange} style={{ width: '100px' }}>
-                          {currencies.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                        <input type="text" className="form-control" name="kd" placeholder="Escriba su Kd" value={formData.kd} onChange={handleInputChange} required={formData.typeId} />
-                        <span className="input-group-text">%</span>
+                {/* Chart Card */}
+                <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h3 className="text-base font-bold text-gray-900">Empresa/Sector</h3>
+                  </div>
+                  <div className="p-6">
+                    <div className="grid md:grid-cols-2 gap-6 items-center">
+                      <div className="flex items-center justify-center">
+                        <BalanceSheetBlock 
+                          koa={formatterx100p(results.koa)}
+                          kd={formatterx100p(results.kd)}
+                          ke={formatterx100p(results.ke)}
+                        />
+                      </div>
+                      <div className="text-center">
+                        <h2 className="text-5xl font-black text-gray-900 mb-2">{formatterx100p(results.cppc)}</h2>
+                        <span className="text-sm font-medium text-gray-600">CPPC</span>
                       </div>
                     </div>
                   </div>
-                  <FormInput label="% de deuda" name="debt" value={formData.debt} onChange={handleInputChange} suffix="%" required={formData.typeId} />
-                  <FormInput label="% de capital" name="capital" value={formData.capital} onChange={handleInputChange} suffix="%" required={formData.typeId} readOnly />
-                </FormSection>
-
-                {/* Section 4: Financial Data */}
-                <FormSection 
-                  title="Datos financieros optimizados" 
-                  number={4}
-                  subtitle="Datos que pueden ser completados automáticamente por el asistente IA"
-                  toggle={formData.useFinancialData}
-                  onToggle={() => setFormData(prev => ({ ...prev, useFinancialData: !prev.useFinancialData }))}
-                >
-                  <div className="alert alert-info d-flex align-items-center mb-3">
-                    <i className="fas fa-info-circle me-2" />
-                    <small><strong>Sugerencia:</strong> Use el chatbot de análisis financiero para obtener estos datos automáticamente.</small>
-                  </div>
-                  <FormInput label="D/C Ratio" name="dc_ratio" value={formData.dc_ratio} onChange={handleInputChange} suffix="decimal" placeholder="Ej: 0.35" tooltip="Ratio Deuda/Capital" />
-                  <FormInput label="Tasa Efectiva Impuesto" name="effective_tax_rate" value={formData.effective_tax_rate} onChange={handleInputChange} suffix="%" placeholder="Ej: 25.5" tooltip="Tasa real de impuestos" />
-                  <FormInput label="Beta Apalancado" name="beta_levered" value={formData.beta_levered} onChange={handleInputChange} suffix="coef." placeholder="Ej: 1.25" tooltip="Beta con riesgo financiero" />
-                  <FormInput label="Beta Desapalancado" name="beta_unlevered" value={formData.beta_unlevered} onChange={handleInputChange} suffix="coef." placeholder="Ej: 0.95" tooltip="Beta sin riesgo financiero" />
-                </FormSection>
-
-                <div className="card-footer px-2">
-                  <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-                    {loading ? 'CALCULANDO...' : 'CALCULA TU WACC'}
-                  </button>
                 </div>
               </div>
-            </form>
-          </div>
-        </div>
 
-        {/* Desktop Toggle */}
-        <button 
-          className="aside-toggle d-none d-lg-flex"
-          onClick={() => setIsAsideMinimized(!isAsideMinimized)}
-        >
-          <span className="svg-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <rect opacity="0.5" x="6" y="11" width="13" height="2" rx="1" fill="currentColor" />
-              <path d="M8.56569 11.4343L12.75 7.25C13.1642 6.83579 13.1642 6.16421 12.75 5.75C12.3358 5.33579 11.6642 5.33579 11.25 5.75L5.70711 11.2929C5.31658 11.6834 5.31658 12.3166 5.70711 12.7071L11.25 18.25C11.6642 18.6642 12.3358 18.6642 12.75 18.25C13.1642 17.8358 13.1642 17.1642 12.75 16.75L8.56569 12.5657C8.25327 12.2533 8.25327 11.7467 8.56569 11.4343Z" fill="currentColor" />
-            </svg>
-          </span>
-        </button>
-      </div>
-
-      {/* MAIN CONTENT */}
-      <div className={`main-content ${isAsideMinimized ? 'aside-minimized' : ''}`}>
-        <div className="container-xxl">
-          {loading && (
-            <div className="table-loading">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Cargando...</span>
-              </div>
-              <div className="mt-3">Calculando resultados...</div>
-            </div>
-          )}
-
-          {!loading && !showResults && (
-            <div className="row">
-              <div className="col-12">
-                <div className="bs-panel-2">
-                  <i className="fa-solid fa-calculator text-primary" />
-                  <h2>Completa los inputs y presiona calcular para generar resultados instantáneos</h2>
-                  <button type="button" className="btn btn-primary" disabled>CALCULA TU WACC</button>
-                </div>
+              {/* Results Cards */}
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <ResultCard icon="fa-solid fa-file-lines" title="CPPC" description="Costo Promedio Ponderado de Capital" value={formatterx100p(results.cppc)} />
+                <ResultCard icon="fa-solid fa-pencil" title="Kd*(1-T)" description="Costo de Deuda Después de Impuestos" value={formatterx100p(results.kd)} />
+                <ResultCard icon="fa-solid fa-chart-column" title="Ke" description="Costo de Capital Financiero" value={formatterx100p(results.ke)} />
+                <ResultCard icon="fa-solid fa-signal" title="Koa" description="Costo de Capital Económico" value={formatterx100p(results.koa)} />
               </div>
             </div>
           )}
 
+          {/* RESULTS VIEW */}
           {!loading && showResults && results && (
-            <div className="results-container">
-              <div className="bs-container-title">
-                <h1 className="fs-1">Resultados generales</h1>
-                <span className="fs-5">Comparación de resultados</span>
+            <div className="space-y-6">
+              {/* Header */}
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">Resultados generales</h1>
+                <p className="text-gray-600">Comparación de resultados</p>
               </div>
 
               {formData.typeId ? (
                 <>
                   {/* Company + Markets View */}
-                  <div className="row g-3 mb-4">
-                    <div className="col-md-4">
-                      <div className={`card bs-panel-3 ${resultCurrency === 'usd' ? 'border-dolares' : 'border-soles'}`}>
-                        <div className="card-header">
-                          <h3 className="card-title">Empresa</h3>
-                          <select className="form-select form-select-sm" value={resultCurrency} onChange={(e) => setResultCurrency(e.target.value as any)} style={{ width: '100px' }}>
-                            <option value="pen">PEN</option>
-                            <option value="usd">USD</option>
-                          </select>
-                        </div>
-                        <div className="card-body text-center">
-                          <h2 className="fs-1 mb-2">{formatterx100p(results.cppc)}</h2>
-                          <span>CPPC</span>
-                        </div>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className={`bg-white rounded-xl border-2 shadow-sm overflow-hidden ${resultCurrency === 'usd' ? 'border-orange-500' : 'border-green-500'}`}>
+                      <div className="px-6 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                        <h3 className="text-base font-bold text-gray-900">Empresa</h3>
+                        <select 
+                          className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                          value={resultCurrency} 
+                          onChange={(e) => setResultCurrency(e.target.value as any)}
+                        >
+                          <option value="pen">PEN</option>
+                          <option value="usd">USD</option>
+                        </select>
+                      </div>
+                      <div className="py-8 text-center">
+                        <h2 className="text-4xl font-black text-gray-900 mb-2">{formatterx100p(results.cppc)}</h2>
+                        <span className="text-sm font-medium text-gray-600">CPPC</span>
                       </div>
                     </div>
-                    <div className="col-md-4">
-                      <div className="card bs-panel-3">
-                        <div className="card-header">
-                          <h3 className="card-title">Mercado emergente</h3>
-                        </div>
-                        <div className="card-body text-center">
-                          <h2 className="fs-1 mb-2">{formatterx100p(results.emergent.cppc)}</h2>
-                          <span>CPPC</span>
-                        </div>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                      <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="text-base font-bold text-gray-900">Mercado emergente</h3>
+                      </div>
+                      <div className="py-8 text-center">
+                        <h2 className="text-4xl font-black text-gray-900 mb-2">{formatterx100p(results.emergent.cppc)}</h2>
+                        <span className="text-sm font-medium text-gray-600">CPPC</span>
                       </div>
                     </div>
-                    <div className="col-md-4">
-                      <div className="card bs-panel-3">
-                        <div className="card-header">
-                          <h3 className="card-title">Mercado desarrollado</h3>
-                        </div>
-                        <div className="card-body text-center">
-                          <h2 className="fs-1 mb-2">{formatterx100p(results.developed.cppc)}</h2>
-                          <span>CPPC</span>
-                        </div>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                      <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="text-base font-bold text-gray-900">Mercado desarrollado</h3>
+                      </div>
+                      <div className="py-8 text-center">
+                        <h2 className="text-4xl font-black text-gray-900 mb-2">{formatterx100p(results.developed.cppc)}</h2>
+                        <span className="text-sm font-medium text-gray-600">CPPC</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="row g-3">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <ResultCard icon="fa-solid fa-file-lines" title="CPPC" description="Costo Promedio Ponderado de Capital" value={formatterx100p(results.cppc)} />
                     <ResultCard icon="fa-solid fa-pencil" title="Kd*(1-T)" description="Costo de Deuda Después de Impuestos" value={formatterx100p(results.kd)} />
                     <ResultCard icon="fa-solid fa-chart-column" title="Ke" description="Costo de Capital Financiero" value={formatterx100p(results.ke)} />
@@ -444,34 +511,53 @@ const KapitalPage: React.FC = () => {
               ) : (
                 <>
                   {/* Market Comparison View */}
-                  <div className="card bs-panel-3 mb-3">
-                    <div className="card-body">
-                      <h3 className="mb-3">Mercado emergente</h3>
-                      <div className="row">
-                        <div className="col-md-6 text-center mb-3">
-                          <h2>{formatterx100p(results.emergent.cppc)}</h2>
-                          <span>CPPC</span>
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="grid lg:grid-cols-3">
+                      <div className="lg:col-span-2 border-r border-gray-200 p-8">
+                        <h3 className="text-base font-bold text-gray-900 mb-6">Resultados del mercado emergente</h3>
+                        <BalanceSheetBlock 
+                          koa={formatterx100p(results.emergent.koa)}
+                          kd={formatterx100p(results.emergent.kd)}
+                          ke={formatterx100p(results.emergent.ke)}
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="border-b border-gray-200 p-6 text-center bg-gray-50">
+                          <h2 className="text-4xl font-black text-gray-900 mb-2">{formatterx100p(results.emergent.cppc)}</h2>
+                          <span className="text-sm font-medium text-gray-600">Costo promedio de capital (CPPC)</span>
                         </div>
-                        <div className="col-md-6">
-                          <div className="panel-item">
-                            <div className="panel-icon bs-fa-green"><i className="fa-solid fa-arrow-trend-up" /></div>
+                        <div className="p-6 space-y-4 flex-1">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
+                              </svg>
+                            </div>
                             <div>
-                              <strong>{formatterx100p(results.emergent.kd)}</strong>
-                              <span className="d-block text-muted small">Kd*(1-T)</span>
+                              <p className="text-base font-bold text-gray-900">{formatterx100p(results.emergent.kd)}</p>
+                              <p className="text-xs text-gray-600">Costo de deuda después de impuestos (Kd*(1-T))</p>
                             </div>
                           </div>
-                          <div className="panel-item">
-                            <div className="panel-icon bs-fa-blue"><i className="fa-regular fa-user" /></div>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                              </svg>
+                            </div>
                             <div>
-                              <strong>{formatterx100p(results.emergent.ke)}</strong>
-                              <span className="d-block text-muted small">Ke</span>
+                              <p className="text-base font-bold text-gray-900">{formatterx100p(results.emergent.ke)}</p>
+                              <p className="text-xs text-gray-600">Costo de capital financiero (Ke)</p>
                             </div>
                           </div>
-                          <div className="panel-item">
-                            <div className="panel-icon bs-fa-light"><i className="fa-solid fa-laptop" /></div>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clipRule="evenodd" />
+                              </svg>
+                            </div>
                             <div>
-                              <strong>{formatterx100p(results.emergent.koa)}</strong>
-                              <span className="d-block text-muted small">Koa</span>
+                              <p className="text-base font-bold text-gray-900">{formatterx100p(results.emergent.koa)}</p>
+                              <p className="text-xs text-gray-600">Costo de capital económico (Koa)</p>
                             </div>
                           </div>
                         </div>
@@ -479,34 +565,53 @@ const KapitalPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="card bs-panel-3">
-                    <div className="card-body">
-                      <h3 className="mb-3">Mercado desarrollado</h3>
-                      <div className="row">
-                        <div className="col-md-6 text-center mb-3">
-                          <h2>{formatterx100p(results.developed.cppc)}</h2>
-                          <span>CPPC</span>
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="grid lg:grid-cols-3">
+                      <div className="lg:col-span-2 border-r border-gray-200 p-8">
+                        <h3 className="text-base font-bold text-gray-900 mb-6">Resultados del mercado desarrollado</h3>
+                        <BalanceSheetBlock 
+                          koa={formatterx100p(results.developed.koa)}
+                          kd={formatterx100p(results.developed.kd)}
+                          ke={formatterx100p(results.developed.ke)}
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="border-b border-gray-200 p-6 text-center bg-gray-50">
+                          <h2 className="text-4xl font-black text-gray-900 mb-2">{formatterx100p(results.developed.cppc)}</h2>
+                          <span className="text-sm font-medium text-gray-600">Costo promedio de capital (CPPC)</span>
                         </div>
-                        <div className="col-md-6">
-                          <div className="panel-item">
-                            <div className="panel-icon bs-fa-green"><i className="fa-solid fa-arrow-trend-up" /></div>
+                        <div className="p-6 space-y-4 flex-1">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
+                              </svg>
+                            </div>
                             <div>
-                              <strong>{formatterx100p(results.developed.kd)}</strong>
-                              <span className="d-block text-muted small">Kd*(1-T)</span>
+                              <p className="text-base font-bold text-gray-900">{formatterx100p(results.developed.kd)}</p>
+                              <p className="text-xs text-gray-600">Costo de deuda después de impuestos (Kd*(1-T))</p>
                             </div>
                           </div>
-                          <div className="panel-item">
-                            <div className="panel-icon bs-fa-blue"><i className="fa-regular fa-user" /></div>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                              </svg>
+                            </div>
                             <div>
-                              <strong>{formatterx100p(results.developed.ke)}</strong>
-                              <span className="d-block text-muted small">Ke</span>
+                              <p className="text-base font-bold text-gray-900">{formatterx100p(results.developed.ke)}</p>
+                              <p className="text-xs text-gray-600">Costo de capital financiero (Ke)</p>
                             </div>
                           </div>
-                          <div className="panel-item">
-                            <div className="panel-icon bs-fa-light"><i className="fa-solid fa-laptop" /></div>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clipRule="evenodd" />
+                              </svg>
+                            </div>
                             <div>
-                              <strong>{formatterx100p(results.developed.koa)}</strong>
-                              <span className="d-block text-muted small">Koa</span>
+                              <p className="text-base font-bold text-gray-900">{formatterx100p(results.developed.koa)}</p>
+                              <p className="text-xs text-gray-600">Costo de capital económico (Koa)</p>
                             </div>
                           </div>
                         </div>
@@ -520,28 +625,70 @@ const KapitalPage: React.FC = () => {
         </div>
 
         {/* FOOTER */}
-        <footer className="bg-light-success mt-5 p-4">
-          <div className="container-xxl">
-            <div className="row g-4">
-              <div className="col-lg-6">
-                <h2><i className="fa-regular fa-building me-2" /> Valora tu Empresa</h2>
-                <p>Obtén una evaluación precisa y confiable para tomar decisiones informadas.</p>
+        <footer className="mt-12 bg-green-50 border-t border-green-100">
+          <div className="container mx-auto px-4 py-8 max-w-7xl">
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h2 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
+                  </svg>
+                  Valora
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Obtén una evaluación precisa y confiable para tomar decisiones informadas.
+                </p>
               </div>
-              <div className="col-lg-6">
-                <h2><i className="fa-solid fa-square-poll-vertical me-2" /> Suscríbete</h2>
-                <form onSubmit={(e) => { e.preventDefault(); alert(`Suscripción: ${email}`); setEmail(''); }}>
-                  <div className="input-group">
-                    <input type="email" className="form-control" placeholder="Tu email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                    <button type="submit" className="btn btn-primary">Subscribirse</button>
-                  </div>
+              <div>
+                <h2 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                  </svg>
+                  Suscríbete
+                </h2>
+                <p className="text-sm text-gray-600 mb-3">
+                  Suscríbete ahora para estar al tanto de lo último en finanzas, como webinars, noticias y ofertas.
+                </p>
+                <form 
+                  onSubmit={(e) => { 
+                    e.preventDefault(); 
+                    const formData = new FormData(e.currentTarget);
+                    alert(`Suscripción: ${formData.get('email')}`);
+                    e.currentTarget.reset();
+                  }}
+                  className="flex gap-2"
+                >
+                  <input 
+                    type="email" 
+                    name="email"
+                    placeholder="Tu email" 
+                    required
+                    className="flex-1 px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                  />
+                  <button 
+                    type="submit"
+                    className="px-6 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Suscribirse
+                  </button>
                 </form>
               </div>
             </div>
           </div>
         </footer>
-      </div>
+      </main>
+
+      {/* REPORT DRAWER */}
+      <ReportDrawer
+        isOpen={isReportDrawerOpen}
+        onClose={() => setIsReportDrawerOpen(false)}
+        onGenerateReport={handleGenerateReport}
+        designs={reportDesigns}
+        contents={reportContents}
+      />
     </div>
   );
 };
 
 export default KapitalPage;
+

@@ -1,0 +1,307 @@
+/* ValoraPage.css */
+
+/* Importar estilos base de KapitalPage */
+@import '../kapital//KapitalPage.css';
+
+
+/* ==================== VALORA SPECIFIC OVERRIDES ==================== */
+
+.valora-page {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f5f8fa;
+}
+
+/* Cambios específicos para formulario Valora */
+.formVALORA .card {
+  border: none;
+  background-color: #fff;
+}
+
+.formVALORA .card-header {
+  background-color: transparent;
+  border: none;
+  padding: 0.75rem 0.5rem;
+}
+
+.formVALORA .card-title {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.formVALORA .badge {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.formVALORA .card-body {
+  padding: 0.5rem;
+}
+
+.formVALORA .form-label {
+  font-weight: 500;
+  color: #3f4254;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.formVALORA .form-select,
+.formVALORA .form-control {
+  border: 1px solid #e4e6ef;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  transition: border-color 0.2s ease;
+  color: #a1a5b7;
+}
+
+.formVALORA .form-select-sm,
+.formVALORA .form-control-sm {
+  padding: 0.375rem 0.625rem;
+  font-size: 0.8rem;
+}
+
+.formVALORA .form-select:focus,
+.formVALORA .form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.1);
+}
+
+.formVALORA .input-group-text {
+  background-color: #f5f8fa;
+  border: 1px solid #e4e6ef;
+  color: #7e8299;
+  font-weight: 500;
+  font-size: 0.8rem;
+  padding: 0.375rem 0.625rem;
+}
+
+.formVALORA .card-footer {
+  background-color: transparent;
+  border: none;
+  padding: 0.75rem 0.5rem;
+}
+
+.formVALORA .btn-primary {
+  padding: 0.625rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.3px;
+}
+
+/* Colores específicos para Balance Sheet de Valora */
+.bg-patrimonio {
+  background-color: #03A9F4;
+}
+
+.bg-activo {
+  background-color: #7B1FA2;
+}
+
+.bg-pasivo {
+  background-color: #4CAF50;
+}
+
+/* Ajustes para los valores en las tarjetas de resultados */
+.valora-page .text-success {
+  color: #50cd89 !important;
+}
+
+.valora-page .text-danger {
+  color: #f1416c !important;
+}
+
+.valora-page .text-primary {
+  color: #0d6efd !important;
+}
+
+/* Logo específico de Valora */
+.aside-logo img[src*="valora"] {
+  height: 30px;
+}
+
+/* Ajustes para el panel de inicio cuando no hay resultados */
+.valora-page .bs-panel-2 .fa-building {
+  color: #0d6efd;
+}
+
+/* Background light primary específico para BVL */
+.bg-light-primary {
+  background-color: #e1f0ff !important;
+}
+
+/* Ajustes para el header de las tarjetas en resultados */
+.valora-page .card-header.bg-light {
+  background-color: #f9f9f9 !important;
+}
+
+/* Estilos para file input en datos financieros */
+.formVALORA input[type="file"] {
+  font-size: 0.8rem;
+  padding: 0.375rem 0.625rem;
+}
+
+.formVALORA input[type="file"]::-webkit-file-upload-button {
+  padding: 0.25rem 0.5rem;
+  background-color: #f5f8fa;
+  border: 1px solid #e4e6ef;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+/* Responsive adjustments específicos para Valora */
+@media (max-width: 991px) {
+  .valora-page .aside-secondary {
+    width: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .valora-page .aside-secondary {
+    width: 230px;
+  }
+  
+  .valora-page .formVALORA .row {
+    flex-direction: column;
+  }
+
+  .valora-page .formVALORA .col-lg-4,
+  .valora-page .formVALORA .col-lg-8,
+  .valora-page .formVALORA .col-lg-12 {
+    width: 100%;
+    margin-bottom: 0.25rem;
+  }
+}
+
+/* Ajustes para análisis de sensibilidad */
+.analysis-container .card-body.bg-secondary {
+  background-color: #f5f8fa !important;
+}
+
+.analysis-container .form-label {
+  color: #3f4254;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  min-height: 37px;
+  display: flex;
+  align-items: center;
+}
+
+/* Estilos para lista de resultados en cards */
+.valora-page .list-group-item {
+  border: none;
+  border-bottom: 1px solid #e4e6ef;
+  padding: 1.5rem 1rem;
+}
+
+.valora-page .list-group-item:last-child {
+  border-bottom: none;
+}
+
+.valora-page .list-group-flush .list-group-item h4 {
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+  color: #3f4254;
+}
+
+.valora-page .list-group-flush .list-group-item h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Balance Sheet específico para valoración */
+.valora-page .bs-balance-block {
+  margin-bottom: 0.5rem;
+}
+
+/* Ajustes para iconos en headers */
+.valora-page .card-header i.fa-solid {
+  color: #7e8299;
+}
+
+.valora-page .card-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: #181c32;
+}
+
+/* Select de empresas BVL */
+.valora-page .form-select-lg {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+}
+
+/* Tooltip específico para Valora */
+.valora-page .fa-circle-info {
+  cursor: help;
+  transition: color 0.2s ease;
+}
+
+.valora-page .fa-circle-info:hover {
+  color: #0d6efd;
+}
+
+/* Loading state específico */
+.valora-page .table-loading {
+  text-align: center;
+  padding: 2.5rem;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.valora-page .table-loading .spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Footer adjustments for Valora */
+.valora-page footer {
+  margin-top: auto;
+}
+
+/* Animaciones */
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.valora-page .results-container,
+.valora-page .analysis-container {
+  animation: slideInFromLeft 0.4s ease;
+}
+
+/* Print styles específicos para Valora */
+@media print {
+  .valora-page .aside,
+  .valora-page .aside-toggle,
+  .valora-page footer,
+  .valora-page .results-navbar,
+  .valora-page .mobile-menu-btn {
+    display: none;
+  }
+
+  .valora-page .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .valora-page .card {
+    page-break-inside: avoid;
+  }
+}

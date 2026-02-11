@@ -7,14 +7,16 @@ import { InternalLayout } from './components/layout/InternalLayout';
 import { useAuthContext } from './hooks/useAuthContext';
 import type { MenuItem } from './types';
 import ValoraPage from './app/valora/ValoraPage';
+import { Footer } from './components/layout/Footer';
+import { PublicLayout } from './components/layout/PublicLayout';
 
 const COMPANY = {
   id: 1,
   name: 'Plataforma Finanzas',
   host: 'https://kapitals.org',
   logos: [
-    { id: 1, patch: '/images/logo.png', type: 'default' },
-    { id: 2, patch: '/images/diseñador.png', type: 'sticky' },
+    { id: 1, patch: '/images/logo.png', type: 'default' as const },
+    { id: 2, patch: '/images/diseñador.png', type: 'sticky' as const },
   ],
 };
 
@@ -37,31 +39,50 @@ function App() {
   }
 
   return (
-    <Routes>
-      {/* Landing page - sin layout, maneja todo internamente */}
-      <Route 
-        path="/" 
+  <Routes>
+
+    {/* Rutas públicas */}
+    <Route element={
+      <PublicLayout
+        user={user}
+        logout={logout}
+        login={login}
+        register={register}
+        company={COMPANY}
+      />
+    }>
+      <Route
+        path="/"
         element={
-          <LandingPage 
-            isAdmin={user?.role === 'admin'}
+          <LandingPage
+            isAdmin={user?.role === "admin"}
             company={COMPANY}
             user={user}
             onLogout={logout}
             onLogin={login}
             onRegister={register}
           />
-        } 
+        }
       />
+    </Route>
 
-      {/* Páginas internas - con InternalLayout */}
-      <Route element={<InternalLayout user={user} onLogout={logout} company={COMPANY} />}>
-        <Route path="/kapital" element={<KapitalPage />} />
-        <Route path="/valora" element={<ValoraPage />} />
-      </Route>
+    {/* Rutas internas */}
+    <Route
+      element={
+        <InternalLayout
+          user={user}
+          onLogout={logout}
+          company={COMPANY}
+        />
+      }
+    >
+      <Route path="/kapital" element={<KapitalPage />} />
+      <Route path="/valora" element={<ValoraPage />} />
+    </Route>
 
-   
-    </Routes>
-  );
+  </Routes>
+);
+
 }
 
 export default App;

@@ -51,181 +51,150 @@ export function LoginModal({
   if (!isOpen) return null;
 
   return (
-    <>
+    <div className="fixed inset-0 z-[1050] flex items-center justify-center">
       {/* Backdrop */}
       <div 
-        className="modal-backdrop fade show"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
         onClick={handleClose}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 1040,
-        }}
       />
 
-      {/* Modal - Fullscreen en móviles */}
-      <div
-        className="modal fade show d-block"
-        tabIndex={-1}
-        style={{ zIndex: 1050 }}
-        role="dialog"
-        aria-labelledby="loginModalLabel"
-        aria-hidden={!isOpen}
-      >
-        <div className="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
-          <div className="modal-content" style={{ minHeight: '100vh'}}>
-            
-            {/* Close button */}
-            <button
-              type="button"
-              className="btn-close position-absolute top-0 end-0 m-3"
-              onClick={handleClose}
-              aria-label="Close"
-              disabled={loading}
-              style={{ zIndex: 1 }}
-            />
+      {/* Modal Content - Fullscreen en móviles, Centrado en desktop */}
+      <div className="relative w-full h-full sm:h-auto sm:max-w-[450px] bg-white sm:rounded-2xl shadow-2xl overflow-y-auto animate-in fade-in zoom-in duration-300">
+        
+        {/* Close button */}
+        <button
+          type="button"
+          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors z-10 disabled:opacity-30"
+          onClick={handleClose}
+          disabled={loading}
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
 
-            <div className="modal-body p-0 d-flex align-items-center">
-              <div className="w-100">
+        <div className="flex flex-col min-h-full">
+          
+          {/* Logo Section - Solo en móviles (sm:hidden) */}
+          <div className="sm:hidden bg-gray-50 text-center py-10 px-6 border-b border-gray-100">
+            <img
+              src="/assets/media/images/logo-pro-finance.png"
+              alt="Logo Pro Finance"
+              className="h-12 mx-auto mb-3 object-contain"
+            />
+            <h5 className="text-gray-900 font-bold text-sm uppercase tracking-wider">Análisis Financiero</h5>
+            <p className="text-gray-500 text-xs font-medium">Toma las mejores decisiones</p>
+          </div>
+
+          {/* Form Section */}
+          <div className="flex-1 px-8 py-12 sm:p-12">
+            <div className="max-w-[340px] mx-auto w-full">
+              
+              {/* Heading */}
+              <div className="text-center mb-10">
+                <h1 className="text-3xl font-black text-gray-900 mb-2">
+                  Iniciar Sesión
+                </h1>
+                <p className="text-gray-500 text-sm font-medium">
+                  Ingresa tus credenciales para acceder
+                </p>
+              </div>
+
+              {/* Error Alert */}
+              {error && (
+                <div className="flex items-start gap-3 mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 animate-in slide-in-from-top-2">
+                  <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <p className="text-sm font-semibold leading-tight">{error}</p>
+                </div>
+              )}
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                 
-                {/* Logo Section - Solo en móviles */}
-                <div className="d-lg-none bg-light text-center py-4 px-3">
-                  <img
-                    src="/assets/media/images/logo-pro-finance.png"
-                    alt="Logo Pro Finance"
-                    className="mb-2"
-                    style={{ height: '50px', maxWidth: '100%' }}
+                {/* Email */}
+                <div>
+                  <label htmlFor="login-email" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+                    Email
+                  </label>
+                  <input
+                    id="login-email"
+                    type="email"
+                    placeholder="nombre@ejemplo.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                    autoComplete="email"
+                    required
+                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-blue-500 outline-none transition-all text-[16px]"
                   />
-                  <h5 className="text-dark mb-1 fs-6">Análisis Financiero</h5>
-                  <p className="text-muted small mb-0">
-                    Toma las mejores decisiones
+                </div>
+
+                {/* Password */}
+                <div>
+                  <div className="flex justify-between items-center mb-1.5 ml-1">
+                    <label htmlFor="login-password" className="block text-xs font-bold text-gray-400 uppercase tracking-widest">
+                      Contraseña
+                    </label>
+                    <button type="button" className="text-[11px] font-bold text-blue-600 hover:text-blue-700">
+                      ¿Olvidaste tu clave?
+                    </button>
+                  </div>
+                  <input
+                    id="login-password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                    autoComplete="current-password"
+                    required
+                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-blue-500 outline-none transition-all text-[16px]"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-3 mt-4 group"
+                >
+                  {loading ? (
+                    <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  ) : (
+                    <>
+                      <span>Ingresar al sistema</span>
+                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </>
+                  )}
+                </button>
+
+                {/* Switch to Register */}
+                <div className="text-center pt-6">
+                  <p className="text-gray-500 text-sm font-medium">
+                    ¿No tienes una cuenta?{' '}
+                    <button
+                      type="button"
+                      onClick={onSwitchToRegister}
+                      disabled={loading}
+                      className="text-blue-600 hover:text-blue-700 font-bold hover:underline underline-offset-4 transition-all"
+                    >
+                      Regístrate gratis
+                    </button>
                   </p>
                 </div>
 
-                {/* Form Section */}
-                <div className="w-100 px-4 py-5 px-lg-10 py-lg-8">
-                  <div className="w-100" style={{ maxWidth: '400px', margin: '0 auto' }}>
-                    
-                    {/* Heading */}
-                    <div className="text-center mb-5 mb-lg-8">
-                      <h1 className="text-dark fw-bolder mb-2 fs-3 fs-lg-1" id="loginModalLabel">
-                        Iniciar Sesión
-                      </h1>
-                      <div className="text-gray-500 fw-semibold fs-7 fs-lg-6">
-                        Ingresa tus credenciales para acceder
-                      </div>
-                    </div>
-
-                    {/* Error Alert */}
-                    {error && (
-                      <div className="alert alert-danger d-flex align-items-center mb-4 py-2 px-3" role="alert">
-                        <i className="fa-solid fa-circle-exclamation me-2 fs-6"></i>
-                        <div className="fs-7 fs-lg-6">{error}</div>
-                      </div>
-                    )}
-
-                    {/* Form */}
-                    <form onSubmit={handleSubmit} className="w-100" noValidate>
-                      
-                      {/* Email */}
-                      <div className="fv-row mb-3 mb-lg-4">
-                        <label htmlFor="login-email" className="visually-hidden">
-                          Email
-                        </label>
-                        <input
-                          id="login-email"
-                          type="email"
-                          placeholder="Email"
-                          name="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          autoComplete="email"
-                          required
-                          className="form-control form-control-lg bg-transparent"
-                          disabled={loading}
-                          style={{ fontSize: '16px' }} // Previene zoom en iOS
-                        />
-                      </div>
-
-                      {/* Password */}
-                      <div className="fv-row mb-4 mb-lg-5">
-                        <label htmlFor="login-password" className="visually-hidden">
-                          Contraseña
-                        </label>
-                        <input
-                          id="login-password"
-                          type="password"
-                          placeholder="Contraseña"
-                          name="password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          autoComplete="current-password"
-                          required
-                          minLength={6}
-                          className="form-control form-control-lg bg-transparent"
-                          disabled={loading}
-                          style={{ fontSize: '16px' }} // Previene zoom en iOS
-                        />
-                      </div>
-
-                      {/* Submit Button */}
-                      <div className="d-grid mb-4">
-                        <button
-                          type="submit"
-                          className="btn btn-primary btn-lg"
-                          disabled={loading}
-                          style={{ 
-                            minHeight: '48px', // Tamaño táctil recomendado
-                            fontSize: '16px'
-                          }}
-                        >
-                          {loading ? (
-                            <>
-                              <span className="spinner-border spinner-border-sm me-2" role="status">
-                                <span className="visually-hidden">Cargando...</span>
-                              </span>
-                              Espere por favor...
-                            </>
-                          ) : (
-                            'Ingresar'
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Register Link */}
-                      <div className="text-center">
-                        <p className="text-gray-500 mb-0 fs-7 fs-lg-6">
-                          ¿No tienes una cuenta?{' '}
-                          <button
-                            type="button"
-                            onClick={onSwitchToRegister}
-                            className="btn btn-link p-0 text-primary fs-7 fs-lg-6"
-                            disabled={loading}
-                            style={{ 
-                              textDecoration: 'underline',
-                              minHeight: '44px', // Área táctil
-                              display: 'inline-flex',
-                              alignItems: 'center'
-                            }}
-                          >
-                            Regístrate gratis
-                          </button>
-                        </p>
-                      </div>
-
-                    </form>
-                  </div>
-                </div>
-
-              </div>
+              </form>
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

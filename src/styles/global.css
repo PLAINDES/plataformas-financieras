@@ -24,69 +24,8 @@
   --bs-light: #F5F8FA;
 }
 
-/* ============================================
-   RESET Y BASE
-   ============================================ */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
 
-body {
-  margin: 0;
-  font-family: 'Inter', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #ffffff;
-  font-size: 1rem;
-  line-height: 1.5;
-}
 
-/* ============================================
-   HEADER STYLES
-   ============================================ */
-.landing-header {
-  transition: all 0.3s ease;
-}
-
-.landing-header.sticky {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 999;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 20px 60px !important;
-}
-
-.landing-header .menu .menu-link {
-  color: #181C32;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s;
-  font-size: 14px;
-}
-
-.landing-header .menu .menu-link:hover,
-.landing-header .menu .menu-link.active {
-  color: var(--kt-primary);
-}
-
-.header .active {
-  border: 1px solid #009ef7 !important;
-}
-
-.header .active-report {
-  border: 1px solid #7B1FA2 !important;
-  color: #7B1FA2 !important;
-}
-
-.header .active-report span {
-  color: #7B1FA2 !important;
-}
 
 @media (min-width: 992px) {
   .header {
@@ -141,8 +80,6 @@ body {
 .mobile-menu-drawer .nav-link:hover {
   background-color: rgba(0, 158, 247, 0.08);
 }
-
-
 
 
 
@@ -383,11 +320,6 @@ body {
   transform: translateY(-5px);
 }
 
-.bs-card-2:hover button {
-  color: var(--kt-primary-inverse);
-  border-color: var(--kt-primary);
-  background-color: var(--kt-primary);
-}
 
 .bs-card-2:hover button i {
   color: var(--kt-primary-inverse);
@@ -721,8 +653,8 @@ body {
    CONTENT SECTIONS
    ============================================ */
 .bs-content-1 .bs-content-title {
-  font-size: 4rem;
-  font-weight: 700;
+  font-size: 3.5rem;
+  font-weight: 500;
 }
 
 .bs-content-1 .bs-content-text {
@@ -753,8 +685,16 @@ body {
    FOOTER
    ============================================ */
 .bs-landing-footer {
-  background-color: #2d205f;
+  background-color: #0E185F;
   color: white;
+  max-height: none; /* Cambiado de 300px a none */
+}
+
+/* Solo aplicar max-height en desktop */
+@media (min-width: 1024px) {
+  .bs-landing-footer {
+    max-height: 300px;
+  }
 }
 
 /* ============================================
@@ -824,15 +764,7 @@ table.dataTable.cell-border {
   text-decoration: none;
 }
 
-.btn-primary {
-  background-color: var(--bs-primary);
-  color: white;
-}
 
-.btn-primary:hover {
-  background-color: #0086d6;
-  transform: translateY(-2px);
-}
 
 .btn-secondary {
   background-color: #e4e6ef;
@@ -902,9 +834,7 @@ table.dataTable.cell-border {
     display: none !important;
   }
   
-  .landing-header {
-    /* Desktop specific styles */
-  }
+ 
 }
 
 @media only screen and (max-width: 992px) {

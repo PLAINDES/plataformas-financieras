@@ -82,6 +82,16 @@ export interface Company {
   logos: Logo[];
   social_links?: SocialLink[];
 }
+const COMPANY = {
+  id: 1,
+  name: 'Plataforma Finanzas',
+  host: 'https://kapitals.org',
+  logos: [
+    { id: 1, patch: '/images/logo.png', type: 'default' },
+    { id: 2, patch: '/images/diseñador.png', type: 'sticky' },
+  ],
+};
+
 
 export interface Logo {
   id: number;

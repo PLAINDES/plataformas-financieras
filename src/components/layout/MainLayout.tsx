@@ -22,6 +22,7 @@ interface MainLayoutProps {
   onLogout: () => void;
   onLogin: (credentials: LoginCredentials) => Promise<User>;
   onRegister: (data: RegisterData) => Promise<void>;
+  OnSave: (data: any) => Promise<void>; // Asegúrate de pasar OnSave si Header lo requiere
 }
 
 export function MainLayout({
@@ -32,9 +33,9 @@ export function MainLayout({
   onLogout,
   onLogin,
   onRegister,
+  OnSave // Prop añadida para consistencia con el Header anterior
 }: MainLayoutProps) {
   useEffect(() => {
-    // Theme setup from original code
     const initTheme = () => {
       const defaultThemeMode = 'light';
       let themeMode: string;
@@ -51,13 +52,20 @@ export function MainLayout({
       }
       
       document.documentElement.setAttribute('data-theme', themeMode);
+      // Soporte para modo oscuro de Tailwind
+      if (themeMode === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     };
     
     initTheme();
   }, []);
   
   return (
-    <div className="d-flex flex-column flex-root" id="kt_app_root">
+    /* d-flex flex-column flex-root -> flex flex-col min-h-screen */
+    <div className="flex flex-col min-h-screen bg-white dark:bg-slate-900" id="kt_app_root">
       <Header
         company={company}
         menuItems={menuItems}
@@ -65,9 +73,12 @@ export function MainLayout({
         onLogout={onLogout}
         onLogin={onLogin}
         onRegister={onRegister}
+        OnSave={OnSave}
       />
       
-      <main className="flex-grow-1">
+      {/* flex-grow-1 -> flex-grow */}
+      <main className="flex-grow pt-[80px]"> 
+        {/* pt-[80px] añadido para compensar el Header fixed y que no tape el contenido */}
         {children}
       </main>
       

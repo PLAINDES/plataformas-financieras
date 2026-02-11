@@ -16,7 +16,6 @@ interface PlatformCardItem extends CollectionItem {
   hoverVideoUrl?: string;
   ctaUrl?: string;
   libraryUrl?: string;
-  ribbon?: string;
 }
 
 interface PlatformCardsSectionProps {
@@ -33,7 +32,6 @@ interface PlatformCardsSectionProps {
       hoverVideoUrl?: string;
       ctaUrl?: string;
       libraryUrl?: string;
-      ribbon?: string;
     }>;
   };
   onSave?: (content: EditableContent) => Promise<void>;
@@ -58,6 +56,9 @@ export function PlatformCardsSection({
       hoverVideoUrl: card.hoverVideoUrl || card.videoUrl,
     })),
   });
+
+  const isFirstLoad = useRef(true);
+  
 
   // Actualizar cuando cambie el content
   useEffect(() => {
@@ -223,30 +224,30 @@ export function PlatformCardsSection({
     caption: 'Sistema de Gestión',
     description: 'Descripción del módulo',
     imageUrl: 'https://via.placeholder.com/300x200/4F46E5/ffffff?text=Nuevo',
-    videoUrl: '/video/default.mp4',
-    hoverVideoUrl: '/video/default.mp4',
+    videoUrl: '/video/Modulo-Kapital.mp4',
+    hoverVideoUrl: '/video/Modulo-Kapital.mp4',
     ctaUrl: 'https://example.com/curso',
     libraryUrl: 'https://example.com/biblioteca',
   });
 
   return (
     <>
-      <section className="platform-section">
-        <div className="container-fluid px-3 px-md-4 px-lg-5">
+      <section className="platform-section ">
+        <div className="platform-container">
           
    
 
           {/* Contenedor principal */}
-          <div className="platform-content">
+          <div className="platform-content ">
             
             {/* Video Container */}
-            <div className="video-container">
+            <div className="video-container ">
               <div className="video-wrapper">
                 <div className="video-responsive">
                   <video
                     ref={videoRef}
                     src={activeVideoUrl}
-                    className="rounded-4 shadow-lg w-100"
+                    className="rounded-2xl shadow-lg w-full"
                     controls
                     style={{ width: '100%', aspectRatio: '16 / 9', background: '#000' }}
                     muted
@@ -254,7 +255,7 @@ export function PlatformCardsSection({
                     playsInline
                   />
                   <div className="video-title-overlay">
-                    <span className="badge bg-dark bg-opacity-75 px-3 py-2">
+                    <span className="inline-block bg-gray-900/75 text-white px-3 py-2 rounded-md">
                       {activeVideoTitle}
                     </span>
                   </div>
@@ -263,8 +264,8 @@ export function PlatformCardsSection({
             </div>
 
             {/* Cards Container */}
-            <div className="cards-container-wrapper">
-              <div className="cards-container" ref={cardsContainerRef}>
+            <div className="cards-container-wrapper  ">
+              <div className="cards-container pt-2" ref={cardsContainerRef}>
                 <EditableCollection
                   data={cardsData}
                   onSave={handleSaveCards}
@@ -272,7 +273,7 @@ export function PlatformCardsSection({
                   addButtonText="Agregar Card"
                   maxItems={10}
                   allowReorder={true}
-                  className="cards-flex-wrapper"
+                  className="cards-flex-wrapper "
                   renderItem={(card, index, helpers) => (
                     <div className="video-card-wrapper" key={card.id}>
                       <PlatformCard
@@ -289,25 +290,60 @@ export function PlatformCardsSection({
               </div>
 
               {/* Controles de navegación - solo mobile/tablet */}
-              {cardsData.items.length > 1 && (
-                <>
-                  <button 
-                    className="carousel-nav-btn carousel-nav-prev"
-                    onClick={handlePrevCard}
-                    aria-label="Card anterior"
-                  >
-                    <i className="bi bi-chevron-left"></i>
-                  </button>
-                  
-                  <button 
-                    className="carousel-nav-btn carousel-nav-next"
-                    onClick={handleNextCard}
-                    aria-label="Card siguiente"
-                  >
-                    <i className="bi bi-chevron-right"></i>
-                  </button>
-                </>
-              )}
+{cardsData.items.length > 1 && (
+  <>
+    <button 
+      className="absolute top-1/2 -translate-y-1/2 left-2 z-20 
+                 w-10 h-10 sm:w-12 sm:h-12
+                 flex items-center justify-center
+                 bg-white/95 backdrop-blur-sm
+                 rounded-full
+                 shadow-lg hover:shadow-xl
+                 border border-gray-200/50
+                 transition-all duration-300 ease-out
+                 hover:scale-110 hover:bg-white
+                 active:scale-95
+                 lg:hidden
+                 group"
+      onClick={handlePrevCard}
+      aria-label="Card anterior"
+    >
+  
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                     stroke-width="1" stroke-linecap="round" stroke-linejoin="round" 
+                     className="lucide lucide-chevron-left-icon lucide-chevron-left 
+                           text-lg sm:text-xl text-gray-700 group-hover:text-indigo-600 
+                           transition-colors">
+                    <path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    
+    <button 
+      className="absolute top-1/2 -translate-y-1/2 right-2 z-20
+                 w-10 h-10 sm:w-12 sm:h-12
+                 flex items-center justify-center
+                 bg-white/95 backdrop-blur-sm
+                 rounded-full
+                 shadow-lg hover:shadow-xl
+                 border border-gray-200/50
+                 transition-all duration-300 ease-out
+                 hover:scale-110 hover:bg-white
+                 active:scale-95
+                 lg:hidden
+                 group"
+      onClick={handleNextCard}
+      aria-label="Card siguiente"
+    >
+ 
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" 
+      fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" 
+      stroke-linejoin="round" className="lucide lucide-chevron-right-icon lucide-chevron-right 
+      text-lg sm:text-xl text-gray-700 group-hover:text-indigo-600 transition-colors">
+      <path d="m9 18 6-6-6-6"/>
+      </svg>
+    </button>
+  </>
+)}
             </div>
 
           </div>
@@ -316,10 +352,20 @@ export function PlatformCardsSection({
 
       {/* Estilos (mantener los mismos) */}
       <style>{`
+
+
         .platform-section {
           padding: 3rem;
           display: flex;
           align-items: center;
+        }
+
+        .platform-container {
+          width: 100%;
+          padding-left: 0.75rem;  /* px-3 */
+          padding-right: 0.75rem;
+          margin-left: auto;
+          margin-right: auto;
         }
 
         .platform-content {
@@ -440,7 +486,7 @@ export function PlatformCardsSection({
         }
 
         .video-card.editing {
-          border: 2px solid #f59e0b;
+          border: 2px solid #2FA4FF;
           box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
           height: 100%;
           overflow-y: auto;
@@ -454,49 +500,6 @@ export function PlatformCardsSection({
           }
         }
 
-        .carousel-nav-btn {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 44px;
-          height: 44px;
-          border-radius: 50%;
-          border: none;
-          background: rgba(255, 255, 255, 0.95);
-          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-          cursor: pointer;
-          z-index: 20;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.25rem;
-          color: #1a1a1a;
-          transition: all 0.3s ease;
-        }
-
-        .carousel-nav-btn:hover {
-          background: rgba(255, 255, 255, 1);
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-          transform: translateY(-50%) scale(1.05);
-        }
-
-        .carousel-nav-btn:active {
-          transform: translateY(-50%) scale(0.95);
-        }
-
-        .carousel-nav-prev {
-          left: 8px;
-        }
-
-        .carousel-nav-next {
-          right: 8px;
-        }
-
-        @media (min-width: 992px) {
-          .carousel-nav-btn {
-            display: none;
-          }
-        }
 
         .card-image-wrapper {
           position: relative;
@@ -519,20 +522,6 @@ export function PlatformCardsSection({
           width: 100%;
           height: 100%;
           object-fit: contain;
-        }
-
-        .ribbon-badge {
-          position: absolute;
-          top: 1.5rem;
-          right: 1.5rem;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          padding: 0.25rem 0.75rem;
-          border-radius: 20px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-          z-index: 10;
         }
 
         .card-content {
@@ -600,6 +589,10 @@ export function PlatformCardsSection({
           .video-wrapper {
             max-width: 90%;
           }
+            .platform-container {
+    padding-left: 1rem;   /* md:px-4 */
+    padding-right: 1rem;
+  }
         }
 
         @media (min-width: 992px) {
@@ -608,6 +601,12 @@ export function PlatformCardsSection({
             align-items: center;
             gap: 3rem;
           }
+
+          .platform-container {
+    padding-left: 1.25rem; /* lg:px-5 */
+    padding-right: 1.25rem;
+    max-width: 1400px;     /* Para evitar que en pantallas gigantes se pierda el centro */
+  }
 
           .video-container {
             flex: 1;
@@ -663,9 +662,10 @@ export function PlatformCardsSection({
           .video-card-wrapper {
             width: 100%;
             max-width: 200px;
-            margin: 0 auto;
+            margin: 0;
             scroll-snap-align: none;
             scroll-snap-stop: normal;
+            flex: 0 0 auto;
           }
 
           .video-card:hover {
@@ -674,7 +674,7 @@ export function PlatformCardsSection({
           }
 
           .video-card.active {
-            border: 2px solid #0d6efd;
+            border: 1px solid #2FA4FF;
             box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
           }
 
@@ -685,11 +685,25 @@ export function PlatformCardsSection({
 
         @media (min-width: 1200px) {
           .platform-content {
-            gap: 0rem;
+            gap: 2rem;
+          }
+
+        .cards-container-wrapper {
+            /* Quitamos comportamientos heredados */
+            flex: none !important; 
+            width: auto !important;
+            max-width: none !important;
+            position: relative;
+            order: 1;
+            
+            /* Forzamos que el contenido interno se pegue a la derecha (al video) */
+            display: flex;
+            justify-content: flex-end; 
           }
 
           .video-card-wrapper {
             max-width: 250px;
+            margin: 0;
           }
 
           .card-caption {
@@ -698,6 +712,11 @@ export function PlatformCardsSection({
           
           .cards-flex-wrapper {
             height: 420px;
+            justify-content: end;
+          }
+          .video-container {
+            flex: 1;
+            order: 2;
           }
         }
       `}</style>
@@ -744,7 +763,7 @@ function PlatformCard({
 
   return (
     <div
-      className={`video-card ${isActive ? 'active' : ''}`}
+      className={`video-card  ${isActive ? 'active' : ''}`}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
     >
@@ -757,10 +776,11 @@ function PlatformCard({
           canMoveUp={helpers.canMoveUp}
           canMoveDown={helpers.canMoveDown}
           position="top-right"
+          buttonsDirection='horizontal'
         />
       )}
 
-      <div className="card-image-wrapper">
+      <div className="card-image-wrapper ">
         <div className="card-img-container">
           {card.ctaUrl ? (
             <a href={card.ctaUrl} target="_blank" rel="noopener noreferrer">
@@ -771,7 +791,6 @@ function PlatformCard({
           )}
         </div>
 
-        {card.ribbon && <div className="ribbon-badge">{card.ribbon}</div>}
       </div>
 
       <div className="card-content">
@@ -783,40 +802,42 @@ function PlatformCard({
         )}
       </div>
 
-      <div className="card-actions">
-        {card.ctaUrl ? (
-          <>
-            <a
-              href={card.ctaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="card-btn"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <span>Curso de Capacitación</span>
-              <i className="bi bi-chevron-right"></i>
-            </a>
+<div className="card-actions">
+  {card.ctaUrl ? (
+    <>
+      {/* 1. Enlace al Curso */}
+      <a
+        href={card.ctaUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="card-btn"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span>Curso de Capacitación</span>
+        <i className="bi bi-chevron-right"></i>
+      </a>
 
-            {card.libraryUrl && (
-              <a
-                href={card.libraryUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="card-btn"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <span>Biblioteca</span>
-                <i className="bi bi-book"></i>
-              </a>
-            )}
-          </>
-        ) : (
+      {/* 2. Enlace a la Biblioteca (si existe) */}
+      {card.libraryUrl && (
+        <a
+          href={card.libraryUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="card-btn"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span>Biblioteca</span>
+          <i className="bi bi-book"></i>
+        </a>
+      )}
+    </>
+  ) : (
           <>
-            <button className="card-btn btn">
+            <button className="card-btn">
               <span>Curso de Capacitación</span>
               <i className="bi bi-chevron-right"></i>
             </button>
-            <button className="card-btn btn">
+            <button className="card-btn">
               <span>Biblioteca</span>
               <i className="bi bi-book"></i>
             </button>
@@ -850,105 +871,74 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
   };
 
   return (
-    <div className="video-card editing" style={{ padding: '1rem', minWidth: '300px', maxWidth: '350px' }}>
-      <h6 style={{ marginBottom: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>
+    <div className="video-card editing p-4 min-w-[300px] max-w-[350px]">
+      <h6 className="mb-4 text-sm font-semibold">
         Editando Card
       </h6>
 
-      <div style={{ display: 'grid', gap: '0.75rem' }}>
+      <div className="grid gap-3">
         <div>
-          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+          <label className="block text-xs mb-1 font-medium">
             Nombre
           </label>
           <input
             type="text"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value, title: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '6px 8px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
-              fontSize: '0.8rem',
-            }}
+            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
           />
         </div>
 
         <div>
-          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+          <label className="block text-xs mb-1 font-medium">
             Caption
           </label>
           <input
             type="text"
             value={formData.caption}
             onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '6px 8px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
-              fontSize: '0.8rem',
-            }}
+            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
           />
         </div>
 
         <div>
-          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+          <label className="block text-xs mb-1 font-medium">
             Descripción
           </label>
           <textarea
             value={formData.description || ''}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             rows={2}
-            style={{
-              width: '100%',
-              padding: '6px 8px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
-              fontSize: '0.8rem',
-              resize: 'vertical',
-            }}
+            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm resize-y"
           />
         </div>
 
         <div>
-          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+          <label className="block text-xs mb-1 font-medium">
             Imagen URL
           </label>
           <input
             type="url"
             value={formData.imageUrl}
             onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '6px 8px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
-              fontSize: '0.75rem',
-            }}
+            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs"
           />
         </div>
 
         <div>
-          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+          <label className="block text-xs mb-1 font-medium">
             Video URL
           </label>
           <input
             type="url"
             value={formData.videoUrl}
             onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '6px 8px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
-              fontSize: '0.75rem',
-            }}
+            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs"
           />
         </div>
 
         <div>
-          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+          <label className="block text-xs mb-1 font-medium">
             CTA URL (opcional)
           </label>
           <input
@@ -956,18 +946,12 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
             value={formData.ctaUrl || ''}
             onChange={(e) => setFormData({ ...formData, ctaUrl: e.target.value })}
             placeholder="https://..."
-            style={{
-              width: '100%',
-              padding: '6px 8px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
-              fontSize: '0.75rem',
-            }}
+            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs"
           />
         </div>
 
         <div>
-          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
+          <label className="block text-xs mb-1 font-medium">
             Library URL (opcional)
           </label>
           <input
@@ -975,64 +959,22 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
             value={formData.libraryUrl || ''}
             onChange={(e) => setFormData({ ...formData, libraryUrl: e.target.value })}
             placeholder="https://..."
-            style={{
-              width: '100%',
-              padding: '6px 8px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
-              fontSize: '0.75rem',
-            }}
+            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs"
           />
         </div>
 
-        <div>
-          <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '4px', fontWeight: '500' }}>
-            Ribbon (opcional)
-          </label>
-          <input
-            type="text"
-            value={formData.ribbon || ''}
-            onChange={(e) => setFormData({ ...formData, ribbon: e.target.value })}
-            placeholder="Nuevo, Popular..."
-            style={{
-              width: '100%',
-              padding: '6px 8px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
-              fontSize: '0.75rem',
-            }}
-          />
-        </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '6px', marginTop: '1rem' }}>
+      <div className="flex gap-1.5 mt-4">
         <button
           onClick={onCancel}
-          style={{
-            flex: 1,
-            padding: '6px',
-            border: '1px solid #d1d5db',
-            background: 'white',
-            borderRadius: '4px',
-            fontSize: '0.75rem',
-            cursor: 'pointer',
-          }}
+          className="flex-1 px-3 py-1.5 border border-gray-300 bg-white rounded text-xs cursor-pointer hover:bg-gray-50"
         >
           Cancelar
         </button>
         <button
           onClick={handleSubmit}
-          style={{
-            flex: 1,
-            padding: '6px',
-            border: 'none',
-            background: '#3b82f6',
-            color: 'white',
-            borderRadius: '4px',
-            fontSize: '0.75rem',
-            cursor: 'pointer',
-            fontWeight: '500',
-          }}
+          className="flex-1 px-3 py-1.5 border-none bg-[#2FA4FF] text-white rounded text-xs cursor-pointer font-medium hover:bg-[#00FFDD]"
         >
           Guardar
         </button>

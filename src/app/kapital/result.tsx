@@ -552,7 +552,7 @@ const KapitalPage: React.FC = () => {
                 <div className="bs-container-title">
                   <div className="row">
                     <div className="col-lg-8 mb-2">
-                      <h1 className="fs-1">Resultados generales</h1>
+                      <h1 className="fs-1">Resultados generasdfsdfles</h1>
                       <span className="fs-5">Comparación de resultados</span>
                     </div>
                   </div>

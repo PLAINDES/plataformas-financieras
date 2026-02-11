@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './context/auth.context';
 import './styles/global.css';
+import './App.css'
 
 declare global {
   interface Window {

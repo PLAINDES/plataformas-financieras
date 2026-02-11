@@ -24,7 +24,6 @@ export function EditableText({
   const containerRef = useRef<HTMLDivElement>(null);
   const { isAdmin } = useAuthContext();
 
-
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
@@ -32,34 +31,26 @@ export function EditableText({
     }
   }, [isEditing]);
 
-  // Cerrar al hacer clic fuera
   useEffect(() => {
     if (!isEditing) return;
-
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         handleCancel();
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isEditing]);
 
   const handleSave = async () => {
-    const hasContentChanged = value !== content.value;
-
-    if (!hasContentChanged) {
+    if (value === content.value) {
       setIsEditing(false);
       return;
     }
 
     setIsSaving(true);
     try {
-      await onSave({
-        ...content,
-        value,
-      });
+      await onSave({ ...content, value });
       setIsEditing(false);
     } catch (error) {
       console.error('Error saving:', error);
@@ -83,26 +74,15 @@ export function EditableText({
     }
   };
 
-
-
   if (!isAdmin) {
-    return (
-      <Component className={className}>
-        {content.value}
-      </Component>
-    );
+    return <Component className={className}>{content.value}</Component>;
   }
 
   if (isEditing) {
     return (
       <div 
         ref={containerRef}
-        style={{ 
-          position: 'relative',
-          display: 'inline-block',
-          minWidth: '200px',
-          width: '100%',
-        }}
+        className="relative inline-block min-w-[200px] w-full"
       >
         {/* Textarea de edición */}
         <textarea
@@ -111,81 +91,32 @@ export function EditableText({
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isSaving}
-          style={{
-            width: '100%',
-            minHeight: '40px',
-            padding: '8px 10px',
-            border: '2px solid #3b82f6',
-            borderRadius: '6px',
-            fontSize: 'inherit',
-            fontFamily: 'inherit',
-            lineHeight: 'inherit',
-            resize: 'vertical',
-            outline: 'none',
-            backgroundColor: 'white',
-            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)',
-          }}
           rows={1}
+          className="w-full min-h-[40px] p-2 border-2 border-blue-500 rounded-md shadow-lg outline-none resize-y bg-white text-inherit font-inherit leading-inherit"
         />
 
         {/* Panel compacto debajo */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 4px)',
-            left: 0,
-            right: 0,
-            backgroundColor: 'white',
-            border: '1px solid #e5e7eb',
-            borderRadius: '6px',
-            padding: '8px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-            zIndex: 1000,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-          }}
-        >
-          {/* Botones principales */}
-          <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-       
+        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white border border-gray-200 rounded-md p-2 shadow-xl z-50 flex flex-col gap-2">
+          {/* Botones */}
+          <div className="flex justify-end gap-1.5">
             <button
               onClick={handleCancel}
               disabled={isSaving}
-              style={{
-                padding: '4px 10px',
-                border: '1px solid #d1d5db',
-                background: 'white',
-                borderRadius: '4px',
-                fontSize: '0.75rem',
-                cursor: 'pointer',
-                color: '#6b7280',
-              }}
+              className="px-2.5 py-1 border border-gray-300 bg-white rounded text-[10px] text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               onClick={handleSave}
               disabled={isSaving}
-              style={{
-                padding: '4px 12px',
-                border: 'none',
-                background: isSaving ? '#9ca3af' : '#3b82f6',
-                color: 'white',
-                borderRadius: '4px',
-                fontSize: '0.75rem',
-                cursor: isSaving ? 'not-allowed' : 'pointer',
-                fontWeight: '500',
-              }}
+              className="px-3 py-1 bg-blue-600 text-white rounded text-[10px] font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400"
             >
               {isSaving ? '...' : 'Guardar'}
             </button>
           </div>
 
-         
-
-          {/* Ayuda */}
-          <div style={{ fontSize: '0.65rem', color: '#9ca3af', textAlign: 'center' }}>
+          {/* Atajos */}
+          <div className="text-[9px] text-gray-400 text-center uppercase tracking-wider">
             Ctrl+Enter = Guardar • Esc = Cancelar
           </div>
         </div>
@@ -195,20 +126,13 @@ export function EditableText({
 
   return (
     <Component
-      className={`${className} editable-text`}
+      className={`
+        ${className} 
+        relative cursor-pointer transition-all duration-200
+        outline-2 outline-dashed outline-transparent hover:outline-blue-500
+        hover:bg-blue-50/30 rounded
+      `}
       onClick={() => setIsEditing(true)}
-      style={{
-        cursor: 'pointer',
-        outline: '2px dashed transparent',
-        transition: 'outline 0.2s',
-        position: 'relative',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.outline = '2px dashed #3b82f6';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.outline = '2px dashed transparent';
-      }}
       title="Click para editar"
     >
       {content.value}

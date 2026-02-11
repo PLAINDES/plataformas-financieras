@@ -30,7 +30,6 @@ export function RegisterModal({
     e.preventDefault();
     setError(null);
 
-    // Validaciones básicas
     if (formData.password.length < 6) {
       setError('La contraseña debe tener al menos 6 caracteres');
       return;
@@ -42,7 +41,6 @@ export function RegisterModal({
     }
 
     setLoading(true);
-
     try {
       await onRegister(formData);
       setFormData({ name: '', lastname: '', email: '', password: '' });
@@ -69,221 +67,153 @@ export function RegisterModal({
   if (!isOpen) return null;
 
   return (
-    <>
+    <div className="fixed inset-0 z-[1050] flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="modal-backdrop fade show"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
         onClick={handleClose}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 1040,
-        }}
       />
 
-      {/* Modal - Fullscreen en móviles */}
-      <div
-        className="modal fade show d-block"
-        tabIndex={-1}
-        style={{ zIndex: 1050 }}
-        role="dialog"
-        aria-labelledby="registerModalLabel"
-        aria-hidden={!isOpen}
-      >
-        <div className="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
-          <div className="modal-content" style={{ minHeight: '100vh' }}>
-            
-            {/* Close button */}
-            <button
-              type="button"
-              className="btn-close position-absolute top-0 end-0 m-3"
-              onClick={handleClose}
-              aria-label="Close"
-              disabled={loading}
-              style={{ zIndex: 1 }}
+      {/* Modal Content */}
+      <div className="relative w-full h-full sm:h-auto sm:max-w-[480px] bg-white sm:rounded-2xl shadow-2xl overflow-y-auto animate-in fade-in zoom-in duration-300">
+        
+        {/* Close button */}
+        <button
+          type="button"
+          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors z-10 disabled:opacity-30"
+          onClick={handleClose}
+          disabled={loading}
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <div className="flex flex-col min-h-full">
+          {/* Logo Section - Solo en móviles (sm:hidden) */}
+          <div className="sm:hidden bg-gray-50 text-center py-8 px-6 border-b border-gray-100">
+            <img
+              src="/assets/media/images/logo-pro-finance.png"
+              alt="Logo Pro Finance"
+              className="h-12 mx-auto mb-3 object-contain"
             />
+            <h5 className="text-gray-900 font-bold text-sm uppercase tracking-wider">Análisis Financiero</h5>
+            <p className="text-gray-500 text-xs">Toma las mejores decisiones</p>
+          </div>
 
-            <div className="modal-body p-0 d-flex align-items-center">
-              <div className="w-100">
-                
-                {/* Logo Section - Solo en móviles */}
-                <div className="d-lg-none bg-light text-center py-4 px-3">
-                  <img
-                    src="/assets/media/images/logo-pro-finance.png"
-                    alt="Logo Pro Finance"
-                    className="mb-2"
-                    style={{ height: '50px', maxWidth: '100%' }}
-                  />
-                  <h5 className="text-dark mb-1 fs-6">Análisis Financiero</h5>
-                  <p className="text-muted small mb-0">
-                    Toma las mejores decisiones
-                  </p>
+          {/* Form Section */}
+          <div className="flex-1 px-6 py-10 sm:p-12">
+            <div className="max-w-[360px] mx-auto w-full">
+              
+              {/* Heading */}
+              <div className="text-center mb-8">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2">
+                  Crea tu cuenta
+                </h1>
+                <p className="text-gray-500 text-sm sm:text-base font-medium">
+                  Registra tus credenciales para acceder
+                </p>
+              </div>
+
+              {/* Error Alert */}
+              {error && (
+                <div className="flex items-center gap-3 mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 animate-shake">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <p className="text-sm font-medium leading-tight">{error}</p>
                 </div>
+              )}
 
-                {/* Form Section */}
-                <div className="w-100 px-4 py-5 px-lg-10 py-lg-8">
-                  <div className="w-100" style={{ maxWidth: '400px', margin: '0 auto' }}>
-                    
-                    {/* Heading */}
-                    <div className="text-center mb-4 mb-lg-6">
-                      <h1 className="text-dark fw-bolder mb-2 fs-3 fs-lg-1" id="registerModalLabel">
-                        Crea tu cuenta
-                      </h1>
-                      <div className="text-gray-500 fw-semibold fs-7 fs-lg-6">
-                        Registra tus credenciales para acceder
-                      </div>
-                    </div>
-
-                    {/* Error Alert */}
-                    {error && (
-                      <div className="alert alert-danger d-flex align-items-center mb-4 py-2 px-3" role="alert">
-                        <i className="fa-solid fa-circle-exclamation me-2 fs-6"></i>
-                        <div className="fs-7 fs-lg-6">{error}</div>
-                      </div>
-                    )}
-
-                    {/* Form */}
-                    <form onSubmit={handleSubmit} className="w-100" noValidate>
-                      
-                      {/* Name */}
-                      <div className="fv-row mb-3">
-                        <label htmlFor="register-name" className="visually-hidden">
-                          Nombres
-                        </label>
-                        <input
-                          id="register-name"
-                          type="text"
-                          placeholder="Nombres"
-                          name="name"
-                          value={formData.name}
-                          onChange={(e) => handleChange('name', e.target.value)}
-                          autoComplete="given-name"
-                          required
-                          className="form-control form-control-lg bg-transparent"
-                          disabled={loading}
-                          style={{ fontSize: '16px' }} // Previene zoom en iOS
-                        />
-                      </div>
-
-                      {/* Lastname */}
-                      <div className="fv-row mb-3">
-                        <label htmlFor="register-lastname" className="visually-hidden">
-                          Apellidos
-                        </label>
-                        <input
-                          id="register-lastname"
-                          type="text"
-                          placeholder="Apellidos"
-                          name="lastname"
-                          value={formData.lastname}
-                          onChange={(e) => handleChange('lastname', e.target.value)}
-                          autoComplete="family-name"
-                          required
-                          className="form-control form-control-lg bg-transparent"
-                          disabled={loading}
-                          style={{ fontSize: '16px' }}
-                        />
-                      </div>
-
-                      {/* Email */}
-                      <div className="fv-row mb-3">
-                        <label htmlFor="register-email" className="visually-hidden">
-                          Email
-                        </label>
-                        <input
-                          id="register-email"
-                          type="email"
-                          placeholder="Email"
-                          name="email"
-                          value={formData.email}
-                          onChange={(e) => handleChange('email', e.target.value)}
-                          autoComplete="email"
-                          required
-                          className="form-control form-control-lg bg-transparent"
-                          disabled={loading}
-                          style={{ fontSize: '16px' }}
-                        />
-                      </div>
-
-                      {/* Password */}
-                      <div className="fv-row mb-4">
-                        <label htmlFor="register-password" className="visually-hidden">
-                          Contraseña
-                        </label>
-                        <input
-                          id="register-password"
-                          type="password"
-                          placeholder="Contraseña (mín. 6 caracteres)"
-                          name="password"
-                          value={formData.password}
-                          onChange={(e) => handleChange('password', e.target.value)}
-                          autoComplete="new-password"
-                          required
-                          minLength={6}
-                          className="form-control form-control-lg bg-transparent"
-                          disabled={loading}
-                          style={{ fontSize: '16px' }}
-                        />
-                      </div>
-
-                      {/* Submit Button */}
-                      <div className="d-grid mb-3 mb-lg-4">
-                        <button
-                          type="submit"
-                          className="btn btn-primary btn-lg"
-                          disabled={loading}
-                          style={{ 
-                            minHeight: '48px', // Tamaño táctil recomendado
-                            fontSize: '16px'
-                          }}
-                        >
-                          {loading ? (
-                            <>
-                              <span className="spinner-border spinner-border-sm me-2" role="status">
-                                <span className="visually-hidden">Cargando...</span>
-                              </span>
-                              Espere por favor...
-                            </>
-                          ) : (
-                            'Registrarme'
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Login Link */}
-                      <div className="text-center">
-                        <p className="text-gray-500 mb-0 fs-7 fs-lg-6">
-                          ¿Ya tienes una cuenta?{' '}
-                          <button
-                            type="button"
-                            onClick={onSwitchToLogin}
-                            className="btn btn-link p-0 text-primary fs-7 fs-lg-6"
-                            disabled={loading}
-                            style={{ 
-                              textDecoration: 'underline',
-                              minHeight: '44px', // Área táctil
-                              display: 'inline-flex',
-                              alignItems: 'center'
-                            }}
-                          >
-                            Inicia sesión
-                          </button>
-                        </p>
-                      </div>
-
-                    </form>
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Name */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Nombre"
+                      value={formData.name}
+                      onChange={(e) => handleChange('name', e.target.value)}
+                      disabled={loading}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
+                    />
+                  </div>
+                  {/* Lastname */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Apellido"
+                      value={formData.lastname}
+                      onChange={(e) => handleChange('lastname', e.target.value)}
+                      disabled={loading}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
+                    />
                   </div>
                 </div>
 
-              </div>
+                {/* Email */}
+                <div className="relative">
+                  <input
+                    type="email"
+                    placeholder="Correo electrónico"
+                    value={formData.email}
+                    onChange={(e) => handleChange('email', e.target.value)}
+                    disabled={loading}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
+                  />
+                </div>
+
+                {/* Password */}
+                <div className="relative">
+                  <input
+                    type="password"
+                    placeholder="Contraseña (mín. 6 caracteres)"
+                    value={formData.password}
+                    onChange={(e) => handleChange('password', e.target.value)}
+                    disabled={loading}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2 mt-2"
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span>Procesando...</span>
+                    </>
+                  ) : (
+                    'Crear mi cuenta'
+                  )}
+                </button>
+
+                {/* Login Link */}
+                <div className="text-center pt-4">
+                  <p className="text-gray-500 text-sm font-medium">
+                    ¿Ya tienes una cuenta?{' '}
+                    <button
+                      type="button"
+                      onClick={onSwitchToLogin}
+                      disabled={loading}
+                      className="text-blue-600 hover:text-blue-700 font-bold hover:underline underline-offset-4 transition-all"
+                    >
+                      Inicia sesión
+                    </button>
+                  </p>
+                </div>
+              </form>
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
