@@ -20,11 +20,11 @@ export const ValoraMetodologiaSection: React.FC<ValoraMetodologiaSectionProps> =
     onSelectMercado
 }) => (
     <div>
-        <h2 className='text-2xl font-semibold mb-2'>Metodologia Valora</h2>
+        <h2 className='text-2xl font-bold mb-2'>Metodologia Valora</h2>
         <p className='mb-2'>Aprende con nosotros paso a paso</p>
         <div className='flex lg:flex-row flex-col gap-4'>
             <div className='flex flex-col gap-2'>
-                <h3 className='font-semibold text-lg'>
+                <h3 className='font-bold text-lg'>
                     {selectedMetodologiaItem === 'curso' ? 'Curso 01' : 'Mercado 01'}
                 </h3>
                 {selectedMetodologiaItem === 'curso' ? (
@@ -35,14 +35,14 @@ export const ValoraMetodologiaSection: React.FC<ValoraMetodologiaSectionProps> =
             </div>
             <div>
                 <div className="mt-3 rounded border border-gray-200 bg-white">
-                    <h4 className="font-semibold bg-[#009ef7] text-white p-4 px-6 text-md rounded-t">
+                    <h4 className="font-bold bg-blue-600 text-white p-4 px-6 text-md rounded-t">
                         Aprende mas sobre el costo del capital
                     </h4>
                     <div>
                         <div>
                             <button
                                 type="button"
-                                className={`flex w-full ${isCategoriaOpen ? 'text-[#009ef7]' : 'text-gray-700'} items-center justify-between rounded bg-gray-50 p-5 text-sm font-semibold transition-all`}
+                                className={`flex w-full ${isCategoriaOpen ? 'text-blue-600' : 'text-gray-700'} items-center justify-between rounded bg-gray-50 p-5 text-sm font-bold transition-all`}
                                 onClick={onToggleCategoria}
                                 aria-expanded={isCategoriaOpen}
                             >
@@ -54,7 +54,7 @@ export const ValoraMetodologiaSection: React.FC<ValoraMetodologiaSectionProps> =
                             >
                                 <button
                                     type="button"
-                                    className="w-full text-left cursor-pointer hover:text-[#009ef7]"
+                                    className="w-full text-left cursor-pointer hover:text-blue-600"
                                     onClick={onSelectCurso}
                                 >
                                     Curso 01
@@ -64,7 +64,7 @@ export const ValoraMetodologiaSection: React.FC<ValoraMetodologiaSectionProps> =
                         <div>
                             <button
                                 type="button"
-                                className={`flex w-full items-center justify-between rounded bg-gray-50 p-5 text-sm font-semibold ${isModuloOpen ? 'text-[#009ef7]' : 'text-gray-700'}`}
+                                className={`flex w-full items-center justify-between rounded bg-gray-50 p-5 text-sm font-bold ${isModuloOpen ? 'text-blue-600' : 'text-gray-700'}`}
                                 onClick={onToggleModulo}
                                 aria-expanded={isModuloOpen}
                             >
@@ -76,7 +76,7 @@ export const ValoraMetodologiaSection: React.FC<ValoraMetodologiaSectionProps> =
                             >
                                 <button
                                     type="button"
-                                    className="w-full text-left cursor-pointer hover:text-[#009ef7]"
+                                    className="w-full text-left cursor-pointer hover:text-blue-600"
                                     onClick={onSelectMercado}
                                 >
                                     Mercado 01

@@ -39,10 +39,10 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
     return (
         <>
             <div
-                className={`fixed inset-0 z-30 bg-black/30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+                className={`fixed inset-0 bg-black/30 backdrop-blur z-50 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
             />
             <div
-                className={`fixed right-0 top-0 z-40 h-dvh w-full max-w-xl bg-white shadow-xl transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                className={`fixed right-0 top-0 z-50 h-dvh w-full max-w-xl bg-white shadow-xl transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
                 role="dialog"
                 aria-modal="true"
             >
@@ -57,37 +57,39 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
                             <i className="fa-solid fa-xmark"></i>
                         </button>
                     </div>
-                    <div className='flex justify-center w-full'>
-                        <div className='lg:p-6 lg:px-10 p-4'>
+                    <div className='flex flex-1 justify-center w-full overflow-hidden'>
+                        <div className='flex h-full w-full flex-col lg:p-6 lg:px-10 p-4'>
                             <div className="mb-10 flex flex-col gap-2">
-                                <h3 className="text-xl font-semibold">
+                                <h3 className="text-xl font-bold">
                                     Genera un reporte con tus datos
                                 </h3>
                                 <p className='text-sm w-11/12'>Identifica el costo de capital al que se enfrenta tu empresa, proyecto o inversion.</p>
                             </div>
-                            <h4 className='text-lg font-semibold'>Seleccione el producto de su preferencia:</h4>
-                            <div className='flex gap-4 my-12 lg:justify-start justify-center'>
-                                {reportProducts.map(product => (
-                                    <ReportProductCard
-                                        key={product.id}
-                                        title={product.title}
-                                        iconClassName={product.iconClassName}
-                                        selected={selectedReportProductId === product.id}
-                                        onSelect={() => onSelectReportProduct(product.id)}
-                                    />
-                                ))}
+                            <div className="flex-1 overflow-y-auto pr-2">
+                                <h4 className='text-lg font-bold'>Seleccione el producto de su preferencia:</h4>
+                                <div className='flex gap-4 my-12 lg:justify-start justify-center'>
+                                    {reportProducts.map(product => (
+                                        <ReportProductCard
+                                            key={product.id}
+                                            title={product.title}
+                                            iconClassName={product.iconClassName}
+                                            selected={selectedReportProductId === product.id}
+                                            onSelect={() => onSelectReportProduct(product.id)}
+                                        />
+                                    ))}
+                                </div>
+                                <h4 className='text-lg font-bold'>Contenido:</h4>
+                                <div className="flex flex-col gap-3 p-10 py-8">
+                                    <ReportCheckbox name="contenido-1" label="Costo de capital del sector" />
+                                    <ReportCheckbox name="contenido-2" label="Costo de capital de la empresa" />
+                                    <ReportCheckbox name="contenido-3" label="Metodologia explicada" />
+                                    <ReportCheckbox name="contenido-4" label="1 hora de consultoria" />
+                                </div>
                             </div>
-                            <h4 className='text-lg font-semibold'>Contenido:</h4>
-                            <div className="flex flex-col gap-3 p-10 py-8">
-                                <ReportCheckbox name="contenido-1" label="Costo de capital del sector" />
-                                <ReportCheckbox name="contenido-2" label="Costo de capital de la empresa" />
-                                <ReportCheckbox name="contenido-3" label="Metodologia explicada" />
-                                <ReportCheckbox name="contenido-4" label="1 hora de consultoria" />
-                            </div>
-                            <div className='flex flex-col justify-center px-10 pb-20 pt-10'>
+                            <div className='sticky bottom-0 bg-white px-10 pb-6 pt-4'>
                                 <button
                                     type="button"
-                                    className='bg-[#009ef7] hover:bg-[#007acc] transition-colors px-4 py-2 rounded text-white uppercase font-medium w-full text-sm cursor-pointer'
+                                    className='bg-blue-600 hover:bg-blue-700 transition-colors px-4 py-2 rounded text-white uppercase font-medium w-full text-sm cursor-pointer'
                                     onClick={onOpenReportViewer}
                                 >
                                     Generar reporte

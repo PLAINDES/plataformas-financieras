@@ -19,7 +19,7 @@ export const ReportCheckbox: React.FC<ReportCheckboxProps> = ({ name, label }) =
             />
             <div
                 className="h-5 w-5 rounded border border-gray-200 bg-white flex items-center justify-center transition-colors"
-                style={{ backgroundColor: checked ? '#bbb' : '#ffffff' }}
+                style={{ backgroundColor: checked ? '#155dfc' : '#ffffff' }}
             >
                 <svg
                     className={`h-3 w-3 text-[#fff] transition-opacity ${checked ? 'opacity-100' : 'opacity-0'}`}

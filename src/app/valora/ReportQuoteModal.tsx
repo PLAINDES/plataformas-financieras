@@ -45,7 +45,7 @@ export const ReportQuoteModal: React.FC<ReportQuoteModalProps> = ({
                                 type="email"
                                 value={email}
                                 onChange={event => onEmailChange(event.target.value)}
-                                className="rounded bg-gray-50 px-3 py-2"
+                                className="rounded bg-gray-50 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 required
                             />
                         </label>
@@ -55,7 +55,7 @@ export const ReportQuoteModal: React.FC<ReportQuoteModalProps> = ({
                                 type="tel"
                                 value={phone}
                                 onChange={event => onPhoneChange(event.target.value)}
-                                className="rounded bg-gray-50 px-3 py-2"
+                                className="rounded bg-gray-50 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 required
                             />
                         </label>
@@ -65,7 +65,7 @@ export const ReportQuoteModal: React.FC<ReportQuoteModalProps> = ({
                                 rows={4}
                                 value={message}
                                 onChange={event => onMessageChange(event.target.value)}
-                                className="rounded bg-gray-50 px-3 py-2"
+                                className="rounded bg-gray-50 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 required
                             />
                         </label>
@@ -74,7 +74,7 @@ export const ReportQuoteModal: React.FC<ReportQuoteModalProps> = ({
                 <div className='flex justify-end p-6'>
                     <button
                         type="submit"
-                        className="rounded bg-[#009ef7] px-4 py-2 text-md font-semibold text-white cursor-pointer hover:bg-[#007acc] transition-colors"
+                        className="rounded bg-blue-600 px-4 py-2 text-md font-semibold text-white cursor-pointer hover:bg-blue-700 transition-colors"
                     >
                         Enviar
                     </button>

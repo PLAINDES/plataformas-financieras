@@ -96,6 +96,12 @@ export function EditableForm({
     });
   };
 
+  const handleCancelEdit = (fieldId: string) => {
+    
+    setEditingFieldId(null);
+  };
+
+
   const handleMoveFieldUp = (index: number) => {
     if (index === 0) return;
     const newFields = [...editedConfig.fields];
@@ -110,42 +116,47 @@ export function EditableForm({
     setEditedConfig({ ...editedConfig, fields: newFields });
   };
 
+  const buttonBaseClass =
+  'px-1 py-0.5 text-xs border border-gray-300 rounded hover:bg-gray-100 transition-colors flex items-center justify-center';
+
+
   // Modo no-admin: renderizar formulario normal
   if (!isAdmin) {
     return (
-      <div className={mobileMode ? 'h-100 d-flex flex-column' : 'card border-0 shadow-sm'}>
-        <div className={mobileMode ? 'flex-grow-1 d-flex flex-column' : 'card-body p-4'}>
-          <div className={mobileMode ? 'flex-grow-1 d-flex flex-column overflow-auto' : ''} style={mobileMode ? { minHeight: 0 } : {}}>
+      <div className={mobileMode ? 'h-full flex flex-col' : 'bg-white border-0 rounded-lg shadow-sm'}>
+        <div className={mobileMode ? 'flex-grow flex flex-col' : 'p-8'}>
+          <div className={mobileMode ? 'flex-grow flex flex-col overflow-auto' : ''} style={mobileMode ? { minHeight: 0 } : {}}>
             {config.fields.map((field, index) => {
               const isLastTextarea = field.type === 'textarea' && index === config.fields.length - 1;
               return (
                 <div 
                   key={field.id} 
-                  className={`mb-2 ${isLastTextarea && mobileMode ? 'flex-grow-1 d-flex flex-column' : ''}`}
+                  className={`mb-4 ${isLastTextarea && mobileMode ? 'flex-grow flex flex-col' : ''}`}
                 >
-                  <label className="form-label fw-semibold mb-1" style={{ fontSize: mobileMode ? '0.8rem' : '0.875rem' }}>
+                  <label className="block mb-2 font-semibold text-[var(--bs-dark)]" style={{ fontSize: mobileMode ? '0.8rem' : '0.875rem' }}>
                     {field.label}
                   </label>
                   {field.type === 'textarea' ? (
                     <textarea 
                       name={field.name}
-                      className={`form-control ${mobileMode ? 'form-control-sm' : ''} ${isLastTextarea && mobileMode ? 'flex-grow-1' : ''}`}
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent transition-all ${isLastTextarea && mobileMode ? 'flex-grow' : ''}`}
                       rows={mobileMode ? undefined : field.rows || 4}
                       placeholder={field.placeholder}
                       value={formData[field.name] || ''}
                       onChange={onChange}
                       required={field.required}
-                      style={mobileMode && isLastTextarea ? { minHeight: '80px', resize: 'none' } : {}}
+                      style={mobileMode && isLastTextarea ? { minHeight: '80px', resize: 'none', fontSize: '0.875rem', padding: '0.75rem' } : { fontSize: '0.9375rem' }}
                     ></textarea>
                   ) : (
                     <input 
                       type={field.type} 
                       name={field.name}
-                      className={`form-control ${mobileMode ? 'form-control-sm' : ''}`}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent transition-all"
                       placeholder={field.placeholder}
                       value={formData[field.name] || ''}
                       onChange={onChange}
                       required={field.required}
+                      style={mobileMode ? { fontSize: '0.875rem', padding: '0.75rem 1rem' } : { fontSize: '0.9375rem' }}
                     />
                   )}
                 </div>
@@ -155,9 +166,9 @@ export function EditableForm({
 
           <button 
             type="button" 
-            className={`btn btn-primary w-100 ${mobileMode ? 'btn-sm mt-2' : 'mt-3'}`}
+            className={`w-full bg-[var(--bs-primary)] text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity ${mobileMode ? 'mt-2' : 'mt-6'}`}
             onClick={onSubmit}
-            style={mobileMode ? { fontSize: '0.85rem', padding: '0.5rem' } : {}}
+            style={mobileMode ? { fontSize: '0.85rem', padding: '0.625rem' } : { fontSize: '1rem' }}
           >
             {config.submitButtonText}
           </button>
@@ -169,7 +180,7 @@ export function EditableForm({
   // Modo admin - no editando: formulario con botón de editar
   if (!isEditing) {
     return (
-      <div className={mobileMode ? 'h-100 d-flex flex-column position-relative' : 'card border-0 shadow-sm'} style={{ position: 'relative' }}>
+      <div className={mobileMode ? 'h-full flex flex-col relative' : 'bg-white border-0 rounded-lg shadow-sm'} style={{ position: 'relative' }}>
         {/* Botón de editar configuración */}
         <div style={{ position: 'absolute', top: mobileMode ? '4px' : '12px', right: mobileMode ? '4px' : '12px', zIndex: 10 }}>
           <button
@@ -191,38 +202,39 @@ export function EditableForm({
           </button>
         </div>
 
-        <div className={mobileMode ? 'flex-grow-1 d-flex flex-column pt-4' : 'card-body p-4'}>
-          <div className={mobileMode ? 'flex-grow-1 d-flex flex-column overflow-auto' : ''} style={mobileMode ? { minHeight: 0 } : {}}>
+        <div className={mobileMode ? 'flex-grow flex flex-col pt-8' : 'p-8'}>
+          <div className={mobileMode ? 'flex-grow flex flex-col overflow-auto' : ''} style={mobileMode ? { minHeight: 0 } : {}}>
             {config.fields.map((field, index) => {
               const isLastTextarea = field.type === 'textarea' && index === config.fields.length - 1;
               return (
                 <div 
                   key={field.id} 
-                  className={`mb-2 ${isLastTextarea && mobileMode ? 'flex-grow-1 d-flex flex-column' : ''}`}
+                  className={`mb-4 ${isLastTextarea && mobileMode ? 'flex-grow flex flex-col' : ''}`}
                 >
-                  <label className="form-label fw-semibold mb-1" style={{ fontSize: mobileMode ? '0.8rem' : '0.875rem' }}>
+                  <label className="block mb-2 font-semibold text-[var(--bs-dark)]" style={{ fontSize: mobileMode ? '0.8rem' : '0.875rem' }}>
                     {field.label}
                   </label>
                   {field.type === 'textarea' ? (
                     <textarea 
                       name={field.name}
-                      className={`form-control ${mobileMode ? 'form-control-sm' : ''} ${isLastTextarea && mobileMode ? 'flex-grow-1' : ''}`}
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent transition-all ${isLastTextarea && mobileMode ? 'flex-grow' : ''}`}
                       rows={mobileMode ? undefined : field.rows || 4}
                       placeholder={field.placeholder}
                       value={formData[field.name] || ''}
                       onChange={onChange}
                       required={field.required}
-                      style={mobileMode && isLastTextarea ? { minHeight: '80px', resize: 'none' } : {}}
+                      style={mobileMode && isLastTextarea ? { minHeight: '80px', resize: 'none', fontSize: '0.875rem', padding: '0.75rem' } : { fontSize: '0.9375rem' }}
                     ></textarea>
                   ) : (
                     <input 
                       type={field.type} 
                       name={field.name}
-                      className={`form-control ${mobileMode ? 'form-control-sm' : ''}`}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent transition-all"
                       placeholder={field.placeholder}
                       value={formData[field.name] || ''}
                       onChange={onChange}
                       required={field.required}
+                      style={mobileMode ? { fontSize: '0.875rem', padding: '0.75rem 1rem' } : { fontSize: '0.9375rem' }}
                     />
                   )}
                 </div>
@@ -232,9 +244,9 @@ export function EditableForm({
 
           <button 
             type="button" 
-            className={`btn btn-primary w-100 ${mobileMode ? 'btn-sm mt-2' : 'mt-3'}`}
+            className={`w-full bg-[var(--bs-primary)] text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity ${mobileMode ? 'mt-2' : 'mt-6'}`}
             onClick={onSubmit}
-            style={mobileMode ? { fontSize: '0.85rem', padding: '0.5rem' } : {}}
+            style={mobileMode ? { fontSize: '0.85rem', padding: '0.625rem' } : { fontSize: '1rem' }}
           >
             {config.submitButtonText}
           </button>
@@ -246,19 +258,19 @@ export function EditableForm({
   // Modo admin - editando: panel de configuración
   return (
     <div 
-      className={`card border-0 shadow-lg editable-form-config ${mobileMode ? 'h-100 d-flex flex-column' : ''}`} 
-      style={{ border: '2px solid #3b82f6' }}
+      className={`bg-white border-0 rounded-lg shadow-lg editable-form-config ${mobileMode ? 'h-full flex flex-col' : ''}`} 
+      style={{ border: '2px solid #2FA4FF' }}
     >
-      <div className="card-header bg-primary text-white" style={mobileMode ? { padding: '0.5rem' } : {}}>
-        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <h5 className="mb-0" style={{ fontSize: mobileMode ? '0.8rem' : '1rem' }}>
+      <div className="bg-[#2FA4FF] text-white rounded-t-lg" style={mobileMode ? { padding: '0.5rem' } : { padding: '1rem' }}>
+        <div className="flex justify-between items-center flex-wrap gap-2">
+          <h5 className="mb-0 font-semibold" style={{ fontSize: mobileMode ? '0.8rem' : '1rem' }}>
             ⚙️ {mobileMode ? 'Config' : 'Config. Formulario'}
           </h5>
-          <div className="d-flex gap-1">
+          <div className="flex gap-1">
             <button 
               onClick={handleCancel}
               disabled={isSaving}
-              className="btn btn-sm btn-light"
+              className="px-3 py-1.5 text-sm bg-white text-[var(--bs-dark)] rounded-md hover:bg-gray-100 transition-colors disabled:opacity-50"
               style={{ fontSize: mobileMode ? '0.7rem' : '0.8rem', padding: mobileMode ? '0.25rem 0.5rem' : '0.375rem 0.75rem' }}
             >
               {mobileMode ? 'X' : 'Cancelar'}
@@ -266,106 +278,194 @@ export function EditableForm({
             <button 
               onClick={handleSave}
               disabled={isSaving}
-              className="btn btn-sm btn-success"
+              className="px-3 py-1.5 text-sm bg-[#0E185F] text-white rounded-md hover:bg-[#1B6B93] transition-colors disabled:opacity-50"
               style={{ fontSize: mobileMode ? '0.7rem' : '0.8rem', padding: mobileMode ? '0.25rem 0.5rem' : '0.375rem 0.75rem' }}
             >
               {isSaving ? '...' : (mobileMode ? '✓' : 'Guardar')}
             </button>
+            
           </div>
         </div>
       </div>
 
       <div 
-        className="card-body p-2 p-md-3 flex-grow-1" 
+        className="p-2 md:p-3 flex-grow overflow-y-auto" 
         style={{ 
-          maxHeight: mobileMode ? '100%' : '70vh', 
-          overflowY: 'auto',
+          maxHeight: mobileMode ? '100%' : '70vh',
           minHeight: 0
         }}
       >
         {/* Configuración de campos */}
         <div className="mb-3">
-          <h6 className="fw-bold mb-2 small" style={{ fontSize: mobileMode ? '0.75rem' : '0.875rem' }}>
+          <h6 className="font-bold mb-2 text-sm" style={{ fontSize: mobileMode ? '0.75rem' : '0.875rem' }}>
             Campos
           </h6>
           
           {editedConfig.fields.map((field, index) => (
             <div 
               key={field.id} 
-              className="card mb-2"
+              className="bg-white rounded-lg mb-2"
               style={{ 
                 border: editingFieldId === field.id ? '2px solid #ffc107' : '1px solid #dee2e6',
                 backgroundColor: editingFieldId === field.id ? '#fffbf0' : 'white'
               }}
             >
-              <div className="card-body p-2">
-                <div className="d-flex justify-content-between align-items-start mb-1">
-                  <h6 className="mb-0 fw-bold" style={{ fontSize: mobileMode ? '0.7rem' : '0.8rem' }}>
+              <div className="p-2">
+                <div className="flex justify-between items-start mb-1">
+                  <h6 className="mb-0 font-bold" style={{ fontSize: mobileMode ? '0.7rem' : '0.8rem' }}>
                     {index + 1}. {field.label}
                   </h6>
-                  <div className="d-flex gap-1 flex-shrink-0">
-                    {index > 0 && (
-                      <button
-                        onClick={() => handleMoveFieldUp(index)}
-                        className="btn btn-sm btn-outline-secondary"
-                        style={{ padding: '1px 4px', fontSize: '0.6rem' }}
-                      >
-                        ↑
-                      </button>
-                    )}
-                    {index < editedConfig.fields.length - 1 && (
-                      <button
-                        onClick={() => handleMoveFieldDown(index)}
-                        className="btn btn-sm btn-outline-secondary"
-                        style={{ padding: '1px 4px', fontSize: '0.6rem' }}
-                      >
-                        ↓
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setEditingFieldId(editingFieldId === field.id ? null : field.id)}
-                      className="btn btn-sm btn-outline-primary"
-                      style={{ padding: '1px 5px', fontSize: '0.6rem' }}
-                    >
-                      {editingFieldId === field.id ? '✓' : '✏️'}
-                    </button>
-                    <button
-                      onClick={() => handleDeleteField(field.id)}
-                      className="btn btn-sm btn-outline-danger"
-                      style={{ padding: '1px 5px', fontSize: '0.6rem' }}
-                    >
-                      🗑️
-                    </button>
-                  </div>
+                  <div className="flex gap-1 flex-shrink-0">
+
+  
+
+  {/* Subir */}
+  {index > 0 && (
+    <button
+      onClick={(e) => { e.stopPropagation(); handleMoveFieldUp(index); }}
+      className={buttonBaseClass}
+      title="Subir"
+    >
+      <span className="text-xs font-bold">↑</span>
+    </button>
+  )}
+
+  {/* Bajar */}
+  {index < editedConfig.fields.length - 1 && (
+    <button
+      onClick={(e) => { e.stopPropagation(); handleMoveFieldDown(index); }}
+      className={buttonBaseClass}
+      title="Bajar"
+    >
+      <span className="text-xs font-bold">↓</span>
+    </button>
+  )}
+
+  {/* Editar / Guardar */}
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      setEditingFieldId(editingFieldId === field.id ? null : field.id);
+    }}
+    className={`${buttonBaseClass} hover:text-blue-600 hover:border-blue-400`}
+    title={editingFieldId === field.id ? 'Guardar' : 'Editar'}
+  >
+    {editingFieldId === field.id ? (
+      /* CHECK */
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M20 6 9 17l-5-5" />
+      </svg>
+    ) : (
+      /* LÁPIZ */
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+        <path d="m15 5 4 4" />
+      </svg>
+    )}
+  </button>
+
+    {/* Cancelar */}
+{editingFieldId === field.id ? (
+  <>
+  <button
+    onClick={(e) => { e.stopPropagation(); handleCancelEdit(field.id); }}
+    className={`${buttonBaseClass} hover:text-red-600 hover:border-red-400`}
+    title="Cancelar"
+  >
+  <svg xmlns="http://www.w3.org/2000/svg" 
+        width="14" 
+        height="14" viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        class="lucide lucide-x-icon lucide-x">
+          <path d="M18 6 6 18"/>
+          <path d="m6 6 12 12"/>
+    </svg>
+  </button>
+  </>
+) : 
+<>
+{/* Eliminar */}
+  <button
+    onClick={(e) => { e.stopPropagation(); handleDeleteField(field.id); }}
+    className={`${buttonBaseClass} hover:text-red-600 hover:border-red-400`}
+    title="Eliminar"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+    </svg>
+  </button>
+  </>
+  }
+
+  
+
+</div>
+
                 </div>
 
                 {editingFieldId === field.id ? (
                   <div className="mt-2">
-                    <div className="row g-1">
-                      <div className="col-12">
-                        <label className="form-label mb-1" style={{ fontSize: '0.7rem' }}>Etiqueta</label>
+                    <div className="flex flex-wrap -mx-0.5">
+                      <div className="w-full px-0.5 mb-2">
+                        <label className="block mb-1 text-[var(--bs-dark)] font-medium" style={{ fontSize: '0.7rem' }}>Etiqueta</label>
                         <input
                           type="text"
-                          className="form-control form-control-sm"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent"
                           value={field.label}
                           onChange={(e) => handleFieldChange(field.id, 'label', e.target.value)}
                           style={{ fontSize: '0.75rem' }}
                         />
                       </div>
-                      <div className="col-12">
-                        <label className="form-label mb-1" style={{ fontSize: '0.7rem' }}>Nombre</label>
+                      <div className="w-full px-0.5 mb-2">
+                        <label className="block mb-1 text-[var(--bs-dark)] font-medium" style={{ fontSize: '0.7rem' }}>Nombre</label>
                         <input
                           type="text"
-                          className="form-control form-control-sm"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent"
                           value={field.name}
                           onChange={(e) => handleFieldChange(field.id, 'name', e.target.value)}
                           style={{ fontSize: '0.75rem' }}
                         />
                       </div>
-                      <div className="col-6">
-                        <label className="form-label mb-1" style={{ fontSize: '0.7rem' }}>Tipo</label>
+                      <div className="w-1/2 px-0.5 mb-2">
+                        <label className="block mb-1 text-[var(--bs-dark)] font-medium" style={{ fontSize: '0.7rem' }}>Tipo</label>
                         <select
-                          className="form-select form-select-sm"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent"
                           value={field.type}
                           onChange={(e) => handleFieldChange(field.id, 'type', e.target.value)}
                           style={{ fontSize: '0.75rem' }}
@@ -375,38 +475,37 @@ export function EditableForm({
                           <option value="textarea">Área texto</option>
                         </select>
                       </div>
-                      <div className="col-6">
-                        <label className="form-label mb-1" style={{ fontSize: '0.7rem' }}>Placeholder</label>
+                      <div className="w-1/2 px-0.5 mb-2">
+                        <label className="block mb-1 text-[var(--bs-dark)] font-medium" style={{ fontSize: '0.7rem' }}>Placeholder</label>
                         <input
                           type="text"
-                          className="form-control form-control-sm"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent"
                           value={field.placeholder}
                           onChange={(e) => handleFieldChange(field.id, 'placeholder', e.target.value)}
                           style={{ fontSize: '0.75rem' }}
                         />
                       </div>
                       {field.type === 'textarea' && (
-                        <div className="col-6">
-                          <label className="form-label mb-1" style={{ fontSize: '0.7rem' }}>Filas</label>
+                        <div className="w-1/2 px-0.5 mb-2">
+                          <label className="block mb-1 text-[var(--bs-dark)] font-medium" style={{ fontSize: '0.7rem' }}>Filas</label>
                           <input
                             type="number"
-                            className="form-control form-control-sm"
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent"
                             value={field.rows || 4}
                             onChange={(e) => handleFieldChange(field.id, 'rows', parseInt(e.target.value))}
                             style={{ fontSize: '0.75rem' }}
                           />
                         </div>
                       )}
-                      <div className="col-6">
-                        <div className="form-check mt-2">
+                      <div className="w-1/2 px-0.5 mb-2">
+                        <div className="flex items-center mt-2">
                           <input
                             type="checkbox"
-                            className="form-check-input"
+                            className="w-4 h-4 text-[var(--bs-primary)] border-gray-300 rounded focus:ring-[var(--bs-primary)]"
                             checked={field.required}
                             onChange={(e) => handleFieldChange(field.id, 'required', e.target.checked)}
-                            style={{ fontSize: '0.7rem' }}
                           />
-                          <label className="form-check-label" style={{ fontSize: '0.7rem' }}>
+                          <label className="ml-2 text-[var(--bs-dark)]" style={{ fontSize: '0.7rem' }}>
                             Obligatorio
                           </label>
                         </div>
@@ -414,7 +513,7 @@ export function EditableForm({
                     </div>
                   </div>
                 ) : (
-                  <p className="mb-0 text-muted" style={{ fontSize: '0.65rem' }}>
+                  <p className="mb-0 text-gray-500" style={{ fontSize: '0.65rem' }}>
                     {field.type} • {field.required ? 'Obligatorio' : 'Opcional'}
                   </p>
                 )}
@@ -424,8 +523,8 @@ export function EditableForm({
 
           <button
             onClick={handleAddField}
-            className="btn btn-sm btn-outline-primary w-100"
-            style={{ border: '2px dashed #3b82f6', fontSize: mobileMode ? '0.7rem' : '0.75rem', padding: '0.25rem' }}
+            className="w-full px-3 py-2 text-sm border-2 border-dashed border-[var(--bs-primary)] text-[var(--bs-primary)] rounded-md hover:bg-blue-50 transition-colors"
+            style={{ fontSize: mobileMode ? '0.7rem' : '0.75rem', padding: '0.5rem' }}
           >
             + Campo
           </button>
@@ -433,12 +532,12 @@ export function EditableForm({
 
         {/* Configuración del botón de envío */}
         <div className="mb-2">
-          <label className="form-label fw-bold mb-1" style={{ fontSize: mobileMode ? '0.7rem' : '0.8rem' }}>
+          <label className="block mb-1 font-bold text-[var(--bs-dark)]" style={{ fontSize: mobileMode ? '0.7rem' : '0.8rem' }}>
             Texto del Botón
           </label>
           <input
             type="text"
-            className="form-control form-control-sm"
+            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent"
             value={editedConfig.submitButtonText}
             onChange={(e) => setEditedConfig({ ...editedConfig, submitButtonText: e.target.value })}
             style={{ fontSize: '0.75rem' }}
@@ -447,12 +546,12 @@ export function EditableForm({
 
         {/* Mensaje de éxito */}
         <div className="mb-2">
-          <label className="form-label fw-bold mb-1" style={{ fontSize: mobileMode ? '0.7rem' : '0.8rem' }}>
+          <label className="block mb-1 font-bold text-[var(--bs-dark)]" style={{ fontSize: mobileMode ? '0.7rem' : '0.8rem' }}>
             Mensaje Éxito
           </label>
           <input
             type="text"
-            className="form-control form-control-sm"
+            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent"
             value={editedConfig.successMessage}
             onChange={(e) => setEditedConfig({ ...editedConfig, successMessage: e.target.value })}
             style={{ fontSize: '0.75rem' }}
@@ -463,19 +562,19 @@ export function EditableForm({
         {!mobileMode && (
           <div className="mt-3">
             <details className="preview-details">
-              <summary className="fw-bold mb-2 small" style={{ cursor: 'pointer', userSelect: 'none', fontSize: '0.75rem' }}>
+              <summary className="font-bold mb-2 text-sm cursor-pointer select-none" style={{ fontSize: '0.75rem' }}>
                 👁️ Vista Previa
               </summary>
-              <div className="card bg-light mt-2">
-                <div className="card-body p-2">
+              <div className="bg-gray-100 rounded-lg mt-2">
+                <div className="p-2">
                   {editedConfig.fields.map((field) => (
                     <div key={field.id} className="mb-1">
-                      <label className="form-label fw-semibold" style={{ fontSize: '0.7rem' }}>
+                      <label className="block font-semibold text-[var(--bs-dark)]" style={{ fontSize: '0.7rem' }}>
                         {field.label}
                       </label>
                       {field.type === 'textarea' ? (
                         <textarea 
-                          className="form-control form-control-sm" 
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md opacity-60" 
                           rows={2}
                           placeholder={field.placeholder}
                           disabled
@@ -484,7 +583,7 @@ export function EditableForm({
                       ) : (
                         <input 
                           type={field.type}
-                          className="form-control form-control-sm" 
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md opacity-60" 
                           placeholder={field.placeholder}
                           disabled
                           style={{ fontSize: '0.7rem' }}
@@ -492,7 +591,7 @@ export function EditableForm({
                       )}
                     </div>
                   ))}
-                  <button className="btn btn-primary btn-sm w-100" disabled style={{ fontSize: '0.7rem' }}>
+                  <button className="w-full px-3 py-1.5 text-sm bg-[var(--bs-primary)] text-white rounded-md opacity-60" disabled style={{ fontSize: '0.7rem' }}>
                     {editedConfig.submitButtonText}
                   </button>
                 </div>
@@ -509,21 +608,21 @@ export function EditableForm({
           z-index: 10;
         }
 
-        .editable-form-config .card-body {
+        .editable-form-config > div:last-of-type {
           scrollbar-width: thin;
           scrollbar-color: #3b82f6 #f1f1f1;
         }
 
-        .editable-form-config .card-body::-webkit-scrollbar {
+        .editable-form-config > div:last-of-type::-webkit-scrollbar {
           width: 4px;
         }
 
-        .editable-form-config .card-body::-webkit-scrollbar-track {
+        .editable-form-config > div:last-of-type::-webkit-scrollbar-track {
           background: #f1f1f1;
           border-radius: 10px;
         }
 
-        .editable-form-config .card-body::-webkit-scrollbar-thumb {
+        .editable-form-config > div:last-of-type::-webkit-scrollbar-thumb {
           background: #3b82f6;
           border-radius: 10px;
         }

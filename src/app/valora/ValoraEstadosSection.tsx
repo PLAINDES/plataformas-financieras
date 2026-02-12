@@ -24,18 +24,18 @@ export const ValoraEstadosSection: React.FC<ValoraEstadosSectionProps> = ({
             <div className="flex flex-wrap gap-3">
                 <button
                     type="button"
-                    className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors cursor-pointer ${financialTab === 'balance'
-                        ? 'border-[#009ef7] text-[#009ef7] bg-[#009ef7]/5'
-                        : 'border-gray-200 text-gray-600 hover:border-[#009ef7]'}`}
+                    className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors cursor-pointer ${financialTab === 'balance'
+                        ? 'border-blue-600 text-blue-600 bg-blue-600/5'
+                        : 'border-gray-200 text-gray-600 hover:border-blue-600'}`}
                     onClick={() => onTabChange('balance')}
                 >
                     Estado de Situacion Financiera
                 </button>
                 <button
                     type="button"
-                    className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors cursor-pointer ${financialTab === 'results'
-                        ? 'border-[#009ef7] text-[#009ef7] bg-[#009ef7]/5'
-                        : 'border-gray-200 text-gray-600 hover:border-[#009ef7]'}`}
+                    className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors cursor-pointer ${financialTab === 'results'
+                        ? 'border-blue-600 text-blue-600 bg-blue-600/5'
+                        : 'border-gray-200 text-gray-600 hover:border-blue-600'}`}
                     onClick={() => onTabChange('results')}
                 >
                     Estado de Resultados
@@ -44,7 +44,7 @@ export const ValoraEstadosSection: React.FC<ValoraEstadosSectionProps> = ({
             <div>
                 <button
                     type="button"
-                    className="flex gap-2 items-center w-full rounded bg-[#009ef7] py-2 px-4 text-xs font-semibold text-white transition-colors hover:bg-sky-600 cursor-pointer"
+                    className="flex gap-2 items-center w-full rounded bg-blue-600 py-2 px-4 text-xs font-bold text-white transition-colors hover:bg-blue-700 cursor-pointer"
                     onClick={onUploadClick}
                 >
                     <i className="fa-solid fa-file-import"></i>

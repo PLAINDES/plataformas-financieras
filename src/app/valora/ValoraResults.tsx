@@ -110,9 +110,9 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
                 <table className="min-w-full text-sm">
                     <thead className="bg-[#f5f8fa] text-gray-700">
                         <tr>
-                            <th className="px-4 py-3 text-left font-semibold border border-gray-100">{table.title}</th>
+                            <th className="px-4 py-3 text-left font-bold border border-gray-100">{table.title}</th>
                             {table.years.map(year => (
-                                <th key={year} className="px-4 py-3 text-right font-semibold border border-gray-100">
+                                <th key={year} className="px-4 py-3 text-right font-bold border border-gray-100">
                                     {year}
                                 </th>
                             ))}
@@ -121,7 +121,7 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
                     <tbody className="border-y border-gray-200">
                         {table.rows.map((row, rowIndex) => (
                             <tr key={`${row.label}-${rowIndex}`}>
-                                <td className={`px-4 py-2 text-left  border border-gray-100 ${mainLabelsForFinancialTables.includes(row.label) ? 'font-semibold bg-[#009ef7]/10 text-[#009ef7]' : 'text-gray-700'}`}>{row.label}</td>
+                                <td className={`px-4 py-2 text-left border border-gray-100 ${mainLabelsForFinancialTables.includes(row.label) ? 'font-bold bg-blue-600/10 text-blue-600' : 'text-gray-700'}`}>{row.label}</td>
                                 {row.values.map((value, valueIndex) => (
                                     <td key={`${row.label}-${rowIndex}-${valueIndex}`} className="px-4 py-2 text-right text-gray-700 border border-gray-100">
                                         {formatCell(value)}
@@ -141,7 +141,7 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
 
 
     return (
-        <div className="flex-12 flex flex-col w-full h-full lg:pb-10 py-10 lg:pt-26 bg-[#f3f6f9] min-h-dvh">
+        <div className="flex-12 flex flex-col w-full h-full lg:pb-10 py-10 lg:pt-10 bg-[#f3f6f9] min-h-dvh">
             <div className="flex-1 w-full px-4 sm:px-8">
                 <div className="mx-auto flex w-full max-w-300 flex-col gap-6">
 

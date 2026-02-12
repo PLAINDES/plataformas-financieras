@@ -13,7 +13,7 @@ export const IconActionButton: React.FC<IconActionButtonProps> = ({
 }) => (
     <button
         type="button"
-        className="cursor-pointer inline-flex items-center justify-center rounded bg-sky-50 px-6 py-3 text-sky-500 transition-colors hover:bg-sky-100"
+        className="cursor-pointer inline-flex items-center justify-center rounded bg-sky-50 px-6 py-3 text-blue-600 transition-colors hover:bg-sky-100"
         aria-label={ariaLabel}
         onClick={onClick}
     >

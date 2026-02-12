@@ -1,18 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MainPage } from './MainPage';
-import { ValoraMobileLayout } from './ValoraMobileLayout';
 import { UploadTemplateModal } from './UploadTemplateModal';
 import { ValoraResults } from './ValoraResults';
 import { ValoraResultsTabs } from './ValoraResultsTabs';
-import { ValoraDesktopHeader } from './ValoraDesktopHeader';
 import { LoadingOverlay } from '../../components/common/LoadingOverlay';
 import { ToastStack } from '../../components/common/ToastStack';
 import type { FinancialTable, FormData } from '../../types/ValoraTypes';
 import type { ToastType } from '../../types/toast.types';
 import { MainPageFooter } from './MainPageFooter';
 import { parseFinancialTablesFromFile } from './valoraFileParsing';
-import { ReportProductCard } from './ReportProductCard';
 import { ReportSidebar } from './ReportSidebar';
+import { NavBar } from '../kapital/components/NavBar';
+import { ValoraFormPanel } from './ValoraFormPanel';
 
 const ValoraPage: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
@@ -21,74 +20,74 @@ const ValoraPage: React.FC = () => {
     currency: '',
     sector: '',
     fileUsername: '',
-    action: ''
+    action: '',
+    longgrowth: '',
+    capitalcost: '',
+    revenuegrowth: ''
   });
-  const [width, setWidth] = useState(window.innerWidth);
   const [fileUploaded, setFileUploaded] = useState(false);
-  const [activePanel, setActivePanel] = useState<'menu' | 'form' | 'options' | null>(null);
-  const [lastPanel, setLastPanel] = useState<'menu' | 'form' | 'options'>('menu');
   const [isDesktopFormOpen, setIsDesktopFormOpen] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [toasts, setToasts] = useState<Array<{ id: string; type: ToastType; message: string }>>([]);
   const toastTimeoutsRef = useRef<Map<string, number>>(new Map());
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
   const [uploadResetKey, setUploadResetKey] = useState(0);
   const [resultsSection, setResultsSection] = useState<'estados' | 'resultados' | 'analisis' | 'metodologia'>('resultados');
+  const [isResultsSidebarOpen, setIsResultsSidebarOpen] = useState(false);
   const [isReportSidebarOpen, setIsReportSidebarOpen] = useState(false);
   const [isReportViewerOpen, setIsReportViewerOpen] = useState(false);
   const [selectedReportProductId, setSelectedReportProductId] = useState('datos');
   const [balanceTable, setBalanceTable] = useState<FinancialTable | null>(null);
   const [resultsTable, setResultsTable] = useState<FinancialTable | null>(null);
-  const currentMobilePage = showResults
-    ? (
-      <div className='flex flex-col'>
-        {isReportViewerOpen ? (
-          <section className="w-full px-4 pb-10 sm:px-8">
-            <div className="mx-auto w-full max-w-5xl rounded-lg border border-gray-200 bg-white shadow">
-              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-                <h4 className="text-sm font-semibold text-gray-800">REPORTE DE DATOS</h4>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleReportViewerClose}
-                    className="rounded border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600"
-                  >
-                    Salir
-                  </button>
-                  <a
-                    href="/files/Reporte-Detallado.pdf"
-                    download
-                    className="rounded bg-[#009ef7] px-3 py-1.5 text-xs font-semibold text-white"
-                  >
-                    Descargar
-                  </a>
-                </div>
-              </div>
-              <div className="h-[70vh] w-full">
-                <iframe
-                  title="Reporte de datos"
-                  src="/files/Reporte-Detallado.pdf"
-                  className="h-full w-full"
-                />
+  const mainContent = showResults ? (
+    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
+      {isReportViewerOpen ? (
+        <section className="flex justify-center w-full px-4 pb-10 sm:px-8 lg:pt-6">
+          <div className="w-full max-w-7xl rounded-lg border border-gray-200 bg-white shadow">
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+              <h4 className="text-sm font-semibold text-gray-800">REPORTE DE DATOS</h4>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleReportViewerClose}
+                  className="rounded border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600"
+                >
+                  Salir
+                </button>
+                <a
+                  href="/files/Reporte-Detallado.pdf"
+                  download
+                  className="rounded bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+                >
+                  Descargar
+                </a>
               </div>
             </div>
-          </section>
-        ) : (
-          <ValoraResults
-            formData={formData}
-            section={resultsSection}
-            balanceTable={balanceTable}
-            resultsTable={resultsTable}
-          />
-        )}
-        <MainPageFooter />
-      </div>
-    )
-    : <MainPage />;
-  const headerRef = useRef<HTMLElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+            <div className="h-[70vh] w-full">
+              <iframe
+                title="Reporte de datos"
+                src="/files/Reporte-Detallado.pdf"
+                className="h-full w-full"
+              />
+            </div>
+          </div>
+        </section>
+      ) : (
+        <ValoraResults
+          section={resultsSection}
+          balanceTable={balanceTable}
+          resultsTable={resultsTable}
+          formData={formData}
+        />
+      )}
+      <MainPageFooter />
+    </div>
+  ) : (
+    <MainPage onOpenForm={() => setIsDesktopFormOpen(prev => !prev)} />
+  );
 
   // Sample data
   const dates = ['2024-Q1', '2024-Q2', '2024-Q3', '2024-Q4'];
@@ -107,12 +106,6 @@ const ValoraPage: React.FC = () => {
       iconClassName: 'fa-solid fa-laptop text-2xl text-gray-400'
     }
   ];
-
-  useEffect(() => {
-    const handleResize = () => setWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  });
 
   useEffect(() => () => {
     toastTimeoutsRef.current.forEach(timeoutId => window.clearTimeout(timeoutId));
@@ -136,7 +129,6 @@ const ValoraPage: React.FC = () => {
 
   const handleReportSidebarOpen = () => {
     setIsReportSidebarOpen(true);
-    setActivePanel(null);
     if (isDesktopFormOpen) {
       setIsDesktopFormOpen(false);
     }
@@ -144,6 +136,10 @@ const ValoraPage: React.FC = () => {
 
   const handleReportSidebarClose = () => {
     setIsReportSidebarOpen(false);
+  };
+
+  const toggleResultsSidebar = () => {
+    setIsResultsSidebarOpen(prev => !prev);
   };
 
   const handleReportViewerOpen = () => {
@@ -156,35 +152,17 @@ const ValoraPage: React.FC = () => {
   }
 
   useEffect(() => {
-    const headerEl = headerRef.current;
-    const containerEl = containerRef.current;
-    if (!headerEl || !containerEl) {
-      return undefined;
+    if (!showResults) {
+      setIsResultsSidebarOpen(false);
     }
-
-    const updateHeaderWidth = () => {
-      containerEl.style.setProperty('--header-width', `${headerEl.offsetWidth}px`);
-    };
-
-    updateHeaderWidth();
-
-    if (typeof ResizeObserver === 'undefined') {
-      window.addEventListener('resize', updateHeaderWidth);
-      return () => window.removeEventListener('resize', updateHeaderWidth);
-    }
-
-    const observer = new ResizeObserver(() => updateHeaderWidth());
-    observer.observe(headerEl);
-
-    return () => observer.disconnect();
-  }, [isDesktopFormOpen]);
+  }, [showResults]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const missingFields: string[] = [];
 
@@ -215,6 +193,8 @@ const ValoraPage: React.FC = () => {
     window.setTimeout(() => {
       setIsLoading(false);
       setShowResults(true);
+      setIsResultsSidebarOpen(true);
+      setIsDesktopFormOpen(false);
       addToast('success', 'Resultados generados correctamente.');
     }, 1000);
   };
@@ -301,141 +281,31 @@ const ValoraPage: React.FC = () => {
     }
   };
 
-  const isMobileSize = () => {
-    // return width <= 768;
-    return width <= 1200;
-  }
-
-  const togglePanel = (panel: 'menu' | 'form' | 'options') => {
-    setActivePanel(prev => (prev === panel ? null : panel));
-    setLastPanel(panel);
-  };
-
   return (
-    <div className='h-dvh flex'>
-      {
-        !isMobileSize() ?
-          <>
-            <div
-              className='relative h-dvh w-full'
-              ref={containerRef}
-              style={{ ['--header-width' as string]: '0px' }}
-            >
-              <ValoraDesktopHeader
-                headerRef={headerRef}
-                isDesktopFormOpen={isDesktopFormOpen}
-                onToggleDesktopForm={() => setIsDesktopFormOpen(prev => !prev)}
-                isFormToggleDisabled={resultsSection === 'metodologia' || isReportSidebarOpen}
-                formData={formData}
-                dates={dates}
-                countries={countries}
-                currencies={currencies}
-                sectors={sectors}
-                fileUploaded={fileUploaded}
-                uploadedFileUrl={uploadedFileUrl}
-                onClearUploadedFile={handleClearUploadedFile}
-                onInputChange={handleInputChange}
-                onSubmit={handleSubmit}
-                onDownloadTemplate={downloadTemplate}
-                onUploadTemplate={openUploadTemplateModal}
-              />
-              <div className="w-full bg-white shadow-xs self-start md:min-h-17 fixed z-10 flex flex-row justify-end items-center pr-20">
-                {showResults && (
-                  <div className="flex items-center gap-4">
-                    <ValoraResultsTabs
-                      activeSection={resultsSection}
-                      onChange={handleResultsSectionChange}
-                    />
-                    <button
-                      type="button"
-                      className="`border-[#7B1FA2] text-[#7B1FA2] hover:border-[#7B1FA2] flex items-center gap-2 border cursor-pointer p-2 px-4 rounded font-medium transition-colors"
-                      onClick={handleReportSidebarOpen}
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
-                      >
-                        <path opacity="0.3" d="M19 22H5C4.4 22 4 21.6 4 21V3C4 2.4 4.4 2 5 2H14L20 8V21C20 21.6 19.6 22 19 22ZM12.5 18C12.5 17.4 12.6 17.5 12 17.5H8.5C7.9 17.5 8 17.4 8 18C8 18.6 7.9 18.5 8.5 18.5L12 18C12.6 18 12.5 18.6 12.5 18ZM16.5 13C16.5 12.4 16.6 12.5 16 12.5H8.5C7.9 12.5 8 12.4 8 13C8 13.6 7.9 13.5 8.5 13.5H15.5C16.1 13.5 16.5 13.6 16.5 13ZM12.5 8C12.5 7.4 12.6 7.5 12 7.5H8C7.4 7.5 7.5 7.4 7.5 8C7.5 8.6 7.4 8.5 8 8.5H12C12.6 8.5 12.5 8.6 12.5 8Z" fill="currentColor"></path>
-                        <rect x="7" y="17" width="6" height="2" rx="1" fill="currentColor"></rect>
-                        <rect x="7" y="12" width="10" height="2" rx="1" fill="currentColor"></rect>
-                        <rect x="7" y="7" width="6" height="2" rx="1" fill="currentColor"></rect>
-                        <path d="M15 8H20L14 2V7C14 7.6 14.4 8 15 8Z" fill="currentColor"></path>
-                      </svg>
-                      Generar reporte
-                    </button>
-                  </div>
-                )}
-
-              </div>
-              <div
-                className="h-dvh overflow-y-auto"
-                style={{ paddingLeft: 'var(--header-width)' }}
-              >
-                {showResults ? (
-                  <div className='flex flex-col min-h-screen '>
-                    {isReportViewerOpen ? (
-                      <section className="flex justify-center w-full px-4 pb-10 sm:px-8 lg:pt-20">
-                        <div className="w-full max-w-7xl rounded-lg border border-gray-200 bg-white shadow">
-                          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-                            <h4 className="text-sm font-semibold text-gray-800">REPORTE DE DATOS</h4>
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={handleReportViewerClose}
-                                className="rounded border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600"
-                              >
-                                Salir
-                              </button>
-                              <a
-                                href="/files/Reporte-Detallado.pdf"
-                                download
-                                className="rounded bg-[#009ef7] px-3 py-1.5 text-xs font-semibold text-white"
-                              >
-                                Descargar
-                              </a>
-                            </div>
-                          </div>
-                          <div className="h-[70vh] w-full">
-                            <iframe
-                              title="Reporte de datos"
-                              src="/files/Reporte-Detallado.pdf"
-                              className="h-full w-full"
-                            />
-                          </div>
-                        </div>
-                      </section>
-                    ) : (
-                      <ValoraResults
-                        section={resultsSection}
-                        balanceTable={balanceTable}
-                        resultsTable={resultsTable}
-                        formData={formData}
-                      />
-                    )}
-                    <MainPageFooter />
-                  </div>
-                ) : (
-                  <MainPage />
-                )}
-              </div>
-            </div>
-          </>
-          :
-          <ValoraMobileLayout
-            activePanel={activePanel}
-            lastPanel={lastPanel}
-            showResults={showResults}
-            resultsSection={resultsSection}
-            onTogglePanel={togglePanel}
-            onClosePanel={() => setActivePanel(null)}
-            onChangeResultsSection={handleResultsSectionChange}
-            onOpenReportSidebar={handleReportSidebarOpen}
-            isFormToggleDisabled={resultsSection === 'metodologia' || isReportSidebarOpen}
+    <div className="min-h-dvh bg-gray-50">
+      <NavBar
+        onToggleMenu={toggleResultsSidebar}
+        onToggleForm={() => setIsDesktopFormOpen(prev => !prev)}
+        showUserMenu={showUserMenu}
+        setShowUserMenu={setShowUserMenu}
+        isMenuOpen={isResultsSidebarOpen}
+        isFormOpen={isDesktopFormOpen}
+        hasResults={showResults}
+        logoHref="/valora"
+        logoSrc="/public/images/logo-valora-small.png"
+        logoAlt="Valora Logo"
+        projectsHref="/valora/proyectos"
+      />
+      <main
+        className={`h-dvh pt-16 transition-all duration-200 ${isDesktopFormOpen ? 'lg:pl-105' : 'lg:pl-0'} ${showResults && isResultsSidebarOpen ? 'lg:pr-65' : 'lg:pr-0'}`}
+      >
+        {mainContent}
+      </main>
+      <aside
+        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-105 border-r border-gray-200 bg-white shadow-sm transition-transform duration-200 ${isDesktopFormOpen ? 'translate-x-0' : '-translate-x-105'}`}
+      >
+        <div className="h-full overflow-y-auto p-4">
+          <ValoraFormPanel
             formData={formData}
             dates={dates}
             countries={countries}
@@ -448,9 +318,24 @@ const ValoraPage: React.FC = () => {
             onSubmit={handleSubmit}
             onDownloadTemplate={downloadTemplate}
             onUploadTemplate={openUploadTemplateModal}
-            currentMobilePage={currentMobilePage}
           />
-      }
+        </div>
+      </aside>
+      {showResults && (
+        <aside
+          className={`fixed right-0 top-16 z-40 h-[calc(100vh-4rem)] w-65 border-l border-gray-200 bg-white shadow-sm transition-transform duration-200 ${isResultsSidebarOpen ? 'translate-x-0' : 'translate-x-65'} ${isResultsSidebarOpen ? '' : 'pointer-events-none'}`}
+        >
+          <div className="flex h-full flex-col">
+            <div>
+              <ValoraResultsTabs
+                activeSection={resultsSection}
+                onChange={handleResultsSectionChange}
+                onOpenReportSidebar={handleReportSidebarOpen}
+              />
+            </div>
+          </div>
+        </aside>
+      )}
       <UploadTemplateModal
         key={uploadResetKey}
         isOpen={isUploadModalOpen}
@@ -469,7 +354,7 @@ const ValoraPage: React.FC = () => {
       />
       <ToastStack toasts={toasts} onDismiss={removeToast} />
       {isLoading && <LoadingOverlay />}
-    </div >
+    </div>
   );
 };
 

@@ -6,8 +6,8 @@ import { ClientsSection } from './sections/ClientsSection';
 import { BenefitsSection } from './sections/BenefitsSection';
 import { ProductsSection } from './sections/ProductsSection';
 import { ContactSection } from './sections/ContactSection';
+import {CTASection} from './sections/CTASection';
 import TeamSection from './sections/TeamSection';
-import { CTASection } from './sections/CTASection';
 import { LandingHeader } from './components/LandingHeader';
 import { ScrollTop } from '../../components/layout/ScrollTop';
 import type { 
@@ -424,5 +424,6 @@ export function LandingPage({
 
       <ScrollTop />
     </div>
+    
   );
 }

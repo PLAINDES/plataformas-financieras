@@ -7,8 +7,7 @@ import { EditableText } from '../../../components/editable/EditableText';
 
 interface BenefitsSectionProps {
   content: BenefitsContent;
-    onSave: (content: EditableContent) => Promise<void>;
-
+  onSave: (content: EditableContent) => Promise<void>;
 }
 
 // Tipos para los datos del gráfico
@@ -103,46 +102,49 @@ export function BenefitsSection({content, onSave}: BenefitsSectionProps) {
   return (
     <>
       {/* Main Section */}
-      <div className="bs-landing-section bs-section-1" id="beneficios" style={{ padding: '40px 0' }}>
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-12 col-lg-8">
+      <div className="bs-landing-section bs-section-1 py-5 sm:py-[30px] lg:py-10" id="beneficios">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center">
+            <div className="w-full lg:w-2/3">
               
               {/* Header */}
-              <div className="text-center m-4 mb-md-7">
-                
-                <EditableText content={{  value: content.title,  id: 'title', type: 'text', section: 'benefits' }}
-                              onSave={onSave} as="h3" className="fw-semibold mb-3 fs-4" />
+              <div className="text-center m-4 mb-7">
+                <EditableText 
+                  content={{ value: content.title, id: 'title', type: 'text', section: 'benefits' }}
+                  onSave={onSave} 
+                  as="h3" 
+                  className="fw-semibold mb-3 text-2xl" 
+                />
 
-                <EditableText content={{  value: content.subtitle,  id: 'subtitle', type: 'text', section: 'benefits' }}
-                              onSave={onSave} as="h3" className="opacity-50 fs-6 fs-md-4 px-3 py-1" />
-
+                <EditableText 
+                  content={{ value: content.subtitle, id: 'subtitle', type: 'text', section: 'benefits' }}
+                  onSave={onSave} 
+                  as="h3" 
+                  className="opacity-50 text-sm md:text-2xl px-3 py-1" 
+                />
               </div>
 
               {/* Card with Chart */}
-              <div className="card">
-                <div className="card-body position-relative" style={{ minHeight: '500px' }}>
+              <div className="bg-white rounded-lg shadow">
+                <div className="relative p-6 sm:p-4 min-h-[500px] sm:min-h-[400px]">
                   
                   {/* Loading Overlay */}
                   {loading && (
-                    <div 
-                      className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white bg-opacity-75" 
-                      style={{ zIndex: 10 }}
-                    >
+                    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-white/75 z-10">
                       <div className="text-center">
-                        <div className="spinner-border text-primary mb-3" role="status">
-                          <span className="visually-hidden">Cargando...</span>
+                        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent align-[-0.125em] mb-3" role="status">
+                          <span className="sr-only">Cargando...</span>
                         </div>
-                        <p className="text-muted">Cargando...</p>
+                        <p className="text-gray-500">Cargando...</p>
                       </div>
                     </div>
                   )}
 
                   {/* Filters Row */}
-                  <div className="row g-3 mb-4">
-                    <div className="col-12 col-lg-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
+                    <div className="w-full">
                       <select 
-                        className="form-select" 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={selectedIndustry}
                         onChange={handleIndustryChange}
                       >
@@ -152,10 +154,10 @@ export function BenefitsSection({content, onSave}: BenefitsSectionProps) {
                         ))}
                       </select>
                     </div>
-                    <div className="col-12 col-lg-6">
-                      <div className="d-flex gap-2">
+                    <div className="w-full">
+                      <div className="flex gap-2">
                         <select 
-                          className="form-select flex-grow-1" 
+                          className="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           value={selectedYear}
                           onChange={handleYearChange}
                         >
@@ -166,35 +168,35 @@ export function BenefitsSection({content, onSave}: BenefitsSectionProps) {
                         </select>
                         <button 
                           type="button" 
-                          className="btn btn-outline py-1 px-3"
+                          className="btn btn-outline py-1 px-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                           onClick={handleSortToggle}
                           title={sortAscending ? 'Ordenar descendente' : 'Ordenar ascendente'}
                         >
-                          <i className={`fa-solid ${sortAscending ? 'fa-arrow-down-1-9' : 'fa-arrow-up-1-9'} fs-3`}></i>
+                          <i className={`fa-solid ${sortAscending ? 'fa-arrow-down-1-9' : 'fa-arrow-up-1-9'} text-2xl`}></i>
                         </button>
                         <button 
                           type="button" 
-                          className="btn btn-outline py-1 px-3"
+                          className="btn btn-outline py-1 px-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                           onClick={handleZoomClick}
                           title="Ver en pantalla completa"
                         >
-                          <i className="fa-solid fa-up-right-and-down-left-from-center fs-3"></i>
+                          <i className="fa-solid fa-up-right-and-down-left-from-center text-2xl"></i>
                         </button>
                       </div>
                     </div>
                   </div>
 
                   {/* Chart Container */}
-                  <div className="row">
-                    <div className="col-12">
+                  <div className="w-full">
+                    <div className="w-full">
                       <div 
                         ref={chartRef}
-                        style={{ width: '100%', height: '420px' }}
+                        className="w-full h-[420px]"
                       >
                         {!selectedIndustry || !selectedYear ? (
-                          <div className="d-flex align-items-center justify-content-center h-100">
-                            <div className="text-center text-muted">
-                              <i className="fa-solid fa-chart-column fs-1 mb-3 d-block"></i>
+                          <div className="flex items-center justify-center h-full">
+                            <div className="text-center text-gray-500">
+                              <i className="fa-solid fa-chart-column text-4xl mb-3 block"></i>
                               <p className="mb-0">Seleccione una industria y año para ver el gráfico</p>
                             </div>
                           </div>
@@ -217,62 +219,57 @@ export function BenefitsSection({content, onSave}: BenefitsSectionProps) {
         <>
           {/* Backdrop */}
           <div 
-            className="modal-backdrop fade show"
+            className="fixed inset-0 bg-black/50 z-[1040]"
             onClick={handleCloseModal}
-            style={{ zIndex: 1040 }}
           />
 
           {/* Modal */}
           <div 
-            className="modal fade show d-block" 
+            className="fixed inset-0 block z-[1050]" 
             tabIndex={-1}
-            style={{ zIndex: 1050 }}
           >
-            <div className="modal-dialog modal-dialog-centered modal-fullscreen">
-              <div className="modal-content">
+            <div className="flex items-center justify-center min-h-screen w-screen h-screen">
+              <div className="bg-white w-full h-full flex flex-col">
                 
                 {/* Header */}
-                <div className="modal-header">
+                <div className="flex items-start justify-between p-6 border-b border-gray-200">
                   <div>
-                    <h3 className="fw-bold mb-1 fs-2 fs-md-1">
+                    <h3 className="font-bold mb-1 text-3xl md:text-4xl sm:text-xl">
                       ¿Qué tan riesgosa es su industria?
                     </h3>
-                    <p className="opacity-50 fs-5 fs-md-3 mb-0">
+                    <p className="opacity-50 text-lg md:text-2xl mb-0 sm:text-sm">
                       Revise el riesgo en el que se encuentra su empresa
                     </p>
                   </div>
                   <button
                     type="button"
-                    className="btn btn-icon btn-sm btn-active-light-primary ms-2"
+                    className="btn btn-icon btn-sm btn-active-light-primary ml-2 p-2 hover:bg-gray-100 rounded-md transition-colors"
                     onClick={handleCloseModal}
                     aria-label="Close"
                   >
-                    <i className="fa-solid fa-xmark fs-2"></i>
+                    <i className="fa-solid fa-xmark text-3xl"></i>
                   </button>
                 </div>
 
                 {/* Body */}
-                <div className="modal-body position-relative">
+                <div className="flex-1 p-6 overflow-y-auto relative">
                   {loading && (
-                    <div 
-                      className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white bg-opacity-75" 
-                      style={{ zIndex: 10 }}
-                    >
+                    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-white/75 z-10">
                       <div className="text-center">
-                        <div className="spinner-border text-primary mb-3" role="status">
-                          <span className="visually-hidden">Cargando...</span>
+                        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent align-[-0.125em] mb-3" role="status">
+                          <span className="sr-only">Cargando...</span>
                         </div>
-                        <p className="text-muted">Cargando...</p>
+                        <p className="text-gray-500">Cargando...</p>
                       </div>
                     </div>
                   )}
 
-                  <div className="row g-3 mb-4">
-                    <div className="col-12 col-lg-8">
-                      <div className="row g-3">
-                        <div className="col-12 col-lg-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 mb-4">
+                    <div className="lg:col-span-8">
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                        <div className="lg:col-span-8">
                           <select 
-                            className="form-select" 
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             value={selectedIndustry}
                             onChange={handleIndustryChange}
                           >
@@ -282,10 +279,10 @@ export function BenefitsSection({content, onSave}: BenefitsSectionProps) {
                             ))}
                           </select>
                         </div>
-                        <div className="col-12 col-lg-4">
-                          <div className="d-flex gap-2">
+                        <div className="lg:col-span-4">
+                          <div className="flex gap-2">
                             <select 
-                              className="form-select flex-grow-1" 
+                              className="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               value={selectedYear}
                               onChange={handleYearChange}
                             >
@@ -296,10 +293,10 @@ export function BenefitsSection({content, onSave}: BenefitsSectionProps) {
                             </select>
                             <button 
                               type="button" 
-                              className="btn btn-outline py-1 px-3"
+                              className="btn btn-outline py-1 px-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                               onClick={handleSortToggle}
                             >
-                              <i className={`fa-solid ${sortAscending ? 'fa-arrow-down-1-9' : 'fa-arrow-up-1-9'} fs-3`}></i>
+                              <i className={`fa-solid ${sortAscending ? 'fa-arrow-down-1-9' : 'fa-arrow-up-1-9'} text-2xl`}></i>
                             </button>
                           </div>
                         </div>
@@ -307,28 +304,28 @@ export function BenefitsSection({content, onSave}: BenefitsSectionProps) {
                     </div>
                     
                     {selectedIndustryData && (
-                      <div className="col-12 col-lg-4">
-                        <h3 className="opacity-50 fs-5 fs-md-3 mb-2">
+                      <div className="lg:col-span-4">
+                        <h3 className="opacity-50 text-lg md:text-2xl mb-2">
                           Costo económico de la industria seleccionada
                         </h3>
-                        <div className="d-flex align-items-center gap-3">
-                          <h1 className="mb-0 fs-1">{selectedIndustryData.value.toFixed(2)}%</h1>
-                          <h3 className="text-primary mb-0 mt-1 fs-4">{selectedIndustryData.label}</h3>
+                        <div className="flex items-center gap-3">
+                          <h1 className="mb-0 text-4xl">{selectedIndustryData.value.toFixed(2)}%</h1>
+                          <h3 className="text-blue-600 mb-0 mt-1 text-2xl">{selectedIndustryData.label}</h3>
                         </div>
                       </div>
                     )}
                   </div>
 
-                  <div className="row">
-                    <div className="col-12">
+                  <div className="w-full">
+                    <div className="w-full">
                       <div 
                         ref={chartModalRef}
-                        style={{ width: '100%', height: '620px' }}
+                        className="w-full h-[620px]"
                       >
                         {!selectedIndustry || !selectedYear ? (
-                          <div className="d-flex align-items-center justify-content-center h-100">
-                            <div className="text-center text-muted">
-                              <i className="fa-solid fa-chart-column fs-1 mb-3 d-block"></i>
+                          <div className="flex items-center justify-center h-full">
+                            <div className="text-center text-gray-500">
+                              <i className="fa-solid fa-chart-column text-4xl mb-3 block"></i>
                               <p className="mb-0">Seleccione una industria y año para ver el gráfico</p>
                             </div>
                           </div>
@@ -341,10 +338,10 @@ export function BenefitsSection({content, onSave}: BenefitsSectionProps) {
                 </div>
 
                 {/* Footer */}
-                <div className="modal-footer">
+                <div className="p-6 border-t border-gray-200">
                   <button 
                     type="button" 
-                    className="btn btn-light"
+                    className="btn btn-light px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
                     onClick={handleCloseModal}
                   >
                     Cerrar
@@ -356,34 +353,6 @@ export function BenefitsSection({content, onSave}: BenefitsSectionProps) {
           </div>
         </>
       )}
-
-      {/* Responsive Styles */}
-      <style>{`
-        @media (max-width: 991px) {
-          .bs-section-1 {
-            padding: 30px 0 !important;
-          }
-        }
-
-        @media (max-width: 575px) {
-          .bs-section-1 {
-            padding: 20px 0 !important;
-          }
-          
-          .card-body {
-            padding: 1rem !important;
-            min-height: 400px !important;
-          }
-          
-          .modal-header h3 {
-            font-size: 1.25rem !important;
-          }
-          
-          .modal-header p {
-            font-size: 0.875rem !important;
-          }
-        }
-      `}</style>
     </>
   );
 }
@@ -399,8 +368,8 @@ function SimpleBarChart({ data, selectedIndustry, height = 420 }: SimpleBarChart
   const maxValue = Math.max(...data.map(d => d.value));
 
   return (
-    <div className="w-100 h-100 d-flex flex-column justify-content-end" style={{ padding: '20px' }}>
-      <div className="d-flex align-items-end justify-content-between gap-2" style={{ height: '100%' }}>
+    <div className="w-full h-full flex flex-col justify-end p-5">
+      <div className="flex items-end justify-between gap-2 h-full">
         {data.map((item, index) => {
           const barHeight = (item.value / maxValue) * 100;
           const isSelected = item.industry === selectedIndustry;
@@ -408,14 +377,12 @@ function SimpleBarChart({ data, selectedIndustry, height = 420 }: SimpleBarChart
           return (
             <div 
               key={index}
-              className="d-flex flex-column align-items-center justify-content-end flex-grow-1"
-              style={{ height: '100%', minWidth: '40px' }}
+              className="flex flex-col items-center justify-end flex-grow h-full min-w-[40px]"
             >
               {/* Value Label */}
               <div 
-                className="text-center mb-2"
+                className="text-center mb-2 text-xs"
                 style={{ 
-                  fontSize: '0.75rem',
                   fontWeight: isSelected ? 'bold' : 'normal',
                   color: isSelected ? '#0d6efd' : '#6c757d'
                 }}
@@ -425,26 +392,23 @@ function SimpleBarChart({ data, selectedIndustry, height = 420 }: SimpleBarChart
               
               {/* Bar */}
               <div 
-                className="w-100 rounded-top position-relative"
+                className="w-full rounded-t relative transition-all duration-300 ease-in-out min-h-[10px]"
                 style={{ 
                   height: `${barHeight}%`,
                   backgroundColor: isSelected ? '#0d6efd' : '#e9ecef',
-                  transition: 'all 0.3s ease',
-                  minHeight: '10px',
                   boxShadow: isSelected ? '0 4px 8px rgba(13, 110, 253, 0.3)' : 'none'
                 }}
               />
               
               {/* Industry Label */}
               <div 
-                className="text-center mt-2"
+                className="text-center mt-2 whitespace-nowrap"
                 style={{ 
                   fontSize: '0.7rem',
                   fontWeight: isSelected ? 'bold' : 'normal',
                   color: isSelected ? '#0d6efd' : '#6c757d',
                   transform: 'rotate(-45deg)',
                   transformOrigin: 'top center',
-                  whiteSpace: 'nowrap',
                   marginTop: '20px'
                 }}
               >

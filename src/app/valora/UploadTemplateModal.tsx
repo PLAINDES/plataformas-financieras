@@ -58,7 +58,7 @@ export const UploadTemplateModal: React.FC<UploadTemplateModalProps> = ({
                     <h3 className="text-lg font-semibold text-gray-800">Plantilla de valorización</h3>
                     <button
                         type="button"
-                        className="rounded p-1 text-[#009ef7]"
+                        className="rounded p-1 text-blue-600"
                         aria-label="Cerrar modal"
                         onClick={onClose}
                     >
@@ -66,16 +66,16 @@ export const UploadTemplateModal: React.FC<UploadTemplateModalProps> = ({
                     </button>
                 </div>
                 <div className='flex flex-col gap-4'>
-                    <div className='border-dashed border-[#009ef7] border rounded flex flex-row gap-3 bg-[#009ef7]/10 p-4 px-6 items-center'>
-                        <i className="fs-2tx text-primary me-2 fa-solid fa-circle-info text-[#009ef7] text-4xl"></i>
+                    <div className='border-dashed border-blue-600 border rounded flex flex-row gap-3 bg-blue-600/10 p-4 px-6 items-center'>
+                        <i className="fs-2tx text-primary me-2 fa-solid fa-circle-info text-blue-600 text-4xl"></i>
                         <p className='text-[15px] text-gray-800'>Sus estados financieros deben estar en la plantilla para poder llenar la información</p>
                     </div>
-                    <div className='border-dashed border-[#009ef7] border rounded flex flex-row gap-3 bg-[#009ef7]/10 p-4 px-6 items-center'>
-                        <i className="fa-solid fa-file-arrow-up me-4 text-primary my-auto fs-2tx text-[#009ef7] text-4xl"></i>
+                    <div className='border-dashed border-blue-600 border rounded flex flex-row gap-3 bg-blue-600/10 p-4 px-6 items-center'>
+                        <i className="fa-solid fa-file-arrow-up me-4 text-primary my-auto fs-2tx text-blue-600 text-4xl"></i>
                         <div className="w-full">
                             <p className="text-sm font-semibold text-gray-800">Haga clic para cargar</p>
                             <p className="text-xs text-gray-600">Sube hasta 1 archivo</p>
-                            <label className="mt-3 flex w-full cursor-pointer items-center justify-center rounded border border-[#009ef7] bg-white px-4 py-2 text-sm font-semibold text-[#009ef7] transition-colors hover:bg-[#009ef7] hover:text-white">
+                            <label className="mt-3 flex w-full cursor-pointer items-center justify-center rounded border border-blue-600 bg-white px-4 py-2 text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-600 hover:text-white">
                                 Seleccionar archivo
                                 <input
                                     ref={fileInputRef}
@@ -89,7 +89,7 @@ export const UploadTemplateModal: React.FC<UploadTemplateModalProps> = ({
                                     <span className="truncate">{selectedFileName}</span>
                                     <button
                                         type="button"
-                                        className="shrink-0 rounded px-2 py-1 text-[11px] font-semibold text-[#009ef7] hover:bg-[#009ef7]/10"
+                                        className="shrink-0 rounded px-2 py-1 text-[11px] font-semibold text-blue-600 hover:bg-blue-600/10"
                                         onClick={handleClearFile}
                                     >
                                         Quitar
@@ -98,7 +98,7 @@ export const UploadTemplateModal: React.FC<UploadTemplateModalProps> = ({
                             )}
                         </div>
                     </div>
-                    <button className='text-sm text-[#009ef7] cursor-pointer self-center' onClick={onDownloadTemplate}>Descargar plantilla de estados financieros <i className="fa-solid fa-download text-primary"></i></button>
+                    <button className='text-sm text-blue-600 cursor-pointer self-center' onClick={onDownloadTemplate}>Descargar plantilla de estados financieros <i className="fa-solid fa-download text-primary"></i></button>
                 </div>
                 <div className="mt-4 flex items-center justify-end gap-2">
                     <button
@@ -110,7 +110,7 @@ export const UploadTemplateModal: React.FC<UploadTemplateModalProps> = ({
                     </button>
                     <button
                         type="button"
-                        className="rounded bg-[#009ef7] px-4 py-2 text-sm font-semibold text-white hover:bg-sky-600 cursor-pointer"
+                        className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 cursor-pointer"
                         onClick={handleUpload}
                     >
                         Subir

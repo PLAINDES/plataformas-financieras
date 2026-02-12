@@ -88,12 +88,12 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
   const sectionBg = { background: 'linear-gradient(to bottom right, #f8f9fa, #e9ecef)' };
 
   return (
-    <section className="py-4 py-md-5 overflow-hidden position-relative" id="equipo" style={sectionBg}>
+    <section className="py-6 md:py-12 overflow-hidden relative" id="equipo" style={sectionBg}>
       
-      <div className="container position-relative z-index-1 px-3 px-md-4">
+      <div className="container mx-auto relative z-10 px-3 md:px-4">
         
         {/* Header Editable */}
-        <div className="text-start mb-4 mb-md-5">
+        <div className="text-left mb-6 md:mb-10">
           <EditableText 
             content={{ 
               value: content?.title || '', 
@@ -103,20 +103,20 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
             }}
             onSave={onSave} 
             as="h2" 
-            className="fs-5 fs-md-4 fw-semibold text-dark mb-2 mb-md-3" 
+            className="text-xl md:text-3xl font-semibold text-gray-900 mb-2 md:mb-4" 
           />
         </div>
 
         {/* Versión Desktop - Grid Principal */}
-        <div className="row g-4 g-md-5 d-none d-lg-flex">
+        <div className="hidden lg:grid lg:grid-cols-2 gap-6 md:gap-10">
           
           {/* COLUMNA IZQUIERDA: Autores + Equipo Desarrollo */}
-          <div className="col-lg-6">
+          <div>
             
             {/* 1. Sección Autores */}
-            <div className="mb-5">
-              <div className="d-flex align-items-center mb-4">
-                <h3 className="h3 fw-bold m-0">Autores</h3>
+            <div className="mb-10">
+              <div className="flex items-center mb-6">
+                <h3 className="text-2xl font-bold m-0">Autores</h3>
               </div>
               
               <EditableCollection
@@ -131,7 +131,7 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
                 addButtonText="Agregar Autor"
                 emptyMessage="No hay autores. Agrega uno para comenzar."
                 allowReorder={true}
-                className="d-flex flex-column gap-3"
+                className="flex flex-col gap-4"
                 renderItem={(author, index, helpers) => (
                   <AuthorCard 
                     author={author} 
@@ -144,12 +144,12 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
 
             {/* 2. Sección Equipo de Desarrollo */}
             <div>
-              <div className="d-flex align-items-center mb-4">
-                <h3 className="h3 fw-bold m-0">Equipo de Desarrollo</h3>
+              <div className="flex items-center mb-6">
+                <h3 className="text-2xl font-bold m-0">Equipo de Desarrollo</h3>
               </div>
 
-              <div className="card border-0 shadow-sm rounded-3 bg-white">
-                <div className="p-2 border-start border-3 border-primary ps-3">
+              <div className="bg-white border-0 shadow-sm rounded-lg">
+                <div className="p-2 border-l-4 border-blue-500 pl-4">
                   <EditableCollection
                     data={{ 
                       id: 'team-developmentTeam', 
@@ -162,7 +162,7 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
                     addButtonText="Agregar Miembro"
                     emptyMessage="No hay miembros. Agrega uno para comenzar."
                     allowReorder={true}
-                    className="list-group list-group-flush"
+                    className="divide-y divide-gray-200"
                     renderItem={(member, index, helpers) => (
                       <DevelopmentMemberCard 
                         member={member} 
@@ -178,9 +178,9 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
           </div>
 
           {/* COLUMNA DERECHA: Colaboradores */}
-          <div className="col-lg-6">
-            <div className="d-flex align-items-center mb-4">
-              <h3 className="h3 fw-bold m-0">Colaboradores</h3>
+          <div>
+            <div className="flex items-center mb-6">
+              <h3 className="text-2xl font-bold m-0">Colaboradores</h3>
             </div>
 
             <EditableCollection
@@ -195,7 +195,7 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
               addButtonText="Agregar Colaborador"
               emptyMessage="No hay colaboradores. Agrega uno para comenzar."
               allowReorder={true}
-              className="d-flex flex-column gap-3"
+              className="flex flex-col gap-4"
               renderItem={(collaborator, index, helpers) => (
                 <CollaboratorCard 
                   collaborator={collaborator} 
@@ -209,23 +209,23 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
         </div>
 
         {/* Versión Mobile - Acordeón */}
-        <div className="d-lg-none">
+        <div className="lg:hidden">
           
           {/* Acordeón Autores */}
-          <div className="mb-3">
+          <div className="mb-4">
             <button
-              className="btn btn-link w-100 text-start text-decoration-none p-0 border-0"
+              className="w-full text-left p-0 border-0 bg-transparent"
               onClick={() => toggleSection('authors')}
             >
-              <div className="card border-0 shadow-sm rounded-3 w-100">
-                <div className="p-3">
-                  <div className="d-flex align-items-center justify-content-between">
-                    <h3 className="h5 fw-bold m-0 text-dark">Autores</h3>
+              <div className="bg-white border-0 shadow-sm rounded-lg w-full">
+                <div className="p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold m-0 text-gray-900">Autores</h3>
                     <svg 
                       width="20" 
                       height="20" 
                       fill="currentColor" 
-                      className="text-muted"
+                      className="text-gray-500"
                       style={{ 
                         transform: openSection === 'authors' ? 'rotate(180deg)' : 'rotate(0deg)',
                         transition: 'transform 0.3s ease'
@@ -239,7 +239,7 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
             </button>
             
             {openSection === 'authors' && (
-              <div className="mt-3 animate-fade-in">
+              <div className="mt-4 animate-fade-in">
                 <EditableCollection
                   data={{ 
                     id: 'team-authors', 
@@ -252,7 +252,7 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
                   addButtonText="Agregar Autor"
                   emptyMessage="No hay autores."
                   allowReorder={true}
-                  className="d-flex flex-column gap-3"
+                  className="flex flex-col gap-4"
                   renderItem={(author, index, helpers) => (
                     <AuthorCard 
                       author={author} 
@@ -266,20 +266,20 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
           </div>
 
           {/* Acordeón Equipo de Desarrollo */}
-          <div className="mb-3">
+          <div className="mb-4">
             <button
-              className="btn btn-link w-100 text-start text-decoration-none p-0 border-0"
+              className="w-full text-left p-0 border-0 bg-transparent"
               onClick={() => toggleSection('development')}
             >
-              <div className="card border-0 shadow-sm rounded-3 w-100">
-                <div className="p-3">
-                  <div className="d-flex align-items-center justify-content-between">
-                    <h3 className="h5 fw-bold m-0 text-dark">Equipo de Desarrollo</h3>
+              <div className="bg-white border-0 shadow-sm rounded-lg w-full">
+                <div className="p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold m-0 text-gray-900">Equipo de Desarrollo</h3>
                     <svg 
                       width="20" 
                       height="20" 
                       fill="currentColor" 
-                      className="text-muted"
+                      className="text-gray-500"
                       style={{ 
                         transform: openSection === 'development' ? 'rotate(180deg)' : 'rotate(0deg)',
                         transition: 'transform 0.3s ease'
@@ -293,8 +293,8 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
             </button>
             
             {openSection === 'development' && (
-              <div className="mt-3 animate-fade-in">
-                <div className="card border-0 shadow-sm rounded-3 bg-white">
+              <div className="mt-4 animate-fade-in">
+                <div className="bg-white border-0 shadow-sm rounded-lg">
                   <div className="p-2">
                     <EditableCollection
                       data={{ 
@@ -308,7 +308,7 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
                       addButtonText="Agregar Miembro"
                       emptyMessage="No hay miembros."
                       allowReorder={true}
-                      className="list-group list-group-flush"
+                      className="divide-y divide-gray-200"
                       renderItem={(member, index, helpers) => (
                         <DevelopmentMemberCard 
                           member={member} 
@@ -325,20 +325,20 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
           </div>
 
           {/* Acordeón Colaboradores */}
-          <div className="mb-3">
+          <div className="mb-4">
             <button
-              className="btn btn-link w-100 text-start text-decoration-none p-0 border-0"
+              className="w-full text-left p-0 border-0 bg-transparent"
               onClick={() => toggleSection('collaborators')}
             >
-              <div className="card border-0 shadow-sm rounded-3 w-100">
-                <div className="p-3">
-                  <div className="d-flex align-items-center justify-content-between">
-                    <h3 className="h5 fw-bold m-0 text-dark">Colaboradores</h3>
+              <div className="bg-white border-0 shadow-sm rounded-lg w-full">
+                <div className="p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold m-0 text-gray-900">Colaboradores</h3>
                     <svg 
                       width="20" 
                       height="20" 
                       fill="currentColor" 
-                      className="text-muted"
+                      className="text-gray-500"
                       style={{ 
                         transform: openSection === 'collaborators' ? 'rotate(180deg)' : 'rotate(0deg)',
                         transition: 'transform 0.3s ease'
@@ -352,7 +352,7 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
             </button>
             
             {openSection === 'collaborators' && (
-              <div className="mt-3 animate-fade-in">
+              <div className="mt-4 animate-fade-in">
                 <EditableCollection
                   data={{ 
                     id: 'team-collaborators', 
@@ -365,7 +365,7 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
                   addButtonText="Agregar Colaborador"
                   emptyMessage="No hay colaboradores."
                   allowReorder={true}
-                  className="d-flex flex-column gap-3"
+                  className="flex flex-col gap-4"
                   renderItem={(collaborator, index, helpers) => (
                     <CollaboratorCard 
                       collaborator={collaborator} 
@@ -429,35 +429,35 @@ function AuthorCard({ author, helpers, onSave }: AuthorCardProps) {
 
   if (helpers.isEditing) {
     return (
-      <div className="card border-0 shadow-sm rounded-3 border-start border-3 border-warning ps-3">
-        <div className="p-4">
-          <div className="mb-3">
-            <label className="form-label small fw-bold">Nombre</label>
+      <div className="bg-white border-0 shadow-sm rounded-lg border-l-4 border-[#2FA4FF] pl-4">
+        <div className="p-6">
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-1">Nombre</label>
             <input
               type="text"
-              className="form-control"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={editedAuthor.name}
               onChange={(e) => setEditedAuthor({ ...editedAuthor, name: e.target.value })}
             />
           </div>
-          <div className="mb-3">
-            <label className="form-label small fw-bold">Cargo/Descripción</label>
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-1">Cargo/Descripción</label>
             <input
               type="text"
-              className="form-control"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={editedAuthor.caption}
               onChange={(e) => setEditedAuthor({ ...editedAuthor, caption: e.target.value })}
             />
           </div>
-          <div className="d-flex gap-2 justify-content-end">
+          <div className="flex gap-2 justify-end">
             <button 
-              className="btn btn-sm btn-secondary"
+              className="px-3 py-1.5 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors"
               onClick={helpers.onCancelEdit}
             >
               Cancelar
             </button>
             <button 
-              className="btn btn-sm btn-primary"
+              className="px-3 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
               onClick={() => helpers.onSaveItem(editedAuthor)}
             >
               Guardar
@@ -469,7 +469,7 @@ function AuthorCard({ author, helpers, onSave }: AuthorCardProps) {
   }
 
   return (
-    <div className="card border-0 shadow-sm rounded-3 border-start border-3 border-primary ps-3" style={{ position: 'relative' }}>
+    <div className="bg-white border-0 shadow-sm rounded-lg border-l-4 border-blue-500 pl-4 relative">
       {isAdmin && (
         <AdminControls
           onEdit={helpers.onEdit}
@@ -479,13 +479,14 @@ function AuthorCard({ author, helpers, onSave }: AuthorCardProps) {
           canMoveUp={helpers.canMoveUp}
           canMoveDown={helpers.canMoveDown}
           position="top-right"
+          buttonsDirection='horizontal'
         />
       )}
-      <div className="p-4">
-        <div className="d-flex align-items-center">
-          <div className="ms-3">
-            <h5 className="h6 fw-bold text-dark mb-1">{author.name}</h5>
-            <p className="small text-muted mb-0">{author.caption}</p>
+      <div className="p-6">
+        <div className="flex items-center">
+          <div className="ml-4">
+            <h5 className="text-base font-bold text-gray-900 mb-1">{author.name}</h5>
+            <p className="text-sm text-gray-600 mb-0">{author.caption}</p>
           </div>
         </div>
       </div>
@@ -506,34 +507,34 @@ function DevelopmentMemberCard({ member, helpers, onSave, mobile = false }: Deve
 
   if (helpers.isEditing) {
     return (
-      <div className={`list-group-item border-0 px-2 py-3 ${mobile ? 'border-start border-3 border-warning ps-3' : ''}`}>
+      <div className={`border-0 px-2 py-4 ${mobile ? 'border-l-4 border-[#2FA4FF] pl-4' : ''}`}>
         <div className="mb-2">
-          <label className="form-label small fw-bold">Nombre</label>
+          <label className="block text-sm font-bold mb-1">Nombre</label>
           <input
             type="text"
-            className="form-control form-control-sm"
+            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={editedMember.name}
             onChange={(e) => setEditedMember({ ...editedMember, name: e.target.value })}
           />
         </div>
         <div className="mb-2">
-          <label className="form-label small fw-bold">Rol (opcional)</label>
+          <label className="block text-sm font-bold mb-1">Rol (opcional)</label>
           <input
             type="text"
-            className="form-control form-control-sm"
+            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={editedMember.caption}
             onChange={(e) => setEditedMember({ ...editedMember, caption: e.target.value })}
           />
         </div>
-        <div className="d-flex gap-2 justify-content-end">
+        <div className="flex gap-2 justify-end">
           <button 
-            className="btn btn-sm btn-secondary"
+            className="px-3 py-1.5 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors"
             onClick={helpers.onCancelEdit}
           >
             Cancelar
           </button>
           <button 
-            className="btn btn-sm btn-primary"
+            className="px-3 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
             onClick={() => helpers.onSaveItem(editedMember)}
           >
             Guardar
@@ -545,8 +546,7 @@ function DevelopmentMemberCard({ member, helpers, onSave, mobile = false }: Deve
 
   return (
     <div 
-      className={`list-group-item border-0 px-2 py-2 d-flex align-items-center hover-bg-light ${mobile ? 'border-start border-3 border-primary ps-3' : ''}`}
-      style={{ position: 'relative' }}
+      className={`border-0 px-2 py-2 flex items-center hover-bg-light ${mobile ? 'border-l-4 border-blue-500 pl-4' : ''} relative`}
     >
       {isAdmin && (
         <AdminControls
@@ -557,15 +557,16 @@ function DevelopmentMemberCard({ member, helpers, onSave, mobile = false }: Deve
           canMoveUp={helpers.canMoveUp}
           canMoveDown={helpers.canMoveDown}
           position="top-right"
+          buttonsDirection='horizontal'
         />
       )}
-      <div className="ms-3 flex-grow-1">
-        <div className={mobile ? "d-flex flex-column" : "d-flex flex-wrap justify-content-between align-items-center"}>
-          <h6 className="mb-0 text-dark fw-bold" style={{ fontSize: mobile ? '0.9rem' : '0.95rem' }}>
+      <div className="ml-4 flex-grow">
+        <div className={mobile ? "flex flex-col" : "flex flex-wrap justify-between items-center"}>
+          <h6 className="mb-0 text-gray-900 font-bold" style={{ fontSize: mobile ? '0.9rem' : '0.95rem' }}>
             {member.name}
           </h6>
           {member.caption && (
-            <small className="text-muted ms-auto">{member.caption}</small>
+            <small className="text-gray-600 ml-auto">{member.caption}</small>
           )}
         </div>
       </div>
@@ -585,40 +586,40 @@ function CollaboratorCard({ collaborator, helpers, onSave }: CollaboratorCardPro
 
   if (helpers.isEditing) {
     return (
-      <div className="card border-0 shadow rounded-3 border-start border-3 border-warning ps-3">
-        <div className="p-4">
-          <div className="mb-3">
-            <label className="form-label small fw-bold">Nombre</label>
+      <div className="bg-white border-0 shadow rounded-lg border-l-4 border-[#2FA4FF] pl-4">
+        <div className="p-6">
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-1">Nombre</label>
             <input
               type="text"
-              className="form-control"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={editedCollaborator.name}
               onChange={(e) => setEditedCollaborator({ ...editedCollaborator, name: e.target.value })}
             />
           </div>
-          <div className="mb-3">
-            <label className="form-label small fw-bold">Descripción</label>
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-1">Descripción</label>
             <input
               type="text"
-              className="form-control"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={editedCollaborator.caption}
               onChange={(e) => setEditedCollaborator({ ...editedCollaborator, caption: e.target.value })}
             />
           </div>
-          <div className="mb-3">
-            <label className="form-label small fw-bold">Área/Departamento (opcional)</label>
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-1">Área/Departamento (opcional)</label>
             <input
               type="text"
-              className="form-control"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={editedCollaborator.description || ''}
               onChange={(e) => setEditedCollaborator({ ...editedCollaborator, description: e.target.value })}
             />
           </div>
-          <div className="mb-3">
-            <label className="form-label small fw-bold">URL de Imagen</label>
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-1">URL de Imagen</label>
             <input
               type="text"
-              className="form-control"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={editedCollaborator.image || ''}
               onChange={(e) => setEditedCollaborator({ ...editedCollaborator, image: e.target.value })}
             />
@@ -627,7 +628,7 @@ function CollaboratorCard({ collaborator, helpers, onSave }: CollaboratorCardPro
                 <img 
                   src={editedCollaborator.image} 
                   alt="Preview" 
-                  style={{ maxWidth: '100px', maxHeight: '60px', objectFit: 'contain' }}
+                  className="max-w-[100px] max-h-[60px] object-contain"
                   onError={(e) => {
                     e.currentTarget.src = 'https://via.placeholder.com/100x60?text=Error';
                   }}
@@ -635,15 +636,15 @@ function CollaboratorCard({ collaborator, helpers, onSave }: CollaboratorCardPro
               </div>
             )}
           </div>
-          <div className="d-flex gap-2 justify-content-end">
+          <div className="flex gap-2 justify-end">
             <button 
-              className="btn btn-sm btn-secondary"
+              className="px-3 py-1.5 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors"
               onClick={helpers.onCancelEdit}
             >
               Cancelar
             </button>
             <button 
-              className="btn btn-sm btn-primary"
+              className="px-3 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
               onClick={() => helpers.onSaveItem(editedCollaborator)}
             >
               Guardar
@@ -655,7 +656,7 @@ function CollaboratorCard({ collaborator, helpers, onSave }: CollaboratorCardPro
   }
 
   return (
-    <div className="card border-0 shadow rounded-3 h-100 border-start border-3 border-primary" style={{ position: 'relative' }}>
+    <div className="bg-white border-0 shadow rounded-lg h-full border-l-4 border-blue-500 relative">
       {isAdmin && (
         <AdminControls
           onEdit={helpers.onEdit}
@@ -665,17 +666,17 @@ function CollaboratorCard({ collaborator, helpers, onSave }: CollaboratorCardPro
           canMoveUp={helpers.canMoveUp}
           canMoveDown={helpers.canMoveDown}
           position="top-right"
+          buttonsDirection='horizontal'
         />
       )}
-      <div className="p-4 text-start">
+      <div className="p-6 text-left">
         {collaborator.image && (
-          <div className="mb-4 d-flex justify-content-start">
-            <div className="p-3 border rounded-3 bg-white shadow-sm" style={{ maxWidth: '150px' }}>
+          <div className="mb-6 flex justify-start">
+            <div className="p-3 border rounded-lg bg-white shadow-sm max-w-[150px]">
               <img
                 src={collaborator.image}
                 alt={collaborator.name}
-                className="img-fluid"
-                style={{ maxHeight: '80px', objectFit: 'contain' }}
+                className="w-full max-h-[80px] object-contain"
                 onError={(e) => {
                   e.currentTarget.src = 'https://media.istockphoto.com/id/1311598658/photo/businessman-trading-online-stock-market-on-teblet-screen-digital-investment-concept.jpg?s=1024x1024&w=is&k=20&c=JZprgGDQ8xqa6iu0fyKJfKOlAvae0w9U-AdHeCT2kg4=';
                 }}
@@ -684,12 +685,12 @@ function CollaboratorCard({ collaborator, helpers, onSave }: CollaboratorCardPro
           </div>
         )}
 
-        <h5 className="h6 fw-bold text-dark mb-2">{collaborator.name}</h5>
-        <p className="display-10 text-secondary mb-3">{collaborator.caption}</p>
+        <h5 className="text-base font-bold text-gray-900 mb-2">{collaborator.name}</h5>
+        <p className="text-sm text-gray-600 mb-4">{collaborator.caption}</p>
 
         {collaborator.description && (
-          <div className="rounded-3 px-2 py-1 bg-light">
-            <small className="fw-semibold">{collaborator.description}</small>
+          <div className="rounded-lg px-2 py-1 bg-gray-100">
+            <small className="font-semibold">{collaborator.description}</small>
           </div>
         )}
       </div>

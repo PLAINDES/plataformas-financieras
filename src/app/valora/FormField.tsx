@@ -78,7 +78,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                     <div ref={containerRef} className="relative">
                         <button
                             type="button"
-                            className="w-full rounded border border-gray-300 px-3 py-2 pr-16 text-left text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            className="w-full rounded border border-gray-300 px-3 py-2 pr-16 text-left text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
                             onClick={() => setIsOpen(prev => !prev)}
                             aria-haspopup="listbox"
                             aria-expanded={isOpen}

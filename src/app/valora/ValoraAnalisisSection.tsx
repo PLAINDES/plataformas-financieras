@@ -50,7 +50,7 @@ export const ValoraAnalisisSection: React.FC<ValoraAnalisisSectionProps> = ({
                         onChange={event => onLongTermGrowthRateChange(parseFloat(event.target.value))}
                         className="w-full rounded border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-center text-gray-700"
                     />
-                    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded bg-[#666]/15 px-2 py-1 text-xs font-semibold text-[#666]">
+                    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded bg-[#666]/15 px-2 py-1 text-xs font-bold text-[#666]">
                         %
                     </span>
                 </div>
@@ -64,7 +64,7 @@ export const ValoraAnalisisSection: React.FC<ValoraAnalisisSectionProps> = ({
                         onChange={event => onCapitalCostRateChange(parseFloat(event.target.value))}
                         className="w-full rounded border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-center text-gray-700"
                     />
-                    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded bg-[#666]/15 px-2 py-1 text-xs font-semibold text-[#666]">
+                    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded bg-[#666]/15 px-2 py-1 text-xs font-bold text-[#666]">
                         %
                     </span>
                 </div>
@@ -92,7 +92,7 @@ export const ValoraAnalisisSection: React.FC<ValoraAnalisisSectionProps> = ({
                         onChange={event => onIncomeGrowthRateChange(parseFloat(event.target.value))}
                         className="w-full rounded border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-center text-gray-700"
                     />
-                    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded bg-[#666]/15 px-2 py-1 text-xs font-semibold text-[#666]">
+                    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded bg-[#666]/15 px-2 py-1 text-xs font-bold text-[#666]">
                         %
                     </span>
                 </div>
@@ -100,7 +100,7 @@ export const ValoraAnalisisSection: React.FC<ValoraAnalisisSectionProps> = ({
         </div>
         <button
             type="button"
-            className='self-end my-7 rounded bg-[#009ef7] py-3 px-6 text-sm font-semibold text-white transition-colors hover:bg-sky-600 cursor-pointer'
+            className='self-end my-7 rounded bg-blue-600 py-3 px-6 text-sm font-bold text-white transition-colors hover:bg-blue-700 cursor-pointer'
             onClick={onSaveClick}
         >
             Guardar

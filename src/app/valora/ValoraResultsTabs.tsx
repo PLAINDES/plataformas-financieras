@@ -6,6 +6,7 @@ export interface ValoraResultsTabsProps {
     activeSection: ValoraResultsSection;
     onChange: (section: ValoraResultsSection) => void;
     orientation?: 'horizontal' | 'vertical';
+    onOpenReportSidebar?: () => void;
 }
 
 const tabs: Array<{
@@ -54,32 +55,43 @@ const tabs: Array<{
 export const ValoraResultsTabs: React.FC<ValoraResultsTabsProps> = ({
     activeSection,
     onChange,
-    orientation = 'horizontal'
+    onOpenReportSidebar
 }) => {
-    const containerClassName = orientation === 'vertical'
-        ? 'flex flex-col gap-2'
-        : 'flex flex-wrap gap-4';
-
     return (
-        <ul className={containerClassName}>
-            {tabs.map(tab => {
-                const isActive = tab.key === activeSection;
-                const activeClassName = isActive
-                    ? 'border-[#009ef7] text-[#009ef7] bg-[#009ef7]/5'
-                    : 'border-transparent text-gray-500 hover:border-[#009ef7]';
-                return (
-                    <li key={tab.key}>
-                        <button
-                            type="button"
-                            className={`flex items-center gap-2 border cursor-pointer p-2 px-4 rounded font-medium transition-colors ${activeClassName}`}
-                            onClick={() => onChange(tab.key)}
-                        >
-                            {tab.icon}
-                            {tab.label}
-                        </button>
-                    </li>
-                );
-            })}
-        </ul>
+        <div className="flex flex-col gap-4">
+            <div className='border-b border-gray-200'>
+                <h2 className='font-bold p-4 text-lg'>Navegación</h2>
+            </div>
+            <ul className={'flex flex-col gap-1 p-2 px-4 border-b pb-6 pt-0 border-gray-200'}>
+                {tabs.map(tab => {
+                    const isActive = tab.key === activeSection;
+                    const activeClassName = isActive
+                        ? 'text-blue-600 bg-blue-50 shadow-sm '
+                        : 'border-transparent text-gray-500 hover:bg-gray-50';
+                    return (
+                        <li key={tab.key}>
+                            <button
+                                type="button"
+                                className={`w-full flex items-center gap-4 text-sm duration-300  cursor-pointer p-4 py-3 rounded-md font-medium transition-colors ${activeClassName}`}
+                                onClick={() => onChange(tab.key)}
+                            >
+                                {tab.icon}
+                                {tab.label}
+                            </button>
+                        </li>
+                    );
+                })}
+            </ul>
+            {onOpenReportSidebar && (
+                <button
+                    type="button"
+                    className="m-6 my-0 flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-sm bg-purple-600 text-white hover:bg-purple-700 shadow-md transition-all duration-200"
+                    onClick={onOpenReportSidebar}
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Generar reporte
+                </button>
+            )}
+        </div>
     );
 };
