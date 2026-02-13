@@ -1,13 +1,13 @@
 // vite.config.ts
 
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
-import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  
+
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -16,25 +16,25 @@ export default defineConfig({
       '@assets': path.resolve(__dirname, './src/shared/assets'),
     },
   },
-  
+
   server: {
     port: 5173,
     host: true,
     proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
+      "/api": {
+        target: "http://localhost:8000",
         changeOrigin: true,
       },
     },
   },
-  
+
   build: {
-    outDir: 'dist',
+    outDir: "dist",
     sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom'],
+          vendor: ["react", "react-dom"],
         },
       },
     },

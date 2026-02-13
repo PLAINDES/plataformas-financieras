@@ -37,50 +37,49 @@ function App() {
   }
 
   return (
-  <Routes>
+    <Routes>
 
-    {/* Rutas públicas */}
-    <Route element={
-      <PublicLayout
-        user={user}
-        logout={logout}
-        login={login}
-        register={register}
-        company={COMPANY}
-      />
-    }>
-      <Route
-        path="/"
-        element={
-          <LandingPage
-            isAdmin={user?.role === "admin"}
-            company={COMPANY}
-            user={user}
-            onLogout={logout}
-            onLogin={login}
-            onRegister={register}
-          />
-        }
-      />
-    </Route>
-
-    {/* Rutas internas */}
-    <Route
-      element={
-        <InternalLayout
+      {/* Rutas públicas */}
+      <Route element={
+        <PublicLayout
           user={user}
-          onLogout={logout}
+          logout={logout}
+          login={login}
+          register={register}
           company={COMPANY}
         />
-      }
-    >
-      <Route path="/kapital" element={<KapitalPage />} />
-      <Route path="/valora" element={<ValoraPage />} />
-    </Route>
+      }>
+        <Route
+          path="/"
+          element={
+            <LandingPage
+              isAdmin={user?.role === "admin"}
+              company={COMPANY}
+              user={user}
+              onLogout={logout}
+              onLogin={login}
+              onRegister={register}
+            />
+          }
+        />
+      </Route>
 
-  </Routes>
-);
+      {/* Rutas internas */}
+      <Route
+        element={
+          <InternalLayout
+            user={user}
+            onLogout={logout}
+            company={COMPANY}
+          />
+        }
+      >
+        <Route path="/kapital" element={<KapitalPage />} />
+        <Route path="/valora" element={<ValoraPage />} />
+      </Route>
 
+    </Routes>
+  );
 }
 
 export default App;
