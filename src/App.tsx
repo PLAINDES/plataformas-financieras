@@ -1,14 +1,12 @@
 // src/App.tsx
 
 import { Routes, Route } from 'react-router-dom';
-import { LandingPage } from './app/landing/LandingPage';
-import KapitalPage from './app/kapital/KapitalPage';
-import { InternalLayout } from './components/layout/InternalLayout';
-import { useAuthContext } from './hooks/useAuthContext';
-import type { MenuItem } from './types';
-import ValoraPage from './app/valora/ValoraPage';
-import { Footer } from './components/layout/Footer';
-import { PublicLayout } from './components/layout/PublicLayout';
+import { LandingPage } from '@features/landing/LandingPage';
+import KapitalPage from '@features/kapital/KapitalPage';
+import { InternalLayout } from '@shared/components/layout/InternalLayout';
+import { useAuthContext } from '@features/auth/hooks/useAuthContext';
+import ValoraPage from '@features/valora/ValoraPage';
+import { PublicLayout } from '@shared/components/layout/PublicLayout';
 
 const COMPANY = {
   id: 1,
