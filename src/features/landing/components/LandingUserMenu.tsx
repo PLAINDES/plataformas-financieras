@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import type { User } from '../../../features/auth/types/user.types';
-import { UserMenuBase } from '@/shared/components/common/UserMenu';
+import { UserMenu } from '@/shared/components/common/UserMenu';
 import { useAuth } from '../../auth/hooks/useAuth';
 
 interface LandingUserMenuProps {
@@ -15,7 +15,7 @@ export function LandingUserMenu({ user, onLogout }: LandingUserMenuProps) {
   const { isAdmin } = useAuth()
   
   return (
-    <UserMenuBase user={user} onLogout={onLogout}>
+    <UserMenu user={user} onLogout={onLogout}>
            {/* Administrador Opciones */}
           {isAdmin && (
             <div className="px-2">
@@ -33,7 +33,7 @@ export function LandingUserMenu({ user, onLogout }: LandingUserMenuProps) {
               </a>
             </div>
           )}
-    </UserMenuBase>
+    </UserMenu>
   );
 }
 

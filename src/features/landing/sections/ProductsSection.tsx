@@ -12,9 +12,9 @@ interface ProductItem extends CollectionItem {
   caption: string;
   price: number;
   typeName: string;
+  contact?: string; 
   imageUrl?: string;
 }
-
 interface ProductsSectionProps {
   content: {
     title?: string;
@@ -26,8 +26,8 @@ interface ProductsSectionProps {
         name: string;
         caption: string;
         price: number;
-        typeName: string;
-        ribbon?: string | null;
+        typeName?: string;
+        contact?: string;
         imageUrl?: string;
       }>;
     }>;
@@ -417,7 +417,15 @@ function ProductCard({ product, isSingleCard, customStyles, helpers }: ProductCa
       {/* Footer Interno */}
       <div className="mt-auto pt-4 border-t border-gray-100 flex flex-col gap-4">
         {/* Botón Outline */}
-        <button className="
+        <button 
+        onClick={() => { 
+          if (product.contact) {
+            const message = encodeURIComponent(`Hola, estoy interesado en adquirir el ${product.typeName || 'producto'}: ${product.name}`);
+            window.open(`https://wa.me/${product.contact}?text=${message}`, '_blank');
+          }
+        }}
+        
+          className="
           w-full py-2.5 px-4
           border-2 border-[#2FA4FF] text-[#2FA4FF] 
           font-semibold rounded-lg
@@ -427,7 +435,7 @@ function ProductCard({ product, isSingleCard, customStyles, helpers }: ProductCa
           flex items-center justify-center gap-2
           group
         ">
-          Adquirir {product.typeName}
+          Adquirir {product.typeName || ''}
           <svg 
             className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" 
             fill="none" 
@@ -461,7 +469,11 @@ interface ProductEditorProps {
 }
 
 function ProductEditor({ product, onSave, onCancel, customStyles }: ProductEditorProps) {
-  const [formData, setFormData] = useState(product);
+  const [formData, setFormData] = useState({
+    ...product,
+    typeName: product.typeName || '',
+    contact: product.contact || '' 
+  });
 
   const handleSubmit = () => {
     onSave(formData);
@@ -535,20 +547,27 @@ function ProductEditor({ product, onSave, onCancel, customStyles }: ProductEdito
           </div>
 
           <div className="flex flex-col">
-            <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1">
-              Tipo
-            </label>
-            <select
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white"
+            <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1">Tipo (Opcional)</label>
+            <input
+              type="text"
+              placeholder="Ej: Sistema, App..."
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-all"
               value={formData.typeName}
               onChange={(e) => setFormData({ ...formData, typeName: e.target.value })}
-            >
-              <option value="Sistema">Sistema</option>
-              <option value="Plataforma">Plataforma</option>
-              <option value="Herramienta">Herramienta</option>
-              <option value="Módulo">Módulo</option>
-            </select>
+            />
           </div>
+        </div>
+        <div className="flex flex-col">
+          <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1 flex justify-between">
+            WhatsApp de Contacto <span>(Opcional)</span>
+          </label>
+          <input
+            type="tel"
+            placeholder="Ej: 51999888777"
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all"
+            value={formData.contact}
+            onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+          />
         </div>
       </div>
 

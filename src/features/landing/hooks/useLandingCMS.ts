@@ -6,7 +6,7 @@ import type { EditableContent, EditableCollectionData, CollectionItem } from '@s
 
 export function useLandingCMS(
   data: LandingDataResponse | null, 
-  onRefresh: () => void,
+  onLocalUpdate: (slug: string, newData: any) => void,
   findContent: (slug: string) => any // Recibimos el helper del otro hook
 ) {
   const { getToken } = useAuthContext();
@@ -48,114 +48,129 @@ export function useLandingCMS(
         token
       );
 
-      onRefresh(); // Recarga la UI
+      onLocalUpdate(editableContent.section + "-home", updatedData);
     } catch (error) {
       console.error('Error saving content:', error);
       throw error;
     }
   };
 
-  // --- Acción: Guardar Colecciones (La lógica pesada) ---
-  const handleSaveCollection = async <T extends CollectionItem>(
-    collectionData: EditableCollectionData<T>
-  ) => {
-    const token = getToken();
-    if (!token) return console.error('No token available');
+const handleSaveCollection = async <T extends CollectionItem>(
+  collectionData: EditableCollectionData<T>
+) => {
+  const token = getToken();
+  if (!token) return console.error('No token available');
 
-    try {
-      console.log('Saving collection:', collectionData);
-      
-      // Helper interno para buscar y validar existencia
-      const getTargetContent = (slug: string) => {
-        const c = findContent(slug);
-        if (!c) throw new Error(`${slug} content not found`);
-        return c;
-      };
+  try {
+    let content: any = null;
+    let updatedData: any = null;
 
-      switch (collectionData.section) {
-        case 'products': {
-          const content = getTargetContent("products");
-          const categoryId = collectionData.id === 'products-kapital' ? 'cat-kapital' : 'cat-valora';
-          
-          const updatedCategories = content.data.categories.map((cat: any) => {
-            if (cat.id === categoryId) {
-              return {
-                ...cat,
-                products: collectionData.items.map((item: any) => {
-                  const { contentId, order, ...rest } = item;
-                  return rest;
-                })
-              };
-            }
-            return cat;
-          });
+    const getTargetContent = (slug: string) => {
+      const c = findContent(slug);
+      if (!c) throw new Error(`${slug} content not found`);
+      return c;
+    };
 
-          await cmsService.updateContent(content.id, { 
-            data: { ...content.data, categories: updatedCategories }, 
-            status: 'published' 
-          }, token);
-          break;
-        }
+    switch (collectionData.section) {
 
-        case 'platforms': {
-          const content = getTargetContent("platforms");
-          const updatedData = {
-            ...content.data,
-            items: collectionData.items.map((item: any) => {
-              const { contentId, order, title, ...rest } = item;
-              return rest; // Nota: Revisar si title vs name es necesario mantener
-            })
-          };
-          await cmsService.updateContent(content.id, { data: updatedData, status: 'published' }, token);
-          break;
-        }
+      case 'products': {
+        content = getTargetContent("products");
+        const categoryId =
+          collectionData.id === 'products-kapital'
+            ? 'cat-kapital'
+            : 'cat-valora';
 
-        case 'clients': {
-          const content = getTargetContent("clients");
-          const updatedData = {
-            ...content.data,
-            logos: collectionData.items.map((item: any) => {
-              const { contentId, order, ...rest } = item;
-              return rest;
-            })
-          };
-          await cmsService.updateContent(content.id, { data: updatedData, status: 'published' }, token);
-          break;
-        }
+        const updatedCategories = content.data.categories.map((cat: any) => {
+          if (cat.id === categoryId) {
+            return {
+              ...cat,
+              products: collectionData.items.map((item: any) => {
+                const { contentId, order, ...rest } = item;
+                return rest;
+              }),
+            };
+          }
+          return cat;
+        });
 
-        case 'team': {
-          const content = getTargetContent("team");
-          let fieldName = '';
-          if (collectionData.id === 'team-authors') fieldName = 'authors';
-          else if (collectionData.id === 'team-developmentTeam') fieldName = 'developmentTeam';
-          else if (collectionData.id === 'team-collaborators') fieldName = 'collaborators';
-          
-          if (!fieldName) throw new Error('Unknown team collection');
+        updatedData = {
+          ...content.data,
+          categories: updatedCategories,
+        };
 
-          const updatedData = {
-            ...content.data,
-            [fieldName]: collectionData.items.map((item: any) => {
-              const { contentId, order, ...rest } = item;
-              return rest;
-            })
-          };
-          await cmsService.updateContent(content.id, { data: updatedData, status: 'published' }, token);
-          break;
-        }
-
-        default:
-          console.warn(`Unknown collection section: ${collectionData.section}`);
-          return;
+        break;
       }
 
-      console.log('Collection updated successfully');
-      onRefresh();
-      
-    } catch (error) {
-      console.error('Error saving collection:', error);
-      throw error;
+      case 'platforms': {
+        content = getTargetContent("platforms");
+
+        updatedData = {
+          ...content.data,
+          items: collectionData.items.map((item: any) => {
+            const { contentId, order, title, ...rest } = item;
+            return rest;
+          }),
+        };
+
+        break;
+      }
+
+      case 'clients': {
+        content = getTargetContent("clients");
+
+        updatedData = {
+          ...content.data,
+          logos: collectionData.items.map((item: any) => {
+            const { contentId, order, ...rest } = item;
+            return rest;
+          }),
+        };
+
+        break;
+      }
+
+      case 'team': {
+        content = getTargetContent("team");
+
+        let fieldName = '';
+        if (collectionData.id === 'team-authors') fieldName = 'authors';
+        else if (collectionData.id === 'team-developmentTeam') fieldName = 'developmentTeam';
+        else if (collectionData.id === 'team-collaborators') fieldName = 'collaborators';
+
+        if (!fieldName) throw new Error('Unknown team collection');
+
+        updatedData = {
+          ...content.data,
+          [fieldName]: collectionData.items.map((item: any) => {
+            const { contentId, order, ...rest } = item;
+            return rest;
+          }),
+        };
+
+        break;
+      }
+
+      default:
+        console.warn(`Unknown collection section: ${collectionData.section}`);
+        return;
     }
-  };
+
+    // 🔥 Guardar una sola vez
+    await cmsService.updateContent(
+      content.id,
+      { data: updatedData, status: 'published' },
+      token
+    );
+
+    // 🔥 Actualizar estado local
+    onLocalUpdate(content.slug, updatedData);
+
+  } catch (error) {
+    console.error('Error saving collection:', error);
+    throw error;
+  }
+};
+
 
   return { handleSaveContent, handleSaveCollection };
 }

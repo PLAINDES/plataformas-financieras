@@ -2,10 +2,10 @@
 
 import { Routes, Route } from 'react-router-dom';
 import { LandingPage } from '@features/landing/LandingPage';
-import KapitalPage from '@features/kapital/KapitalPage';
+import KapitalPage from './features/finance/kapital/KapitalPage';
 import { InternalLayout } from '@shared/components/layout/InternalLayout';
 import { useAuthContext } from '@features/auth/hooks/useAuthContext';
-import ValoraPage from '@features/valora/ValoraPage';
+import ValoraPage from './features/finance/valora/ValoraPage';
 import { PublicLayout } from '@shared/components/layout/PublicLayout';
 
 const COMPANY = {

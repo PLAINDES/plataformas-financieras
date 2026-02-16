@@ -262,23 +262,23 @@ const { isAdmin } = useAuthContext();
     <div
       style={{ position: 'relative', display: 'inline-block' }}
       onClick={(e) => {
-        if (isAdmin) {
+        if (isAdmin()) {
           e.preventDefault();
           e.stopPropagation();
           setIsEditing(true);
         }
       }}
       onMouseEnter={(e) => {
-        if (isAdmin) {
+        if (isAdmin()) {
           e.currentTarget.style.outline = '2px dashed #3b82f6';
         }
       }}
       onMouseLeave={(e) => {
-        if (isAdmin) {
+        if (isAdmin()) {
           e.currentTarget.style.outline = '2px dashed transparent';
         }
       }}
-      title={isAdmin ? 'Click para editar enlace' : undefined}
+      title={isAdmin() ? 'Click para editar enlace' : undefined}
     >
       {renderLink()}
     </div>

@@ -61,11 +61,12 @@ export function LandingPage({
     menuItems, 
     refresh, 
     findContent, // Necesario para el CMS hook
-    getContentData // Helper para la vista
+    getContentData,
+    updateContentLocally
   } = useLandingData();
 
   // 2. Hook de Lógica CMS: Maneja el guardado y lógica de negocio
-  const { handleSaveContent, handleSaveCollection } = useLandingCMS(data, refresh, findContent);
+  const { handleSaveContent, handleSaveCollection } = useLandingCMS(data, updateContentLocally, findContent);
 
   // Renderizado condicional simple
   if (loading) return <div className="flex h-screen items-center justify-center">Loading...</div>;

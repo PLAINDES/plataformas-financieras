@@ -39,12 +39,32 @@ export function useLandingData() {
     return findContent(slug)?.data;
   };
 
+  const updateContentLocally = (slug: string, newData: any) => {
+  setData(prev => {
+    if (!prev) return prev;
+
+    return {
+      ...prev,
+      page: {
+        ...prev.page,
+        contents: prev.page.contents.map(content =>
+          content.slug === slug
+            ? { ...content, data: newData }
+            : content
+        )
+      }
+    };
+  });
+};
+
+
   return {
     data,
     loading,
     menuItems,
     refresh: loadData,
-    findContent,    // Devuelve el objeto completo (id, slug, data)
-    getContentData  // Devuelve solo content.data (lo que usa la UI)
+    findContent,   
+    getContentData,
+    updateContentLocally  
   };
 }

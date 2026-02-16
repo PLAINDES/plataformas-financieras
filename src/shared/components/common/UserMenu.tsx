@@ -9,7 +9,7 @@ interface UserMenuBaseProps {
   children?: React.ReactNode
 }
 
-export function UserMenuBase({ user, onLogout, children }: UserMenuBaseProps) {
+export function UserMenu({ user, onLogout, children }: UserMenuBaseProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
     
