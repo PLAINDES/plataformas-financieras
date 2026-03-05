@@ -1,14 +1,13 @@
 // src/App.tsx
 
 import { Routes, Route } from 'react-router-dom';
-import { LandingPage } from './app/landing/LandingPage';
-import KapitalPage from './app/kapital/KapitalPage';
-import { InternalLayout } from './components/layout/InternalLayout';
-import { useAuthContext } from './hooks/useAuthContext';
-import type { MenuItem } from './types';
-import ValoraPage from './app/valora/ValoraPage';
-import { Footer } from './components/layout/Footer';
-import { PublicLayout } from './components/layout/PublicLayout';
+import { LandingPage } from '@features/landing/LandingPage';
+import KapitalPage from './features/finance/kapital/KapitalPage';
+import { InternalLayout } from '@shared/components/layout/InternalLayout';
+import { useAuthContext } from '@features/auth/hooks/useAuthContext';
+import ValoraPage from './features/finance/valora/ValoraPage';
+import { PublicLayout } from '@shared/components/layout/PublicLayout';
+import DashboardPage from '@features/admin/DashboardPage';
 
 const COMPANY = {
   id: 1,
@@ -39,50 +38,54 @@ function App() {
   }
 
   return (
-  <Routes>
+    <Routes>
 
-    {/* Rutas públicas */}
-    <Route element={
-      <PublicLayout
-        user={user}
-        logout={logout}
-        login={login}
-        register={register}
-        company={COMPANY}
-      />
-    }>
-      <Route
-        path="/"
-        element={
-          <LandingPage
-            isAdmin={user?.role === "admin"}
-            company={COMPANY}
-            user={user}
-            onLogout={logout}
-            onLogin={login}
-            onRegister={register}
-          />
-        }
-      />
-    </Route>
-
-    {/* Rutas internas */}
-    <Route
-      element={
-        <InternalLayout
+      {/* Rutas públicas */}
+      <Route element={
+        <PublicLayout
           user={user}
-          onLogout={logout}
+          logout={logout}
+          login={login}
+          register={register}
           company={COMPANY}
         />
-      }
-    >
-      <Route path="/kapital" element={<KapitalPage />} />
-      <Route path="/valora" element={<ValoraPage />} />
-    </Route>
+      }>
+        <Route
+          path="/"
+          element={
+            <LandingPage
+              isAdmin={user?.role === "admin"}
+              company={COMPANY}
+              user={user}
+              onLogout={logout}
+              onLogin={login}
+              onRegister={register}
+            />
+          }
+        />
+      </Route>
 
-  </Routes>
-);
+      {/* Rutas internas */}
+      <Route
+        element={
+          <InternalLayout
+            user={user}
+            onLogout={logout}
+            company={COMPANY}
+          />
+        }
+      >
+        <Route path="/kapital" element={<KapitalPage />} />
+        <Route path="/valora" element={<ValoraPage />} />
+      </Route>
 
+      <Route>
+        <Route path='/admin' element={<DashboardPage/>}/>
+
+      </Route>
+
+    </Routes>
+  );
 }
 
 export default App;

@@ -22,7 +22,15 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@features/*": ["./src/features/*"],
+      "@assets/*": ["./src/shared/assets/*"]
+    }
   },
   "include": ["src"]
 }

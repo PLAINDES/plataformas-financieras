@@ -1,0 +1,171 @@
+// src/features/landing/hooks/useLandingCMS.ts
+import { useAuthContext } from '@/features/auth/hooks/useAuthContext'; 
+import { cmsService } from '@/shared/services/cms.service';
+import type { LandingDataResponse } from '@/shared/types';
+import type { EditableContent, EditableCollectionData, CollectionItem } from '@shared/types/editable.types';
+
+export function useLandingCMS(
+  data: LandingDataResponse | null, 
+  onLocalUpdate: (slug: string, newData: any) => void,
+  findContent: (slug: string) => any 
+) {
+  const { getToken } = useAuthContext();
+
+  const getContentIdFromEditable = (editable: EditableContent): number | null => {
+    if (!data) return null;
+    const content = findContent(`${editable.section}-home`) || findContent(editable.section);
+    return content ? content.id : null;
+  };
+
+  const getFieldName = (editableId: string): string => {
+    const parts = editableId.split('_');
+    return parts[parts.length - 1];
+  };
+
+  const handleSaveContent = async (editableContent: EditableContent) => {
+    const token = getToken();
+    if (!token) return console.error('No token available');
+
+    try {
+      const contentId = getContentIdFromEditable(editableContent);
+      if (!contentId) throw new Error(`Content ID not found for ${editableContent.section}`);
+
+      const contentObj = findContent(`${editableContent.section}-home`) || findContent(editableContent.section);
+      const currentData = contentObj?.data || {};
+      const fieldName = getFieldName(editableContent.id);
+
+      const updatedData = {
+        ...currentData,
+        [fieldName]: editableContent.value,
+      };
+
+      await cmsService.updateContent(
+        contentId,
+        { data: updatedData, status: 'published' },
+        token
+      );
+
+      onLocalUpdate(editableContent.section + "-home", updatedData);
+    } catch (error) {
+      console.error('Error saving content:', error);
+      throw error;
+    }
+  };
+
+const handleSaveCollection = async <T extends CollectionItem>(
+  collectionData: EditableCollectionData<T>
+) => {
+  const token = getToken();
+  if (!token) return console.error('No token available');
+
+  try {
+    let content: any = null;
+    let updatedData: any = null;
+
+    const getTargetContent = (slug: string) => {
+      const c = findContent(slug);
+      if (!c) throw new Error(`${slug} content not found`);
+      return c;
+    };
+
+    switch (collectionData.section) {
+
+      case 'products': {
+        content = getTargetContent("products");
+        const categoryId =
+          collectionData.id === 'products-kapital'
+            ? 'cat-kapital'
+            : 'cat-valora';
+
+        const updatedCategories = content.data.categories.map((cat: any) => {
+          if (cat.id === categoryId) {
+            return {
+              ...cat,
+              products: collectionData.items.map((item: any) => {
+                const { contentId, order, ...rest } = item;
+                return rest;
+              }),
+            };
+          }
+          return cat;
+        });
+
+        updatedData = {
+          ...content.data,
+          categories: updatedCategories,
+        };
+
+        break;
+      }
+
+      case 'platforms': {
+        content = getTargetContent("platforms");
+
+        updatedData = {
+          ...content.data,
+          items: collectionData.items.map((item: any) => {
+            const { contentId, order, title, ...rest } = item;
+            return rest;
+          }),
+        };
+
+        break;
+      }
+
+      case 'clients': {
+        content = getTargetContent("clients");
+
+        updatedData = {
+          ...content.data,
+          logos: collectionData.items.map((item: any) => {
+            const { contentId, order, ...rest } = item;
+            return rest;
+          }),
+        };
+
+        break;
+      }
+
+      case 'team': {
+        content = getTargetContent("team");
+
+        let fieldName = '';
+        if (collectionData.id === 'team-authors') fieldName = 'authors';
+        else if (collectionData.id === 'team-developmentTeam') fieldName = 'developmentTeam';
+        else if (collectionData.id === 'team-collaborators') fieldName = 'collaborators';
+
+        if (!fieldName) throw new Error('Unknown team collection');
+
+        updatedData = {
+          ...content.data,
+          [fieldName]: collectionData.items.map((item: any) => {
+            const { contentId, order, ...rest } = item;
+            return rest;
+          }),
+        };
+
+        break;
+      }
+
+      default:
+        console.warn(`Unknown collection section: ${collectionData.section}`);
+        return;
+    }
+
+    await cmsService.updateContent(
+      content.id,
+      { data: updatedData, status: 'published' },
+      token
+    );
+
+    onLocalUpdate(content.slug, updatedData);
+
+  } catch (error) {
+    console.error('Error saving collection:', error);
+    throw error;
+  }
+};
+
+
+  return { handleSaveContent, handleSaveCollection };
+}
