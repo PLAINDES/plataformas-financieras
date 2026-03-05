@@ -1,171 +1,134 @@
 // src/features/landing/hooks/useLandingCMS.ts
-import { useAuthContext } from '@/features/auth/hooks/useAuthContext'; 
+import { useAuthContext } from '@/features/auth/hooks/useAuthContext';
 import { cmsService } from '@/shared/services/cms.service';
 import type { LandingDataResponse } from '@/shared/types';
-import type { EditableContent, EditableCollectionData, CollectionItem } from '@shared/types/editable.types';
+import type { EditableContent, EditableCollectionData, CollectionItem } from '@/shared/types/editable.types';
 
 export function useLandingCMS(
-  data: LandingDataResponse | null, 
+  data: LandingDataResponse | null,
   onLocalUpdate: (slug: string, newData: any) => void,
-  findContent: (slug: string) => any 
+  findContent: (slug: string) => any
 ) {
-  const { getToken } = useAuthContext();
+  const { getToken, user } = useAuthContext();   
 
-  const getContentIdFromEditable = (editable: EditableContent): number | null => {
-    if (!data) return null;
-    const content = findContent(`${editable.section}-home`) || findContent(editable.section);
-    return content ? content.id : null;
-  };
+  const getFieldName = (editableId: string): string =>
+    editableId.split('_').at(-1)!;
 
-  const getFieldName = (editableId: string): string => {
-    const parts = editableId.split('_');
-    return parts[parts.length - 1];
+  const save = (contentId: number, payload: { data: any; status?: 'draft' | 'published' }) => {
+    const token = getToken();
+    if (!token) { console.error('No token available'); return Promise.reject('No token'); }
+    return cmsService.updateContent(contentId, payload, token, user?.id ?? null);
   };
 
   const handleSaveContent = async (editableContent: EditableContent) => {
-    const token = getToken();
-    if (!token) return console.error('No token available');
-
     try {
-      const contentId = getContentIdFromEditable(editableContent);
-      if (!contentId) throw new Error(`Content ID not found for ${editableContent.section}`);
-
       const contentObj = findContent(`${editableContent.section}-home`) || findContent(editableContent.section);
-      const currentData = contentObj?.data || {};
-      const fieldName = getFieldName(editableContent.id);
+      if (!contentObj) throw new Error(`Content not found for ${editableContent.section}`);
 
-      const updatedData = {
-        ...currentData,
-        [fieldName]: editableContent.value,
-      };
-
-      await cmsService.updateContent(
-        contentId,
-        { data: updatedData, status: 'published' },
-        token
-      );
-
-      onLocalUpdate(editableContent.section + "-home", updatedData);
+      const updatedData = { ...contentObj.data, [getFieldName(editableContent.id)]: editableContent.value };
+      await save(contentObj.id, { data: updatedData, status: 'published' });
+      onLocalUpdate(contentObj.slug, updatedData);
     } catch (error) {
       console.error('Error saving content:', error);
       throw error;
     }
   };
 
-const handleSaveCollection = async <T extends CollectionItem>(
-  collectionData: EditableCollectionData<T>
-) => {
-  const token = getToken();
-  if (!token) return console.error('No token available');
+  const handleSaveMenuItems = async (items: { title: string }[]) => {
+    try {
+      const contentObj = findContent("header-principal");
+      if (!contentObj) throw new Error('header-principal content not found');
 
-  try {
-    let content: any = null;
-    let updatedData: any = null;
-
-    const getTargetContent = (slug: string) => {
-      const c = findContent(slug);
-      if (!c) throw new Error(`${slug} content not found`);
-      return c;
-    };
-
-    switch (collectionData.section) {
-
-      case 'products': {
-        content = getTargetContent("products");
-        const categoryId =
-          collectionData.id === 'products-kapital'
-            ? 'cat-kapital'
-            : 'cat-valora';
-
-        const updatedCategories = content.data.categories.map((cat: any) => {
-          if (cat.id === categoryId) {
-            return {
-              ...cat,
-              products: collectionData.items.map((item: any) => {
-                const { contentId, order, ...rest } = item;
-                return rest;
-              }),
-            };
-          }
-          return cat;
-        });
-
-        updatedData = {
-          ...content.data,
-          categories: updatedCategories,
-        };
-
-        break;
-      }
-
-      case 'platforms': {
-        content = getTargetContent("platforms");
-
-        updatedData = {
-          ...content.data,
-          items: collectionData.items.map((item: any) => {
-            const { contentId, order, title, ...rest } = item;
-            return rest;
-          }),
-        };
-
-        break;
-      }
-
-      case 'clients': {
-        content = getTargetContent("clients");
-
-        updatedData = {
-          ...content.data,
-          logos: collectionData.items.map((item: any) => {
-            const { contentId, order, ...rest } = item;
-            return rest;
-          }),
-        };
-
-        break;
-      }
-
-      case 'team': {
-        content = getTargetContent("team");
-
-        let fieldName = '';
-        if (collectionData.id === 'team-authors') fieldName = 'authors';
-        else if (collectionData.id === 'team-developmentTeam') fieldName = 'developmentTeam';
-        else if (collectionData.id === 'team-collaborators') fieldName = 'collaborators';
-
-        if (!fieldName) throw new Error('Unknown team collection');
-
-        updatedData = {
-          ...content.data,
-          [fieldName]: collectionData.items.map((item: any) => {
-            const { contentId, order, ...rest } = item;
-            return rest;
-          }),
-        };
-
-        break;
-      }
-
-      default:
-        console.warn(`Unknown collection section: ${collectionData.section}`);
-        return;
+      const updatedData = { ...contentObj.data, item_header: items };
+      await save(contentObj.id, { data: updatedData, status: 'published' });
+      onLocalUpdate("header-principal", updatedData);
+    } catch (error) {
+      console.error('Error saving menu items:', error);
+      throw error;
     }
+  };
 
-    await cmsService.updateContent(
-      content.id,
-      { data: updatedData, status: 'published' },
-      token
-    );
+  const handleSaveFooter = async (updatedFooter: any) => {
+    try {
+      const contentObj = findContent("main-footer");
+      if (!contentObj) throw new Error('main-footer content not found');
 
-    onLocalUpdate(content.slug, updatedData);
+      await save(contentObj.id, { data: updatedFooter, status: 'published' });
+      onLocalUpdate("main-footer", updatedFooter);
+    } catch (error) {
+      console.error('Error saving footer:', error);
+      throw error;
+    }
+  };
 
-  } catch (error) {
-    console.error('Error saving collection:', error);
-    throw error;
-  }
-};
+  const handleSaveCollection = async <T extends CollectionItem>(collectionData: EditableCollectionData<T>) => {
+    try {
+      let content: any = null;
+      let updatedData: any = null;
 
+      const getTargetContent = (slug: string) => {
+        const c = findContent(slug);
+        if (!c) throw new Error(`${slug} content not found`);
+        return c;
+      };
 
-  return { handleSaveContent, handleSaveCollection };
+      switch (collectionData.section) {
+        case 'products': {
+          content = getTargetContent("products");
+          const categoryId = collectionData.id === 'products-kapital' ? 'cat-kapital' : 'cat-valora';
+          updatedData = {
+            ...content.data,
+            categories: content.data.categories.map((cat: any) =>
+              cat.id === categoryId
+                ? { ...cat, products: collectionData.items.map(({ contentId, order, ...rest }: any) => rest) }
+                : cat
+            ),
+          };
+          break;
+        }
+        case 'platforms': {
+          content = getTargetContent("platforms");
+          updatedData = {
+            ...content.data,
+            items: collectionData.items.map(({ contentId, order, title, ...rest }: any) => rest),
+          };
+          break;
+        }
+        case 'clients': {
+          content = getTargetContent("clients");
+          updatedData = {
+            ...content.data,
+            logos: collectionData.items.map(({ contentId, order, ...rest }: any) => rest),
+          };
+          break;
+        }
+        case 'team': {
+          content = getTargetContent("team");
+          const fieldMap: Record<string, string> = {
+            'team-authors': 'authors',
+            'team-developmentTeam': 'developmentTeam',
+            'team-collaborators': 'collaborators',
+          };
+          const fieldName = fieldMap[collectionData.id];
+          if (!fieldName) throw new Error('Unknown team collection');
+          updatedData = {
+            ...content.data,
+            [fieldName]: collectionData.items.map(({ contentId, order, ...rest }: any) => rest),
+          };
+          break;
+        }
+        default:
+          console.warn(`Unknown collection section: ${collectionData.section}`);
+          return;
+      }
+
+      await save(content.id, { data: updatedData, status: 'published' });
+      onLocalUpdate(content.slug, updatedData);
+    } catch (error) {
+      console.error('Error saving collection:', error);
+      throw error;
+    }
+  };
+
+  return { handleSaveContent, handleSaveMenuItems, handleSaveFooter, handleSaveCollection };
 }

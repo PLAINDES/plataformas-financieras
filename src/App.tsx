@@ -28,6 +28,7 @@ function App() {
     register,
     loading: authLoading,
   } = useAuthContext();
+  console.log("REGISTRO", register)
 
   if (authLoading) {
     return (
@@ -42,13 +43,7 @@ function App() {
 
       {/* Rutas públicas */}
       <Route element={
-        <PublicLayout
-          user={user}
-          logout={logout}
-          login={login}
-          register={register}
-          company={COMPANY}
-        />
+        <PublicLayout/>
       }>
         <Route
           path="/"

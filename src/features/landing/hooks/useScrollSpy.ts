@@ -8,9 +8,7 @@ export function useScrollSpy(
   useEffect(() => {
 
     const handleScroll = () => {
-      // scrollY = cuánto has bajado en la página
       const scrollPosition = window.scrollY + offset;
-      // Le sumamos un offset para compensar el header fixed
 
       for (let id of sectionIds) {
         const section = document.getElementById(id);
@@ -18,19 +16,15 @@ export function useScrollSpy(
         if (!section) continue;
 
         const sectionTop = section.offsetTop;
-        // Distancia desde arriba del documento hasta la sección
 
         const sectionHeight = section.offsetHeight;
-        // Altura total de la sección
 
-        // Si el scroll está dentro del rango de esta sección
         if (
           scrollPosition >= sectionTop &&
           scrollPosition < sectionTop + sectionHeight
         ) {
           setActive(id);
           break;
-          // break para evitar seguir revisando innecesariamente
         }
       }
     };

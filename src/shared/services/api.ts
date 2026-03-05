@@ -16,9 +16,6 @@ class APIClient {
     this.baseURL = baseURL;
   }
 
-  /**
-   * Construye headers para las peticiones
-   */
   private getHeaders(token?: string): HeadersInit {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -31,9 +28,7 @@ class APIClient {
     return headers;
   }
 
-  /**
-   * Construye URL con query params
-   */
+
   private buildURL(endpoint: string, params?: Record<string, any>): string {
     const url = new URL(endpoint, this.baseURL);
     
@@ -48,9 +43,7 @@ class APIClient {
     return url.toString();
   }
 
-  /**
-   * Maneja errores de la API
-   */
+
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
@@ -59,13 +52,11 @@ class APIClient {
         const errorData: APIError = await response.json();
         errorMessage = errorData.detail || errorMessage;
       } catch {
-        // Si no se puede parsear el error, usar mensaje genérico
       }
 
       throw new Error(errorMessage);
     }
 
-    // Para respuestas 204 No Content
     if (response.status === 204) {
       return undefined as T;
     }
@@ -73,9 +64,7 @@ class APIClient {
     return response.json();
   }
 
-  /**
-   * GET request
-   */
+ 
   async get<T>(endpoint: string, options?: RequestOptions): Promise<T> {
     const url = this.buildURL(endpoint, options?.params);
     
@@ -87,9 +76,7 @@ class APIClient {
     return this.handleResponse<T>(response);
   }
 
-  /**
-   * POST request
-   */
+
   async post<T>(
     endpoint: string, 
     data?: any, 
@@ -106,9 +93,7 @@ class APIClient {
     return this.handleResponse<T>(response);
   }
 
-  /**
-   * PUT request
-   */
+
   async put<T>(
     endpoint: string, 
     data: any, 
@@ -125,9 +110,6 @@ class APIClient {
     return this.handleResponse<T>(response);
   }
 
-  /**
-   * PATCH request
-   */
   async patch<T>(
     endpoint: string, 
     data: any, 
@@ -144,9 +126,7 @@ class APIClient {
     return this.handleResponse<T>(response);
   }
 
-  /**
-   * DELETE request
-   */
+
   async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
     const url = this.buildURL(endpoint, options?.params);
     

@@ -4,11 +4,10 @@ import { Footer } from "./Footer";
 
 
 
-export function PublicLayout({ user, logout, login, register, company }) {
+export function PublicLayout() {
   return (
     <>
       <Outlet />
-      <Footer company={company} />
     </>
   );
 }
