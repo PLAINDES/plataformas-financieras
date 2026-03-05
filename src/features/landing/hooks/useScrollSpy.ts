@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 
 export function useScrollSpy(
-  sectionIds: string[],                // IDs de las secciones
-  setActive: (id: string) => void,     // Función para actualizar el menú activo
-  offset: number = 120                 // Compensación por header fixed
+  sectionIds: string[],                
+  setActive: (id: string) => void,    
+  offset: number = 120                
 ) {
   useEffect(() => {
 

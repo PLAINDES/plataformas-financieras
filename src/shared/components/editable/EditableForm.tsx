@@ -177,11 +177,9 @@ export function EditableForm({
     );
   }
 
-  // Modo admin - no editando: formulario con botón de editar
   if (!isEditing) {
     return (
       <div className={mobileMode ? 'h-full flex flex-col relative' : 'bg-white border-0 rounded-lg shadow-sm'} style={{ position: 'relative' }}>
-        {/* Botón de editar configuración */}
         <div style={{ position: 'absolute', top: mobileMode ? '4px' : '12px', right: mobileMode ? '4px' : '12px', zIndex: 10 }}>
           <button
             onClick={() => setIsEditing(true)}

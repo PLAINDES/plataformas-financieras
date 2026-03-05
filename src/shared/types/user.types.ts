@@ -6,12 +6,11 @@ export interface User {
   name: string;
   lastname: string | null;
   role: 'admin' | 'user';
-  perfil: 1 | 2 | 3; // Mantenerlo si lo usas para lógica de permisos
+  perfil: 1 | 2 | 3; 
   avatar: string | null;
   is_active: boolean;
 }
 
-// Opcional: Si el enum de roles se usa en Layouts para mostrar/ocultar secciones
 export const UserRole = {
   ADMIN: 1,
   EDITOR: 2,

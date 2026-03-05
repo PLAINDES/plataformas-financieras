@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { FormField } from '../../shared/components/FormField';
+import { FormField } from '../../components/FormField';
 import { ResultsConceptsCard } from './ResultsConceptsCard';
 
 export interface ValoraResultadosSectionProps {

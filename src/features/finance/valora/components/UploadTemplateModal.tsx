@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 
-import type { ToastType } from '../../types/toast.types';
+import type { ToastType } from '@/shared/types/toast.types';
 
 export interface UploadTemplateModalProps {
     isOpen: boolean;

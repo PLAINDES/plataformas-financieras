@@ -97,7 +97,7 @@ export default function TeamSection({ content, onSave, onSaveCollection }: TeamS
           <EditableText 
             content={{ 
               value: content?.title || '', 
-              id: 'team_title', 
+              id: 'team', 
               type: 'text', 
               section: 'team' 
             }}

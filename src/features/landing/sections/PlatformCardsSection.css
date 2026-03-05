@@ -243,6 +243,28 @@
         }
 
         @media (min-width: 992px) {
+           .carrousel-desktop-cards .cards-container {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory;
+    display: block;
+  }
+
+  .carrousel-desktop-cards .cards-flex-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 1.5rem;
+    width: max-content;
+    height: auto;
+    padding-bottom: 1rem;
+  }
+
+  .carrousel-desktop-cards .video-card-wrapper {
+    flex: 0 0 auto;
+    max-width: 250px; /* mantiene tu tamaño actual */
+    scroll-snap-align: start;
+  }
+  
           .platform-content {
             flex-direction: row;
             align-items: center;
@@ -250,9 +272,9 @@
           }
 
           .platform-container {
-    padding-left: 1.25rem; /* lg:px-5 */
+    padding-left: 1.25rem; 
     padding-right: 1.25rem;
-    max-width: 1400px;     /* Para evitar que en pantallas gigantes se pierda el centro */
+    max-width: 1400px;     
   }
 
           .video-container {
@@ -276,6 +298,7 @@
             overflow-x: hidden;
             overflow-y: auto;
             max-height: 80vh;
+            max-width: 780px;
             padding-right: 0.5rem;
             scrollbar-width: thin;
             scrollbar-color: rgba(0,0,0,0.2) transparent;

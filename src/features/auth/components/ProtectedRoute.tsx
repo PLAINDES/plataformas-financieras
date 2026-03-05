@@ -10,9 +10,7 @@ interface ProtectedRouteProps {
   redirectTo?: string;
 }
 
-/**
- * Componente para proteger rutas que requieren autenticación con Tailwind CSS
- */
+
 export function ProtectedRoute({ 
   children, 
   requireAdmin = false,
@@ -20,7 +18,6 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
 
-  // Pantalla de carga centrada
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
@@ -35,12 +32,10 @@ export function ProtectedRoute({
     );
   }
 
-  // No autenticado - redirigir
   if (!user) {
     return <Navigate to={redirectTo} replace />;
   }
 
-  // Requiere admin pero el usuario no lo es
   if (requireAdmin && user.role !== 'admin' && user.perfil !== 1) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4">
@@ -79,6 +74,5 @@ export function ProtectedRoute({
     );
   }
 
-  // Usuario autenticado con permisos correctos
   return <>{children}</>;
 }

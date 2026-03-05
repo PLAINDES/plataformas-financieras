@@ -7,6 +7,7 @@ import { InternalLayout } from '@shared/components/layout/InternalLayout';
 import { useAuthContext } from '@features/auth/hooks/useAuthContext';
 import ValoraPage from './features/finance/valora/ValoraPage';
 import { PublicLayout } from '@shared/components/layout/PublicLayout';
+import DashboardPage from '@features/admin/DashboardPage';
 
 const COMPANY = {
   id: 1,
@@ -76,6 +77,11 @@ function App() {
       >
         <Route path="/kapital" element={<KapitalPage />} />
         <Route path="/valora" element={<ValoraPage />} />
+      </Route>
+
+      <Route>
+        <Route path='/admin' element={<DashboardPage/>}/>
+
       </Route>
 
     </Routes>

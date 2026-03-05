@@ -1,15 +1,14 @@
-// src/app/landing/sections/PlatformCardsSection.tsx
-
 import React, { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { EditableCollection, AdminControls } from '@/shared/components/editable/EditableCollection';
 import { useAuthContext } from '../../auth/hooks/useAuthContext';
 import type { EditableContent, EditableCollectionData, CollectionItem } from '@/shared/types/editable.types';
 import './PlatformCardsSection.css'
 
-// Tipo para el card editable
 interface PlatformCardItem extends CollectionItem {
   name: string;
-  title?: string; // Para compatibilidad interna
+  title?: string;
   caption: string;
   description?: string;
   imageUrl: string;
@@ -45,23 +44,18 @@ export function PlatformCardsSection({
   onSaveCollection,
 }: PlatformCardsSectionProps) {
   const { isAdmin } = useAuthContext();
-  
-  // Convertir content.items a formato editable
+
   const [cardsData, setCardsData] = useState<EditableCollectionData<PlatformCardItem>>({
     id: 'platform-cards',
     section: 'platforms',
     items: (content.items || []).map((card, index) => ({
       ...card,
-      title: card.name, // Mapear name → title para compatibilidad interna
+      title: card.name,
       order: index,
-      hoverVideoUrl: card.hoverVideoUrl || card.videoUrl,
+      hoverVideoUrl: card.videoUrl,
     })),
   });
 
-  const isFirstLoad = useRef(true);
-  
-
-  // Actualizar cuando cambie el content
   useEffect(() => {
     if (content.items) {
       setCardsData({
@@ -71,7 +65,7 @@ export function PlatformCardsSection({
           ...card,
           title: card.name,
           order: index,
-          hoverVideoUrl: card.hoverVideoUrl || card.videoUrl,
+          hoverVideoUrl: card.videoUrl,
         })),
       });
     }
@@ -84,7 +78,6 @@ export function PlatformCardsSection({
   const videoRef = useRef<HTMLVideoElement>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
 
-  // Actualizar video activo cuando cambien los items
   useEffect(() => {
     if (cardsData.items.length > 0 && !activeVideoUrl) {
       const firstCard = cardsData.items[0];
@@ -98,9 +91,7 @@ export function PlatformCardsSection({
     setActiveVideoUrl(card.videoUrl);
     setActiveVideoTitle(card.name);
     setHoveredCardId(card.id);
-    
     scrollToCard(index);
-    
     if (videoRef.current) {
       videoRef.current.load();
       videoRef.current.play();
@@ -109,8 +100,7 @@ export function PlatformCardsSection({
 
   const handleCardHover = (card: PlatformCardItem) => {
     if (window.innerWidth >= 992) {
-      const videoUrl = card.hoverVideoUrl || card.videoUrl;
-      setActiveVideoUrl(videoUrl);
+      setActiveVideoUrl(card.videoUrl);
       setActiveVideoTitle(card.name);
       setHoveredCardId(card.id);
       if (videoRef.current) {
@@ -122,24 +112,15 @@ export function PlatformCardsSection({
 
   const scrollToCard = (index: number) => {
     if (!cardsContainerRef.current) return;
-    
     const container = cardsContainerRef.current;
     const cardElements = container.querySelectorAll('.video-card-wrapper');
-    
     if (cardElements[index]) {
       const card = cardElements[index] as HTMLElement;
-      
       const containerWidth = container.offsetWidth;
       const cardWidth = card.offsetWidth;
       const cardLeft = card.offsetLeft;
-      
       const scrollPosition = cardLeft - (containerWidth / 2) + (cardWidth / 2);
-      
-      container.scrollTo({
-        left: scrollPosition,
-        behavior: 'smooth'
-      });
-      
+      container.scrollTo({ left: scrollPosition, behavior: 'smooth' });
       setCurrentIndex(index);
     }
   };
@@ -159,37 +140,30 @@ export function PlatformCardsSection({
   useEffect(() => {
     const container = cardsContainerRef.current;
     if (!container) return;
-
     let timeoutId: any;
-
     const handleScroll = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
         const scrollLeft = container.scrollLeft;
         const containerWidth = container.offsetWidth;
         const cards = container.querySelectorAll('.video-card-wrapper');
-        
         let closestIndex = 0;
         let closestDistance = Infinity;
-        
         cards.forEach((card, index) => {
           const cardElement = card as HTMLElement;
           const cardCenter = cardElement.offsetLeft + cardElement.offsetWidth / 2;
           const containerCenter = scrollLeft + containerWidth / 2;
           const distance = Math.abs(cardCenter - containerCenter);
-          
           if (distance < closestDistance) {
             closestDistance = distance;
             closestIndex = index;
           }
         });
-        
         if (closestIndex !== currentIndex) {
           setCurrentIndex(closestIndex);
         }
       }, 100);
     };
-
     container.addEventListener('scroll', handleScroll);
     return () => {
       container.removeEventListener('scroll', handleScroll);
@@ -198,20 +172,13 @@ export function PlatformCardsSection({
   }, [currentIndex, cardsData.items.length]);
 
   const handleSaveCards = async (data: EditableCollectionData<PlatformCardItem>) => {
-    console.log('Saving platform cards:', data);
-    
-    // Actualizar estado local
     setCardsData(data);
-    
-    // Actualizar video activo si el card actual fue eliminado
     if (!data.items.find(item => item.id === hoveredCardId) && data.items.length > 0) {
       const firstCard = data.items[0];
       setActiveVideoUrl(firstCard.videoUrl);
       setActiveVideoTitle(firstCard.name);
       setHoveredCardId(firstCard.id);
     }
-    
-    // Llamar al handler del padre si existe
     if (onSaveCollection) {
       await onSaveCollection(data);
     }
@@ -225,140 +192,92 @@ export function PlatformCardsSection({
     caption: 'Sistema de Gestión',
     description: 'Descripción del módulo',
     imageUrl: 'https://via.placeholder.com/300x200/4F46E5/ffffff?text=Nuevo',
-    videoUrl: '/video/Modulo-Kapital.mp4',
-    hoverVideoUrl: '/video/Modulo-Kapital.mp4',
+    videoUrl: '',
+    hoverVideoUrl: '',
     ctaUrl: 'https://example.com/curso',
     libraryUrl: 'https://example.com/biblioteca',
   });
 
   return (
-    <>
-      <section className="platform-section ">
-        <div className="platform-container">
-          
-   
-
-          {/* Contenedor principal */}
-          <div className="platform-content ">
-            
-            {/* Video Container */}
-            <div className="video-container ">
-              <div className="video-wrapper">
-                <div className="video-responsive">
-                  <video
-                    ref={videoRef}
-                    src={activeVideoUrl}
-                    className="rounded-2xl shadow-lg w-full"
-                    controls
-                    style={{ width: '100%', aspectRatio: '16 / 9', background: '#000' }}
-                    muted
-                    loop
-                    playsInline
-                  />
-                  <div className="video-title-overlay">
-                    <span className="inline-block bg-gray-900/75 text-white px-3 py-2 rounded-md">
-                      {activeVideoTitle}
-                    </span>
-                  </div>
+    <section className="platform-section">
+      <div className="platform-container">
+        <div className="platform-content">
+          <div className="video-container">
+            <div className="video-wrapper">
+              <div className="video-responsive">
+                <video
+                  ref={videoRef}
+                  src={activeVideoUrl}
+                  className="rounded-2xl shadow-lg w-full"
+                  controls
+                  style={{ width: '100%', aspectRatio: '16 / 9', background: '#000' }}
+                  muted
+                  loop
+                  playsInline
+                />
+                <div className="video-title-overlay">
+                  <span className="inline-block bg-gray-900/75 text-white px-3 py-2 rounded-md">
+                    {activeVideoTitle}
+                  </span>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Cards Container */}
-            <div className="cards-container-wrapper  ">
-              <div className="cards-container pt-2" ref={cardsContainerRef}>
-                <EditableCollection
-                  data={cardsData}
-                  onSave={handleSaveCards}
-                  createNewItem={createNewCard}
-                  addButtonText="Agregar Card"
-                  maxItems={10}
-                  allowReorder={true}
-                  className="cards-flex-wrapper "
-                  renderItem={(card, index, helpers) => (
-                    <div className="video-card-wrapper" key={card.id}>
-                      <PlatformCard
-                        card={card}
-                        isActive={hoveredCardId === card.id}
-                        isEditing={helpers.isEditing}
-                        onActivate={() => handleCardClick(card, index)}
-                        onHover={() => handleCardHover(card)}
-                        helpers={helpers}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              {/* Controles de navegación - solo mobile/tablet */}
-{cardsData.items.length > 1 && (
-  <>
-    <button 
-      className="absolute top-1/2 -translate-y-1/2 left-2 z-20 
-                 w-10 h-10 sm:w-12 sm:h-12
-                 flex items-center justify-center
-                 bg-white/95 backdrop-blur-sm
-                 rounded-full
-                 shadow-lg hover:shadow-xl
-                 border border-gray-200/50
-                 transition-all duration-300 ease-out
-                 hover:scale-110 hover:bg-white
-                 active:scale-95
-                 lg:hidden
-                 group"
-      onClick={handlePrevCard}
-      aria-label="Card anterior"
-    >
-  
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-                     stroke-width="1" stroke-linecap="round" stroke-linejoin="round" 
-                     className="lucide lucide-chevron-left-icon lucide-chevron-left 
-                           text-lg sm:text-xl text-gray-700 group-hover:text-indigo-600 
-                           transition-colors">
-                    <path d="m15 18-6-6 6-6"/></svg>
-    </button>
-    
-    <button 
-      className="absolute top-1/2 -translate-y-1/2 right-2 z-20
-                 w-10 h-10 sm:w-12 sm:h-12
-                 flex items-center justify-center
-                 bg-white/95 backdrop-blur-sm
-                 rounded-full
-                 shadow-lg hover:shadow-xl
-                 border border-gray-200/50
-                 transition-all duration-300 ease-out
-                 hover:scale-110 hover:bg-white
-                 active:scale-95
-                 lg:hidden
-                 group"
-      onClick={handleNextCard}
-      aria-label="Card siguiente"
-    >
- 
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" 
-      fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" 
-      stroke-linejoin="round" className="lucide lucide-chevron-right-icon lucide-chevron-right 
-      text-lg sm:text-xl text-gray-700 group-hover:text-indigo-600 transition-colors">
-      <path d="m9 18 6-6-6-6"/>
-      </svg>
-    </button>
-  </>
-)}
+          <div className={`cards-container-wrapper ${cardsData.items.length > 2 ? 'carrousel-desktop-cards' : ''}`}>
+            <div className="cards-container pt-2" ref={cardsContainerRef}>
+              <EditableCollection
+                data={cardsData}
+                onSave={handleSaveCards}
+                createNewItem={createNewCard}
+                addButtonText="Agregar Card"
+                maxItems={10}
+                allowReorder={true}
+                className="cards-flex-wrapper"
+                renderItem={(card, index, helpers) => (
+                  <div className="video-card-wrapper" key={card.id}>
+                    <PlatformCard
+                      card={card}
+                      isActive={hoveredCardId === card.id}
+                      isEditing={helpers.isEditing}
+                      onActivate={() => handleCardClick(card, index)}
+                      onHover={() => handleCardHover(card)}
+                      helpers={helpers}
+                    />
+                  </div>
+                )}
+              />
             </div>
 
+            {cardsData.items.length > 1 && (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute top-1/2 -translate-y-1/2 left-2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 backdrop-blur-sm shadow-lg hover:shadow-xl border-gray-200/50 hover:scale-110 active:scale-95 lg:hidden group"
+                  onClick={handlePrevCard}
+                  aria-label="Card anterior"
+                >
+                  <ChevronLeft className="text-gray-700 group-hover:text-indigo-600 transition-colors" strokeWidth={1} />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute top-1/2 -translate-y-1/2 right-2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 backdrop-blur-sm shadow-lg hover:shadow-xl border-gray-200/50 hover:scale-110 active:scale-95 lg:hidden group"
+                  onClick={handleNextCard}
+                  aria-label="Card siguiente"
+                >
+                  <ChevronRight className="text-gray-700 group-hover:text-indigo-600 transition-colors" strokeWidth={1} />
+                </Button>
+              </>
+            )}
           </div>
         </div>
-      </section>
-
-
-    </>
+      </div>
+    </section>
   );
 }
-
-// ============================================
-// CARD COMPONENT
-// ============================================
 
 interface PlatformCardProps {
   card: PlatformCardItem;
@@ -369,24 +288,13 @@ interface PlatformCardProps {
   helpers: any;
 }
 
-function PlatformCard({
-  card,
-  isActive,
-  isEditing,
-  onActivate,
-  onHover,
-  helpers,
-}: PlatformCardProps) {
+function PlatformCard({ card, isActive, isEditing, onActivate, onHover, helpers }: PlatformCardProps) {
   const handleClick = () => {
-    if (!isEditing) {
-      onActivate();
-    }
+    if (!isEditing) onActivate();
   };
 
   const handleMouseEnter = () => {
-    if (!isEditing && window.innerWidth >= 992) {
-      onHover();
-    }
+    if (!isEditing && window.innerWidth >= 992) onHover();
   };
 
   if (isEditing) {
@@ -395,7 +303,7 @@ function PlatformCard({
 
   return (
     <div
-      className={`video-card  ${isActive ? 'active' : ''}`}
+      className={`video-card ${isActive ? 'active' : ''}`}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
     >
@@ -408,11 +316,11 @@ function PlatformCard({
           canMoveUp={helpers.canMoveUp}
           canMoveDown={helpers.canMoveDown}
           position="top-right"
-          buttonsDirection='horizontal'
+          buttonsDirection="horizontal"
         />
       )}
 
-      <div className="card-image-wrapper ">
+      <div className="card-image-wrapper">
         <div className="card-img-container">
           {card.ctaUrl ? (
             <a href={card.ctaUrl} target="_blank" rel="noopener noreferrer">
@@ -422,7 +330,6 @@ function PlatformCard({
             <img src={card.imageUrl} alt={card.name} />
           )}
         </div>
-
       </div>
 
       <div className="card-content">
@@ -434,44 +341,41 @@ function PlatformCard({
         )}
       </div>
 
-<div className="card-actions">
-  {card.ctaUrl ? (
-    <>
-      {/* 1. Enlace al Curso */}
-      <a
-        href={card.ctaUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="card-btn"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <span>Curso de Capacitación</span>
-        <i className="bi bi-chevron-right"></i>
-      </a>
-
-      {/* 2. Enlace a la Biblioteca (si existe) */}
-      {card.libraryUrl && (
-        <a
-          href={card.libraryUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="card-btn"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <span>Biblioteca</span>
-          <i className="bi bi-book"></i>
-        </a>
-      )}
-    </>
-  ) : (
+      <div className="card-actions">
+        {card.ctaUrl ? (
+          <>
+            
+              <a href={card.ctaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="card-btn"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span>Curso de Capacitación</span>
+              <ChevronRight size={16} />
+            </a>
+            {card.libraryUrl && (
+                
+                <a href={card.libraryUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="card-btn"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span>Biblioteca</span>
+                <BookOpen size={16} />
+              </a>
+            )}
+          </>
+        ) : (
           <>
             <button className="card-btn">
               <span>Curso de Capacitación</span>
-              <i className="bi bi-chevron-right"></i>
+              <ChevronRight size={16} />
             </button>
             <button className="card-btn">
               <span>Biblioteca</span>
-              <i className="bi bi-book"></i>
+              <BookOpen size={16} />
             </button>
           </>
         )}
@@ -479,10 +383,6 @@ function PlatformCard({
     </div>
   );
 }
-
-// ============================================
-// CARD EDITOR
-// ============================================
 
 interface CardEditorProps {
   card: PlatformCardItem;
@@ -494,49 +394,37 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
   const [formData, setFormData] = useState(card);
 
   const handleSubmit = () => {
-    // Asegurar que name y title estén sincronizados
-    const dataToSave = {
-      ...formData,
-      title: formData.name,
-    };
-    onSave(dataToSave);
+    onSave({ ...formData, title: formData.name });
   };
 
   return (
     <div className="video-card editing p-4 min-w-[300px] max-w-[350px]">
-      <h6 className="mb-4 text-sm font-semibold">
-        Editando Card
-      </h6>
+      <h6 className="mb-4 text-sm font-semibold">Editando Card</h6>
 
       <div className="grid gap-3">
-        <div>
-          <label className="block text-xs mb-1 font-medium">
-            Nombre
-          </label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value, title: e.target.value })}
-            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
-          />
-        </div>
+        {[
+          { label: 'Nombre', field: 'name', type: 'text', extraUpdate: { title: true } },
+          { label: 'Caption', field: 'caption', type: 'text' },
+        ].map(({ label, field, type, extraUpdate }) => (
+          <div key={field}>
+            <label className="block text-xs mb-1 font-medium">{label}</label>
+            <input
+              type={type}
+              value={(formData as any)[field]}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  [field]: e.target.value,
+                  ...(extraUpdate ? { title: e.target.value } : {}),
+                })
+              }
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+            />
+          </div>
+        ))}
 
         <div>
-          <label className="block text-xs mb-1 font-medium">
-            Caption
-          </label>
-          <input
-            type="text"
-            value={formData.caption}
-            onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
-            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs mb-1 font-medium">
-            Descripción
-          </label>
+          <label className="block text-xs mb-1 font-medium">Descripción</label>
           <textarea
             value={formData.description || ''}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -545,72 +433,42 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
           />
         </div>
 
-        <div>
-          <label className="block text-xs mb-1 font-medium">
-            Imagen URL
-          </label>
-          <input
-            type="url"
-            value={formData.imageUrl}
-            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs mb-1 font-medium">
-            Video URL
-          </label>
-          <input
-            type="url"
-            value={formData.videoUrl}
-            onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs mb-1 font-medium">
-            CTA URL (opcional)
-          </label>
-          <input
-            type="url"
-            value={formData.ctaUrl || ''}
-            onChange={(e) => setFormData({ ...formData, ctaUrl: e.target.value })}
-            placeholder="https://..."
-            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs mb-1 font-medium">
-            Library URL (opcional)
-          </label>
-          <input
-            type="url"
-            value={formData.libraryUrl || ''}
-            onChange={(e) => setFormData({ ...formData, libraryUrl: e.target.value })}
-            placeholder="https://..."
-            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs"
-          />
-        </div>
-
+        {(['imageUrl', 'videoUrl', 'ctaUrl', 'libraryUrl'] as const).map((field) => (
+          <div key={field}>
+            <label className="block text-xs mb-1 font-medium">
+              {field === 'imageUrl' ? 'Imagen URL' :
+               field === 'videoUrl' ? 'Video URL' :
+               field === 'ctaUrl' ? 'CTA URL (opcional)' : 'Library URL (opcional)'}
+            </label>
+            <input
+              type="url"
+              value={formData[field] || ''}
+              onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+              placeholder={field.includes('Url') ? 'https://...' : ''}
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs"
+            />
+          </div>
+        ))}
       </div>
 
       <div className="flex gap-1.5 mt-4">
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={onCancel}
-          className="flex-1 px-3 py-1.5 border border-gray-300 bg-white rounded text-xs cursor-pointer hover:bg-gray-50"
+          className="flex-1 text-xs"
         >
           Cancelar
-        </button>
-        <button
+        </Button>
+        <Button
+          size="sm"
           onClick={handleSubmit}
-          className="flex-1 px-3 py-1.5 border-none bg-[#2FA4FF] text-white rounded text-xs cursor-pointer font-medium hover:bg-[#00FFDD]"
+          className="flex-1 text-xs bg-[#2FA4FF] hover:bg-[#00FFDD] text-white border-none"
         >
           Guardar
-        </button>
+        </Button>
       </div>
     </div>
   );
 }
+

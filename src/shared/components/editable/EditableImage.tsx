@@ -467,12 +467,13 @@ export function EditableImage({
   }
 
   return (
-    <div
-      style={{
-        position: 'relative',
-        display: 'inline-block',
-      }}
-    >
+<div
+  style={{
+    position: 'relative',
+    width: '100%',
+    height: '100%',
+  }}
+>
       <img
         src={content.value}
         alt={alt}

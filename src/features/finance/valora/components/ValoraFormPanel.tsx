@@ -1,8 +1,8 @@
 import React from 'react';
 import { IconActionButton } from '../../../../shared/components/ui/IconActionButton';
-import { FormField } from '../../shared/components/FormField';
+import { FormField } from '../../components/FormField';
 import type { FormData } from '@/shared/types/ValoraTypes';
-import { FormSection } from '../../shared/components/FormSection';
+import { FormSection } from '../../components/FormSection';
 
 
 export interface ValoraFormPanelProps {

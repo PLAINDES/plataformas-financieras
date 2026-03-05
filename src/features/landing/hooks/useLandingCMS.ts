@@ -1,5 +1,5 @@
 // src/features/landing/hooks/useLandingCMS.ts
-import { useAuthContext } from '@/features/auth/hooks/useAuthContext'; // Ajusta ruta si es necesario
+import { useAuthContext } from '@/features/auth/hooks/useAuthContext'; 
 import { cmsService } from '@/shared/services/cms.service';
 import type { LandingDataResponse } from '@/shared/types';
 import type { EditableContent, EditableCollectionData, CollectionItem } from '@shared/types/editable.types';
@@ -7,11 +7,10 @@ import type { EditableContent, EditableCollectionData, CollectionItem } from '@s
 export function useLandingCMS(
   data: LandingDataResponse | null, 
   onLocalUpdate: (slug: string, newData: any) => void,
-  findContent: (slug: string) => any // Recibimos el helper del otro hook
+  findContent: (slug: string) => any 
 ) {
   const { getToken } = useAuthContext();
 
-  // --- Helpers Privados ---
   const getContentIdFromEditable = (editable: EditableContent): number | null => {
     if (!data) return null;
     const content = findContent(`${editable.section}-home`) || findContent(editable.section);
@@ -23,7 +22,6 @@ export function useLandingCMS(
     return parts[parts.length - 1];
   };
 
-  // --- Acción: Guardar campo simple ---
   const handleSaveContent = async (editableContent: EditableContent) => {
     const token = getToken();
     if (!token) return console.error('No token available');
@@ -32,7 +30,6 @@ export function useLandingCMS(
       const contentId = getContentIdFromEditable(editableContent);
       if (!contentId) throw new Error(`Content ID not found for ${editableContent.section}`);
 
-      // Obtenemos la data actual para no perder otros campos
       const contentObj = findContent(`${editableContent.section}-home`) || findContent(editableContent.section);
       const currentData = contentObj?.data || {};
       const fieldName = getFieldName(editableContent.id);
@@ -155,14 +152,12 @@ const handleSaveCollection = async <T extends CollectionItem>(
         return;
     }
 
-    // 🔥 Guardar una sola vez
     await cmsService.updateContent(
       content.id,
       { data: updatedData, status: 'published' },
       token
     );
 
-    // 🔥 Actualizar estado local
     onLocalUpdate(content.slug, updatedData);
 
   } catch (error) {

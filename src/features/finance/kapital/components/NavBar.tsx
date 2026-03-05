@@ -1,8 +1,8 @@
 // src/app/kapital/components/NavBar.tsx
 
 import React, { useMemo } from 'react';
-import { FinanceNavbar } from '@/features/finance/shared/components/FinanceNavbar';
-import type { NavTab } from '@/features/finance/shared/components/FinanceNavbar';
+import { FinanceNavbar } from '@/features/finance/components/FinanceNavbar';
+import type { NavTab } from '@/features/finance/components/FinanceNavbar';
 import { UserMenu } from '@/shared/components/common/UserMenu';
 import type { User } from '@/shared/types/user.types';
 

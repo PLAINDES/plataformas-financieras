@@ -23,7 +23,7 @@ interface HeaderProps {
   onLogout: () => void;
   onLogin: (credentials: LoginCredentials) => Promise<User>;
   onRegister: (data: RegisterData) => Promise<void>;
-  OnSave: (data: any) => Promise<void>; // Asumido por la llamada en handleSaveDescription
+  OnSave: (data: any) => Promise<void>; 
 }
 
 export function Header({ 

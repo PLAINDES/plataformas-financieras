@@ -1,7 +1,6 @@
 import React from 'react';
 
-import type { FinancialTable } from '../../types/ValoraTypes';
-
+import type { FinancialTable } from '@/shared/types/ValoraTypes';
 export interface ValoraEstadosSectionProps {
     financialTab: 'balance' | 'results';
     onTabChange: (tab: 'balance' | 'results') => void;

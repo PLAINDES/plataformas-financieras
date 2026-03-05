@@ -1,0 +1,78 @@
+/* Custom styles for mobile responsiveness and additional effects */
+
+/* Scroll Top Button Custom Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.scrolltop-appear {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  #kt_scrolltop {
+    bottom: 1rem;
+    right: 1rem;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  #kt_app_footer {
+    padding: 1rem 0;
+  }
+
+  #kt_app_footer .container {
+    padding: 0 1rem;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  #kt_scrolltop {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Footer hover effects */
+.footer-link {
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.footer-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 50%;
+  background-color: currentColor;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.footer-link:hover::after {
+  width: 100%;
+}
+
+/* Print styles */
+@media print {
+  #kt_scrolltop,
+  #kt_app_footer {
+    display: none;
+  }
+}

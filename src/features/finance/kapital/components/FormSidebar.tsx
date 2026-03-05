@@ -1,6 +1,6 @@
 import React from 'react';
-import { FormField } from '../../shared/components/FormField';
-import { FormSection } from '../../shared/components/FormSection';
+import { FormField } from '../../components/FormField';
+import { FormSection } from '../../components/FormSection';
 
 interface FormSidebarProps {
   isOpen: boolean;
@@ -36,18 +36,11 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
 }) => {
   return (
     <>
-      {/* Backdrop Overlay */}
-      {isOpen && hasResults && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 transition-opacity"
-          onClick={onClose}
-        />
-      )}
+
         <form onSubmit={onSubmit} className="flex h-full flex-col">
 
         <div className="flex-1 bg-white p-2">
    
-          {/* Form Content */}
           <div className='overflow-auto pb-6'>
             
               {/* Section 1: Industry */}

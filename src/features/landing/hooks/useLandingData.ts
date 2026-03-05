@@ -1,4 +1,3 @@
-// src/features/landing/hooks/useLandingData.ts
 import { useState, useEffect, useCallback } from 'react';
 import { cmsService } from '@/shared/services/cms.service';
 import type { LandingDataResponse, MenuItem } from '@/shared/types';
@@ -19,7 +18,6 @@ export function useLandingData() {
     loadData();
   }, [loadData]);
 
-  // Lógica de transformación del menú (sacada de la vista)
   const menuItems: MenuItem[] = data?.menus?.header_landing?.items.map(item => ({
     id: item.id,
     name: item.title,
@@ -29,12 +27,10 @@ export function useLandingData() {
     order: item.order ?? 0
   })) ?? [];
 
-  // Helper optimizado para buscar contenido
   const findContent = (slug: string) => {
     return data?.page.contents.find(c => c.slug === slug);
   };
 
-  // Helper para sacar directamente la data (ahorra código en la vista)
   const getContentData = (slug: string) => {
     return findContent(slug)?.data;
   };

@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MainPage } from './components/MainPage';
+import { FinancePageTemplate } from '../components/MainPage';
 import { UploadTemplateModal } from './components/UploadTemplateModal';
 import { ValoraResults } from './components/ValoraResults';
 import { LoadingOverlay } from '@/shared/components/common/LoadingOverlay';
 import { ToastStack } from '@/shared/components/common/ToastStack';
 import type { FinancialTable, FormData } from '@/shared/types/ValoraTypes';
 import type { ToastType } from '@/shared/types/toast.types';
-import { MainPageFooter } from './components/MainPageFooter';
+import { MainPageFooter } from '../components/MainPageFooter';
 import { parseFinancialTablesFromFile } from './types/valoraFileParsing';
 import { NavBar } from './components/Navbar';
 import { NavigationTabs } from './components/ValoraNavigationTabs';
 import { ValoraFormPanel } from './components/ValoraFormPanel';
-import { ReportSidebar } from '../shared/components/ReportSidebar';
+import { ReportSidebar } from '../components/ReportSidebar';
 
 import { useAuth } from '@/features/auth/hooks/useAuth';
 const ValoraPage: React.FC = () => {
@@ -83,10 +83,18 @@ const ValoraPage: React.FC = () => {
           formData={formData}
         />
       )}
-      <MainPageFooter />
+      <MainPageFooter 
+        brandName={"Valora"} 
+        brandHref={"/valora"} 
+        />
     </div>
   ) : (
-    <MainPage onOpenForm={() => setIsDesktopFormOpen(prev => !prev)} />
+    <FinancePageTemplate 
+        brandName="Kapital"
+        brandHref="/kapital"
+        heroTitle="Bienvenido a Valora"
+        onOpenForm={() => setIsDesktopFormOpen(prev => !prev)}
+    />
   );
 
   // Sample data
@@ -318,7 +326,7 @@ const ValoraPage: React.FC = () => {
         hasResults={showResults}
       />
       <main
-        className={`${showResults ? 'pt-24 lg:pt-16' : 'pt-12 lg:pt-16'} transition-all duration-300 ${isDesktopFormOpen ? 'lg:pl-105' : 'lg:pl-0'}`}
+        className={`${showResults ? 'pt-24 lg:pt-16' : 'pt-12 lg:pt-16'} transition-all h-screen duration-300 ${isDesktopFormOpen ? 'lg:pl-105' : 'lg:pl-0'}`}
       >
         {mainContent}
       </main>

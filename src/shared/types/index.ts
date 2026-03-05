@@ -1,8 +1,6 @@
 
 import type { PageResponse, SectionResponse } from './api.types';
 
-// ==================== RE-EXPORTS de API ====================
-// Importamos los tipos de la API y los re-exportamos
 export type {
   UserResponse,
   TokenResponse,
@@ -20,16 +18,6 @@ export type {
   AdminDashboardStats,
 } from './api.types';
 
-// ==================== TIPOS LOCALES (Frontend) ====================
-
-/**
- * User unificado para el frontend
- * Mapea UserResponse del backend + campos adicionales locales
- */
-
-/**
- * Información de la compañía
- */
 export interface Company {
   id: number;
   name: string;
@@ -65,9 +53,7 @@ export interface SocialLink {
   icon?: string;
 }
 
-/**
- * Item de menú
- */
+
 export interface MenuItem {
   id: number;
   name: string;
@@ -79,9 +65,7 @@ export interface MenuItem {
   children?: MenuItem[];
 }
 
-/**
- * Datos completos del landing (extendido)
- */
+
 export interface LandingData {
   page: PageResponse;
   sections: SectionResponse[];

@@ -9,17 +9,12 @@ import { CTASection } from './sections/CTASection';
 import TeamSection from './sections/TeamSection';
 import { LandingHeader } from './layout/LandingHeader';
 import { ScrollTop } from '@/shared/components/layout/ScrollTop';
-
-// Hooks
 import { useLandingData } from '@/features/landing/hooks/useLandingData';
 import { useLandingCMS } from '@/features/landing/hooks/useLandingCMS';
-
-// Types
 import type { Company } from '@/shared/types';
 import type { User } from '@/shared/types/user.types';
 import type { LoginCredentials } from '../auth/types/user.types';
 
-// Esto podría ir a un archivo de configuración si crece
 const COMPANY = {
   id: 1,
   name: 'Plataforma Finanzas',
@@ -54,21 +49,18 @@ export function LandingPage({
   onRegister 
 }: LandingPageProps) {
   
-  // 1. Hook de Datos: Maneja loading, fetch y parsing
   const { 
     data, 
     loading, 
     menuItems, 
     refresh, 
-    findContent, // Necesario para el CMS hook
+    findContent, 
     getContentData,
     updateContentLocally
   } = useLandingData();
 
-  // 2. Hook de Lógica CMS: Maneja el guardado y lógica de negocio
   const { handleSaveContent, handleSaveCollection } = useLandingCMS(data, updateContentLocally, findContent);
 
-  // Renderizado condicional simple
   if (loading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
   if (!data) return <div className="flex h-screen items-center justify-center text-red-500">Error loading data</div>;
 
