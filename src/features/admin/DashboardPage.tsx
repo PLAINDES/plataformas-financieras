@@ -1,13 +1,12 @@
 import React from 'react';
-import MainLayout from './MainLayout';
 import './AdminLayout.css';
 import { Footer } from './AdminLayout';
 // Example Dashboard Component
 const DashboardPage: React.FC = () => {
   return (
-    <MainLayout>
+    <>
       {/* Toolbar */}
-      <div className="bg-white py-3 shadow-sm md:py-6">
+      <div className=" py-3 md:py-6">
         <div className="container mx-auto flex flex-col flex-wrap justify-between px-4 md:flex-row md:items-center">
           {/* Page Title */}
           <div className="mb-3 flex flex-col justify-center md:mb-0 md:mr-3">
@@ -81,11 +80,11 @@ const DashboardPage: React.FC = () => {
           </div>
 
 
- 
+
         </div>
-        
+
       </div>
-    </MainLayout>
+    </>
   );
 };
 

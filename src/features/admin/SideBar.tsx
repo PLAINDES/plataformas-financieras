@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom'; // Opcional si usas React Router
+import { useLocation, useNavigate } from 'react-router-dom'; // Opcional si usas React Router
+import { UserMenu } from "@/shared/components/common/UserMenu";
+import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 
 interface SidebarProps {
   isMinimized?: boolean;
@@ -17,8 +19,15 @@ const Sidebar: React.FC<SidebarProps> = ({
   isMinimized = false,
   onToggleMinimize
 }) => {
+  const { user, logout } = useAuthContext();
+  const navigate = useNavigate();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const location = useLocation?.() || { pathname: '' };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   // SVG Icon Component
   const CubeIcon = () => (
@@ -98,7 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         `}
       >
         {/* Logo Section */}
-        <div className="py-4  relative text-center border-b px-0 border-gray-600 border-dashed">
+        <div className="py-6  relative text-center border-b px-0 border-gray-600 border-dashed">
           <a href="/admin" className="">
             <h3 className={`font-bold text-white transition-all duration-300 ${isMinimized ? 'text-sm' : 'text-md'}`}>
               {isMinimized ? 'ADM' : 'ADMINISTRADOR'}
@@ -121,7 +130,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {/* Menu Heading */}
           <div className="mb-2 px-3 pt-5">
             {!isMinimized && (
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Módulos
               </span>
             )}
@@ -140,7 +149,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   }
                   setIsMobileOpen(false);
                 }}
-                className={`group flex items-center rounded-lg px-3 py-3 transition-all duration-200
+                className={`group flex items-center rounded-lg px-3 py-1.5 transition-all duration-200
                   ${isActive(item.href)
                     ? 'bg-[#1b1b28] text-[#3699FF]'
                     : 'text-gray-400 hover:bg-[#1b1b28] hover:text-white'
@@ -150,7 +159,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 title={isMinimized ? item.title : ''}
               >
                 {/* Icon */}
-                <span className={`flex-shrink-0 ${isMinimized ? '' : 'mr-3'}`}>
+                <span className={`flex-shrink-0 flex justify-center ${isMinimized ? '' : 'mr-3'}`}>
                   <span className="inline-block h-6 w-6">
                     {item.icon}
                   </span>
@@ -158,7 +167,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                 {/* Title */}
                 {!isMinimized && (
-                  <span className="text-sm font-semibold">
+                  <span className="text-sm font-normal">
                     {item.title}
                   </span>
                 )}
@@ -171,6 +180,38 @@ const Sidebar: React.FC<SidebarProps> = ({
             ))}
           </nav>
         </div>
+
+        {/* User Profile Section */}
+        {user && (
+          <div className="border-t border-dashed border-gray-600 p-4">
+            <UserMenu
+              user={user}
+              onLogout={handleLogout}
+              onlyLogout={true}
+              customTrigger={
+                <div className={`flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-white/10 cursor-pointer ${isMinimized ? 'justify-center' : ''}`}>
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gray-700">
+                    <img
+                      src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}+${user.lastname}&background=random`}
+                      alt={user.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  {!isMinimized && (
+                    <div className="flex flex-col text-left overflow-hidden">
+                      <span className="truncate text-sm font-medium text-white max-w-[140px]">
+                        {user.name} {user.lastname}
+                      </span>
+                      <span className="truncate text-xs text-gray-400 max-w-[140px]">
+                        {user.email}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              }
+            />
+          </div>
+        )}
       </div>
 
       {/* Mobile Toggle Button */}
