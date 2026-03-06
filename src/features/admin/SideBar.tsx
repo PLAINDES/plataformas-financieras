@@ -13,9 +13,9 @@ interface MenuItem {
   onClick?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ 
-  isMinimized = false, 
-  onToggleMinimize 
+const Sidebar: React.FC<SidebarProps> = ({
+  isMinimized = false,
+  onToggleMinimize
 }) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const location = useLocation?.() || { pathname: '' };
@@ -23,28 +23,28 @@ const Sidebar: React.FC<SidebarProps> = ({
   // SVG Icon Component
   const CubeIcon = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path 
-        opacity="0.3" 
-        d="M11.8 5.2L17.7 8.6V15.4L11.8 18.8L5.90001 15.4V8.6L11.8 5.2ZM11.8 2C11.5 2 11.2 2.1 11 2.2L3.8 6.4C3.3 6.7 3 7.3 3 7.9V16.2C3 16.8 3.3 17.4 3.8 17.7L11 21.9C11.3 22 11.5 22.1 11.8 22.1C12.1 22.1 12.4 22 12.6 21.9L19.8 17.7C20.3 17.4 20.6 16.8 20.6 16.2V7.9C20.6 7.3 20.3 6.7 19.8 6.4L12.6 2.2C12.4 2.1 12.1 2 11.8 2Z" 
-        fill="currentColor" 
+      <path
+        opacity="0.3"
+        d="M11.8 5.2L17.7 8.6V15.4L11.8 18.8L5.90001 15.4V8.6L11.8 5.2ZM11.8 2C11.5 2 11.2 2.1 11 2.2L3.8 6.4C3.3 6.7 3 7.3 3 7.9V16.2C3 16.8 3.3 17.4 3.8 17.7L11 21.9C11.3 22 11.5 22.1 11.8 22.1C12.1 22.1 12.4 22 12.6 21.9L19.8 17.7C20.3 17.4 20.6 16.8 20.6 16.2V7.9C20.6 7.3 20.3 6.7 19.8 6.4L12.6 2.2C12.4 2.1 12.1 2 11.8 2Z"
+        fill="currentColor"
       />
-      <path 
-        d="M11.8 8.69995L8.90001 10.3V13.7L11.8 15.3L14.7 13.7V10.3L11.8 8.69995Z" 
-        fill="currentColor" 
+      <path
+        d="M11.8 8.69995L8.90001 10.3V13.7L11.8 15.3L14.7 13.7V10.3L11.8 8.69995Z"
+        fill="currentColor"
       />
     </svg>
   );
 
   const ArrowIcon = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path 
-        opacity="0.5" 
-        d="M14.2657 11.4343L18.45 7.25C18.8642 6.83579 18.8642 6.16421 18.45 5.75C18.0358 5.33579 17.3642 5.33579 16.95 5.75L11.4071 11.2929C11.0166 11.6834 11.0166 12.3166 11.4071 12.7071L16.95 18.25C17.3642 18.6642 18.0358 18.6642 18.45 18.25C18.8642 17.8358 18.8642 17.1642 18.45 16.75L14.2657 12.5657C13.9533 12.2533 13.9533 11.7467 14.2657 11.4343Z" 
-        fill="currentColor" 
+      <path
+        opacity="0.5"
+        d="M14.2657 11.4343L18.45 7.25C18.8642 6.83579 18.8642 6.16421 18.45 5.75C18.0358 5.33579 17.3642 5.33579 16.95 5.75L11.4071 11.2929C11.0166 11.6834 11.0166 12.3166 11.4071 12.7071L16.95 18.25C17.3642 18.6642 18.0358 18.6642 18.45 18.25C18.8642 17.8358 18.8642 17.1642 18.45 16.75L14.2657 12.5657C13.9533 12.2533 13.9533 11.7467 14.2657 11.4343Z"
+        fill="currentColor"
       />
-      <path 
-        d="M8.2657 11.4343L12.45 7.25C12.8642 6.83579 12.8642 6.16421 12.45 5.75C12.0358 5.33579 11.3642 5.33579 10.95 5.75L5.40712 11.2929C5.01659 11.6834 5.01659 12.3166 5.40712 12.7071L10.95 18.25C11.3642 18.6642 12.0358 18.6642 12.45 18.25C12.8642 17.8358 12.8642 17.1642 12.45 16.75L8.2657 12.5657C7.95328 12.2533 7.95328 11.7467 8.2657 11.4343Z" 
-        fill="currentColor" 
+      <path
+        d="M8.2657 11.4343L12.45 7.25C12.8642 6.83579 12.8642 6.16421 12.45 5.75C12.0358 5.33579 11.3642 5.33579 10.95 5.75L5.40712 11.2929C5.01659 11.6834 5.01659 12.3166 5.40712 12.7071L10.95 18.25C11.3642 18.6642 12.0358 18.6642 12.45 18.25C12.8642 17.8358 12.8642 17.1642 12.45 16.75L8.2657 12.5657C7.95328 12.2533 7.95328 11.7467 8.2657 11.4343Z"
+        fill="currentColor"
       />
     </svg>
   );
@@ -94,17 +94,16 @@ const Sidebar: React.FC<SidebarProps> = ({
         id="kt_app_sidebar"
         className={`fixed left-0 top-0 z-50 flex  flex-col bg-[#1e1e2d] transition-all duration-300 lg:relative lg:z-auto
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          ${isMinimized ? 'lg:w-[75px]' : 'w-[225px]'}
+          ${isMinimized ? 'lg:w-[75px]' : 'w-[250px]'}
         `}
       >
         {/* Logo Section */}
-        <div className="flex items-center justify-center px-6 py-8 relative">
-          <a href="/admin" className="text-center">
-            <h3 className={`font-bold text-white transition-all duration-300 ${isMinimized ? 'text-sm' : 'text-lg'}`}>
+        <div className="py-4  relative text-center border-b px-0 border-gray-600 border-dashed">
+          <a href="/admin" className="">
+            <h3 className={`font-bold text-white transition-all duration-300 ${isMinimized ? 'text-sm' : 'text-md'}`}>
               {isMinimized ? 'ADM' : 'ADMINISTRADOR'}
             </h3>
           </a>
-
           {/* Toggle Button - Desktop Only */}
           <button
             onClick={onToggleMinimize}

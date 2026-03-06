@@ -51,70 +51,70 @@ const Icon: FC<IconProps> = ({ children, size = 20 }) => (
 
 const CubeIcon: FC<{ size?: number }> = ({ size = 20 }) => (
   <Icon size={size}>
-    <path opacity="0.35" d="M11.8 5.2L17.7 8.6V15.4L11.8 18.8L5.9 15.4V8.6L11.8 5.2Z" fill="currentColor"/>
-    <path d="M11.8 8.7L8.9 10.3V13.7L11.8 15.3L14.7 13.7V10.3L11.8 8.7Z" fill="currentColor"/>
+    <path opacity="0.35" d="M11.8 5.2L17.7 8.6V15.4L11.8 18.8L5.9 15.4V8.6L11.8 5.2Z" fill="currentColor" />
+    <path d="M11.8 8.7L8.9 10.3V13.7L11.8 15.3L14.7 13.7V10.3L11.8 8.7Z" fill="currentColor" />
   </Icon>
 );
 
 const ChevronLeft: FC = () => (
   <Icon size={16}>
-    <path opacity="0.5" d="M14.3 11.4L18.5 7.25C18.9 6.84 18.9 6.16 18.5 5.75C18.0 5.34 17.4 5.34 16.95 5.75L11.4 11.3C11.0 11.68 11.0 12.32 11.4 12.71L16.95 18.25C17.4 18.66 18.0 18.66 18.5 18.25C18.9 17.84 18.9 17.16 18.5 16.75L14.3 12.57C13.95 12.25 13.95 11.75 14.3 11.43Z" fill="currentColor"/>
-    <path d="M8.27 11.4L12.45 7.25C12.86 6.84 12.86 6.16 12.45 5.75C12.04 5.34 11.36 5.34 10.95 5.75L5.41 11.3C5.02 11.68 5.02 12.32 5.41 12.71L10.95 18.25C11.36 18.66 12.04 18.66 12.45 18.25C12.86 17.84 12.86 17.16 12.45 16.75L8.27 12.57C7.95 12.25 7.95 11.75 8.27 11.43Z" fill="currentColor"/>
+    <path opacity="0.5" d="M14.3 11.4L18.5 7.25C18.9 6.84 18.9 6.16 18.5 5.75C18.0 5.34 17.4 5.34 16.95 5.75L11.4 11.3C11.0 11.68 11.0 12.32 11.4 12.71L16.95 18.25C17.4 18.66 18.0 18.66 18.5 18.25C18.9 17.84 18.9 17.16 18.5 16.75L14.3 12.57C13.95 12.25 13.95 11.75 14.3 11.43Z" fill="currentColor" />
+    <path d="M8.27 11.4L12.45 7.25C12.86 6.84 12.86 6.16 12.45 5.75C12.04 5.34 11.36 5.34 10.95 5.75L5.41 11.3C5.02 11.68 5.02 12.32 5.41 12.71L10.95 18.25C11.36 18.66 12.04 18.66 12.45 18.25C12.86 17.84 12.86 17.16 12.45 16.75L8.27 12.57C7.95 12.25 7.95 11.75 8.27 11.43Z" fill="currentColor" />
   </Icon>
 );
 
 const MenuIcon: FC = () => (
   <Icon size={22}>
-    <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
   </Icon>
 );
 
 const CloseIcon: FC = () => (
   <Icon size={22}>
-    <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
   </Icon>
 );
 
 const BellIcon: FC = () => (
   <Icon size={20}>
-    <path opacity="0.3" d="M12 2C9.24 2 7 4.24 7 7v5l-2 2v1h14v-1l-2-2V7c0-2.76-2.24-5-5-5z" fill="currentColor"/>
-    <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zM7 13v-2l2-2V7c0-2.21 1.79-4 4-4s4 1.79 4 4v2l2 2v2H7z" fill="currentColor"/>
+    <path opacity="0.3" d="M12 2C9.24 2 7 4.24 7 7v5l-2 2v1h14v-1l-2-2V7c0-2.76-2.24-5-5-5z" fill="currentColor" />
+    <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zM7 13v-2l2-2V7c0-2.21 1.79-4 4-4s4 1.79 4 4v2l2 2v2H7z" fill="currentColor" />
   </Icon>
 );
 
 const SearchIcon: FC = () => (
   <Icon size={18}>
-    <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
-    <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" opacity="0.5" />
+    <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
   </Icon>
 );
 
 const GridIcon: FC = () => (
   <Icon size={20}>
-    <rect x="3" y="3" width="7" height="7" rx="1.5" fill="currentColor" opacity="0.5"/>
-    <rect x="14" y="3" width="7" height="7" rx="1.5" fill="currentColor"/>
-    <rect x="3" y="14" width="7" height="7" rx="1.5" fill="currentColor"/>
-    <rect x="14" y="14" width="7" height="7" rx="1.5" fill="currentColor" opacity="0.5"/>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" fill="currentColor" opacity="0.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" fill="currentColor" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" fill="currentColor" />
+    <rect x="14" y="14" width="7" height="7" rx="1.5" fill="currentColor" opacity="0.5" />
   </Icon>
 );
 
 const UserIcon: FC = () => (
   <Icon size={20}>
-    <circle cx="12" cy="8" r="4" fill="currentColor" opacity="0.4"/>
-    <path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" fill="currentColor" opacity="0.8"/>
+    <circle cx="12" cy="8" r="4" fill="currentColor" opacity="0.4" />
+    <path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" fill="currentColor" opacity="0.8" />
   </Icon>
 );
 
 const ChevronDown: FC = () => (
   <Icon size={14}>
-    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </Icon>
 );
 
 const UpArrow: FC = () => (
   <Icon size={22}>
-    <rect opacity="0.5" x="13" y="6" width="13" height="2" rx="1" transform="rotate(90 13 6)" fill="currentColor"/>
-    <path d="M12.57 8.57L16.75 12.75C17.16 13.16 17.84 13.16 18.25 12.75C18.66 12.34 18.66 11.66 18.25 11.25L12.71 5.71C12.32 5.32 11.68 5.32 11.29 5.71L5.75 11.25C5.34 11.66 5.34 12.34 5.75 12.75C6.16 13.16 6.84 13.16 7.25 12.75L11.43 8.57C11.75 8.25 12.25 8.25 12.57 8.57Z" fill="currentColor"/>
+    <rect opacity="0.5" x="13" y="6" width="13" height="2" rx="1" transform="rotate(90 13 6)" fill="currentColor" />
+    <path d="M12.57 8.57L16.75 12.75C17.16 13.16 17.84 13.16 18.25 12.75C18.66 12.34 18.66 11.66 18.25 11.25L12.71 5.71C12.32 5.32 11.68 5.32 11.29 5.71L5.75 11.25C5.34 11.66 5.34 12.34 5.75 12.75C6.16 13.16 6.84 13.16 7.25 12.75L11.43 8.57C11.75 8.25 12.25 8.25 12.57 8.57Z" fill="currentColor" />
   </Icon>
 );
 
@@ -183,10 +183,10 @@ const Footer: FC = () => {
           onMouseEnter={handleLinkEnter}
           onMouseLeave={(e) => handleLinkLeave(e, "#6b7a99")}
         >
-          Plataforma Herramientas
+          Proideas
         </a>
       </span>
-      <div style={{ display: "flex", gap: 4 }}>
+      {/* <div style={{ display: "flex", gap: 4 }}>
         {(["About", "Support", "Purchase"] as const).map((l) => (
           <a
             key={l}
@@ -208,7 +208,7 @@ const Footer: FC = () => {
             {l}
           </a>
         ))}
-      </div>
+      </div> */}
     </footer>
   );
 };
@@ -280,7 +280,6 @@ const Navbar: FC<NavbarProps> = ({ onMobileMenuToggle, isMobileOpen }) => {
 
       {/* Right: notifications + apps + profile */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-
         {/* Apps grid */}
         <button
           aria-label="Apps"
