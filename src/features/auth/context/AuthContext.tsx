@@ -1,6 +1,6 @@
-import { createContext, type ReactNode } from 'react';
-import type { User } from '../types/user.types';
-import { useAuth } from '../hooks/useAuth';
+import { createContext, type ReactNode } from "react";
+import type { User } from "../types/user.types";
+import { useAuth } from "../hooks/useAuth";
 
 export interface AuthContextValue {
   user: User | null;
@@ -22,9 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <>
-    <AuthContext.Provider value={auth}>
-      {children}
-    </AuthContext.Provider>
+      <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>
     </>
   );
 }

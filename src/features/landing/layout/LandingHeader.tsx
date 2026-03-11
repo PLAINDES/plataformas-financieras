@@ -91,9 +91,9 @@ export function LandingHeader({
       <nav
         className={`
         fixed top-0 left-0 w-full z-50 transition-all duration-500
-        ${isSticky ? "bg-white/90 backdrop-blur-lg h-16 lg:h-[65px] shadow-sm" : "bg-transparent h-20 lg:h-24"}`}
+        ${isSticky ? "bg-white/90 backdrop-blur-lg h-16 lg:h-16.25 shadow-sm" : "bg-transparent h-20 lg:h-24"}`}
       >
-        <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-2 lg:grid-cols-12 items-center h-full">
+        <div className="max-w-350 mx-auto px-6 grid grid-cols-2 lg:grid-cols-12 items-center h-full">
           {/* Logo */}
           <div className="flex items-center gap-4 lg:col-span-3">
             <div className="lg:hidden">
@@ -147,7 +147,7 @@ export function LandingHeader({
             >
               Soporte
             </a>
-            <div className="h-6 w-[1px] bg-gray-200 hidden lg:block mx-2" />
+            <div className="h-6 w-px bg-gray-200 hidden lg:block mx-2" />
             {user ? (
               <LandingUserMenu user={user} onLogout={onLogout} />
             ) : (
@@ -176,14 +176,14 @@ export function LandingHeader({
 
       {/* Mobile Drawer */}
       <div
-        className={`fixed inset-0 z-[100] lg:hidden transition-all duration-300 ${isMobileMenuOpen ? "visible" : "invisible"}`}
+        className={`fixed inset-0 z-100 lg:hidden transition-all duration-300 ${isMobileMenuOpen ? "visible" : "invisible"}`}
       >
         <div
           onClick={() => setIsMobileMenuOpen(false)}
           className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isMobileMenuOpen ? "opacity-100" : "opacity-0"}`}
         />
         <aside
-          className={`absolute top-0 left-0 h-full w-[280px] bg-white shadow-2xl transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+          className={`absolute top-0 left-0 h-full w-70 bg-white shadow-2xl transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
         >
           <div className="flex flex-col h-full">
             <div className="p-6 flex items-center justify-between border-b border-gray-50">
@@ -242,7 +242,7 @@ export function LandingHeader({
         }}
       />
 
-      <div className="h-20 lg:h-[65px]" />
+      <div className="h-20 lg:h-16.25" />
     </header>
   );
 }

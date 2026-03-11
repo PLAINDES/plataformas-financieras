@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
 import { read, utils } from "xlsx";
 import { MainService } from "@/shared/services/main.service";
@@ -21,7 +21,7 @@ export const ConfiguracionPage = () => {
     "trimestral" | "anual"
   >("trimestral");
   const [activeTab, setActiveTab] = useState("rf");
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
 
   // State for each section
   const [rfData, setRfData] = useState<BaseComplementItem[]>(MOCK_RF);
@@ -112,10 +112,10 @@ export const ConfiguracionPage = () => {
   };
 
   // Wrapper for delete to pass the item
-  const createDeleteHandler = (setter: any, data: any[]) => (item: any) =>
+  const createDeleteHandler = (setter: any, _data: any[]) => (item: any) =>
     handleDelete(setter, item.id, item);
 
-  const handleCreate = (
+  /*const handleCreate = (
     data: any[],
     setter: React.Dispatch<React.SetStateAction<any[]>>
   ) => {
@@ -126,7 +126,7 @@ export const ConfiguracionPage = () => {
       descripcion: "Nuevo Registro Local",
     };
     setter([...data, newItem]);
-  };
+  };*/
 
   // EXCEL HANDLING
   const handleImportClick = () => {

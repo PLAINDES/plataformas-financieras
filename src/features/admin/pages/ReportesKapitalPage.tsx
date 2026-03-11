@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
 import { useNavigate } from "react-router-dom";
 

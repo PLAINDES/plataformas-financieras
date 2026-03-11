@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FinancePageTemplate } from "../components/MainPage";
 import { UploadTemplateModal } from "./components/UploadTemplateModal";
 import { ValoraResults } from "./components/ValoraResults";
@@ -40,7 +40,7 @@ const ValoraPage: React.FC = () => {
   const [resultsSection, setResultsSection] = useState<
     "estados" | "resultados" | "analisis" | "metodologia"
   >("resultados");
-  const [isResultsSidebarOpen, setIsResultsSidebarOpen] = useState(false);
+  const [_isResultsSidebarOpen, setIsResultsSidebarOpen] = useState(false);
   const [isReportSidebarOpen, setIsReportSidebarOpen] = useState(false);
   const [isReportViewerOpen, setIsReportViewerOpen] = useState(false);
   const [selectedReportProductId, setSelectedReportProductId] =
@@ -181,9 +181,9 @@ const ValoraPage: React.FC = () => {
     }
   }, [showResults]);
 
-  const toggleResultsSidebar = () => {
+  /*const toggleResultsSidebar = () => {
     setIsResultsSidebarOpen((prev) => !prev);
-  };
+  };*/
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>

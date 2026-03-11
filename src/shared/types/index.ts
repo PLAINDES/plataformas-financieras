@@ -36,6 +36,15 @@ export interface Company {
   address?: string;
   logos: Logo[];
   social_links?: SocialLink[];
+  facebook_link?: string;
+  twitter_link?: string;
+  linkedin_link?: string;
+  instagram_link?: string;
+  whatsapp_link?: string;
+  terms_and_conditions?: string;
+  privacy_policies?: string;
+  phone_contact?: string;
+  email_contact?: string;
 }
 
 export interface Logo {

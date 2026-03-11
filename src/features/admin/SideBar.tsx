@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom"; // Opcional si usas React Router
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { UserMenu } from "@/shared/components/common/UserMenu";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 
@@ -114,7 +114,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         id="kt_app_sidebar"
         className={`fixed left-0 top-0 z-50 flex  flex-col bg-[#1e1e2d] transition-all duration-300 lg:relative lg:z-auto
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-          ${isMinimized ? "lg:w-[75px]" : "w-[250px]"}
+          ${isMinimized ? "lg:w-18.75" : "w-62.5]"}
         `}
       >
         {/* Logo Section */}
@@ -129,7 +129,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {/* Toggle Button - Desktop Only */}
           <button
             onClick={onToggleMinimize}
-            className={`absolute -right-[15px] top-1/2 hidden h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-110 lg:flex
+            className={`absolute -right-3.75 top-1/2 hidden h-7.5 w-7.5 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-110 lg:flex
               ${isMinimized ? "rotate-0" : "rotate-180"}
             `}
             aria-label="Toggle sidebar"
@@ -174,7 +174,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               >
                 {/* Icon */}
                 <span
-                  className={`flex-shrink-0 flex justify-center ${isMinimized ? "" : "mr-3"}`}
+                  className={`shrink-0 flex justify-center ${isMinimized ? "" : "mr-3"}`}
                 >
                   <span className="inline-block h-6 w-6">{item.icon}</span>
                 </span>
@@ -216,10 +216,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                   </div>
                   {!isMinimized && (
                     <div className="flex flex-col text-left overflow-hidden">
-                      <span className="truncate text-sm font-medium text-white max-w-[140px]">
+                      <span className="truncate text-sm font-medium text-white max-w-35">
                         {user.name} {user.lastname}
                       </span>
-                      <span className="truncate text-xs text-gray-400 max-w-[140px]">
+                      <span className="truncate text-xs text-gray-400 max-w-35">
                         {user.email}
                       </span>
                     </div>

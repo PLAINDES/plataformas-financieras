@@ -50,7 +50,9 @@ export function ProductsSection({
   onSave,
   onSaveCollection,
 }: ProductsSectionProps) {
-  const { isAdmin } = useAuthContext();
+  const { isAdmin: _isAdmin } = useAuthContext();
+  void _isAdmin;
+
   const [activeTab, setActiveTab] = useState<"kapital" | "valora">("kapital");
   const [currentPage, setCurrentPage] = useState(0);
 
@@ -230,22 +232,25 @@ export function ProductsSection({
             maxItems={20}
             allowReorder={true}
             className={`flex flex-wrap gap-y-8 ${isSingleCard ? "justify-center" : "justify-start"}`}
-            renderItem={(product, index, helpers) => {
-              const visibleIds = visibleProducts.map((p) => p.id);
-              if (!visibleIds.includes(product.id) && !helpers.isEditing)
-                return null;
+            renderItem={(product, _index, helpers) => {
+              const isVisible =
+                visibleProducts.some((p) => p.id === product.id) ||
+                helpers.isEditing;
+
+              if (!isVisible) return null;
+
+              const wrapperClass = `px-4 ${isSingleCard ? "w-full sm:w-[83.33%] md:w-1/2 lg:w-1/3" : "w-full md:w-1/2 lg:w-1/3"}`;
+
               return (
-                <div
-                  key={product.id}
-                  className={`px-4 ${isSingleCard ? "w-full sm:w-[83.33%] md:w-1/2 lg:w-1/3" : "w-full md:w-1/2 lg:w-1/3"}`}
-                >
-                  {helpers.isEditing ? (
+                <div key={product.id} className={wrapperClass}>
+                  {helpers.isEditing && (
                     <ProductEditor
                       product={product}
                       onSave={helpers.onSaveItem}
                       onCancel={helpers.onCancelEdit}
                     />
-                  ) : (
+                  )}
+                  {!helpers.isEditing && (
                     <ProductCard
                       product={product}
                       isSingleCard={isSingleCard}
@@ -310,7 +315,7 @@ function ProductCard({ product, isSingleCard, helpers }: ProductCardProps) {
       )}
 
       <div
-        className={`flex items-center justify-center mb-4 rounded-xl bg-[#E0F7FA] ${isSingleCard ? "mx-auto h-[120px] w-[150px]" : "h-20 w-20"}`}
+        className={`flex items-center justify-center mb-4 rounded-xl bg-[#E0F7FA] ${isSingleCard ? "mx-auto h-30 w-37.5" : "h-20 w-20"}`}
       >
         <Laptop
           className={`text-sky-500 ${isSingleCard ? "w-10 h-10" : "w-6 h-6"}`}
@@ -320,7 +325,7 @@ function ProductCard({ product, isSingleCard, helpers }: ProductCardProps) {
       <h3 className="text-xl font-bold mb-2 text-gray-900 leading-tight">
         {product.name}
       </h3>
-      <p className="text-gray-500 flex-grow leading-relaxed mb-4">
+      <p className="text-gray-500 grow leading-relaxed mb-4">
         {product.caption}
       </p>
 
@@ -374,16 +379,16 @@ function ProductEditor({ product, onSave, onCancel }: ProductEditorProps) {
   });
 
   return (
-    <div className="flex flex-col p-6 bg-white border-2 border-[#2FA4FF] rounded-[12px] ring-4 ring-[#2FA4FF]/10 min-h-[400px] shadow-sm">
+    <div className="flex flex-col p-6 bg-white border-2 border-[#2FA4FF] rounded-2xl ring-4 ring-[#2FA4FF]/10 min-h-100 shadow-sm">
       <h6 className="mb-4 text-[14px] font-semibold text-[#2FA4FF] flex items-center gap-2">
         <span>✏️</span> Editando Producto
       </h6>
 
-      <div className="flex items-center justify-center mb-4 mx-auto h-20 w-20 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600">
+      <div className="flex items-center justify-center mb-4 mx-auto h-20 w-20 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600">
         <Laptop className="w-6 h-6 text-white" />
       </div>
 
-      <div className="flex flex-col gap-4 flex-grow">
+      <div className="flex flex-col gap-4 grow">
         {[{ label: "Nombre", field: "name", type: "text" }].map(
           ({ label, field, type }) => (
             <div key={field} className="flex flex-col">

@@ -86,6 +86,7 @@ export function ClientsSection({
         await onSaveCollection({ ...data, id: "clients-logos" });
       } catch (error) {
         setItems(previousItems);
+        console.error("Error al guardar los logos de clientes:", error);
       }
     }
   };
@@ -193,7 +194,7 @@ function ClientLogoCard({
   if (helpers.isEditing) {
     return (
       <div
-        className="relative min-w-[280px] max-w-[320px] sm:min-w-full sm:max-w-full border border-slate-200 rounded-xl p-5 bg-white z-[100] shadow-2xl mb-4 sm:mb-0 animate-in fade-in zoom-in duration-200"
+        className="relative min-w-70 max-w-[320px] sm:min-w-full sm:max-w-full border border-slate-200 rounded-xl p-5 bg-white z-100 shadow-2xl mb-4 sm:mb-0 animate-in fade-in zoom-in duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-full">
@@ -250,7 +251,7 @@ function ClientLogoCard({
                   <img
                     src={editedClient.imageUrl}
                     alt="Preview"
-                    className="max-h-[40px] w-auto object-contain filter drop-shadow-sm"
+                    className="max-h-10 w-auto object-contain filter drop-shadow-sm"
                     onError={(e) => {
                       e.currentTarget.src =
                         "https://via.placeholder.com/140x40?text=Error+al+cargar";
@@ -289,7 +290,7 @@ function ClientLogoCard({
     <div
       data-client-logo
       className={`
-        relative min-w-[70px] max-w-[140px] flex justify-center items-center
+        relative min-w-17.5 max-w-35 flex justify-center items-center
         transition-all duration-200
         ${isAdmin ? "cursor-pointer" : ""}
         ${isSelected ? "ring-2 ring-blue-500 ring-offset-2 rounded-lg p-1" : ""}
@@ -301,7 +302,7 @@ function ClientLogoCard({
         src={client.imageUrl}
         alt={client.alt || client.name}
         className={`
-          max-h-[22px] md:max-h-[30px] lg:max-h-[35px] w-auto object-contain
+          max-h-5.5 md:max-h-7.5 lg:max-h-8.75 w-auto object-contain
           grayscale brightness-85 opacity-40
           transition-all duration-300
           hover:grayscale-0 hover:brightness-100 hover:opacity-60 hover:scale-110

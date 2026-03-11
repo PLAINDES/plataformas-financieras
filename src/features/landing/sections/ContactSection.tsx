@@ -33,7 +33,8 @@ interface ContactSectionProps {
 
 export function ContactSection({ content, onSave }: ContactSectionProps) {
   const [formData, setFormData] = useState<Record<string, string>>({});
-  const { isAdmin } = useAuthContext();
+  const { isAdmin: _isAdmin } = useAuthContext();
+  void _isAdmin;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

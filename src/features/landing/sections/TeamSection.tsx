@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { EditableText } from "@/shared/components/editable/EditableText";
 import {
   EditableCollection,
@@ -37,7 +37,8 @@ export default function TeamSection({
   onSaveCollection,
 }: TeamSectionProps) {
   const [openSection, setOpenSection] = useState<string | null>(null);
-  const { isAdmin } = useAuthContext();
+  const { isAdmin: _isAdmin } = useAuthContext();
+  void _isAdmin;
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
@@ -153,12 +154,7 @@ export default function TeamSection({
                 allowReorder={true}
                 className="flex flex-col gap-4"
                 renderItem={(author, index, helpers) => (
-                  <AuthorCard
-                    key={index}
-                    author={author}
-                    helpers={helpers}
-                    onSave={handleSaveAuthors}
-                  />
+                  <AuthorCard key={index} author={author} helpers={helpers} />
                 )}
               />
             </div>
@@ -189,7 +185,6 @@ export default function TeamSection({
                         key={index}
                         member={member}
                         helpers={helpers}
-                        onSave={handleSaveDevelopmentTeam}
                       />
                     )}
                   />
@@ -222,7 +217,6 @@ export default function TeamSection({
                   key={index}
                   collaborator={collaborator}
                   helpers={helpers}
-                  onSave={handleSaveCollaborators}
                 />
               )}
             />
@@ -279,12 +273,7 @@ export default function TeamSection({
                   allowReorder={true}
                   className="flex flex-col gap-4"
                   renderItem={(author, index, helpers) => (
-                    <AuthorCard
-                      key={index}
-                      author={author}
-                      helpers={helpers}
-                      onSave={handleSaveAuthors}
-                    />
+                    <AuthorCard key={index} author={author} helpers={helpers} />
                   )}
                 />
               </div>
@@ -345,7 +334,6 @@ export default function TeamSection({
                           key={index}
                           member={member}
                           helpers={helpers}
-                          onSave={handleSaveDevelopmentTeam}
                           mobile={true}
                         />
                       )}
@@ -408,7 +396,6 @@ export default function TeamSection({
                       key={index}
                       collaborator={collaborator}
                       helpers={helpers}
-                      onSave={handleSaveCollaborators}
                     />
                   )}
                 />
@@ -456,10 +443,9 @@ export default function TeamSection({
 interface AuthorCardProps {
   author: TeamMember;
   helpers: any;
-  onSave: (data: EditableCollectionData<TeamMember>) => Promise<void>;
 }
 
-function AuthorCard({ author, helpers, onSave }: AuthorCardProps) {
+function AuthorCard({ author, helpers }: AuthorCardProps) {
   const [editedAuthor, setEditedAuthor] = useState(author);
   const { isAdmin } = useAuthContext();
 
@@ -541,14 +527,12 @@ function AuthorCard({ author, helpers, onSave }: AuthorCardProps) {
 interface DevelopmentMemberCardProps {
   member: TeamMember;
   helpers: any;
-  onSave: (data: EditableCollectionData<TeamMember>) => Promise<void>;
   mobile?: boolean;
 }
 
 function DevelopmentMemberCard({
   member,
   helpers,
-  onSave,
   mobile = false,
 }: DevelopmentMemberCardProps) {
   const [editedMember, setEditedMember] = useState(member);
@@ -615,7 +599,7 @@ function DevelopmentMemberCard({
           buttonsDirection="horizontal"
         />
       )}
-      <div className="ml-4 flex-grow">
+      <div className="ml-4 grow">
         <div
           className={
             mobile
@@ -641,14 +625,9 @@ function DevelopmentMemberCard({
 interface CollaboratorCardProps {
   collaborator: TeamMember;
   helpers: any;
-  onSave: (data: EditableCollectionData<TeamMember>) => Promise<void>;
 }
 
-function CollaboratorCard({
-  collaborator,
-  helpers,
-  onSave,
-}: CollaboratorCardProps) {
+function CollaboratorCard({ collaborator, helpers }: CollaboratorCardProps) {
   const [editedCollaborator, setEditedCollaborator] = useState(collaborator);
   const { isAdmin } = useAuthContext();
 
@@ -720,7 +699,7 @@ function CollaboratorCard({
                 <img
                   src={editedCollaborator.image}
                   alt="Preview"
-                  className="max-w-[100px] max-h-[60px] object-contain"
+                  className="max-w-25 max-h-15 object-contain"
                   onError={(e) => {
                     e.currentTarget.src =
                       "https://via.placeholder.com/100x60?text=Error";
@@ -765,11 +744,11 @@ function CollaboratorCard({
       <div className="p-6 text-left">
         {collaborator.image && (
           <div className="mb-6 flex justify-start">
-            <div className="p-3 border rounded-lg bg-white shadow-sm max-w-[150px]">
+            <div className="p-3 border rounded-lg bg-white shadow-sm max-w-37.5">
               <img
                 src={collaborator.image}
                 alt={collaborator.name}
-                className="w-full max-h-[80px] object-contain"
+                className="w-full max-h-20 object-contain"
                 onError={(e) => {
                   e.currentTarget.src =
                     "https://media.istockphoto.com/id/1311598658/photo/businessman-trading-online-stock-market-on-teblet-screen-digital-investment-concept.jpg?s=1024x1024&w=is&k=20&c=JZprgGDQ8xqa6iu0fyKJfKOlAvae0w9U-AdHeCT2kg4=";

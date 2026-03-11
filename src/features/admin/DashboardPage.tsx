@@ -1,6 +1,5 @@
-import React from 'react';
-import './AdminLayout.css';
-import { Footer } from './AdminLayout';
+import React from "react";
+import "./AdminLayout.css";
 // Example Dashboard Component
 const DashboardPage: React.FC = () => {
   return (
@@ -38,10 +37,10 @@ const DashboardPage: React.FC = () => {
           {/* Main Card */}
           <div className="overflow-hidden rounded-lg bg-white shadow-sm">
             <div
-              className="flex min-h-[400px] flex-col justify-between bg-cover bg-center bg-no-repeat p-6 pb-0 md:min-h-[500px] md:p-9"
+              className="flex min-h-100 flex-col justify-between bg-cover bg-center bg-no-repeat p-6 pb-0 md:min-h-125 md:p-9"
               style={{
                 backgroundImage: "url('assets/media/stock/900x600/42.png')",
-                backgroundPosition: '100% 50%',
+                backgroundPosition: "100% 50%",
               }}
             >
               {/* Content */}
@@ -78,11 +77,7 @@ const DashboardPage: React.FC = () => {
               </div>
             </div>
           </div>
-
-
-
         </div>
-
       </div>
     </>
   );

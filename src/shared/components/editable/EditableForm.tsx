@@ -98,7 +98,7 @@ export function EditableForm({
     });
   };
 
-  const handleCancelEdit = (fieldId: string) => {
+  const handleCancelEdit = (_fieldId: string) => {
     setEditingFieldId(null);
   };
 
@@ -135,11 +135,9 @@ export function EditableForm({
             : "bg-white border-0 rounded-lg shadow-sm"
         }
       >
-        <div className={mobileMode ? "flex-grow flex flex-col" : "p-8"}>
+        <div className={mobileMode ? "grow flex flex-col" : "p-8"}>
           <div
-            className={
-              mobileMode ? "flex-grow flex flex-col overflow-auto" : ""
-            }
+            className={mobileMode ? "grow flex flex-col overflow-auto" : ""}
             style={mobileMode ? { minHeight: 0 } : {}}
           >
             {config.fields.map((field, index) => {
@@ -148,10 +146,10 @@ export function EditableForm({
               return (
                 <div
                   key={field.id}
-                  className={`mb-4 ${isLastTextarea && mobileMode ? "flex-grow flex flex-col" : ""}`}
+                  className={`mb-4 ${isLastTextarea && mobileMode ? "grow flex flex-col" : ""}`}
                 >
                   <label
-                    className="block mb-2 font-semibold text-[var(--bs-dark)]"
+                    className="block mb-2 font-semibold text-(--bs-dark)"
                     style={{ fontSize: mobileMode ? "0.8rem" : "0.875rem" }}
                   >
                     {field.label}
@@ -159,7 +157,7 @@ export function EditableForm({
                   {field.type === "textarea" ? (
                     <textarea
                       name={field.name}
-                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent transition-all ${isLastTextarea && mobileMode ? "flex-grow" : ""}`}
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent transition-all ${isLastTextarea && mobileMode ? "grow" : ""}`}
                       rows={mobileMode ? undefined : field.rows || 4}
                       placeholder={field.placeholder}
                       value={formData[field.name] || ""}
@@ -180,7 +178,7 @@ export function EditableForm({
                     <input
                       type={field.type}
                       name={field.name}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent transition-all"
                       placeholder={field.placeholder}
                       value={formData[field.name] || ""}
                       onChange={onChange}
@@ -199,7 +197,7 @@ export function EditableForm({
 
           <button
             type="button"
-            className={`w-full bg-[var(--bs-primary)] text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity ${mobileMode ? "mt-2" : "mt-6"}`}
+            className={`w-full bg-(--bs-primary) text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity ${mobileMode ? "mt-2" : "mt-6"}`}
             onClick={onSubmit}
             style={
               mobileMode
@@ -251,11 +249,9 @@ export function EditableForm({
           </button>
         </div>
 
-        <div className={mobileMode ? "flex-grow flex flex-col pt-8" : "p-8"}>
+        <div className={mobileMode ? "grow flex flex-col pt-8" : "p-8"}>
           <div
-            className={
-              mobileMode ? "flex-grow flex flex-col overflow-auto" : ""
-            }
+            className={mobileMode ? "grow flex flex-col overflow-auto" : ""}
             style={mobileMode ? { minHeight: 0 } : {}}
           >
             {config.fields.map((field, index) => {
@@ -264,10 +260,10 @@ export function EditableForm({
               return (
                 <div
                   key={field.id}
-                  className={`mb-4 ${isLastTextarea && mobileMode ? "flex-grow flex flex-col" : ""}`}
+                  className={`mb-4 ${isLastTextarea && mobileMode ? "grow flex flex-col" : ""}`}
                 >
                   <label
-                    className="block mb-2 font-semibold text-[var(--bs-dark)]"
+                    className="block mb-2 font-semibold text-(--bs-dark)"
                     style={{ fontSize: mobileMode ? "0.8rem" : "0.875rem" }}
                   >
                     {field.label}
@@ -275,7 +271,7 @@ export function EditableForm({
                   {field.type === "textarea" ? (
                     <textarea
                       name={field.name}
-                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent transition-all ${isLastTextarea && mobileMode ? "flex-grow" : ""}`}
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent transition-all ${isLastTextarea && mobileMode ? "grow" : ""}`}
                       rows={mobileMode ? undefined : field.rows || 4}
                       placeholder={field.placeholder}
                       value={formData[field.name] || ""}
@@ -296,7 +292,7 @@ export function EditableForm({
                     <input
                       type={field.type}
                       name={field.name}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent transition-all"
                       placeholder={field.placeholder}
                       value={formData[field.name] || ""}
                       onChange={onChange}
@@ -315,7 +311,7 @@ export function EditableForm({
 
           <button
             type="button"
-            className={`w-full bg-[var(--bs-primary)] text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity ${mobileMode ? "mt-2" : "mt-6"}`}
+            className={`w-full bg-(--bs-primary) text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity ${mobileMode ? "mt-2" : "mt-6"}`}
             onClick={onSubmit}
             style={
               mobileMode
@@ -351,7 +347,7 @@ export function EditableForm({
             <button
               onClick={handleCancel}
               disabled={isSaving}
-              className="px-3 py-1.5 text-sm bg-white text-[var(--bs-dark)] rounded-md hover:bg-gray-100 transition-colors disabled:opacity-50"
+              className="px-3 py-1.5 text-sm bg-white text-(--bs-dark) rounded-md hover:bg-gray-100 transition-colors disabled:opacity-50"
               style={{
                 fontSize: mobileMode ? "0.7rem" : "0.8rem",
                 padding: mobileMode ? "0.25rem 0.5rem" : "0.375rem 0.75rem",
@@ -375,7 +371,7 @@ export function EditableForm({
       </div>
 
       <div
-        className="p-2 md:p-3 flex-grow overflow-y-auto"
+        className="p-2 md:p-3 grow overflow-y-auto"
         style={{
           maxHeight: mobileMode ? "100%" : "70vh",
           minHeight: 0,
@@ -411,7 +407,7 @@ export function EditableForm({
                   >
                     {index + 1}. {field.label}
                   </h6>
-                  <div className="flex gap-1 flex-shrink-0">
+                  <div className="flex gap-1 shrink-0">
                     {/* Subir */}
                     {index > 0 && (
                       <button
@@ -550,14 +546,14 @@ export function EditableForm({
                     <div className="flex flex-wrap -mx-0.5">
                       <div className="w-full px-0.5 mb-2">
                         <label
-                          className="block mb-1 text-[var(--bs-dark)] font-medium"
+                          className="block mb-1 text-(--bs-dark) font-medium"
                           style={{ fontSize: "0.7rem" }}
                         >
                           Etiqueta
                         </label>
                         <input
                           type="text"
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent"
                           value={field.label}
                           onChange={(e) =>
                             handleFieldChange(field.id, "label", e.target.value)
@@ -567,14 +563,14 @@ export function EditableForm({
                       </div>
                       <div className="w-full px-0.5 mb-2">
                         <label
-                          className="block mb-1 text-[var(--bs-dark)] font-medium"
+                          className="block mb-1 text-(--bs-dark) font-medium"
                           style={{ fontSize: "0.7rem" }}
                         >
                           Nombre
                         </label>
                         <input
                           type="text"
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent"
                           value={field.name}
                           onChange={(e) =>
                             handleFieldChange(field.id, "name", e.target.value)
@@ -584,13 +580,13 @@ export function EditableForm({
                       </div>
                       <div className="w-1/2 px-0.5 mb-2">
                         <label
-                          className="block mb-1 text-[var(--bs-dark)] font-medium"
+                          className="block mb-1 text-(--bs-dark) font-medium"
                           style={{ fontSize: "0.7rem" }}
                         >
                           Tipo
                         </label>
                         <select
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent"
                           value={field.type}
                           onChange={(e) =>
                             handleFieldChange(field.id, "type", e.target.value)
@@ -604,14 +600,14 @@ export function EditableForm({
                       </div>
                       <div className="w-1/2 px-0.5 mb-2">
                         <label
-                          className="block mb-1 text-[var(--bs-dark)] font-medium"
+                          className="block mb-1 text-(--bs-dark) font-medium"
                           style={{ fontSize: "0.7rem" }}
                         >
                           Placeholder
                         </label>
                         <input
                           type="text"
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent"
                           value={field.placeholder}
                           onChange={(e) =>
                             handleFieldChange(
@@ -626,14 +622,14 @@ export function EditableForm({
                       {field.type === "textarea" && (
                         <div className="w-1/2 px-0.5 mb-2">
                           <label
-                            className="block mb-1 text-[var(--bs-dark)] font-medium"
+                            className="block mb-1 text-(--bs-dark) font-medium"
                             style={{ fontSize: "0.7rem" }}
                           >
                             Filas
                           </label>
                           <input
                             type="number"
-                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent"
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent"
                             value={field.rows || 4}
                             onChange={(e) =>
                               handleFieldChange(
@@ -650,7 +646,7 @@ export function EditableForm({
                         <div className="flex items-center mt-2">
                           <input
                             type="checkbox"
-                            className="w-4 h-4 text-[var(--bs-primary)] border-gray-300 rounded focus:ring-[var(--bs-primary)]"
+                            className="w-4 h-4 text-(--bs-primary) border-gray-300 rounded focus:ring-(--bs-primary)"
                             checked={field.required}
                             onChange={(e) =>
                               handleFieldChange(
@@ -661,7 +657,7 @@ export function EditableForm({
                             }
                           />
                           <label
-                            className="ml-2 text-[var(--bs-dark)]"
+                            className="ml-2 text-(--bs-dark)"
                             style={{ fontSize: "0.7rem" }}
                           >
                             Obligatorio
@@ -684,7 +680,7 @@ export function EditableForm({
 
           <button
             onClick={handleAddField}
-            className="w-full px-3 py-2 text-sm border-2 border-dashed border-[var(--bs-primary)] text-[var(--bs-primary)] rounded-md hover:bg-blue-50 transition-colors"
+            className="w-full px-3 py-2 text-sm border-2 border-dashed border-(--bs-primary) text-(--bs-primary) rounded-md hover:bg-blue-50 transition-colors"
             style={{
               fontSize: mobileMode ? "0.7rem" : "0.75rem",
               padding: "0.5rem",
@@ -697,14 +693,14 @@ export function EditableForm({
         {/* Configuración del botón de envío */}
         <div className="mb-2">
           <label
-            className="block mb-1 font-bold text-[var(--bs-dark)]"
+            className="block mb-1 font-bold text-(--bs-dark)"
             style={{ fontSize: mobileMode ? "0.7rem" : "0.8rem" }}
           >
             Texto del Botón
           </label>
           <input
             type="text"
-            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent"
+            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent"
             value={editedConfig.submitButtonText}
             onChange={(e) =>
               setEditedConfig({
@@ -719,14 +715,14 @@ export function EditableForm({
         {/* Mensaje de éxito */}
         <div className="mb-2">
           <label
-            className="block mb-1 font-bold text-[var(--bs-dark)]"
+            className="block mb-1 font-bold text-(--bs-dark)"
             style={{ fontSize: mobileMode ? "0.7rem" : "0.8rem" }}
           >
             Mensaje Éxito
           </label>
           <input
             type="text"
-            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent"
+            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent"
             value={editedConfig.successMessage}
             onChange={(e) =>
               setEditedConfig({
@@ -753,7 +749,7 @@ export function EditableForm({
                   {editedConfig.fields.map((field) => (
                     <div key={field.id} className="mb-1">
                       <label
-                        className="block font-semibold text-[var(--bs-dark)]"
+                        className="block font-semibold text-(--bs-dark)"
                         style={{ fontSize: "0.7rem" }}
                       >
                         {field.label}
@@ -778,7 +774,7 @@ export function EditableForm({
                     </div>
                   ))}
                   <button
-                    className="w-full px-3 py-1.5 text-sm bg-[var(--bs-primary)] text-white rounded-md opacity-60"
+                    className="w-full px-3 py-1.5 text-sm bg-(--bs-primary) text-white rounded-md opacity-60"
                     disabled
                     style={{ fontSize: "0.7rem" }}
                   >

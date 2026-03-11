@@ -1,6 +1,5 @@
 // src/components/common/UserMenu.tsx
 
-import { useState, useRef, useEffect } from "react";
 import type { User } from "../../../features/auth/types/user.types";
 import { UserMenu } from "@/shared/components/common/UserMenu";
 import { useAuth } from "../../auth/hooks/useAuth";

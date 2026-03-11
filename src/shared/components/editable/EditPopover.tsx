@@ -55,7 +55,7 @@ export function EditPopover({
         if (!o) onCancel();
       }}
     >
-      <DialogContent className="sm:max-w-[360px]">
+      <DialogContent className="sm:max-w-90">
         <DialogHeader>
           <DialogTitle className="text-sm font-semibold">{title}</DialogTitle>
         </DialogHeader>
@@ -177,7 +177,7 @@ export function ItemControls({
       <Button
         variant="ghost"
         size="icon"
-        className={`${base} hover:!text-red-500 hover:!bg-red-50`}
+        className={`${base} hover:text-red-500! hover:bg-red-50!`}
         onClick={(e) => {
           e.stopPropagation();
           onDelete();

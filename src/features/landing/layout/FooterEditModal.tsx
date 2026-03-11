@@ -145,7 +145,7 @@ export function FooterEditModal({
         if (!o) onClose();
       }}
     >
-      <DialogContent className="sm:max-w-[520px] max-h-[85vh] flex flex-col gap-0 p-0">
+      <DialogContent className="sm:max-w-130 max-h-[85vh] flex flex-col gap-0 p-0">
         <DialogHeader className="px-5 pt-5 pb-3">
           <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
             <Pencil size={14} className="text-muted-foreground" />

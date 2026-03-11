@@ -160,7 +160,7 @@ export function HeaderEditModal({
         if (!o) onClose();
       }}
     >
-      <DialogContent className="sm:max-w-[420px] max-h-[80vh] flex flex-col gap-3">
+      <DialogContent className="sm:max-w-105 max-h-[80vh] flex flex-col gap-3">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
             <Pencil size={13} className="text-muted-foreground" />

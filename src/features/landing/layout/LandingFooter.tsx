@@ -69,7 +69,7 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
                 <img
                   alt="Logo"
                   src="/images/logo.png"
-                  className="h-[40px] object-contain"
+                  className="h-10 object-contain"
                 />
               </div>
               <div>

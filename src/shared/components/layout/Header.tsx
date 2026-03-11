@@ -27,7 +27,6 @@ interface HeaderProps {
 }
 
 export function Header({
-  company,
   menuItems,
   user,
   onLogout,
@@ -116,7 +115,7 @@ export function Header({
                 }}
                 onSave={handleSaveDescription}
                 alt="image"
-                className="h-[40px]"
+                className="h-10"
               />
             </div>
 
@@ -130,7 +129,7 @@ export function Header({
                 }}
                 onSave={handleSaveDescription}
                 alt="Logo"
-                className="h-[35px]"
+                className="h-8.75"
               />
             </div>
 
@@ -180,14 +179,14 @@ export function Header({
                 }}
                 onSave={handleSaveDescription}
                 alt="Logo"
-                className="h-[40px]"
+                className="h-10"
               />
             </div>
           </div>
         </header>
 
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-[60] lg:hidden">
+          <div className="fixed inset-0 z-60 lg:hidden">
             {/* Overlay */}
             <div
               className="absolute inset-0 bg-black/50 backdrop-blur-sm"

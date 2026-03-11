@@ -2,7 +2,11 @@
 
 import type { APIError } from "../types/api.types";
 
-const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/v1/`;
+// In dev, route through Vite's proxy (/api → backend) to avoid CORS.
+// In production, use the explicit API URL from env.
+const API_BASE_URL = import.meta.env.DEV
+  ? `${window.location.origin}/api/v1/`
+  : `${import.meta.env.VITE_API_URL}/api/v1/`;
 
 interface RequestOptions {
   token?: string;

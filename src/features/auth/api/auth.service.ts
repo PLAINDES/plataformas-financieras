@@ -1,15 +1,15 @@
 // src/services/auth.service.ts
 
 import { api } from "@/shared/services/api";
-import type { 
+import type {
   UserResponse,
   TokenResponse,
-  UserLogin,
-  UserCreate
-} from '../types/user.types';
+  LoginCredentials as UserLogin,
+  UserCreate,
+} from "../types/user.types";
 
 export class AuthService {
-  private readonly basePath = 'auth';
+  private readonly basePath = "auth";
 
   /**
    * Registra un nuevo usuario
@@ -30,7 +30,7 @@ export class AuthService {
    */
   async logout(token: string): Promise<{ message: string }> {
     return api.post<{ message: string }>(
-      `${this.basePath}/logout`, 
+      `${this.basePath}/logout`,
       {},
       { token }
     );
@@ -47,11 +47,7 @@ export class AuthService {
    * Refresca el token de acceso
    */
   async refreshToken(token: string): Promise<TokenResponse> {
-    return api.post<TokenResponse>(
-      `${this.basePath}/refresh`, 
-      {},
-      { token }
-    );
+    return api.post<TokenResponse>(`${this.basePath}/refresh`, {}, { token });
   }
 }
 
