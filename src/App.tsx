@@ -68,11 +68,7 @@ function App() {
       </Route>
 
       {/* Rutas internas */}
-      <Route
-        element={
-          <InternalLayout user={user} onLogout={logout} company={COMPANY} />
-        }
-      >
+      <Route element={<InternalLayout />}>
         <Route path="/kapital" element={<KapitalPage />} />
         <Route path="/valora" element={<ValoraPage />} />
         <Route path="usuario/proyectos" element={<ProyectosUsuarioPage />} />

@@ -1,18 +1,12 @@
 // src/components/layout/MainLayout.tsx
 
-import { useEffect } from 'react';
-import type { ReactNode } from 'react';
-import { Header } from './Header';
-import { Footer } from './Footer';
-import { ScrollTop } from './ScrollTop';
-import type { Company, MenuItem, User, LoginCredentials } from '../../types';
-
-interface RegisterData {
-  name: string;
-  lastname: string;
-  email: string;
-  password: string;
-}
+import { useEffect } from "react";
+import type { ReactNode } from "react";
+import { Header } from "./Header";
+import { Footer } from "./Footer";
+import { ScrollTop } from "./ScrollTop";
+import type { Company, MenuItem, LoginCredentials } from "../../types";
+import type { User, RegisterData } from "@/features/auth/types/user.types";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -21,8 +15,8 @@ interface MainLayoutProps {
   user: User | null;
   onLogout: () => void;
   onLogin: (credentials: LoginCredentials) => Promise<User>;
-  onRegister: (data: RegisterData) => Promise<void>;
-  OnSave: (data: any) => Promise<void>; // Asegúrate de pasar OnSave si Header lo requiere
+  onRegister: (data: RegisterData) => Promise<User>;
+  OnSave: (data: any) => Promise<void>;
 }
 
 export function MainLayout({
@@ -33,37 +27,44 @@ export function MainLayout({
   onLogout,
   onLogin,
   onRegister,
-  OnSave 
+  OnSave,
 }: MainLayoutProps) {
   useEffect(() => {
     const initTheme = () => {
-      const defaultThemeMode = 'light';
+      const defaultThemeMode = "light";
       let themeMode: string;
-      
-      if (document.documentElement.hasAttribute('data-theme-mode')) {
-        themeMode = document.documentElement.getAttribute('data-theme-mode') || defaultThemeMode;
+
+      if (document.documentElement.hasAttribute("data-theme-mode")) {
+        themeMode =
+          document.documentElement.getAttribute("data-theme-mode") ||
+          defaultThemeMode;
       } else {
-        const stored = localStorage.getItem('data-theme');
+        const stored = localStorage.getItem("data-theme");
         themeMode = stored || defaultThemeMode;
       }
-      
-      if (themeMode === 'system') {
-        themeMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+      if (themeMode === "system") {
+        themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
       }
-      
-      document.documentElement.setAttribute('data-theme', themeMode);
-      if (themeMode === 'dark') {
-        document.documentElement.classList.add('dark');
+
+      document.documentElement.setAttribute("data-theme", themeMode);
+      if (themeMode === "dark") {
+        document.documentElement.classList.add("dark");
       } else {
-        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.remove("dark");
       }
     };
-    
+
     initTheme();
   }, []);
-  
+
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-slate-900" id="kt_app_root">
+    <div
+      className="flex flex-col min-h-screen bg-white dark:bg-slate-900"
+      id="kt_app_root"
+    >
       <Header
         company={company}
         menuItems={menuItems}
@@ -73,15 +74,15 @@ export function MainLayout({
         onRegister={onRegister}
         OnSave={OnSave}
       />
-      
+
       {/* flex-grow-1 -> flex-grow */}
-      <main className="flex-grow pt-[80px]"> 
-        {/* pt-[80px] añadido para compensar el Header fixed y que no tape el contenido */}
+      <main className="grow pt-20">
+        {/* pt-20 añadido para compensar el Header fixed y que no tape el contenido */}
         {children}
       </main>
-      
+
       <Footer company={company} />
-      
+
       <ScrollTop />
     </div>
   );

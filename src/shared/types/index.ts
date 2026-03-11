@@ -1,10 +1,6 @@
 import type { PageResponse, SectionResponse } from "./api.types";
 
 export type {
-  UserResponse,
-  TokenResponse,
-  UserLogin,
-  UserCreate,
   LandingDataResponse,
   PageResponse,
   PageWithSections,
@@ -19,6 +15,18 @@ export type {
 
 export * from "./templatecomplement.types";
 
+// Re-export User types from auth module - unica fuente de la verdad
+export type {
+  User,
+  RegisterData,
+  LoginCredentials,
+  AuthResponse,
+  UserResponse,
+  TokenResponse,
+  UserCreate,
+  UserUpdate,
+} from "@/features/auth/types/user.types";
+
 export interface Company {
   id: number;
   name: string;
@@ -29,15 +37,6 @@ export interface Company {
   logos: Logo[];
   social_links?: SocialLink[];
 }
-const COMPANY = {
-  id: 1,
-  name: "Plataforma Finanzas",
-  host: "https://kapitals.org",
-  logos: [
-    { id: 1, patch: "/images/logo.png", type: "default" },
-    { id: 2, patch: "/images/diseñador.png", type: "sticky" },
-  ],
-};
 
 export interface Logo {
   id: number;

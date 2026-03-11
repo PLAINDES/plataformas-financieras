@@ -1,20 +1,20 @@
 // src/components/layout/Header.tsx
 
-import { useState, useEffect } from 'react';
-import { UserMenu } from '../components/common/UserMenu';
-import { MobileMenuToggle } from '../components/common/MobileMenuToggle';
-import { LoginModal } from '../auth/LoginModal';
-import { RegisterModal } from '../auth/RegisterModal';
-import { useAuthModal } from '../../features/auth/hooks/useAuthModal';
-import type { MenuItem, Company, User, LoginCredentials, EditableContent } from '../../types';
-import { EditableImage } from '../editable/EditableImage';
-
-interface RegisterData {
-  name: string;
-  lastname: string;
-  email: string;
-  password: string;
-}
+import { useState, useEffect } from "react";
+import { UserMenu } from "../common/UserMenu";
+import { MobileMenuToggle } from "../ui/MobileMenuToggle";
+import { LoginModal } from "../../../features/auth/components/LoginModal";
+import { RegisterModal } from "../../../features/auth/components/RegisterModal";
+import { useAuthModal } from "../../../features/auth/hooks/useAuthModal";
+import type {
+  MenuItem,
+  Company,
+  User,
+  LoginCredentials,
+  RegisterData,
+} from "../../types";
+import type { EditableContent } from "@/shared/types/editable.types";
+import { EditableImage } from "../editable/EditableImage";
 
 interface HeaderProps {
   company: Company;
@@ -22,22 +22,22 @@ interface HeaderProps {
   user: User | null;
   onLogout: () => void;
   onLogin: (credentials: LoginCredentials) => Promise<User>;
-  onRegister: (data: RegisterData) => Promise<void>;
-  OnSave: (data: any) => Promise<void>; 
+  onRegister: (data: RegisterData) => Promise<User>;
+  OnSave: (data: any) => Promise<void>;
 }
 
-export function Header({ 
-  company, 
-  menuItems, 
-  user, 
-  onLogout, 
-  onLogin, 
+export function Header({
+  company,
+  menuItems,
+  user,
+  onLogout,
+  onLogin,
   onRegister,
-  OnSave 
+  OnSave,
 }: HeaderProps) {
   const [isSticky, setIsSticky] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeMenu, setActiveMenu] = useState<string>('home');
+  const [activeMenu, setActiveMenu] = useState<string>("home");
 
   const {
     isLoginOpen,
@@ -47,30 +47,33 @@ export function Header({
     switchToRegister,
     switchToLogin,
   } = useAuthModal();
-  
+
   const EXCLUDED_IDS = [72, 73];
   const STICKY_OFFSET_DESKTOP = 300;
   const STICKY_OFFSET_MOBILE = 200;
-  
+
   const visibleMenuItems = menuItems.filter(
     (item) => !EXCLUDED_IDS.includes(item.id) && item.visible
   );
-  
+
   useEffect(() => {
     const handleScroll = () => {
-      const offset = window.innerWidth >= 1024 ? STICKY_OFFSET_DESKTOP : STICKY_OFFSET_MOBILE;
+      const offset =
+        window.innerWidth >= 1024
+          ? STICKY_OFFSET_DESKTOP
+          : STICKY_OFFSET_MOBILE;
       setIsSticky(window.scrollY > offset);
     };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-  
+
   const handleMenuClick = (slug: string) => {
     const id = slug.toLowerCase();
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior: "smooth" });
     }
     setActiveMenu(id);
     setIsMobileMenuOpen(false);
@@ -85,40 +88,52 @@ export function Header({
   return (
     <div className="mb-0" id="home">
       <div
-        className="bg-no-repeat bg-contain bg-bottom" 
-        style={{ backgroundImage: 'url(/assets/media/svg/illustrations/landing.svg)' }}
+        className="bg-no-repeat bg-contain bg-bottom"
+        style={{
+          backgroundImage: "url(/assets/media/svg/illustrations/landing.svg)",
+        }}
       >
-        <header 
+        <header
           className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 px-6 py-4 md:px-12 md:py-6 flex items-center justify-between ${
-            isSticky ? 'bg-white shadow-md py-3' : 'bg-transparent'
+            isSticky ? "bg-white shadow-md py-3" : "bg-transparent"
           }`}
         >
           <div className="flex items-center flex-1">
             <div className="lg:hidden">
-              <MobileMenuToggle 
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+              <MobileMenuToggle
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 isOpen={isMobileMenuOpen}
               />
             </div>
 
             <div className="hidden md:block">
-              <EditableImage 
-                content={{ value: "images/diseñador.png", id: 'header-designer', type: 'text', section: 'header' }} 
-                onSave={handleSaveDescription} 
-                alt='image' 
-                className='h-[40px]' 
+              <EditableImage
+                content={{
+                  value: "images/diseñador.png",
+                  id: "header-designer",
+                  type: "text",
+                  section: "header",
+                }}
+                onSave={handleSaveDescription}
+                alt="image"
+                className="h-[40px]"
               />
             </div>
 
             <div className="md:hidden ml-2">
-              <EditableImage 
-                content={{ value: "images/logo.png", id: 'header-logo', type: 'text', section: 'header' }} 
-                onSave={handleSaveDescription} 
-                alt='Logo' 
-                className='h-[35px]' 
+              <EditableImage
+                content={{
+                  value: "images/logo.png",
+                  id: "header-logo",
+                  type: "text",
+                  section: "header",
+                }}
+                onSave={handleSaveDescription}
+                alt="Logo"
+                className="h-[35px]"
               />
             </div>
-            
+
             <nav className="hidden lg:flex items-center ml-12 space-x-8">
               {visibleMenuItems.map((item) => (
                 <a
@@ -129,7 +144,9 @@ export function Header({
                     handleMenuClick(item.slug);
                   }}
                   className={`text-sm font-bold transition-colors hover:text-blue-600 ${
-                    activeMenu === item.slug.toLowerCase() ? 'text-blue-600' : 'text-gray-700'
+                    activeMenu === item.slug.toLowerCase()
+                      ? "text-blue-600"
+                      : "text-gray-700"
                   }`}
                 >
                   {item.name}
@@ -137,13 +154,13 @@ export function Header({
               ))}
             </nav>
           </div>
-          
+
           <div className="flex items-center justify-end flex-1 gap-6">
             <div>
               {user ? (
                 <UserMenu user={user} onLogout={onLogout} />
               ) : (
-                <button 
+                <button
                   onClick={openLogin}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center transition-all"
                 >
@@ -152,22 +169,27 @@ export function Header({
                 </button>
               )}
             </div>
-            
+
             <div className="hidden sm:block">
-              <EditableImage 
-                content={{ value: "images/logo.png", id: 'header-logo', type: 'text', section: 'header' }} 
-                onSave={handleSaveDescription} 
-                alt='Logo' 
-                className='h-[40px]' 
+              <EditableImage
+                content={{
+                  value: "images/logo.png",
+                  id: "header-logo",
+                  type: "text",
+                  section: "header",
+                }}
+                onSave={handleSaveDescription}
+                alt="Logo"
+                className="h-[40px]"
               />
             </div>
           </div>
         </header>
-        
+
         {isMobileMenuOpen && (
           <div className="fixed inset-0 z-[60] lg:hidden">
             {/* Overlay */}
-            <div 
+            <div
               className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setIsMobileMenuOpen(false)}
             />
@@ -183,7 +205,9 @@ export function Header({
                       handleMenuClick(item.slug);
                     }}
                     className={`text-lg font-bold py-2 border-b border-gray-100 ${
-                      activeMenu === item.slug.toLowerCase() ? 'text-blue-600' : 'text-gray-800'
+                      activeMenu === item.slug.toLowerCase()
+                        ? "text-blue-600"
+                        : "text-gray-800"
                     }`}
                   >
                     {item.name}
@@ -194,14 +218,14 @@ export function Header({
           </div>
         )}
       </div>
-      
+
       <LoginModal
         isOpen={isLoginOpen}
         onClose={closeModal}
         onLogin={onLogin}
         onSwitchToRegister={switchToRegister}
       />
-      
+
       <RegisterModal
         isOpen={isRegisterOpen}
         onClose={closeModal}

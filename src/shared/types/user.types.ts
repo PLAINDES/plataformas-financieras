@@ -4,9 +4,9 @@ export interface User {
   id: number;
   email: string;
   name: string;
-  lastname: string | null;
-  role: 'admin' | 'user';
-  perfil: 1 | 2 | 3; 
+  lastname?: string;
+  role: "admin" | "user";
+  perfil: 1 | 2 | 3;
   avatar: string | null;
   is_active: boolean;
 }

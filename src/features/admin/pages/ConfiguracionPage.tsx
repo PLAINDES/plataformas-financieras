@@ -2,19 +2,19 @@ import React, { useState, useRef, useEffect } from "react";
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
 import { read, utils } from "xlsx";
 import { MainService } from "@/shared/services/main.service";
-import type { BaseFinancialItem, DamodaranItem } from "@/shared/types";
+import type { BaseComplementItem, DamodaranItem } from "@/shared/types";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 // Moved to shared/types/templatecomplement.types.ts
 
 // ─── INITIAL MOCK DATA ────────────────────────────────────────────────────────
 // Kept for fallback or reference, but state will initialize empty to prefer API data
-const MOCK_RF: BaseFinancialItem[] = [];
-const MOCK_PRIMA: BaseFinancialItem[] = [];
-const MOCK_IR: BaseFinancialItem[] = [];
+const MOCK_RF: BaseComplementItem[] = [];
+const MOCK_PRIMA: BaseComplementItem[] = [];
+const MOCK_IR: BaseComplementItem[] = [];
 const MOCK_DAMODARAN: DamodaranItem[] = [];
-const MOCK_DEVALUACION: BaseFinancialItem[] = [];
-const MOCK_EMBI: BaseFinancialItem[] = [];
+const MOCK_DEVALUACION: BaseComplementItem[] = [];
+const MOCK_EMBI: BaseComplementItem[] = [];
 
 export const ConfiguracionPage = () => {
   const [activeFrequency, setActiveFrequency] = useState<
@@ -24,14 +24,14 @@ export const ConfiguracionPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // State for each section
-  const [rfData, setRfData] = useState<BaseFinancialItem[]>(MOCK_RF);
-  const [primaData, setPrimaData] = useState<BaseFinancialItem[]>(MOCK_PRIMA);
-  const [irData, setIrData] = useState<BaseFinancialItem[]>(MOCK_IR);
+  const [rfData, setRfData] = useState<BaseComplementItem[]>(MOCK_RF);
+  const [primaData, setPrimaData] = useState<BaseComplementItem[]>(MOCK_PRIMA);
+  const [irData, setIrData] = useState<BaseComplementItem[]>(MOCK_IR);
   const [damodaranData, setDamodaranData] =
     useState<DamodaranItem[]>(MOCK_DAMODARAN);
   const [devaluacionData, setDevaluacionData] =
-    useState<BaseFinancialItem[]>(MOCK_DEVALUACION);
-  const [embiData, setEmbiData] = useState<BaseFinancialItem[]>(MOCK_EMBI);
+    useState<BaseComplementItem[]>(MOCK_DEVALUACION);
+  const [embiData, setEmbiData] = useState<BaseComplementItem[]>(MOCK_EMBI);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
