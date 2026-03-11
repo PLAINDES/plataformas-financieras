@@ -1,25 +1,52 @@
 // src/features/landing/layout/HeaderEditModal.tsx
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, GripVertical, Pencil } from 'lucide-react';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors} from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { Dialog, DialogContent, DialogHeader, DialogTitle} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState, useEffect } from "react";
+import { Plus, Trash2, GripVertical, Pencil } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import type { DragEndEvent } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface HeaderMenuItem {
   id: string;
   title: string;
 }
 
-function SortableMenuItem({ item, onDelete, onTitleChange}: {
+function SortableMenuItem({
+  item,
+  onDelete,
+  onTitleChange,
+}: {
   item: HeaderMenuItem;
   onDelete: (id: string) => void;
   onTitleChange: (id: string, value: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -32,7 +59,7 @@ function SortableMenuItem({ item, onDelete, onTitleChange}: {
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg border bg-background transition-colors ${isDragging ? 'border-blue-400 shadow-lg' : 'border-border hover:border-muted-foreground/30'}`}
+      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg border bg-background transition-colors ${isDragging ? "border-blue-400 shadow-lg" : "border-border hover:border-muted-foreground/30"}`}
     >
       <button
         {...attributes}
@@ -61,7 +88,6 @@ function SortableMenuItem({ item, onDelete, onTitleChange}: {
   );
 }
 
-
 interface HeaderEditModalProps {
   open: boolean;
   items: HeaderMenuItem[];
@@ -69,13 +95,20 @@ interface HeaderEditModalProps {
   onSave: (items: { title: string }[]) => Promise<void>;
 }
 
-export function HeaderEditModal({ open, items, onClose, onSave }: HeaderEditModalProps) {
+export function HeaderEditModal({
+  open,
+  items,
+  onClose,
+  onSave,
+}: HeaderEditModalProps) {
   const [localItems, setLocalItems] = useState<HeaderMenuItem[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setLocalItems(items.map((item, i) => ({ ...item, id: item.id ?? `item-${i}` })));
+      setLocalItems(
+        items.map((item, i) => ({ ...item, id: item.id ?? `item-${i}` }))
+      );
     }
   }, [open]);
 
@@ -87,28 +120,30 @@ export function HeaderEditModal({ open, items, onClose, onSave }: HeaderEditModa
     const { active, over } = event;
     if (over && active.id !== over.id) {
       setLocalItems((prev) => {
-        const oldIndex = prev.findIndex(i => i.id === active.id);
-        const newIndex = prev.findIndex(i => i.id === over.id);
+        const oldIndex = prev.findIndex((i) => i.id === active.id);
+        const newIndex = prev.findIndex((i) => i.id === over.id);
         return arrayMove(prev, oldIndex, newIndex);
       });
     }
   };
 
   const handleAdd = () => {
-    const newItem = { id: `new-${Date.now()}`, title: '' };
-    setLocalItems(prev => [...prev, newItem]);
+    const newItem = { id: `new-${Date.now()}`, title: "" };
+    setLocalItems((prev) => [...prev, newItem]);
   };
 
   const handleDelete = (id: string) => {
-    setLocalItems(prev => prev.filter(i => i.id !== id));
+    setLocalItems((prev) => prev.filter((i) => i.id !== id));
   };
 
   const handleTitleChange = (id: string, value: string) => {
-    setLocalItems(prev => prev.map(i => i.id === id ? { ...i, title: value } : i));
+    setLocalItems((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, title: value } : i))
+    );
   };
 
   const handleSave = async () => {
-    const valid = localItems.filter(i => i.title.trim());
+    const valid = localItems.filter((i) => i.title.trim());
     setSaving(true);
     try {
       await onSave(valid.map(({ title }) => ({ title })));
@@ -119,7 +154,12 @@ export function HeaderEditModal({ open, items, onClose, onSave }: HeaderEditModa
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
       <DialogContent className="sm:max-w-[420px] max-h-[80vh] flex flex-col gap-3">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
@@ -135,8 +175,15 @@ export function HeaderEditModal({ open, items, onClose, onSave }: HeaderEditModa
             </p>
           )}
 
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={localItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={localItems.map((i) => i.id)}
+              strategy={verticalListSortingStrategy}
+            >
               {localItems.map((item) => (
                 <SortableMenuItem
                   key={item.id}
@@ -160,9 +207,11 @@ export function HeaderEditModal({ open, items, onClose, onSave }: HeaderEditModa
         </Button>
 
         <div className="flex justify-end gap-2 pt-1 border-t border-border">
-          <Button variant="outline" size="sm" onClick={onClose}>Cancelar</Button>
+          <Button variant="outline" size="sm" onClick={onClose}>
+            Cancelar
+          </Button>
           <Button size="sm" onClick={handleSave} disabled={saving}>
-            {saving ? 'Guardando...' : 'Guardar cambios'}
+            {saving ? "Guardando..." : "Guardar cambios"}
           </Button>
         </div>
       </DialogContent>

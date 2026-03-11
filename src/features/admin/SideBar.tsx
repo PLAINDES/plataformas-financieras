@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom'; // Opcional si usas React Router
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom"; // Opcional si usas React Router
 import { UserMenu } from "@/shared/components/common/UserMenu";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 
@@ -11,27 +11,33 @@ interface SidebarProps {
 interface MenuItem {
   title: string;
   href: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
   onClick?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
   isMinimized = false,
-  onToggleMinimize
+  onToggleMinimize,
 }) => {
   const { user, logout } = useAuthContext();
   const navigate = useNavigate();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const location = useLocation?.() || { pathname: '' };
+  const location = useLocation?.() || { pathname: "" };
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
   // SVG Icon Component
   const CubeIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <path
         opacity="0.3"
         d="M11.8 5.2L17.7 8.6V15.4L11.8 18.8L5.90001 15.4V8.6L11.8 5.2ZM11.8 2C11.5 2 11.2 2.1 11 2.2L3.8 6.4C3.3 6.7 3 7.3 3 7.9V16.2C3 16.8 3.3 17.4 3.8 17.7L11 21.9C11.3 22 11.5 22.1 11.8 22.1C12.1 22.1 12.4 22 12.6 21.9L19.8 17.7C20.3 17.4 20.6 16.8 20.6 16.2V7.9C20.6 7.3 20.3 6.7 19.8 6.4L12.6 2.2C12.4 2.1 12.1 2 11.8 2Z"
@@ -45,7 +51,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   );
 
   const ArrowIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <path
         opacity="0.5"
         d="M14.2657 11.4343L18.45 7.25C18.8642 6.83579 18.8642 6.16421 18.45 5.75C18.0358 5.33579 17.3642 5.33579 16.95 5.75L11.4071 11.2929C11.0166 11.6834 11.0166 12.3166 11.4071 12.7071L16.95 18.25C17.3642 18.6642 18.0358 18.6642 18.45 18.25C18.8642 17.8358 18.8642 17.1642 18.45 16.75L14.2657 12.5657C13.9533 12.2533 13.9533 11.7467 14.2657 11.4343Z"
@@ -59,33 +71,32 @@ const Sidebar: React.FC<SidebarProps> = ({
   );
 
   const menuItems: MenuItem[] = [
-
     {
-      title: 'Plantillas Maestras',
-      href: '/admin/master/plantillas',
-      icon: <CubeIcon />
+      title: "Plantillas Maestras",
+      href: "/admin/master/plantillas",
+      icon: <CubeIcon />,
     },
 
     {
-      title: 'Reportes Kapital',
-      href: '/admin/kapital/reportes',
-      icon: <CubeIcon />
+      title: "Reportes Kapital",
+      href: "/admin/kapital/reportes",
+      icon: <CubeIcon />,
     },
     {
-      title: 'Reportes Valora',
-      href: '/admin/valora/reportes',
-      icon: <CubeIcon />
+      title: "Reportes Valora",
+      href: "/admin/valora/reportes",
+      icon: <CubeIcon />,
     },
     {
-      title: 'Configuración',
-      href: '/admin/configuraciones',
-      icon: <CubeIcon />
-    }
+      title: "Configuración",
+      href: "/admin/configuraciones",
+      icon: <CubeIcon />,
+    },
   ];
 
   const isActive = (href: string) => {
     if (!location.pathname) return false;
-    return location.pathname.startsWith(href) && href !== '#';
+    return location.pathname.startsWith(href) && href !== "#";
   };
 
   return (
@@ -102,22 +113,24 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div
         id="kt_app_sidebar"
         className={`fixed left-0 top-0 z-50 flex  flex-col bg-[#1e1e2d] transition-all duration-300 lg:relative lg:z-auto
-          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          ${isMinimized ? 'lg:w-[75px]' : 'w-[250px]'}
+          ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+          ${isMinimized ? "lg:w-[75px]" : "w-[250px]"}
         `}
       >
         {/* Logo Section */}
         <div className="py-6  relative text-center border-b px-0 border-gray-600 border-dashed">
           <a href="/admin" className="">
-            <h3 className={`font-bold text-white transition-all duration-300 ${isMinimized ? 'text-sm' : 'text-md'}`}>
-              {isMinimized ? 'ADM' : 'ADMINISTRADOR'}
+            <h3
+              className={`font-bold text-white transition-all duration-300 ${isMinimized ? "text-sm" : "text-md"}`}
+            >
+              {isMinimized ? "ADM" : "ADMINISTRADOR"}
             </h3>
           </a>
           {/* Toggle Button - Desktop Only */}
           <button
             onClick={onToggleMinimize}
             className={`absolute -right-[15px] top-1/2 hidden h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-110 lg:flex
-              ${isMinimized ? 'rotate-0' : 'rotate-180'}
+              ${isMinimized ? "rotate-0" : "rotate-180"}
             `}
             aria-label="Toggle sidebar"
           >
@@ -150,26 +163,25 @@ const Sidebar: React.FC<SidebarProps> = ({
                   setIsMobileOpen(false);
                 }}
                 className={`group flex items-center rounded-lg px-3 py-1.5 transition-all duration-200
-                  ${isActive(item.href)
-                    ? 'bg-[#1b1b28] text-[#3699FF]'
-                    : 'text-gray-400 hover:bg-[#1b1b28] hover:text-white'
+                  ${
+                    isActive(item.href)
+                      ? "bg-[#1b1b28] text-[#3699FF]"
+                      : "text-gray-400 hover:bg-[#1b1b28] hover:text-white"
                   }
-                  ${isMinimized ? 'justify-center' : ''}
+                  ${isMinimized ? "justify-center" : ""}
                 `}
-                title={isMinimized ? item.title : ''}
+                title={isMinimized ? item.title : ""}
               >
                 {/* Icon */}
-                <span className={`flex-shrink-0 flex justify-center ${isMinimized ? '' : 'mr-3'}`}>
-                  <span className="inline-block h-6 w-6">
-                    {item.icon}
-                  </span>
+                <span
+                  className={`flex-shrink-0 flex justify-center ${isMinimized ? "" : "mr-3"}`}
+                >
+                  <span className="inline-block h-6 w-6">{item.icon}</span>
                 </span>
 
                 {/* Title */}
                 {!isMinimized && (
-                  <span className="text-sm font-normal">
-                    {item.title}
-                  </span>
+                  <span className="text-sm font-normal">{item.title}</span>
                 )}
 
                 {/* Active Indicator */}
@@ -189,10 +201,15 @@ const Sidebar: React.FC<SidebarProps> = ({
               onLogout={handleLogout}
               onlyLogout={true}
               customTrigger={
-                <div className={`flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-white/10 cursor-pointer ${isMinimized ? 'justify-center' : ''}`}>
+                <div
+                  className={`flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-white/10 cursor-pointer ${isMinimized ? "justify-center" : ""}`}
+                >
                   <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gray-700">
                     <img
-                      src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}+${user.lastname}&background=random`}
+                      src={
+                        user.avatar ||
+                        `https://ui-avatars.com/api/?name=${user.name}+${user.lastname}&background=random`
+                      }
                       alt={user.name}
                       className="h-full w-full object-cover"
                     />
@@ -221,12 +238,32 @@ const Sidebar: React.FC<SidebarProps> = ({
         aria-label="Toggle mobile menu"
       >
         {isMobileOpen ? (
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         ) : (
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
           </svg>
         )}
       </button>

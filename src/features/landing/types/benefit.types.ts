@@ -1,10 +1,9 @@
-import type { EditableContent } from '../../../types/editable.types';
+import type { EditableContent } from "@/shared/types/editable.types";
 
 export interface BenefitsContent {
   title: string;
   subtitle: string;
 }
-
 
 export interface BenefitsSectionProps {
   content: BenefitsContent;

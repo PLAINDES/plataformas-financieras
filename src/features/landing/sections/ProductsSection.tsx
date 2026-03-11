@@ -1,16 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Laptop } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { EditableText } from '@/shared/components/editable/EditableText';
-import { EditableCollection, AdminControls } from '@/shared/components/editable/EditableCollection';
-import { useAuthContext } from '../../auth/hooks/useAuthContext';
-import type { EditableContent, EditableCollectionData, CollectionItem } from '@/shared/types/editable.types';
+import { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight, Laptop } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { EditableText } from "@/shared/components/editable/EditableText";
+import {
+  EditableCollection,
+  AdminControls,
+} from "@/shared/components/editable/EditableCollection";
+import { useAuthContext } from "../../auth/hooks/useAuthContext";
+import type {
+  EditableContent,
+  EditableCollectionData,
+  CollectionItem,
+} from "@/shared/types/editable.types";
 
 interface ProductItem extends CollectionItem {
   name: string;
   caption: string;
   price: number;
-  typeName: string;
+  typeName?: string;
   contact?: string;
   imageUrl?: string;
 }
@@ -33,42 +40,60 @@ interface ProductsSectionProps {
     }>;
   };
   onSave: (content: EditableContent) => Promise<void>;
-  onSaveCollection: (data: EditableCollectionData<ProductItem>) => Promise<void>;
+  onSaveCollection: (
+    data: EditableCollectionData<ProductItem>
+  ) => Promise<void>;
 }
 
-export function ProductsSection({ content, onSave, onSaveCollection }: ProductsSectionProps) {
+export function ProductsSection({
+  content,
+  onSave,
+  onSaveCollection,
+}: ProductsSectionProps) {
   const { isAdmin } = useAuthContext();
-  const [activeTab, setActiveTab] = useState<'kapital' | 'valora'>('kapital');
+  const [activeTab, setActiveTab] = useState<"kapital" | "valora">("kapital");
   const [currentPage, setCurrentPage] = useState(0);
 
   const adaptContentToState = (rawContent: typeof content) => {
     if (!rawContent || !rawContent.categories) {
       return {
-        kapital: { id: 'products-kapital', section: 'products', items: [] },
-        valora: { id: 'products-valora', section: 'products', items: [] },
+        kapital: { id: "products-kapital", section: "products", items: [] },
+        valora: { id: "products-valora", section: "products", items: [] },
       };
     }
-    const kapitalCategory = rawContent.categories.find(cat => cat.id === 'cat-kapital');
-    const valoraCategory = rawContent.categories.find(cat => cat.id === 'cat-valora');
+    const kapitalCategory = rawContent.categories.find(
+      (cat) => cat.id === "cat-kapital"
+    );
+    const valoraCategory = rawContent.categories.find(
+      (cat) => cat.id === "cat-valora"
+    );
     return {
       kapital: {
-        id: 'products-kapital',
-        section: 'products',
-        items: kapitalCategory?.products?.map((p, index) => ({ ...p, order: index })) || [],
+        id: "products-kapital",
+        section: "products",
+        items:
+          kapitalCategory?.products?.map((p, index) => ({
+            ...p,
+            order: index,
+          })) || [],
       },
       valora: {
-        id: 'products-valora',
-        section: 'products',
-        items: valoraCategory?.products?.map((p, index) => ({ ...p, order: index })) || [],
+        id: "products-valora",
+        section: "products",
+        items:
+          valoraCategory?.products?.map((p, index) => ({
+            ...p,
+            order: index,
+          })) || [],
       },
     };
   };
 
   const [titleData, setTitleData] = useState<EditableContent>({
-    id: 'title',
-    type: 'text',
-    value: content?.title || 'Productos',
-    section: 'products',
+    id: "title",
+    type: "text",
+    value: content?.title || "Productos",
+    section: "products",
   });
 
   const [productosData, setProductosData] = useState<{
@@ -78,25 +103,25 @@ export function ProductsSection({ content, onSave, onSaveCollection }: ProductsS
 
   useEffect(() => {
     setProductosData(adaptContentToState(content));
-    setTitleData(prev => ({ ...prev, value: content?.title || 'Productos' }));
+    setTitleData((prev) => ({ ...prev, value: content?.title || "Productos" }));
   }, [content]);
 
   const customStyles = {
     gradientText: {
-      background: '-webkit-linear-gradient(45deg, #181C32, #f70067)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
+      background: "-webkit-linear-gradient(45deg, #181C32, #f70067)",
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
     },
     navPillActive: {
-      backgroundColor: '#2FA4FF',
-      color: 'white',
+      backgroundColor: "#2FA4FF",
+      color: "white",
     },
   };
 
   const activeProducts = productosData[activeTab].items;
 
   const getItemsPerPage = () => {
-    if (typeof window === 'undefined') return 3;
+    if (typeof window === "undefined") return 3;
     if (window.innerWidth >= 992) return 3;
     if (window.innerWidth >= 768) return 2;
     return 1;
@@ -106,15 +131,18 @@ export function ProductsSection({ content, onSave, onSaveCollection }: ProductsS
 
   useEffect(() => {
     const handleResize = () => setItemsPerPage(getItemsPerPage());
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => { setCurrentPage(0); }, [activeTab]);
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [activeTab]);
 
   const totalPages = Math.ceil(activeProducts.length / itemsPerPage);
-  const nextPage = () => setCurrentPage(prev => (prev + 1) % totalPages);
-  const prevPage = () => setCurrentPage(prev => (prev - 1 + totalPages) % totalPages);
+  const nextPage = () => setCurrentPage((prev) => (prev + 1) % totalPages);
+  const prevPage = () =>
+    setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
 
   const getVisibleProducts = () => {
     const start = currentPage * itemsPerPage;
@@ -127,10 +155,10 @@ export function ProductsSection({ content, onSave, onSaveCollection }: ProductsS
   const createNewProduct = (): ProductItem => ({
     id: `product_${Date.now()}`,
     order: productosData[activeTab].items.length,
-    name: 'Nuevo Producto',
-    caption: 'Descripción del producto',
+    name: "Nuevo Producto",
+    caption: "Descripción del producto",
     price: 0,
-    typeName: 'Sistema',
+    typeName: "Sistema", // aunque opcional, le damos un valor por defecto
   });
 
   return (
@@ -144,8 +172,11 @@ export function ProductsSection({ content, onSave, onSaveCollection }: ProductsS
             className="mb-6 text-2xl lg:text-3xl"
           />
 
-          <ul className="flex flex-wrap list-none justify-start gap-3" role="tablist">
-            {(['kapital', 'valora'] as const).map(tab => (
+          <ul
+            className="flex flex-wrap list-none justify-start gap-3"
+            role="tablist"
+          >
+            {(["kapital", "valora"] as const).map((tab) => (
               <li key={tab}>
                 <Button
                   onClick={() => setActiveTab(tab)}
@@ -170,7 +201,10 @@ export function ProductsSection({ content, onSave, onSaveCollection }: ProductsS
                 onClick={prevPage}
                 disabled={currentPage === 0}
               >
-                <ChevronLeft className="w-5 h-5 transition-transform group-hover:-translate-x-0.5" strokeWidth={2.5} />
+                <ChevronLeft
+                  className="w-5 h-5 transition-transform group-hover:-translate-x-0.5"
+                  strokeWidth={2.5}
+                />
               </Button>
 
               <Button
@@ -180,7 +214,10 @@ export function ProductsSection({ content, onSave, onSaveCollection }: ProductsS
                 onClick={nextPage}
                 disabled={currentPage === totalPages - 1}
               >
-                <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+                <ChevronRight
+                  className="w-5 h-5 transition-transform group-hover:translate-x-0.5"
+                  strokeWidth={2.5}
+                />
               </Button>
             </>
           )}
@@ -192,14 +229,15 @@ export function ProductsSection({ content, onSave, onSaveCollection }: ProductsS
             addButtonText="Agregar Producto"
             maxItems={20}
             allowReorder={true}
-            className={`flex flex-wrap gap-y-8 ${isSingleCard ? 'justify-center' : 'justify-start'}`}
+            className={`flex flex-wrap gap-y-8 ${isSingleCard ? "justify-center" : "justify-start"}`}
             renderItem={(product, index, helpers) => {
-              const visibleIds = visibleProducts.map(p => p.id);
-              if (!visibleIds.includes(product.id) && !helpers.isEditing) return null;
+              const visibleIds = visibleProducts.map((p) => p.id);
+              if (!visibleIds.includes(product.id) && !helpers.isEditing)
+                return null;
               return (
                 <div
                   key={product.id}
-                  className={`px-4 ${isSingleCard ? 'w-full sm:w-[83.33%] md:w-1/2 lg:w-1/3' : 'w-full md:w-1/2 lg:w-1/3'}`}
+                  className={`px-4 ${isSingleCard ? "w-full sm:w-[83.33%] md:w-1/2 lg:w-1/3" : "w-full md:w-1/2 lg:w-1/3"}`}
                 >
                   {helpers.isEditing ? (
                     <ProductEditor
@@ -224,7 +262,7 @@ export function ProductsSection({ content, onSave, onSaveCollection }: ProductsS
               {[...Array(totalPages)].map((_, idx) => (
                 <button
                   key={idx}
-                  className={`h-2 rounded-full transition-all duration-300 ${idx === currentPage ? 'bg-blue-600 w-8' : 'bg-gray-300 w-2 hover:bg-gray-400'}`}
+                  className={`h-2 rounded-full transition-all duration-300 ${idx === currentPage ? "bg-blue-600 w-8" : "bg-gray-300 w-2 hover:bg-gray-400"}`}
                   onClick={() => setCurrentPage(idx)}
                   aria-label={`Ir a página ${idx + 1}`}
                 />
@@ -239,7 +277,10 @@ export function ProductsSection({ content, onSave, onSaveCollection }: ProductsS
             className="inline-flex items-center justify-center px-8 py-3.5 bg-[#2FA4FF] text-white font-bold rounded-full shadow-lg shadow-blue-500/20 transition-all duration-300 hover:bg-blue-700 hover:shadow-blue-500/40 hover:-translate-y-1 group"
           >
             Ver catálogo completo
-            <ChevronRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" strokeWidth={2.5} />
+            <ChevronRight
+              className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1"
+              strokeWidth={2.5}
+            />
           </a>
         </div>
       </div>
@@ -268,33 +309,49 @@ function ProductCard({ product, isSingleCard, helpers }: ProductCardProps) {
         />
       )}
 
-      <div className={`flex items-center justify-center mb-4 rounded-xl bg-[#E0F7FA] ${isSingleCard ? 'mx-auto h-[120px] w-[150px]' : 'h-20 w-20'}`}>
-        <Laptop className={`text-sky-500 ${isSingleCard ? 'w-10 h-10' : 'w-6 h-6'}`} />
+      <div
+        className={`flex items-center justify-center mb-4 rounded-xl bg-[#E0F7FA] ${isSingleCard ? "mx-auto h-[120px] w-[150px]" : "h-20 w-20"}`}
+      >
+        <Laptop
+          className={`text-sky-500 ${isSingleCard ? "w-10 h-10" : "w-6 h-6"}`}
+        />
       </div>
 
-      <h3 className="text-xl font-bold mb-2 text-gray-900 leading-tight">{product.name}</h3>
-      <p className="text-gray-500 flex-grow leading-relaxed mb-4">{product.caption}</p>
+      <h3 className="text-xl font-bold mb-2 text-gray-900 leading-tight">
+        {product.name}
+      </h3>
+      <p className="text-gray-500 flex-grow leading-relaxed mb-4">
+        {product.caption}
+      </p>
 
       <div className="mt-auto pt-4 border-t border-gray-100 flex flex-col gap-4">
         <Button
           variant="outline"
           onClick={() => {
             if (product.contact) {
-              const message = encodeURIComponent(`Hola, estoy interesado en adquirir el ${product.typeName || 'producto'}: ${product.name}`);
-              window.open(`https://wa.me/${product.contact}?text=${message}`, '_blank');
+              const message = encodeURIComponent(
+                `Hola, estoy interesado en adquirir el ${product.typeName || "producto"}: ${product.name}`
+              );
+              window.open(
+                `https://wa.me/${product.contact}?text=${message}`,
+                "_blank"
+              );
             } else if ((product as any).url) {
-              window.open((product as any).url, '_blank');
+              window.open((product as any).url, "_blank");
             }
           }}
           className="w-full py-2.5 px-4 border-2 border-[#2FA4FF] text-[#2FA4FF] font-semibold rounded-lg hover:bg-[#2FA4FF] hover:text-white group h-auto"
         >
-          Adquirir {product.typeName || ''}
-          <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+          Adquirir {product.typeName || ""}
+          <ChevronRight
+            className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1"
+            strokeWidth={2.5}
+          />
         </Button>
 
         <div className="text-center">
           <span className="text-lg font-bold text-[#2FA4FF]">
-            {product.price === 0 ? 'Gratis' : `S/ ${product.price}.00`}
+            {product.price === 0 ? "Gratis" : `S/ ${product.price}.00`}
           </span>
         </div>
       </div>
@@ -311,9 +368,9 @@ interface ProductEditorProps {
 function ProductEditor({ product, onSave, onCancel }: ProductEditorProps) {
   const [formData, setFormData] = useState({
     ...product,
-    typeName: product.typeName || '',
-    contact: product.contact || '',
-    url: (product as any).url || '',
+    typeName: product.typeName || "",
+    contact: product.contact || "",
+    url: (product as any).url || "",
   });
 
   return (
@@ -327,84 +384,123 @@ function ProductEditor({ product, onSave, onCancel }: ProductEditorProps) {
       </div>
 
       <div className="flex flex-col gap-4 flex-grow">
-        {[
-          { label: 'Nombre', field: 'name', type: 'text' },
-        ].map(({ label, field, type }) => (
-          <div key={field} className="flex flex-col">
-            <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1">{label}</label>
-            <input
-              type={type}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-              value={(formData as any)[field]}
-              onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
-            />
-          </div>
-        ))}
+        {[{ label: "Nombre", field: "name", type: "text" }].map(
+          ({ label, field, type }) => (
+            <div key={field} className="flex flex-col">
+              <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1">
+                {label}
+              </label>
+              <input
+                type={type}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                value={(formData as any)[field]}
+                onChange={(e) =>
+                  setFormData({ ...formData, [field]: e.target.value })
+                }
+              />
+            </div>
+          )
+        )}
 
         <div className="flex flex-col">
-          <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1">Descripción</label>
+          <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1">
+            Descripción
+          </label>
           <textarea
             className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
             value={formData.caption}
-            onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, caption: e.target.value })
+            }
             rows={2}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col">
-            <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1">Precio (S/)</label>
+            <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1">
+              Precio (S/)
+            </label>
             <input
               type="number"
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+              onChange={(e) =>
+                setFormData({ ...formData, price: parseFloat(e.target.value) })
+              }
               min="0"
               step="0.01"
             />
           </div>
           <div className="flex flex-col">
-            <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1">Tipo (Opcional)</label>
+            <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1">
+              Tipo (Opcional)
+            </label>
             <input
               type="text"
               placeholder="Ej: Sistema, App..."
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-all"
               value={formData.typeName}
-              onChange={(e) => setFormData({ ...formData, typeName: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, typeName: e.target.value })
+              }
             />
           </div>
         </div>
 
         <div className="flex flex-col">
-          <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1 flex justify-between">URL <span>(Opcional)</span></label>
+          <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1 flex justify-between">
+            URL <span>(Opcional)</span>
+          </label>
           <input
             type="url"
             placeholder="https://ejemplo.com"
             className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all disabled:bg-gray-100"
             value={formData.url}
             disabled={!!formData.contact}
-            onChange={(e) => setFormData({ ...formData, url: e.target.value, contact: e.target.value ? '' : formData.contact })}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                url: e.target.value,
+                contact: e.target.value ? "" : formData.contact,
+              })
+            }
           />
         </div>
 
         <div className="flex flex-col">
-          <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1 flex justify-between">WhatsApp de Contacto <span>(Opcional)</span></label>
+          <label className="text-[12px] font-medium text-gray-500 mb-1 ml-1 flex justify-between">
+            WhatsApp de Contacto <span>(Opcional)</span>
+          </label>
           <input
             type="tel"
             placeholder="Ej: 51999888777"
             className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all disabled:bg-gray-100"
             value={formData.contact}
             disabled={!!formData.url}
-            onChange={(e) => setFormData({ ...formData, contact: e.target.value, url: e.target.value ? '' : formData.url })}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                contact: e.target.value,
+                url: e.target.value ? "" : formData.url,
+              })
+            }
           />
         </div>
       </div>
 
       <div className="flex gap-3 mt-6">
-        <Button variant="secondary" className="flex-1 text-sm" onClick={onCancel}>
+        <Button
+          variant="secondary"
+          className="flex-1 text-sm"
+          onClick={onCancel}
+        >
           Cancelar
         </Button>
-        <Button className="flex-1 text-sm bg-[#2FA4FF] hover:bg-blue-600 shadow-md shadow-blue-500/20" onClick={() => onSave(formData)}>
+        <Button
+          className="flex-1 text-sm bg-[#2FA4FF] hover:bg-blue-600 shadow-md shadow-blue-500/20"
+          onClick={() => onSave(formData)}
+        >
           Guardar
         </Button>
       </div>
