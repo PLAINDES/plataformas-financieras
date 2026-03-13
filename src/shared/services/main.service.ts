@@ -3,6 +3,7 @@ import type {
   TemplateComplement,
   TemplateComplementCreate,
   TemplateComplementUpdate,
+  Calculation
 } from "../types";
 
 export const MainService = {
@@ -46,5 +47,14 @@ export const MainService = {
    */
   deleteTemplateComplement: async (id: number): Promise<void> => {
     return api.delete<void>(`main/template-complements/${id}`);
+  },
+
+  getCalculations: async (userId?: number): Promise<Calculation[]> => {
+    const params = userId !== undefined ? `?user_id=${userId}` : "";
+    return api.get<Calculation[]>(`main/calculations${params}`);
+  },
+
+  deleteCalculation: async (id: number): Promise<void> => {
+    return api.delete<void>(`main/calculations/${id}`);
   },
 };

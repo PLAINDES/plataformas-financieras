@@ -313,7 +313,7 @@ const ValoraPage: React.FC = () => {
       logoHref="/valora"
       logoSrc="/public/images/logo-valora-small.png"
       logoAlt="Valora Logo"
-      projectsHref="/valora/proyectos"
+      projectsHref="/usuario/proyectos"
       selected={getSelectedView()}
       onNavigate={handleResultsSectionChange}
       onOpenReport={handleReportSidebarOpen}

@@ -14,6 +14,7 @@ import { PlantillasMaestrasPage } from "./features/admin/pages/PlantillasMaestra
 import { ReportesKapitalPage } from "./features/admin/pages/ReportesKapitalPage";
 import { ReportesValoraPage } from "./features/admin/pages/ReportesValoraPage";
 import { ConfiguracionPage } from "./features/admin/pages/ConfiguracionPage";
+import ProyectosUsuarioPage from "./features/finance/components/ProyectosUsuarioPage";
 
 const COMPANY = {
   id: 1,
@@ -73,6 +74,7 @@ function App() {
       >
         <Route path="/kapital" element={<KapitalPage />} />
         <Route path="/valora" element={<ValoraPage />} />
+        <Route path="usuario/proyectos" element={<ProyectosUsuarioPage />} />
       </Route>
 
       <Route

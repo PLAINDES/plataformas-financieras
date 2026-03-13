@@ -87,3 +87,14 @@ export type TemplateComplementCreate = Omit<
   "id" | "created_at" | "updated_at" | "deleted_at"
 >;
 export type TemplateComplementUpdate = Partial<TemplateComplementCreate>;
+
+export interface Calculation {
+  id: number;
+  calculation_file_id: number | null;
+  user_id: number;
+  report_code: string;
+  type: "valora" | "kapital";
+  data: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}

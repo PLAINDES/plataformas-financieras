@@ -198,7 +198,7 @@ const ValoraMethodology: React.FC<{ uid?: string }> = ({ uid = 'demo' }) => {
                     </div>
                   </div>
                   <div className="menu-item px-5">
-                    <a href="/valora/proyectos" className="menu-link fs-7">Mis proyectos</a>
+                    <a href="/usuario/proyectos" className="menu-link fs-7">Mis proyectos</a>
                   </div>
                   <div className="separator" />
                   <div className="menu-item px-5">
