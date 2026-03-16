@@ -99,3 +99,95 @@ export interface Calculation {
   created_at: string;
   updated_at: string;
 }
+
+
+export interface MediaBasic {
+  id: number;
+  url: string;
+  filename: string;
+  original_name: string;
+  mime_type: string;
+  alt_text: string | null;
+}
+
+export interface CoverDetail {
+  id: number;
+  nombre: string;
+  tipo: "imagen_adjuntada" | "personalizada";
+  portada: MediaBasic | null;
+  primer_imagen_footer: MediaBasic | null;
+  segundo_imagen_footer: MediaBasic | null;
+  logo_superior: MediaBasic | null;
+  imagen_central: MediaBasic | null;
+  logo_inferior: MediaBasic | null;
+  imagen_fondo: MediaBasic | null;
+}
+
+export interface TemplateCodeBasic {
+  id: number;
+  nombre: string;
+  code: string;
+  type: "valora" | "kapital";
+  hoja: string | null;
+}
+
+export interface TemplateWithCodes {
+  id: number;
+  nombre: string;
+  is_default: boolean;
+  template_codes: TemplateCodeBasic[];
+}
+
+export interface Report {
+  id: number;
+  nombre: string;
+  precio: number | null;
+  moneda: string;
+  sector_empresa: string | null;
+  bono_ajustado: string | null;
+  link_pago: string | null;
+  contenido: string | null;
+  activo: boolean;
+  created_at: string;
+  updated_at: string;
+  template: TemplateWithCodes | null;
+  portada: CoverDetail | null;
+}
+
+export type CoverTipo = "imagen_adjuntada" | "personalizada";
+
+export interface Cover {
+  id: number;
+  nombre: string;
+  tipo: CoverTipo;
+  portada: MediaBasic | null;
+  primer_imagen_footer: MediaBasic | null;
+  segundo_imagen_footer: MediaBasic | null;
+  logo_superior: MediaBasic | null;
+  imagen_central: MediaBasic | null;
+  logo_inferior: MediaBasic | null;
+  imagen_fondo: MediaBasic | null;
+}
+
+
+export interface CoverUpdate {
+  portada_id?: number | null;
+  primer_imagen_footer_id?: number | null;
+  segundo_imagen_footer_id?: number | null;
+  logo_superior_id?: number | null;
+  imagen_central_id?: number | null;
+  logo_inferior_id?: number | null;
+  imagen_fondo_id?: number | null;
+}
+
+export interface ReportUpdate {
+  nombre?: string;
+  precio?: number | null;
+  moneda?: string;
+  sector_empresa?: string | null;
+  bono_ajustado?: string | null;
+  link_pago?: string | null;
+  contenido?: string | null;
+  activo?: boolean;
+  cover_data?: CoverUpdate;
+}

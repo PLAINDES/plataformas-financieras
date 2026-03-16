@@ -3,7 +3,10 @@ import type {
   TemplateComplement,
   TemplateComplementCreate,
   TemplateComplementUpdate,
-  Calculation
+  Calculation,
+  Report,
+  ReportUpdate,
+  Cover
 } from "../types";
 
 export const MainService = {
@@ -56,5 +59,21 @@ export const MainService = {
 
   deleteCalculation: async (id: number): Promise<void> => {
     return api.delete<void>(`main/calculations/${id}`);
+  },
+
+  getReports: async (): Promise<Report[]> => {
+    return api.get<Report[]>("main/reports");
+  },
+
+  getReport: async (id: number): Promise<Report> => {
+    return api.get<Report>(`main/reports/${id}`);
+  },
+
+  updateReport: async (id: number, data: ReportUpdate): Promise<{ message: string }> => {
+    return api.put<{ message: string }>(`main/reports/${id}`, data);
+  },
+
+  getCovers: async (): Promise<Cover[]> => {
+    return api.get<Cover[]>("main/covers");
   },
 };
