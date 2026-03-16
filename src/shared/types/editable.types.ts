@@ -1,9 +1,5 @@
 // src/types/editable.types.ts
 
-// ============================================
-// TIPOS BASE PARA CONTENIDO EDITABLE
-// ============================================
-
 
 export interface EditableContent {
   id: string;
@@ -13,10 +9,6 @@ export interface EditableContent {
 }
 
 
-
-// ============================================
-// TIPOS PARA COLECCIONES
-// ============================================
 
 export interface CollectionItem {
   id: string;
@@ -29,9 +21,6 @@ export interface EditableCollectionData<T extends CollectionItem = CollectionIte
   items: T[];
 }
 
-// ============================================
-// TIPOS PARA MEDIA
-// ============================================
 
 export interface VideoData {
   type: 'upload' | 'url';
@@ -46,9 +35,6 @@ export interface LinkData {
   target?: '_blank' | '_self';
 }
 
-// ============================================
-// CALLBACKS Y ACCIONES
-// ============================================
 
 export interface CollectionActions<T extends CollectionItem> {
   onAdd: () => void;

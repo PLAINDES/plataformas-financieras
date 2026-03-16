@@ -298,7 +298,7 @@ const KapitalPage: React.FC = () => {
         logoHref="/kapital"
         logoSrc="/public/images/logo-kapital-small.png"
         logoAlt="Kapital Logo"
-        projectsHref="/kapital/proyectos"
+        projectsHref="/usuario/proyectos"
         selected={getSelectedView()}
         onNavigate={handleResultsSectionChange}
         onOpenReport={handleReportSidebarOpen}

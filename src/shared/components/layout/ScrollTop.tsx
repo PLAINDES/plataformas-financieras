@@ -7,7 +7,6 @@ export function ScrollTop() {
 
   useEffect(() => {
     const toggleVisibility = () => {
-      // window.pageYOffset está depreciado, usamos window.scrollY
       if (window.scrollY > 300) {
         setIsVisible(true);
       } else {
@@ -26,7 +25,6 @@ export function ScrollTop() {
     });
   };
 
-  // Usamos clases de Tailwind para la transición de entrada/salida
   return (
     <div
       id="kt_scrolltop"

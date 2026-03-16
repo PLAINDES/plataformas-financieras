@@ -88,13 +88,11 @@ export function Header({
         className="bg-no-repeat bg-contain bg-bottom" 
         style={{ backgroundImage: 'url(/assets/media/svg/illustrations/landing.svg)' }}
       >
-        {/* Header Container */}
         <header 
           className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 px-6 py-4 md:px-12 md:py-6 flex items-center justify-between ${
             isSticky ? 'bg-white shadow-md py-3' : 'bg-transparent'
           }`}
         >
-          {/* Left Side: Toggle + Logo + Nav */}
           <div className="flex items-center flex-1">
             <div className="lg:hidden">
               <MobileMenuToggle 
@@ -121,7 +119,6 @@ export function Header({
               />
             </div>
             
-            {/* Desktop Menu */}
             <nav className="hidden lg:flex items-center ml-12 space-x-8">
               {visibleMenuItems.map((item) => (
                 <a
@@ -141,7 +138,6 @@ export function Header({
             </nav>
           </div>
           
-          {/* Right Side: Auth + Secondary Logo */}
           <div className="flex items-center justify-end flex-1 gap-6">
             <div>
               {user ? (
@@ -168,7 +164,6 @@ export function Header({
           </div>
         </header>
         
-        {/* Mobile Menu Overlay & Drawer */}
         {isMobileMenuOpen && (
           <div className="fixed inset-0 z-[60] lg:hidden">
             {/* Overlay */}
@@ -200,7 +195,6 @@ export function Header({
         )}
       </div>
       
-      {/* Auth Modals */}
       <LoginModal
         isOpen={isLoginOpen}
         onClose={closeModal}

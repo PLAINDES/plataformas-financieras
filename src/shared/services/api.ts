@@ -1,8 +1,8 @@
 // src/services/api.ts
 
-import type { APIError } from '../types/api.types';
+import type { APIError } from "../types/api.types";
 
-const API_BASE_URL = 'http://localhost:8000/api/v1/';
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/v1/`;
 
 interface RequestOptions {
   token?: string;
@@ -16,27 +16,21 @@ class APIClient {
     this.baseURL = baseURL;
   }
 
-  /**
-   * Construye headers para las peticiones
-   */
   private getHeaders(token?: string): HeadersInit {
     const headers: HeadersInit = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
 
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers["Authorization"] = `Bearer ${token}`;
     }
 
     return headers;
   }
 
-  /**
-   * Construye URL con query params
-   */
   private buildURL(endpoint: string, params?: Record<string, any>): string {
     const url = new URL(endpoint, this.baseURL);
-    
+
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
@@ -48,24 +42,18 @@ class APIClient {
     return url.toString();
   }
 
-  /**
-   * Maneja errores de la API
-   */
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
-      
+
       try {
         const errorData: APIError = await response.json();
         errorMessage = errorData.detail || errorMessage;
-      } catch {
-        // Si no se puede parsear el error, usar mensaje genérico
-      }
+      } catch {}
 
       throw new Error(errorMessage);
     }
 
-    // Para respuestas 204 No Content
     if (response.status === 204) {
       return undefined as T;
     }
@@ -73,32 +61,26 @@ class APIClient {
     return response.json();
   }
 
-  /**
-   * GET request
-   */
   async get<T>(endpoint: string, options?: RequestOptions): Promise<T> {
     const url = this.buildURL(endpoint, options?.params);
-    
+
     const response = await fetch(url, {
-      method: 'GET',
+      method: "GET",
       headers: this.getHeaders(options?.token),
     });
 
     return this.handleResponse<T>(response);
   }
 
-  /**
-   * POST request
-   */
   async post<T>(
-    endpoint: string, 
-    data?: any, 
+    endpoint: string,
+    data?: any,
     options?: RequestOptions
   ): Promise<T> {
     const url = this.buildURL(endpoint, options?.params);
-    
+
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers: this.getHeaders(options?.token),
       body: data ? JSON.stringify(data) : undefined,
     });
@@ -106,18 +88,15 @@ class APIClient {
     return this.handleResponse<T>(response);
   }
 
-  /**
-   * PUT request
-   */
   async put<T>(
-    endpoint: string, 
-    data: any, 
+    endpoint: string,
+    data: any,
     options?: RequestOptions
   ): Promise<T> {
     const url = this.buildURL(endpoint, options?.params);
-    
+
     const response = await fetch(url, {
-      method: 'PUT',
+      method: "PUT",
       headers: this.getHeaders(options?.token),
       body: JSON.stringify(data),
     });
@@ -125,18 +104,15 @@ class APIClient {
     return this.handleResponse<T>(response);
   }
 
-  /**
-   * PATCH request
-   */
   async patch<T>(
-    endpoint: string, 
-    data: any, 
+    endpoint: string,
+    data: any,
     options?: RequestOptions
   ): Promise<T> {
     const url = this.buildURL(endpoint, options?.params);
-    
+
     const response = await fetch(url, {
-      method: 'PATCH',
+      method: "PATCH",
       headers: this.getHeaders(options?.token),
       body: JSON.stringify(data),
     });
@@ -144,14 +120,11 @@ class APIClient {
     return this.handleResponse<T>(response);
   }
 
-  /**
-   * DELETE request
-   */
   async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
     const url = this.buildURL(endpoint, options?.params);
-    
+
     const response = await fetch(url, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: this.getHeaders(options?.token),
     });
 

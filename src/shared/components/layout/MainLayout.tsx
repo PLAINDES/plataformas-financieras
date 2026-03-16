@@ -33,7 +33,7 @@ export function MainLayout({
   onLogout,
   onLogin,
   onRegister,
-  OnSave // Prop añadida para consistencia con el Header anterior
+  OnSave 
 }: MainLayoutProps) {
   useEffect(() => {
     const initTheme = () => {
@@ -52,7 +52,6 @@ export function MainLayout({
       }
       
       document.documentElement.setAttribute('data-theme', themeMode);
-      // Soporte para modo oscuro de Tailwind
       if (themeMode === 'dark') {
         document.documentElement.classList.add('dark');
       } else {
@@ -64,7 +63,6 @@ export function MainLayout({
   }, []);
   
   return (
-    /* d-flex flex-column flex-root -> flex flex-col min-h-screen */
     <div className="flex flex-col min-h-screen bg-white dark:bg-slate-900" id="kt_app_root">
       <Header
         company={company}

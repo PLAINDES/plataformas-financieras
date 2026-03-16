@@ -1,10 +1,10 @@
 // src/app/kapital/components/NavBar.tsx
 
-import React, { useMemo } from 'react';
-import { FinanceNavbar } from '@/features/finance/components/FinanceNavbar';
-import type { NavTab } from '@/features/finance/components/FinanceNavbar';
-import { UserMenu } from '@/shared/components/common/UserMenu';
-import type { User } from '@/shared/types/user.types';
+import React, { useMemo } from "react";
+import { FinanceNavbar } from "@/features/finance/components/FinanceNavbar";
+import type { NavTab } from "@/features/finance/components/FinanceNavbar";
+import { UserMenu } from "@/shared/components/common/UserMenu";
+import type { User } from "@/shared/types/user.types";
 
 interface NavbarProps {
   user: User;
@@ -12,9 +12,9 @@ interface NavbarProps {
   onToggleForm: () => void;
   isFormOpen: boolean;
   hasResults: boolean;
-  selected: 'result' | 'analysis' | 'methodology' | '';
-  onNavigate: (view: 'result' | 'analysis' | 'methodology') => void;
-  onOpenReport: () => void;
+  selected: "result" | "analysis" | "methodology" | "";
+  onNavigate?: (view: "result" | "analysis" | "methodology") => void;
+  onOpenReport?: () => void;
 }
 
 export const NavBar: React.FC<NavbarProps> = ({
@@ -33,8 +33,8 @@ export const NavBar: React.FC<NavbarProps> = ({
 
     return [
       {
-        id: 'result',
-        label: 'Resultados',
+        id: "result",
+        label: "Resultados",
         icon: (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -43,8 +43,8 @@ export const NavBar: React.FC<NavbarProps> = ({
         )
       },
       {
-        id: 'analysis',
-        label: 'Análisis',
+        id: "analysis",
+        label: "Análisis",
         icon: (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -53,8 +53,8 @@ export const NavBar: React.FC<NavbarProps> = ({
         )
       },
       {
-        id: 'methodology',
-        label: 'Metodología',
+        id: "methodology",
+        label: "Metodología",
         icon: (
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
             viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -73,9 +73,9 @@ export const NavBar: React.FC<NavbarProps> = ({
   return (
     <FinanceNavbar
       logo={{
-        src: '/public/images/logo-kapital-small.png',
-        alt: 'Kapital Logo',
-        href: '/kapital'
+        src: "/public/images/logo-kapital-small.png",
+        alt: "Kapital Logo",
+        href: "/kapital"
       }}
       tabs={tabs}
       selectedTabId={selected}
@@ -95,7 +95,7 @@ export const NavBar: React.FC<NavbarProps> = ({
 
           <UserMenu user={user} onLogout={onLogout}>
             <a
-              href="/kapital/proyectos"
+              href="/usuario/proyectos"
               className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
               Mis proyectos

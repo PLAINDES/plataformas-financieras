@@ -1,15 +1,18 @@
+// src/features/landing/layout/LandingHeader.tsx
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LandingUserMenu } from '../components/LandingUserMenu';
 import { MobileMenuToggle } from '@/shared/components/ui/MobileMenuToggle';
 import { LoginModal } from '../../auth/components/LoginModal';
 import { RegisterModal } from '../../auth/components/RegisterModal';
 import { useAuthModal } from '../../auth/hooks/useAuthModal';
+import { EditableImage } from '@/shared/components/editable/EditableImage';
+import { HeaderEditModal } from './HeaderEditModal';
+import { useAuthContext } from '@/features/auth/hooks/useAuthContext';
+import { useScrollSpy } from '../hooks/useScrollSpy';
 import type { MenuItem, Company } from '@/shared/types';
 import type { User, LoginCredentials } from '../../auth/types/user.types';
-import { EditableImage } from '@/shared/components/editable/EditableImage';
-import { useScrollSpy } from '../hooks/useScrollSpy';
 
 interface HeaderProps {
   company: Company;
@@ -19,16 +22,17 @@ interface HeaderProps {
   onLogin: (credentials: LoginCredentials) => Promise<User>;
   onRegister: (data: any) => Promise<void>;
   onSave?: (content: any) => Promise<void>;
+  onSaveMenuItems?: (items: { title: string }[]) => Promise<void>;
 }
 
-export function LandingHeader({ menuItems, user, onLogout, onLogin, onRegister, onSave }: HeaderProps) {
+export function LandingHeader({ menuItems, user, onLogout, onLogin, onRegister, onSave, onSaveMenuItems }: HeaderProps) {
   const [isSticky, setIsSticky] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string>('home');
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const { isAdmin } = useAuthContext();
 
   const { isLoginOpen, isRegisterOpen, openLogin, closeModal, switchToRegister, switchToLogin } = useAuthModal();
-
-  const visibleMenuItems = menuItems.filter(item => item.visible);
 
   useEffect(() => {
     const handleScroll = () => setIsSticky(window.scrollY > 50);
@@ -36,25 +40,26 @@ export function LandingHeader({ menuItems, user, onLogout, onLogin, onRegister, 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleMenuClick = (slug: string) => {
-    const id = slug.toLowerCase();
+  const handleMenuClick = (title: string) => {
+    const id = title.toLowerCase().replace(/\s+/g, '-');
     const element = document.getElementById(id);
     if (element) {
       const offset = 80;
       const bodyRect = document.body.getBoundingClientRect().top;
       const elementRect = element.getBoundingClientRect().top;
-      const elementPosition = elementRect - bodyRect;
-      const offsetPosition = elementPosition - offset;
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      window.scrollTo({ top: (elementRect - bodyRect) - offset, behavior: 'smooth' });
     }
     setActiveMenu(id);
     setIsMobileMenuOpen(false);
   };
 
-  useScrollSpy(
-    visibleMenuItems.map(item => item.slug.toLowerCase()),
-    setActiveMenu
-  );
+  useScrollSpy(menuItems.map(item => item.slug.toLowerCase()), setActiveMenu);
+
+  const navItems = menuItems.map((item, index) => ({
+    id: String(item.id ?? index),
+    title: item.name,
+    slug: item.slug,
+  }));
 
   return (
     <header className="relative w-full" id="home">
@@ -64,6 +69,7 @@ export function LandingHeader({ menuItems, user, onLogout, onLogin, onRegister, 
       >
         <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-2 lg:grid-cols-12 items-center h-full">
 
+          {/* Logo */}
           <div className="flex items-center gap-4 lg:col-span-3">
             <div className="lg:hidden">
               <MobileMenuToggle onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} isOpen={isMobileMenuOpen} />
@@ -78,87 +84,79 @@ export function LandingHeader({ menuItems, user, onLogout, onLogin, onRegister, 
             </div>
           </div>
 
+          {/* Desktop nav */}
           <div className="hidden lg:flex justify-center lg:col-span-6">
             <div className="flex items-center gap-2">
-              {visibleMenuItems.map((item) => {
+              {navItems.map((item) => {
                 const isActive = activeMenu === item.slug.toLowerCase();
                 return (
-                  
-                  <a  key={item.id}
+                  <a
+                    key={item.id}
                     href={`#${item.slug.toLowerCase()}`}
-                    onClick={(e) => { e.preventDefault(); handleMenuClick(item.slug); }}
-                    className={`
-                      relative px-5 py-2 rounded-full text-[16px] tracking-tight transition-all duration-300
-                      ${isActive ? 'text-[#009ef7]' : 'text-gray-600 hover:text-[#009ef7]'}
-                    `}
+                    onClick={(e) => { e.preventDefault(); handleMenuClick(item.title); }}
+                    className={`px-5 py-2 rounded-full text-[16px] tracking-tight transition-all duration-300 ${isActive ? 'text-[#009ef7]' : 'text-gray-600 hover:text-[#009ef7]'}`}
                   >
-                    {item.name}
+                    {item.title}
                   </a>
                 );
               })}
             </div>
           </div>
 
+          {/* Acciones */}
           <div className="flex items-center justify-end gap-3 lg:col-span-3">
-            
-            <a  href="#contacto"
-              className="hidden xl:block text-[11px] text-gray-400 hover:text-[#009ef7] transition-colors uppercase tracking-widest"
-            >
+            <a href="#contacto" className="hidden xl:block text-[11px] text-gray-400 hover:text-[#009ef7] transition-colors uppercase tracking-widest">
               Soporte
             </a>
-
             <div className="h-6 w-[1px] bg-gray-200 hidden lg:block mx-2" />
-
             {user ? (
               <LandingUserMenu user={user} onLogout={onLogout} />
             ) : (
-              <Button
-                onClick={openLogin}
-                className="h-9 lg:h-10 px-6 rounded-lg bg-[#009ef7] text-white text-xs hover:bg-[#0086d1] active:scale-95 shadow-sm"
-              >
+              <Button onClick={openLogin} className="h-9 lg:h-10 px-6 rounded-lg bg-[#009ef7] text-white text-xs hover:bg-[#0086d1] active:scale-95 shadow-sm">
                 Iniciar Sesión
               </Button>
             )}
           </div>
         </div>
+
+        {/* Botón flotante editar — solo admin, esquina superior derecha */}
+        {isAdmin && (
+          <button
+            onClick={() => setEditModalOpen(true)}
+            className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-white text-[11px] font-medium backdrop-blur-sm transition-all shadow-sm"
+            title="Editar menú"
+          >
+            <Pencil size={11} />
+            Editar menú
+          </button>
+        )}
       </nav>
 
+      {/* Mobile Drawer */}
       <div className={`fixed inset-0 z-[100] lg:hidden transition-all duration-300 ${isMobileMenuOpen ? 'visible' : 'invisible'}`}>
         <div
           onClick={() => setIsMobileMenuOpen(false)}
           className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0'}`}
         />
-
         <aside className={`absolute top-0 left-0 h-full w-[280px] bg-white shadow-2xl transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex flex-col h-full">
             <div className="p-6 flex items-center justify-between border-b border-gray-50">
               <img src="images/logo.png" alt="Logo" className="h-7" />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="w-8 h-8 bg-gray-100 rounded-full hover:bg-gray-200"
-              >
+              <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)} className="w-8 h-8 bg-gray-100 rounded-full hover:bg-gray-200">
                 <X className="text-gray-500" size={14} />
               </Button>
             </div>
-
             <nav className="flex flex-col p-4 pt-10 gap-y-1">
-              {visibleMenuItems.map((item) => {
+              {navItems.map((item) => {
                 const isActive = activeMenu === item.slug.toLowerCase();
                 return (
-                  
-                  <a  key={item.id}
+                  <a
+                    key={item.id}
                     href={`#${item.slug.toLowerCase()}`}
-                    onClick={(e) => { e.preventDefault(); handleMenuClick(item.slug); }}
-                    className={`
-                      px-4 py-3 rounded-md text-sm transition-all
-                      ${isActive
-                        ? 'bg-[#009ef7]/10 text-[#009ef7]'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-[#009ef7]'}
-                    `}
+                    onClick={(e) => { e.preventDefault(); handleMenuClick(item.title); }}
+                    className={`px-4 py-3 rounded-md text-sm transition-all ${isActive ? 'bg-[#009ef7]/10 text-[#009ef7]' : 'text-gray-700 hover:bg-gray-50 hover:text-[#009ef7]'}`}
                   >
-                    {item.name}
+                    {item.title}
                   </a>
                 );
               })}
@@ -169,6 +167,16 @@ export function LandingHeader({ menuItems, user, onLogout, onLogin, onRegister, 
 
       <LoginModal isOpen={isLoginOpen} onClose={closeModal} onLogin={onLogin} onSwitchToRegister={switchToRegister} />
       <RegisterModal isOpen={isRegisterOpen} onClose={closeModal} onRegister={onRegister} onSwitchToLogin={switchToLogin} />
+
+      {/* Modal de edición */}
+      <HeaderEditModal
+        open={editModalOpen}
+        items={navItems}
+        onClose={() => setEditModalOpen(false)}
+        onSave={async (items) => {
+          await onSaveMenuItems?.(items);
+        }}
+      />
 
       <div className="h-20 lg:h-[65px]" />
     </header>

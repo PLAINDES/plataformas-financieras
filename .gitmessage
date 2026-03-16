@@ -1,0 +1,16 @@
+
+# --- ESCRIBE TU MENSAJE AQUÍ ARRIBA ---
+
+# La convención para commits es la siguiente:
+
+# Obligatorio para generar changelogs automáticos y mantener orden.
+
+#
+
+# - feat: agregar endpoint de login (Nueva funcionalidad)
+
+# - fix: corregir cálculo de iva (Bug fix)
+
+# - refactor: mover lógica de validación (Refactorización)
+
+# - test: agregar tests unitarios a usuario

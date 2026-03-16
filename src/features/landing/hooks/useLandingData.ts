@@ -1,3 +1,4 @@
+// src/features/landing/hooks/useLandingData.ts
 import { useState, useEffect, useCallback } from 'react';
 import { cmsService } from '@/shared/services/cms.service';
 import type { LandingDataResponse, MenuItem } from '@/shared/types';
@@ -18,49 +19,44 @@ export function useLandingData() {
     loadData();
   }, [loadData]);
 
-  const menuItems: MenuItem[] = data?.menus?.header_landing?.items.map(item => ({
-    id: item.id,
-    name: item.title,
-    slug: item.slug ?? item.title.toLowerCase().replace(/\s+/g, '-'),
-    visible: item.is_visible,
-    target: item.target ?? '_self',
-    order: item.order ?? 0
-  })) ?? [];
+  const findContent = (slug: string) =>
+    data?.page.contents.find(c => c.slug === slug);
 
-  const findContent = (slug: string) => {
-    return data?.page.contents.find(c => c.slug === slug);
-  };
+  const getContentData = (slug: string) =>
+    findContent(slug)?.data;
 
-  const getContentData = (slug: string) => {
-    return findContent(slug)?.data;
-  };
+  const menuItems: MenuItem[] = (getContentData("header-principal")?.item_header ?? [])
+    .map((item: { title: string }, index: number) => ({
+      id: index,
+      name: item.title,
+      slug: item.title.toLowerCase().replace(/\s+/g, '-'),
+      visible: true,
+      target: '_self' as const,
+      order: index,
+    }));
 
   const updateContentLocally = (slug: string, newData: any) => {
-  setData(prev => {
-    if (!prev) return prev;
-
-    return {
-      ...prev,
-      page: {
-        ...prev.page,
-        contents: prev.page.contents.map(content =>
-          content.slug === slug
-            ? { ...content, data: newData }
-            : content
-        )
-      }
-    };
-  });
-};
-
+    setData(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        page: {
+          ...prev.page,
+          contents: prev.page.contents.map(content =>
+            content.slug === slug ? { ...content, data: newData } : content
+          )
+        }
+      };
+    });
+  };
 
   return {
     data,
     loading,
     menuItems,
     refresh: loadData,
-    findContent,   
+    findContent,
     getContentData,
-    updateContentLocally  
+    updateContentLocally,
   };
 }

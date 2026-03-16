@@ -6,7 +6,7 @@ export interface AuthContextValue {
   user: User | null;
   loading: boolean;
   error: string | null;
-  isAdmin: () => boolean;
+  isAdmin: boolean;
   isAuthenticated: boolean;
   login: (data: any) => Promise<User>;
   register: (data: any) => Promise<User>;

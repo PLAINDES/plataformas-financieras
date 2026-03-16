@@ -1,10 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { EditableCollection, AdminControls } from '@/shared/components/editable/EditableCollection';
-import { useAuthContext } from '../../auth/hooks/useAuthContext';
-import type { EditableContent, EditableCollectionData, CollectionItem } from '@/shared/types/editable.types';
-import './PlatformCardsSection.css'
+import React, { useState, useEffect, useRef } from "react";
+import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  EditableCollection,
+  AdminControls,
+} from "@/shared/components/editable/EditableCollection";
+import { useAuthContext } from "../../auth/hooks/useAuthContext";
+import type {
+  EditableContent,
+  EditableCollectionData,
+  CollectionItem,
+} from "@/shared/types/editable.types";
+import "./PlatformCardsSection.css";
 
 interface PlatformCardItem extends CollectionItem {
   name: string;
@@ -35,7 +42,9 @@ interface PlatformCardsSectionProps {
     }>;
   };
   onSave?: (content: EditableContent) => Promise<void>;
-  onSaveCollection?: (data: EditableCollectionData<PlatformCardItem>) => Promise<void>;
+  onSaveCollection?: (
+    data: EditableCollectionData<PlatformCardItem>
+  ) => Promise<void>;
 }
 
 export function PlatformCardsSection({
@@ -45,9 +54,11 @@ export function PlatformCardsSection({
 }: PlatformCardsSectionProps) {
   const { isAdmin } = useAuthContext();
 
-  const [cardsData, setCardsData] = useState<EditableCollectionData<PlatformCardItem>>({
-    id: 'platform-cards',
-    section: 'platforms',
+  const [cardsData, setCardsData] = useState<
+    EditableCollectionData<PlatformCardItem>
+  >({
+    id: "platform-cards",
+    section: "platforms",
     items: (content.items || []).map((card, index) => ({
       ...card,
       title: card.name,
@@ -59,8 +70,8 @@ export function PlatformCardsSection({
   useEffect(() => {
     if (content.items) {
       setCardsData({
-        id: 'platform-cards',
-        section: 'platforms',
+        id: "platform-cards",
+        section: "platforms",
         items: content.items.map((card, index) => ({
           ...card,
           title: card.name,
@@ -71,9 +82,15 @@ export function PlatformCardsSection({
     }
   }, [content]);
 
-  const [activeVideoUrl, setActiveVideoUrl] = useState<string>(cardsData.items[0]?.videoUrl || '');
-  const [activeVideoTitle, setActiveVideoTitle] = useState<string>(cardsData.items[0]?.name || '');
-  const [hoveredCardId, setHoveredCardId] = useState<string | null>(cardsData.items[0]?.id || null);
+  const [activeVideoUrl, setActiveVideoUrl] = useState<string>(
+    cardsData.items[0]?.videoUrl || ""
+  );
+  const [activeVideoTitle, setActiveVideoTitle] = useState<string>(
+    cardsData.items[0]?.name || ""
+  );
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(
+    cardsData.items[0]?.id || null
+  );
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
@@ -113,26 +130,28 @@ export function PlatformCardsSection({
   const scrollToCard = (index: number) => {
     if (!cardsContainerRef.current) return;
     const container = cardsContainerRef.current;
-    const cardElements = container.querySelectorAll('.video-card-wrapper');
+    const cardElements = container.querySelectorAll(".video-card-wrapper");
     if (cardElements[index]) {
       const card = cardElements[index] as HTMLElement;
       const containerWidth = container.offsetWidth;
       const cardWidth = card.offsetWidth;
       const cardLeft = card.offsetLeft;
-      const scrollPosition = cardLeft - (containerWidth / 2) + (cardWidth / 2);
-      container.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+      const scrollPosition = cardLeft - containerWidth / 2 + cardWidth / 2;
+      container.scrollTo({ left: scrollPosition, behavior: "smooth" });
       setCurrentIndex(index);
     }
   };
 
   const handlePrevCard = () => {
-    const newIndex = currentIndex > 0 ? currentIndex - 1 : cardsData.items.length - 1;
+    const newIndex =
+      currentIndex > 0 ? currentIndex - 1 : cardsData.items.length - 1;
     scrollToCard(newIndex);
     handleCardClick(cardsData.items[newIndex], newIndex);
   };
 
   const handleNextCard = () => {
-    const newIndex = currentIndex < cardsData.items.length - 1 ? currentIndex + 1 : 0;
+    const newIndex =
+      currentIndex < cardsData.items.length - 1 ? currentIndex + 1 : 0;
     scrollToCard(newIndex);
     handleCardClick(cardsData.items[newIndex], newIndex);
   };
@@ -146,12 +165,13 @@ export function PlatformCardsSection({
       timeoutId = setTimeout(() => {
         const scrollLeft = container.scrollLeft;
         const containerWidth = container.offsetWidth;
-        const cards = container.querySelectorAll('.video-card-wrapper');
+        const cards = container.querySelectorAll(".video-card-wrapper");
         let closestIndex = 0;
         let closestDistance = Infinity;
         cards.forEach((card, index) => {
           const cardElement = card as HTMLElement;
-          const cardCenter = cardElement.offsetLeft + cardElement.offsetWidth / 2;
+          const cardCenter =
+            cardElement.offsetLeft + cardElement.offsetWidth / 2;
           const containerCenter = scrollLeft + containerWidth / 2;
           const distance = Math.abs(cardCenter - containerCenter);
           if (distance < closestDistance) {
@@ -164,16 +184,21 @@ export function PlatformCardsSection({
         }
       }, 100);
     };
-    container.addEventListener('scroll', handleScroll);
+    container.addEventListener("scroll", handleScroll);
     return () => {
-      container.removeEventListener('scroll', handleScroll);
+      container.removeEventListener("scroll", handleScroll);
       clearTimeout(timeoutId);
     };
   }, [currentIndex, cardsData.items.length]);
 
-  const handleSaveCards = async (data: EditableCollectionData<PlatformCardItem>) => {
+  const handleSaveCards = async (
+    data: EditableCollectionData<PlatformCardItem>
+  ) => {
     setCardsData(data);
-    if (!data.items.find(item => item.id === hoveredCardId) && data.items.length > 0) {
+    if (
+      !data.items.find((item) => item.id === hoveredCardId) &&
+      data.items.length > 0
+    ) {
       const firstCard = data.items[0];
       setActiveVideoUrl(firstCard.videoUrl);
       setActiveVideoTitle(firstCard.name);
@@ -187,15 +212,15 @@ export function PlatformCardsSection({
   const createNewCard = (): PlatformCardItem => ({
     id: `card_${Date.now()}`,
     order: cardsData.items.length,
-    name: 'Nuevo Módulo',
-    title: 'Nuevo Módulo',
-    caption: 'Sistema de Gestión',
-    description: 'Descripción del módulo',
-    imageUrl: 'https://via.placeholder.com/300x200/4F46E5/ffffff?text=Nuevo',
-    videoUrl: '',
-    hoverVideoUrl: '',
-    ctaUrl: 'https://example.com/curso',
-    libraryUrl: 'https://example.com/biblioteca',
+    name: "Nuevo Módulo",
+    title: "Nuevo Módulo",
+    caption: "Sistema de Gestión",
+    description: "Descripción del módulo",
+    imageUrl: "https://via.placeholder.com/300x200/4F46E5/ffffff?text=Nuevo",
+    videoUrl: "",
+    hoverVideoUrl: "",
+    ctaUrl: "https://example.com/curso",
+    libraryUrl: "https://example.com/biblioteca",
   });
 
   return (
@@ -210,21 +235,27 @@ export function PlatformCardsSection({
                   src={activeVideoUrl}
                   className="rounded-2xl shadow-lg w-full"
                   controls
-                  style={{ width: '100%', aspectRatio: '16 / 9', background: '#000' }}
+                  style={{
+                    width: "100%",
+                    aspectRatio: "16 / 9",
+                    background: "#000",
+                  }}
                   muted
                   loop
                   playsInline
                 />
-                <div className="video-title-overlay">
+                {/* <div className="video-title-overlay">
                   <span className="inline-block bg-gray-900/75 text-white px-3 py-2 rounded-md">
                     {activeVideoTitle}
                   </span>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
 
-          <div className={`cards-container-wrapper ${cardsData.items.length > 2 ? 'carrousel-desktop-cards' : ''}`}>
+          <div
+            className={`cards-container-wrapper ${cardsData.items.length > 2 ? "carrousel-desktop-cards" : ""}`}
+          >
             <div className="cards-container pt-2" ref={cardsContainerRef}>
               <EditableCollection
                 data={cardsData}
@@ -258,7 +289,10 @@ export function PlatformCardsSection({
                   onClick={handlePrevCard}
                   aria-label="Card anterior"
                 >
-                  <ChevronLeft className="text-gray-700 group-hover:text-indigo-600 transition-colors" strokeWidth={1} />
+                  <ChevronLeft
+                    className="text-gray-700 group-hover:text-indigo-600 transition-colors"
+                    strokeWidth={1}
+                  />
                 </Button>
 
                 <Button
@@ -268,7 +302,10 @@ export function PlatformCardsSection({
                   onClick={handleNextCard}
                   aria-label="Card siguiente"
                 >
-                  <ChevronRight className="text-gray-700 group-hover:text-indigo-600 transition-colors" strokeWidth={1} />
+                  <ChevronRight
+                    className="text-gray-700 group-hover:text-indigo-600 transition-colors"
+                    strokeWidth={1}
+                  />
                 </Button>
               </>
             )}
@@ -288,7 +325,14 @@ interface PlatformCardProps {
   helpers: any;
 }
 
-function PlatformCard({ card, isActive, isEditing, onActivate, onHover, helpers }: PlatformCardProps) {
+function PlatformCard({
+  card,
+  isActive,
+  isEditing,
+  onActivate,
+  onHover,
+  helpers,
+}: PlatformCardProps) {
   const handleClick = () => {
     if (!isEditing) onActivate();
   };
@@ -298,12 +342,18 @@ function PlatformCard({ card, isActive, isEditing, onActivate, onHover, helpers 
   };
 
   if (isEditing) {
-    return <CardEditor card={card} onSave={helpers.onSaveItem} onCancel={helpers.onCancelEdit} />;
+    return (
+      <CardEditor
+        card={card}
+        onSave={helpers.onSaveItem}
+        onCancel={helpers.onCancelEdit}
+      />
+    );
   }
 
   return (
     <div
-      className={`video-card ${isActive ? 'active' : ''}`}
+      className={`video-card ${isActive ? "active" : ""}`}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
     >
@@ -344,8 +394,8 @@ function PlatformCard({ card, isActive, isEditing, onActivate, onHover, helpers 
       <div className="card-actions">
         {card.ctaUrl ? (
           <>
-            
-              <a href={card.ctaUrl}
+            <a
+              href={card.ctaUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="card-btn"
@@ -355,8 +405,8 @@ function PlatformCard({ card, isActive, isEditing, onActivate, onHover, helpers 
               <ChevronRight size={16} />
             </a>
             {card.libraryUrl && (
-                
-                <a href={card.libraryUrl}
+              <a
+                href={card.libraryUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="card-btn"
@@ -403,8 +453,13 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
 
       <div className="grid gap-3">
         {[
-          { label: 'Nombre', field: 'name', type: 'text', extraUpdate: { title: true } },
-          { label: 'Caption', field: 'caption', type: 'text' },
+          {
+            label: "Nombre",
+            field: "name",
+            type: "text",
+            extraUpdate: { title: true },
+          },
+          { label: "Caption", field: "caption", type: "text" },
         ].map(({ label, field, type, extraUpdate }) => (
           <div key={field}>
             <label className="block text-xs mb-1 font-medium">{label}</label>
@@ -426,29 +481,39 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
         <div>
           <label className="block text-xs mb-1 font-medium">Descripción</label>
           <textarea
-            value={formData.description || ''}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            value={formData.description || ""}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
             rows={2}
             className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm resize-y"
           />
         </div>
 
-        {(['imageUrl', 'videoUrl', 'ctaUrl', 'libraryUrl'] as const).map((field) => (
-          <div key={field}>
-            <label className="block text-xs mb-1 font-medium">
-              {field === 'imageUrl' ? 'Imagen URL' :
-               field === 'videoUrl' ? 'Video URL' :
-               field === 'ctaUrl' ? 'CTA URL (opcional)' : 'Library URL (opcional)'}
-            </label>
-            <input
-              type="url"
-              value={formData[field] || ''}
-              onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
-              placeholder={field.includes('Url') ? 'https://...' : ''}
-              className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs"
-            />
-          </div>
-        ))}
+        {(["imageUrl", "videoUrl", "ctaUrl", "libraryUrl"] as const).map(
+          (field) => (
+            <div key={field}>
+              <label className="block text-xs mb-1 font-medium">
+                {field === "imageUrl"
+                  ? "Imagen URL"
+                  : field === "videoUrl"
+                    ? "Video URL"
+                    : field === "ctaUrl"
+                      ? "CTA URL (opcional)"
+                      : "Library URL (opcional)"}
+              </label>
+              <input
+                type="url"
+                value={formData[field] || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, [field]: e.target.value })
+                }
+                placeholder={field.includes("Url") ? "https://..." : ""}
+                className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs"
+              />
+            </div>
+          )
+        )}
       </div>
 
       <div className="flex gap-1.5 mt-4">
@@ -471,4 +536,3 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
     </div>
   );
 }
-

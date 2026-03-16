@@ -19,7 +19,6 @@ export function useAuth() {
 
   const isAdmin = user?.role === 'admin' || user?.perfil === 1;
 
-  // Cargar usuario desde localStorage al montar
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -27,11 +26,9 @@ export function useAuth() {
         const storedUser = localStorage.getItem(USER_DATA_KEY);
 
         if (token && storedUser) {
-          // Intentar usar datos del localStorage primero
           const parsedUser = JSON.parse(storedUser) as User;
           setUser(parsedUser);
 
-          // Validar token con el backend
           try {
             const userResponse = await authService.getCurrentUser(token);
             const validatedUser = mapUserResponseToUser(userResponse);
@@ -56,9 +53,7 @@ export function useAuth() {
     loadUser();
   }, []);
 
-  /**
-   * Iniciar sesión
-   */
+
   const login = useCallback(async (credentials: LoginCredentials): Promise<User> => {
     try {
       setError(null);
@@ -66,7 +61,6 @@ export function useAuth() {
       const tokenResponse = await authService.login(credentials);
       const authResponse = mapTokenResponseToAuth(tokenResponse);
       
-      // Guardar token y usuario
       localStorage.setItem(AUTH_TOKEN_KEY, authResponse.access_token);
       localStorage.setItem(USER_DATA_KEY, JSON.stringify(authResponse.user));
       
@@ -79,9 +73,7 @@ export function useAuth() {
     }
   }, []);
 
-  /**
-   * Registrar nuevo usuario
-   */
+
   const register = useCallback(async (data: RegisterData): Promise<User> => {
     try {
       setError(null);
@@ -89,7 +81,6 @@ export function useAuth() {
       const tokenResponse = await authService.register(data);
       const authResponse = mapTokenResponseToAuth(tokenResponse);
       
-      // Guardar token y usuario
       localStorage.setItem(AUTH_TOKEN_KEY, authResponse.access_token);
       localStorage.setItem(USER_DATA_KEY, JSON.stringify(authResponse.user));
       
@@ -102,40 +93,32 @@ export function useAuth() {
     }
   }, []);
 
-  /**
-   * Cerrar sesión
-   */
+ 
   const logout = useCallback(async () => {
     try {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       
       if (token) {
-        // Intentar cerrar sesión en el backend
         try {
           await authService.logout(token);
         } catch (err) {
           console.warn('Error al cerrar sesión en el backend:', err);
-          // Continuar de todos modos con el logout local
         }
       }
       
-      // Limpiar estado local
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(USER_DATA_KEY);
       setUser(null);
       setError(null);
     } catch (err: any) {
       console.error('Error during logout:', err);
-      // Limpiar de todos modos
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(USER_DATA_KEY);
       setUser(null);
     }
   }, []);
 
-  /**
-   * Refrescar token
-   */
+
   const refreshToken = useCallback(async (): Promise<void> => {
     try {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
@@ -153,15 +136,12 @@ export function useAuth() {
       setUser(authResponse.user);
     } catch (err: any) {
       console.error('Error refreshing token:', err);
-      // Si falla el refresh, cerrar sesión
       await logout();
       throw err;
     }
   }, [logout]);
 
-  /**
-   * Obtener token actual
-   */
+
   const getToken = useCallback((): string | null => {
     return localStorage.getItem(AUTH_TOKEN_KEY);
   }, []);

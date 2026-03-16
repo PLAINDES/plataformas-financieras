@@ -1,13 +1,4 @@
-// src/types/api.types.ts
-// Tipos que coinciden EXACTAMENTE con los schemas de FastAPI
 
-
-
-// ==================== CMS - LANDING ====================
-
-// types/api.types.ts
-
-// Interface para los items del contenido (data variable)
 export interface SectionContentItem {
   id: number;
   order: number;
@@ -17,21 +8,20 @@ export interface SectionContentItem {
     slug: string;
     status: string;
     content_type_id: number;
-    data: any; // Aquí puedes ser más específico según la sección (Hero, Product, etc.)
+    data: any;
     created_at: string;
     updated_at: string;
   };
 }
 
-// Interface de la Sección corregida
 export interface SectionResponse {
   id: number;
-  name: string;          // "hero-home", "platform", etc.
-  component: string;     // "HeroSection", "PlatformSection", etc.
+  name: string;          
+  component: string;   
   order: number;
   is_visible: boolean;
   page_id: number;
-  contents: SectionContentItem[]; // Es una lista de contenidos
+  contents: SectionContentItem[]; 
   created_at: string;
   updated_at: string;
 }
@@ -58,10 +48,8 @@ export interface PageWithSections extends PageResponse {
 export interface LandingDataResponse {
   page: PageResponse;
   sections: SectionResponse[];
-  company_info: Record<string, any>; // JSON dinámico del backend
+  company_info: Record<string, any>; 
 }
-
-// ==================== CMS - PAGES (ADMIN) ====================
 
 export interface PageCreate {
   title: string;
@@ -83,8 +71,6 @@ export interface PageUpdate {
   meta_description?: string;
 }
 
-// ==================== CMS - SECTIONS (ADMIN) ====================
-
 export interface SectionCreate {
   page_id: number;
   section_type: string;
@@ -105,8 +91,6 @@ export interface SectionUpdate {
   is_active?: boolean;
   css_classes?: string;
 }
-
-// ==================== CMS - CONTACT ====================
 
 export interface ContactMessageCreate {
   name: string;
@@ -137,7 +121,6 @@ export interface ContactMessageResponse {
   created_at: string;
 }
 
-// ==================== CMS - MEDIA ====================
 
 export interface MediaCreate {
   filename: string;
@@ -163,7 +146,6 @@ export interface MediaResponse {
   created_at: string;
 }
 
-// ==================== CMS - DASHBOARD ====================
 
 export interface AdminDashboardStats {
   total_pages: number;
@@ -174,8 +156,6 @@ export interface AdminDashboardStats {
   total_messages: number;
   total_media: number;
 }
-
-// ==================== API ERROR ====================
 
 export interface APIError {
   detail: string;
