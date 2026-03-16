@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ChevronUp, ChevronDown, BarChart2, Home, ChevronRight, Expand,
-} from "lucide-react";
+import {  ChevronUp, ChevronDown, BarChart2, Home, ChevronRight} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -224,7 +222,6 @@ export const ReporteKapitalEditor: React.FC = () => {
         </h1>
       </header>
 
-      {/* Breadcrumb — fuera del contenedor blanco */}
       <div className="flex items-center gap-1 px-4 py-3 text-[10px] text-slate-500 md:px-6">
         <Home className="h-3 w-3" />
         <span>Home</span>
@@ -242,7 +239,6 @@ export const ReporteKapitalEditor: React.FC = () => {
         </span>
       </div>
 
-      {/* Contenedor blanco único */}
       <div className="mx-4 mb-10 md:mx-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
 
         {/* Título dentro del contenedor */}
@@ -252,14 +248,12 @@ export const ReporteKapitalEditor: React.FC = () => {
           </h2>
         </div>
 
-        {/* Cuerpo: form + sidebar */}
         <div className="flex flex-col gap-6 p-6 lg:flex-row">
 
-          {/* ── Columna principal ── */}
           <div className="flex flex-1 flex-col gap-5 min-w-0">
 
             {/* Campos del formulario */}
-            <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-5">
+            <div className="p-2">
               <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end">
                 <div className="flex-1">
                   <Label htmlFor="nombre" className="mb-1.5 block text-xs font-semibold text-slate-600 uppercase">
@@ -338,7 +332,7 @@ export const ReporteKapitalEditor: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
                 <div className="flex-1">
                   <Label className="mb-1.5 block text-xs font-semibold text-slate-600 uppercase">
                     Portada
@@ -361,7 +355,7 @@ export const ReporteKapitalEditor: React.FC = () => {
                 </div>
 
                 <div
-                  className="relative flex h-28 w-20 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-blue-200 shadow-sm bg-gradient-to-br from-blue-600 to-blue-800"
+                  className="relative flex h-24 w-16 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-blue-200 shadow-sm bg-gradient-to-br from-blue-600 to-blue-800"
                   onClick={() => portadaUrl && setLightboxOpen(true)}
                 >
                   {/* Cambiar para consumir portada de api con imagen real */}
@@ -386,34 +380,38 @@ export const ReporteKapitalEditor: React.FC = () => {
                 </div>
               </div>
             </div>
-
-            {/* Referencia de tokens */}
             <div className="rounded-xl border border-violet-200 bg-violet-50 p-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <code className="rounded bg-violet-100 px-1 py-0.5 font-mono text-[10px] font-semibold text-violet-700 whitespace-nowrap">$BLOQUE_INICIO$</code>
-                    <span className="text-[10px] text-violet-600">Inicia una fila de columnas</span>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="space-y-3 sm:col-span-1">
+                  <div className="flex flex-col items-start gap-1">
+                    <code className="rounded bg-violet-100 px-1 py-0.5 font-mono text-[12px] font-semibold text-violet-700 whitespace-nowrap">$BLOQUE_INICIO$</code>
+                    <p className="text-[10px] font-medium text-violet-600">Inicia una fila de columnas</p>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <code className="rounded bg-violet-100 px-1 py-0.5 font-mono text-[10px] font-semibold text-violet-700 whitespace-nowrap">$BLOQUE_FIN$</code>
-                    <span className="text-[10px] text-violet-600">Cierra la fila iniciada</span>
-                  </div>
-                  <div className="pt-1">
-                    <p className="font-mono text-[10px] text-violet-500">$$W6OMQ$$[*height:350px;][.col-6]</p>
-                    <p className="text-[10px] text-violet-400 mt-0.5">Estilos: [*height:350px;*width:50%;]</p>
-                    <p className="text-[10px] text-violet-400">Clases: [.col-2.col-3.col-4]</p>
+                  <div className="flex flex-col items-start gap-1">
+                    <code className="rounded  bg-violet-100 px-1 py-0.5 font-mono text-[12px] font-semibold text-violet-700 whitespace-nowrap">$BLOQUE_FIN$</code>
+                    <p className="text-[10px] font-medium text-violet-600">Cierra la fila iniciada</p>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-[10px] font-semibold text-violet-600 uppercase tracking-wide">Columnas disponibles</p>
-                  <p className="font-mono text-[10px] text-violet-500">[1|2|3|4|5|6|7|8|9|10|11|12]</p>
-                  <p className="text-[10px] text-violet-500">
-                    Las clases <code className="rounded bg-violet-100 px-0.5 font-mono text-violet-700">col-*</code> se comportan como columnas dentro de un bloque.
-                  </p>
-                  <div className="pt-1 space-y-1">
-                    <p className="text-[10px] font-semibold text-violet-600">Texto:</p>
-                    <p className="font-mono text-[10px] text-violet-500">{"{"}{"= hola ="}{"}"} o {"{"}{"= hola ="}{"}"}{"[.col-6]"}</p>
+
+                <div className="space-y-1 sm:col-span-2">
+                  <div>
+                    <p className="text-[10px] text-violet-600 leading-relaxed font-bold">
+                      Para insertar estilos y clases a un elemento ingresado debe de seguir estos patrones como ejemplo:
+                    </p>
+                    <p className="font-mono text-[10px] text-violet-500 mt-1">$$W6OMQ$$[*height:350px;][.col-6]</p>
+                    <p className="text-[10px] text-violet-400 mt-0.5">Estilos: [*height:350px;*width:50%;]</p>
+                    <p className="text-[10px] text-violet-400">Clases: [.col-2.col-3.col-4] `{"{=>"}"` [1|2|3|4|5|6|7|8|9|10|11|12]</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-violet-400 mt-0.5">
+                      Las clases que contengan <code className="rounded bg-violet-100 px-0.5 font-mono text-violet-700">col</code> se comportarán como columnas si están dentro de un bloque.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-violet-600 leading-relaxed">
+                      Para la edición de textos se debe ingresar dentro de estas llaves:
+                    </p>
+                    <p className="font-bold text-[10px] text-violet-500 mt-1">{"{"}{"= hola ="}{"}"} o {"{"}{"= hola ="}{"}"}{"[.col-6]"}</p>
                   </div>
                 </div>
               </div>
@@ -441,7 +439,7 @@ export const ReporteKapitalEditor: React.FC = () => {
 
           {/* ── Sidebar ── */}
           <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0">
-            <p className="mb-3 text-[11px] font-bold tracking-widest text-slate-700 uppercase">
+            <p className="mb-3 text-[14px] font-bold tracking-widest text-slate-700 uppercase">
               Estructura de Tablas y Gráficos
             </p>
             <div className="flex flex-col gap-3">
