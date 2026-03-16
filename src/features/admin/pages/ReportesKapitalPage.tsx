@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
+import { useNavigate } from "react-router-dom";
 
 interface Reporte {
   id: number;
@@ -39,6 +40,7 @@ const INITIAL_DATA: Reporte[] = [
 
 export const ReportesKapitalPage = () => {
   const [data, setData] = useState<Reporte[]>(INITIAL_DATA);
+  const navigate = useNavigate();
 
   const handleCreate = () => {
     const newReporte: Reporte = {
@@ -52,8 +54,10 @@ export const ReportesKapitalPage = () => {
     setData([...data, newReporte]);
   };
 
+
+
   const handleEdit = (item: Reporte) => {
-    alert(`Editar reporte: ${item.nombre}`);
+    navigate(`/admin/kapital/reportes/${item.id}/editar`);
   };
 
   const handleDelete = (item: Reporte) => {

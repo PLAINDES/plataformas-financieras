@@ -15,6 +15,7 @@ import { ReportesKapitalPage } from "./features/admin/pages/ReportesKapitalPage"
 import { ReportesValoraPage } from "./features/admin/pages/ReportesValoraPage";
 import { ConfiguracionPage } from "./features/admin/pages/ConfiguracionPage";
 import ProyectosUsuarioPage from "./features/finance/components/ProyectosUsuarioPage";
+import { ReporteKapitalEditor } from "./features/admin/components/ReporteKapitalEditor";
 
 const COMPANY = {
   id: 1,
@@ -90,6 +91,7 @@ function App() {
         <Route index element={<DashboardPage />} />
         <Route path="master/plantillas" element={<PlantillasMaestrasPage />} />
         <Route path="kapital/reportes" element={<ReportesKapitalPage />} />
+        <Route path="kapital/reportes/:id/editar" element={<ReporteKapitalEditor />} />
         <Route path="valora/reportes" element={<ReportesValoraPage />} />
         <Route path="configuraciones" element={<ConfiguracionPage />} />
       </Route>

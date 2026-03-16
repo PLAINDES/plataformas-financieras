@@ -89,6 +89,7 @@ export type TemplateComplementCreate = Omit<
 export type TemplateComplementUpdate = Partial<TemplateComplementCreate>;
 
 export interface Calculation {
+  code: ReactNode;
   id: number;
   calculation_file_id: number | null;
   user_id: number;

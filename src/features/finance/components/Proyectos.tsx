@@ -20,10 +20,6 @@ interface ProyectosProps {
   userId?: number;
 }
 
-const tipoStyle: Record<string, string> = {
-  valora: "bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200",
-  kapital: "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200",
-};
 
 const PAGE_SIZE = 10;
 
@@ -39,7 +35,7 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
   const accionesCell = (c: Calculation): React.ReactNode => (
     <div className="flex items-center justify-center gap-1">
       <a
-        href={`/${c.type}/${c.report_code}/resultados`}
+        href={`/${c.type}/${c.code}/resultados`}
         className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-colors"
         title="Ver proyecto"
       >
@@ -67,7 +63,7 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
       header: "Proyecto",
       cell: (c) => (
         <span className="font-mono text-gray-800 font-medium tracking-tight text-xs">
-          {String(c.data?.sector ?? c.data?.industria ?? `calc-${c.id}`)}
+          {(c.code)}
         </span>
       ),
     },
@@ -93,20 +89,7 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
       header: "Proyecto",
       cell: (c) => (
         <span className="font-mono text-gray-800 font-medium tracking-tight text-xs">
-          {(c.report_code)}
-        </span>
-      ),
-    },
-    {
-      header: "Tipo",
-      cell: (c) => (
-        <span
-          className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${
-            tipoStyle[c.type] ?? tipoStyle["valora"]
-          }`}
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
-          {c.type}
+          {(c.code)}
         </span>
       ),
     },
