@@ -141,6 +141,7 @@ export interface TemplateWithCodes {
 export interface Report {
   id: number;
   nombre: string;
+  file: string | null;
   precio: number | null;
   moneda: string;
   sector_empresa: string | null;
