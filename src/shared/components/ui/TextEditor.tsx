@@ -111,7 +111,15 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, title, icon 
   );
 };
 
-export const RichTextEditor: React.FC = () => {
+interface RichTextEditorProps {
+  initialContent?: string;
+  onChange?: (html: string) => void;
+}
+
+export const RichTextEditor: React.FC<RichTextEditorProps> = ({
+  initialContent = DEFAULT_CONTENT,
+  onChange,
+}) => {
   const [fontSize, setFontSize] = useState("13");
   const [fontFamily, setFontFamily] = useState("sans-serif");
   const [textColor, setTextColor] = useState("#f7c400");
@@ -134,11 +142,27 @@ export const RichTextEditor: React.FC = () => {
       Subscript,
       Superscript,
     ],
-    content: DEFAULT_CONTENT,
+    content: initialContent,
+    onUpdate({editor}){
+      onChange?.(editor.getHTML());
+    },
     editorProps: {
       attributes: {
         class:
           "prose prose-sm max-w-none focus:outline-none min-h-[400px] px-6 py-5 text-slate-800 leading-relaxed",
+      },
+      handleDrop(view, event, _slice, moved) {
+        if (moved) return false;
+        const token = event.dataTransfer?.getData("text/plain");
+        if (!token) return false;
+
+        const coords = { left: event.clientX, top: event.clientY };
+        const pos = view.posAtCoords(coords);
+        if (!pos) return false;
+
+        view.dispatch(view.state.tr.insertText(token, pos.pos));
+        event.preventDefault();
+        return true;
       },
     },
   });
