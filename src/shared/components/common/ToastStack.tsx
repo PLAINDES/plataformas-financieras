@@ -1,3 +1,5 @@
+import React from "react";
+
 import type { ToastType } from "../../types/toast.types";
 
 export interface ToastItem {
@@ -34,7 +36,7 @@ export const ToastStack: React.FC<ToastStackProps> = ({
   toasts,
   onDismiss,
 }) => (
-  <div className="fixed right-6 top-6 z-60 flex w-full max-w-xs flex-col gap-2">
+  <div className="fixed right-6 top-6 z-[60] flex w-full max-w-xs flex-col gap-2">
     {toasts.map((toast) => {
       const { className, icon } = toastStyles[toast.type];
 

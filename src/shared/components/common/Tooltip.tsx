@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface TooltipProps {
   id: string;
   content: string;
