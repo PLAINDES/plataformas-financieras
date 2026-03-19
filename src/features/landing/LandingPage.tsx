@@ -10,14 +10,12 @@ import TeamSection from "./sections/TeamSection";
 import { LandingHeader } from "./layout/LandingHeader";
 import { LandingFooter } from "./layout/LandingFooter";
 import { ScrollTop } from "@/shared/components/layout/ScrollTop";
+import ErrorFallback from "@/shared/components/ErrorFallback";
 import { useLandingData } from "@/features/landing/hooks/useLandingData";
 import { useLandingCMS } from "@/features/landing/hooks/useLandingCMS";
 import type { Company } from "@/shared/types";
-import type {
-  User,
-  LoginCredentials,
-  RegisterData,
-} from "../auth/types/user.types";
+import type { User } from "@/shared/types/user.types";
+import type { LoginCredentials } from "../auth/types/user.types";
 
 const COMPANY: Company = {
   id: 1,
@@ -68,9 +66,7 @@ export function LandingPage({
     );
   if (!data)
     return (
-      <div className="flex h-screen items-center justify-center text-red-500">
-        Error loading data
-      </div>
+      <ErrorFallback message="No se pudieron cargar los datos del sitio. Intenta recargar la página o contacta al administrador." />
     );
 
   return (
@@ -109,6 +105,7 @@ export function LandingPage({
 
       <BenefitsSection
         content={getContentData("benefits-home")}
+        isAdmin={isAdmin}
         onSave={handleSaveContent}
       />
       <ProductsSection

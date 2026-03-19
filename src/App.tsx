@@ -12,7 +12,9 @@ import { ProtectedRoute } from "@features/auth/components/ProtectedRoute";
 import MainLayout from "@features/admin/MainLayout";
 import { PlantillasMaestrasPage } from "./features/admin/pages/PlantillasMaestrasPage";
 import { ReportesKapitalPage } from "./features/admin/pages/ReportesKapitalPage";
-import { ReportesValoraPage } from "./features/admin/pages/ReportesValoraPage";
+import PortadasPage from "./features/admin/pages/PortadasPage";
+import PortadaCreatePage from "./features/admin/pages/PortadaCreatePage";
+import PortadaEditPage from "./features/admin/pages/PortadaEditPage";
 import { ConfiguracionPage } from "./features/admin/pages/ConfiguracionPage";
 import ProyectosUsuarioPage from "./features/finance/components/ProyectosUsuarioPage";
 import { ReporteKapitalEditor } from "./features/admin/components/ReporteKapitalEditor";
@@ -86,12 +88,11 @@ function App() {
       >
         <Route index element={<DashboardPage />} />
         <Route path="master/plantillas" element={<PlantillasMaestrasPage />} />
-        <Route path="kapital/reportes" element={<ReportesKapitalPage />} />
-        <Route
-          path="kapital/reportes/:id/editar"
-          element={<ReporteKapitalEditor />}
-        />
-        <Route path="valora/reportes" element={<ReportesValoraPage />} />
+        <Route path="reportes" element={<ReportesKapitalPage />} />
+        <Route path="portadas" element={<PortadasPage />} />
+        <Route path="portadas/nuevo" element={<PortadaCreatePage />} />
+        <Route path="portadas/:id/editar" element={<PortadaEditPage />} />
+        <Route path="reportes/:id/editar" element={<ReporteKapitalEditor />} />
         <Route path="configuraciones" element={<ConfiguracionPage />} />
       </Route>
     </Routes>

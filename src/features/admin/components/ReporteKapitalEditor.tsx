@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronUp, ChevronDown, BarChart2, Home, ChevronRight } from "lucide-react";
+import { ChevronUp, ChevronDown, BarChart2, Home } from "lucide-react";
+import Breadcrumbs from "@/shared/components/Breadcrumbs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -83,7 +84,9 @@ const FieldItem: React.FC<{ field: TemplateCodeBasic }> = ({ field }) => (
       <p className="truncate font-mono text-[11px] font-semibold text-blue-500">
         {field.code}
       </p>
-      <p className="truncate text-xs font-medium text-slate-700">{field.nombre}</p>
+      <p className="truncate text-xs font-medium text-slate-700">
+        {field.nombre}
+      </p>
       <p className="truncate text-[10px] text-slate-400">{field.hoja ?? "—"}</p>
     </div>
   </div>
@@ -124,10 +127,9 @@ export const ReporteKapitalEditor: React.FC = () => {
   const navigate = useNavigate();
   const isEdit = Boolean(id);
 
-
   const [editorKey, setEditorKey] = useState(0);
   const [editorContent, setEditorContent] = useState<string>("");
-  const [contentReady, setContentReady] = useState(false); 
+  const [contentReady, setContentReady] = useState(false);
 
   const [form, setForm] = useState<ReportFormData>(INITIAL_FORM);
   const [report, setReport] = useState<Report | null>(null);
@@ -140,6 +142,23 @@ export const ReporteKapitalEditor: React.FC = () => {
 
   const templateCodes = report?.template?.template_codes ?? [];
   const portadaUrl = report?.portada?.portada?.url;
+  const selectedCover = form.portadaId
+    ? covers.find((c) => c.id === form.portadaId)
+    : undefined;
+  const selectedCoverUrl = selectedCover?.portada?.url ?? portadaUrl ?? null;
+
+  const breadcrumbItems = [
+    {
+      label: (
+        <div className="flex items-center gap-1">
+          <Home className="h-3 w-3" />
+          <span className="ml-1">Home</span>
+        </div>
+      ),
+    },
+    { label: "Reportes", onClick: () => navigate("/admin/reportes") },
+    { label: isEdit ? form.nombre || "Editar reporte" : "Nuevo reporte" },
+  ];
 
   const isChartOrTable = (tc: TemplateCodeBasic) => {
     const text = `${tc.nombre} ${tc.code}`.toLowerCase();
@@ -210,7 +229,7 @@ export const ReporteKapitalEditor: React.FC = () => {
         contenido: form.contenido,
         link_pago: form.linkPago,
         activo: form.activo,
-        portada_id: form.portadaId
+        portada_id: form.portadaId,
       });
 
       const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
@@ -236,7 +255,11 @@ export const ReporteKapitalEditor: React.FC = () => {
       const canvas = await html2canvas(element, { scale: 2, useCORS: true });
       document.body.removeChild(element);
 
-      const pdf = new jsPDF({ unit: "px", format: "a4", orientation: "portrait" });
+      const pdf = new jsPDF({
+        unit: "px",
+        format: "a4",
+        orientation: "portrait",
+      });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = pageWidth;
@@ -266,7 +289,9 @@ export const ReporteKapitalEditor: React.FC = () => {
       navigate("/admin/kapital/reportes");
     } catch (err) {
       console.error(err);
-      alert("Error al guardar el reporte. Revisa la consola para más detalles.");
+      alert(
+        "Error al guardar el reporte. Revisa la consola para más detalles."
+      );
     } finally {
       setSaving(false);
     }
@@ -288,14 +313,14 @@ export const ReporteKapitalEditor: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       {/* Lightbox */}
-      {lightboxOpen && portadaUrl && (
+      {lightboxOpen && selectedCoverUrl && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
           onClick={() => setLightboxOpen(false)}
         >
           <img
-            src={"/images/prueba_portada.jpg"}
-            alt={"prueba"}
+            src={selectedCoverUrl!}
+            alt={"portada"}
             className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-2xl object-contain"
             onClick={(e) => e.stopPropagation()}
           />
@@ -317,22 +342,10 @@ export const ReporteKapitalEditor: React.FC = () => {
       </header>
 
       {/* Breadcrumb */}
-      <div className="flex items-center gap-1 px-4 py-3 text-[10px] text-slate-500 md:px-6">
-        <Home className="h-3 w-3" />
-        <span>Home</span>
-        <ChevronRight className="h-3 w-3" />
-        <button
-          type="button"
-          className="hover:underline"
-          onClick={() => navigate("/admin/kapital/reportes")}
-        >
-          Reportes
-        </button>
-        <ChevronRight className="h-3 w-3" />
-        <span className="font-medium text-slate-700">
-          {isEdit ? form.nombre || "Editar reporte" : "Nuevo reporte"}
-        </span>
-      </div>
+      <Breadcrumbs
+        items={breadcrumbItems}
+        className="flex items-center gap-1 px-4 py-3 text-[10px] text-slate-500 md:px-6"
+      />
 
       <div className="mx-4 mb-10 md:mx-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
         {/* Card header */}
@@ -500,12 +513,12 @@ export const ReporteKapitalEditor: React.FC = () => {
                 {/* Cover thumbnail */}
                 <div
                   className="relative flex h-24 w-16 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-blue-200 shadow-sm bg-gradient-to-br from-blue-600 to-blue-800"
-                  onClick={() => portadaUrl && setLightboxOpen(true)}
+                  onClick={() => selectedCoverUrl && setLightboxOpen(true)}
                 >
-                  {portadaUrl ? (
+                  {selectedCoverUrl ? (
                     <img
-                      src={"/images/prueba_portada.jpg"}
-                      alt={"prueba"}
+                      src={selectedCoverUrl}
+                      alt={"portada"}
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -569,7 +582,8 @@ export const ReporteKapitalEditor: React.FC = () => {
                         Estilos: [*height:350px;*width:50%;]
                       </p>
                       <p className="text-[10px] text-violet-400">
-                        Clases: [.col-2.col-3.col-4] `{"{"}"={">"}"` [1|2|3|4|5|6|7|8|9|10|11|12]`
+                        Clases: [.col-2.col-3.col-4] `{"{"}"={">"}"`
+                        [1|2|3|4|5|6|7|8|9|10|11|12]`
                       </p>
                     </div>
                     <div>
@@ -578,24 +592,27 @@ export const ReporteKapitalEditor: React.FC = () => {
                         <code className="rounded bg-violet-100 px-0.5 font-mono text-violet-700">
                           col
                         </code>{" "}
-                        se comportarán como columnas si están dentro de un bloque.
+                        se comportarán como columnas si están dentro de un
+                        bloque.
                       </p>
                     </div>
                     <div>
                       <p className="text-[10px] text-violet-600 leading-relaxed">
-                        Para la edición de textos se debe ingresar dentro de estas
-                        llaves:
+                        Para la edición de textos se debe ingresar dentro de
+                        estas llaves:
                       </p>
                       <p className="font-bold text-[10px] text-violet-500 mt-1">
-                        {"{"}{"= hola ="}{"}"} o {"{"}{"= hola ="}{"}"}{" "}
-                        {"[.col-6]"}
+                        {"{"}
+                        {"= hola ="}
+                        {"}"} o {"{"}
+                        {"= hola ="}
+                        {"}"} {"[.col-6]"}
                       </p>
                     </div>
                   </div>
                 </div>
               )}
             </div>
-
 
             {!contentReady ? (
               <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-12 text-sm text-gray-400">
