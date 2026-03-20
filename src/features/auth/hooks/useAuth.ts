@@ -16,7 +16,8 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const isAdmin = user?.role === "admin" || user?.perfil === 1;
+  const isAdmin =
+    user?.role === "admin" || user?.role === "master" || user?.perfil === 1;
 
   useEffect(() => {
     const loadUser = async () => {

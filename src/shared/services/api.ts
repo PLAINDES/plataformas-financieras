@@ -134,6 +134,28 @@ class APIClient {
 
     return this.handleResponse<T>(response);
   }
+
+  /* Upload FormData (multipart). Do NOT set Content-Type — browser sets it with boundary. */
+  async postForm<T>(
+    endpoint: string,
+    formData: FormData,
+    options?: RequestOptions
+  ): Promise<T> {
+    const url = this.buildURL(endpoint, options?.params);
+
+    const headers: HeadersInit = {};
+    if (options?.token) {
+      headers["Authorization"] = `Bearer ${options.token}`;
+    }
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+
+    return this.handleResponse<T>(response);
+  }
 }
 
 export const api = new APIClient(API_BASE_URL);

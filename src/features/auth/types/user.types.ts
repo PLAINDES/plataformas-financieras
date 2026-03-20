@@ -16,7 +16,7 @@ export interface User {
   email: string;
   name: string;
   lastname?: string;
-  role: "admin" | "user";
+  role: "admin" | "master" | "user";
   is_active: boolean;
   avatar: string | null;
   created_at: string;
@@ -70,7 +70,7 @@ export interface UserResponse {
   email: string;
   name: string;
   lastname: string | null;
-  role: "admin" | "user";
+  role: "admin" | "master" | "user";
   is_active: boolean;
   avatar: string | null;
   created_at: string;
@@ -93,7 +93,7 @@ export interface UserCreate {
   name: string;
   lastname?: string;
   password: string;
-  role?: "admin" | "user";
+  role?: "admin" | "master" | "user";
 }
 
 /**
@@ -122,7 +122,8 @@ export function mapUserResponseToUser(userResponse: UserResponse): User {
     avatar: userResponse.avatar,
     created_at: userResponse.created_at,
     // Mapear role a perfil numérico de compatibilidad
-    perfil: userResponse.role === "admin" ? 1 : 2,
+    perfil:
+      userResponse.role === "admin" || userResponse.role === "master" ? 1 : 2,
   };
 }
 
@@ -143,5 +144,7 @@ export function mapTokenResponseToAuth(
  * Verifica si un usuario es administrador
  */
 export function isUserAdmin(user: User | null): boolean {
-  return user?.role === "admin" || user?.perfil === 1;
+  return (
+    user?.role === "admin" || user?.role === "master" || user?.perfil === 1
+  );
 }

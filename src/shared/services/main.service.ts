@@ -3,8 +3,20 @@ import type {
   TemplateComplement,
   TemplateComplementCreate,
   TemplateComplementUpdate,
-  Calculation
+  Calculation,
+  Report,
+  ReportUpdate,
+  Cover,
+  MasterTemplate,
+  MasterTemplateCreate,
+  MasterTemplateUpdate,
 } from "../types";
+
+const getAuthToken = (token?: string): string | undefined => {
+  if (token) return token;
+  const fromStorage = localStorage.getItem("auth_token");
+  return fromStorage || undefined;
+};
 
 export const MainService = {
   // ==================== TEMPLATE COMPLEMENTS ====================
@@ -56,5 +68,155 @@ export const MainService = {
 
   deleteCalculation: async (id: number): Promise<void> => {
     return api.delete<void>(`main/calculations/${id}`);
+  },
+  getReports: async (): Promise<Report[]> => {
+    return api.get<Report[]>("main/reports");
+  },
+
+  getReport: async (id: number): Promise<Report> => {
+    return api.get<Report>(`main/reports/${id}`);
+  },
+
+  updateReport: async (
+    id: number,
+    data: ReportUpdate
+  ): Promise<{ message: string }> => {
+    return api.put<{ message: string }>(`main/reports/${id}`, data);
+  },
+
+  getReportContent: async (id: number): Promise<string> => {
+    const res = await api.get<{ html: string }>(`main/reports/${id}/content`);
+    return res.html;
+  },
+
+  uploadReportFile: async (id: number, formData: FormData): Promise<void> => {
+    const BASE_URL = `${import.meta.env.VITE_API_URL}/api/v1/`;
+    const res = await fetch(`${BASE_URL}main/reports/${id}/upload`, {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(
+        (err as { detail?: string }).detail ?? `Upload failed: ${res.status}`
+      );
+    }
+  },
+
+  getCovers: async (): Promise<Cover[]> => {
+    return api.get<Cover[]>("main/covers");
+  },
+
+  // ==================== MASTER TEMPLATES ====================
+
+  getMasterTemplates: async (options?: {
+    limit?: number;
+    offset?: number;
+    search?: string;
+    token?: string;
+  }): Promise<MasterTemplate[]> => {
+    const params = new URLSearchParams();
+    if (options?.limit !== undefined)
+      params.append("limit", options.limit.toString());
+    if (options?.offset !== undefined)
+      params.append("offset", options.offset.toString());
+    if (options?.search) params.append("search", options.search);
+    const queryString = params.toString();
+    const url = queryString
+      ? `main/master-templates?${queryString}`
+      : "main/master-templates";
+    return api.get<MasterTemplate[]>(url, {
+      token: getAuthToken(options?.token),
+    });
+  },
+
+  getMasterTemplate: async (
+    id: number,
+    token?: string
+  ): Promise<MasterTemplate> => {
+    return api.get<MasterTemplate>(`main/master-templates/${id}`, {
+      token: getAuthToken(token),
+    });
+  },
+
+  createMasterTemplate: async (
+    data: MasterTemplateCreate,
+    token?: string
+  ): Promise<MasterTemplate> => {
+    return api.post<MasterTemplate>("main/master-templates", data, {
+      token: getAuthToken(token),
+    });
+  },
+
+  updateMasterTemplate: async (
+    id: number,
+    data: MasterTemplateUpdate,
+    token?: string
+  ): Promise<MasterTemplate> => {
+    return api.put<MasterTemplate>(`main/master-templates/${id}`, data, {
+      token: getAuthToken(token),
+    });
+  },
+
+  deleteMasterTemplate: async (id: number, token?: string): Promise<void> => {
+    return api.delete<void>(`main/master-templates/${id}`, {
+      token: getAuthToken(token),
+    });
+  },
+
+  uploadMasterTemplateFile: async (
+    id: number,
+    file: File,
+    token?: string
+  ): Promise<any> => {
+    const form = new FormData();
+    form.append("file", file);
+    // Retorna { template, extracted_codes, statistics, processed_sheets }
+    return api.postForm<any>(`main/master-templates/${id}/upload`, form, {
+      token: getAuthToken(token),
+    });
+  },
+
+  downloadMasterTemplateUrl: (id: number): string => {
+    const base = import.meta.env.DEV
+      ? `${window.location.origin}/api/v1/`
+      : `${import.meta.env.VITE_API_URL}/api/v1/`;
+    return `${base}main/master-templates/${id}/download`;
+  },
+
+  getMasterTemplateCodes: async (
+    id: number,
+    token?: string
+  ): Promise<{
+    template_id: number;
+    template_name: string;
+    codes: {
+      valora: any[];
+      kapital: any[];
+    };
+    statistics: {
+      total: number;
+      valora: number;
+      kapital: number;
+    };
+  }> => {
+    return api.get<any>(`main/master-templates/${id}/codes`, {
+      token: getAuthToken(token),
+    });
+  },
+
+  getMasterTemplateChartImages: async (
+    id: number,
+    token?: string
+  ): Promise<{
+    template_id: number;
+    template_name: string;
+    valora: any[];
+    kapital: any[];
+    total: number;
+  }> => {
+    return api.get<any>(`main/master-templates/${id}/chart-images`, {
+      token: getAuthToken(token),
+    });
   },
 };

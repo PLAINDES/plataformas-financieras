@@ -1,37 +1,37 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
 import { read, utils } from "xlsx";
 import { MainService } from "@/shared/services/main.service";
-import type { BaseComplementItem, DamodaranItem } from "@/shared/types";
+import type { BaseFinancialItem, DamodaranItem } from "@/shared/types";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 // Moved to shared/types/templatecomplement.types.ts
 
 // ─── INITIAL MOCK DATA ────────────────────────────────────────────────────────
 // Kept for fallback or reference, but state will initialize empty to prefer API data
-const MOCK_RF: BaseComplementItem[] = [];
-const MOCK_PRIMA: BaseComplementItem[] = [];
-const MOCK_IR: BaseComplementItem[] = [];
+const MOCK_RF: BaseFinancialItem[] = [];
+const MOCK_PRIMA: BaseFinancialItem[] = [];
+const MOCK_IR: BaseFinancialItem[] = [];
 const MOCK_DAMODARAN: DamodaranItem[] = [];
-const MOCK_DEVALUACION: BaseComplementItem[] = [];
-const MOCK_EMBI: BaseComplementItem[] = [];
+const MOCK_DEVALUACION: BaseFinancialItem[] = [];
+const MOCK_EMBI: BaseFinancialItem[] = [];
 
 export const ConfiguracionPage = () => {
   const [activeFrequency, setActiveFrequency] = useState<
     "trimestral" | "anual"
   >("trimestral");
   const [activeTab, setActiveTab] = useState("rf");
-  const [_isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // State for each section
-  const [rfData, setRfData] = useState<BaseComplementItem[]>(MOCK_RF);
-  const [primaData, setPrimaData] = useState<BaseComplementItem[]>(MOCK_PRIMA);
-  const [irData, setIrData] = useState<BaseComplementItem[]>(MOCK_IR);
+  const [rfData, setRfData] = useState<BaseFinancialItem[]>(MOCK_RF);
+  const [primaData, setPrimaData] = useState<BaseFinancialItem[]>(MOCK_PRIMA);
+  const [irData, setIrData] = useState<BaseFinancialItem[]>(MOCK_IR);
   const [damodaranData, setDamodaranData] =
     useState<DamodaranItem[]>(MOCK_DAMODARAN);
   const [devaluacionData, setDevaluacionData] =
-    useState<BaseComplementItem[]>(MOCK_DEVALUACION);
-  const [embiData, setEmbiData] = useState<BaseComplementItem[]>(MOCK_EMBI);
+    useState<BaseFinancialItem[]>(MOCK_DEVALUACION);
+  const [embiData, setEmbiData] = useState<BaseFinancialItem[]>(MOCK_EMBI);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -112,10 +112,10 @@ export const ConfiguracionPage = () => {
   };
 
   // Wrapper for delete to pass the item
-  const createDeleteHandler = (setter: any, _data: any[]) => (item: any) =>
+  const createDeleteHandler = (setter: any, data: any[]) => (item: any) =>
     handleDelete(setter, item.id, item);
 
-  /*const handleCreate = (
+  const handleCreate = (
     data: any[],
     setter: React.Dispatch<React.SetStateAction<any[]>>
   ) => {
@@ -126,7 +126,7 @@ export const ConfiguracionPage = () => {
       descripcion: "Nuevo Registro Local",
     };
     setter([...data, newItem]);
-  };*/
+  };
 
   // EXCEL HANDLING
   const handleImportClick = () => {

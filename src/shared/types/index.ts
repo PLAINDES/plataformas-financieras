@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { PageResponse, SectionResponse } from "./api.types";
 
 export type {
@@ -104,6 +105,27 @@ export interface Calculation {
   report_code: string;
   type: "valora" | "kapital";
   data: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Report {
+  id: number;
+  nombre: string;
+  tipo: "valora" | "kapital";
+  contenido?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ReportUpdate = Partial<
+  Omit<Report, "id" | "created_at" | "updated_at">
+>;
+
+export interface Cover {
+  id: number;
+  nombre: string;
+  url?: string;
   created_at: string;
   updated_at: string;
 }

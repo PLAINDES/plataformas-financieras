@@ -46,6 +46,78 @@ export interface DamodaranItem extends BaseComplementItem {
   spread_debt: number;
 }
 
+// ==================== MASTER TEMPLATE TYPES ====================
+export type MasterTemplateType = "valora" | "kapital";
+
+export interface MasterTemplate {
+  id: number;
+  nombre: string;
+  description: string | null;
+  is_active: boolean;
+  hojas_config: Record<string, any> | null;
+  onedrive_env: string | null;
+  onedrive_folder: string | null;
+  onedrive_item_id: string | null;
+  onedrive_filename: string | null;
+  onedrive_path: string | null;
+  created_by_user_id: number | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface MasterTemplateCreate {
+  nombre: string;
+  description?: string;
+  is_active?: boolean;
+  hojas_config?: Record<string, any>;
+}
+
+export interface MasterTemplateUpdate {
+  nombre?: string;
+  description?: string;
+  is_active?: boolean;
+  hojas_config?: Record<string, any>;
+}
+
+// ==================== TEMPLATE CODE TYPES ================================
+export interface TemplateCode {
+  id: number;
+  template_code_image_id: number | null;
+  type: "valora" | "kapital";
+  hoja: string | null;
+  nombre: string;
+  code: string;
+  template_ids: number[];
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface ExtractedCodesResponse {
+  template: MasterTemplate;
+  extracted_codes: {
+    valora: TemplateCode[];
+    kapital: TemplateCode[];
+  };
+  statistics: {
+    total_codes: number;
+    valora_codes: number;
+    kapital_codes: number;
+    sheets_processed: number;
+    sheets: Array<{
+      name: string;
+      type: "valora" | "kapital";
+      codes_count: number;
+    }>;
+  };
+  processed_sheets: Array<{
+    name: string;
+    type: "valora" | "kapital";
+    codes_count: number;
+  }>;
+}
+
 // 4.1 Cost of Debt Lookup (Auxiliary data for Damodaran year)
 export interface DamodaranSpreadItem extends BaseComplementItem {
   min_std_dev: number;
@@ -68,3 +140,6 @@ export type FinancialItem =
   | DamodaranItem
   | DamodaranSpreadItem
   | DynamicCountryItem;
+
+// Alias para compatibilidad con ConfiguracionPage
+export type BaseFinancialItem = BaseComplementItem;

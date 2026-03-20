@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Navigate, Link } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
+import { useAuthContext } from "../hooks/useAuthContext";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -15,7 +15,7 @@ export function ProtectedRoute({
   requireAdmin = false,
   redirectTo = "/",
 }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuthContext();
 
   if (loading) {
     return (
@@ -35,7 +35,7 @@ export function ProtectedRoute({
     return <Navigate to={redirectTo} replace />;
   }
 
-  if (requireAdmin && user.role !== "admin" && user.perfil !== 1) {
+  if (requireAdmin && !isAdmin) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white border border-red-100 rounded-2xl p-8 shadow-xl text-center">
