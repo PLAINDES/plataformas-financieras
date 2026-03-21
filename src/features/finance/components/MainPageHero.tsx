@@ -2,12 +2,16 @@ import React from "react";
 import { Calculator, FileText } from "lucide-react";
 
 type MainPageHeroProps = {
-    title: string;
-    buttonText: string;
-    onOpenForm: () => void;
+  title: string;
+  buttonText: string;
+  onOpenForm: () => void;
 };
 
-export const MainPageHero: React.FC<MainPageHeroProps> = ({ title, buttonText, onOpenForm }) => (
+export const MainPageHero: React.FC<MainPageHeroProps> = ({
+  title,
+  buttonText,
+  onOpenForm,
+}) => (
   <div className="flex flex-2/3 flex-col items-center justify-center py-20 px-6 bg-[#f3f6f9]">
     <div className="max-w-lg text-center">
       <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-blue-100 flex items-center justify-center">
@@ -19,7 +23,8 @@ export const MainPageHero: React.FC<MainPageHeroProps> = ({ title, buttonText, o
       </h2>
 
       <p className="text-gray-600 leading-relaxed mb-6">
-                Completa los inputs y presionas calcular para generar resultados instantaneos
+        Completa los inputs y presionas calcular para generar resultados
+        instantaneos
       </p>
 
       <button

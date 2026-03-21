@@ -1,7 +1,11 @@
 // src/types/landing.types.ts
 
-import type { EditableContent } from './editable.types';
-import type { LinkData, VideoData, EditableCollectionData } from './editable-collection.types';
+import type {
+  EditableContent,
+  LinkData,
+  VideoData,
+  EditableCollectionData,
+} from "@/shared/types/editable.types";
 
 // ============================================
 // API RESPONSE TYPES
@@ -25,7 +29,7 @@ export interface MenuItemResponse {
   title: string;
   url: string | null;
   page_id: number | null;
-  target: '_self' | '_blank';
+  target: "_self" | "_blank";
   icon: string | null;
   order: number;
   is_visible: boolean;
@@ -165,7 +169,7 @@ export interface ClientsSectionData {
 
 export interface ClientLogo {
   id: string;
-  order?: number;
+  order: number;
   name: string;
   imageUrl: string;
   alt: string;
@@ -190,7 +194,6 @@ export interface BenefitItem {
   description: string;
   imageUrl?: string;
 }
-
 
 // ============================================
 // PRODUCTS SECTION

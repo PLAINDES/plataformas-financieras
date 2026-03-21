@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import type { FormEvent } from 'react';
-import { X, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import type { LoginCredentials, User } from '../types/user.types';
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { X, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import type { LoginCredentials, User } from "../types/user.types";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -12,9 +12,14 @@ interface LoginModalProps {
   onSwitchToRegister: () => void;
 }
 
-export function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegister }: LoginModalProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export function LoginModal({
+  isOpen,
+  onClose,
+  onLogin,
+  onSwitchToRegister,
+}: LoginModalProps) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,11 +29,13 @@ export function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegister }: Log
     setLoading(true);
     try {
       await onLogin({ email, password });
-      setEmail('');
-      setPassword('');
+      setEmail("");
+      setPassword("");
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión. Verifica tus credenciales.');
+      setError(
+        err.message || "Error al iniciar sesión. Verifica tus credenciales."
+      );
     } finally {
       setLoading(false);
     }
@@ -36,8 +43,8 @@ export function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegister }: Log
 
   const handleClose = () => {
     if (!loading) {
-      setEmail('');
-      setPassword('');
+      setEmail("");
+      setPassword("");
       setError(null);
       onClose();
     }
@@ -46,13 +53,13 @@ export function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegister }: Log
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[1050] flex items-center justify-center">
+    <div className="fixed inset-0 z-1050 flex items-center justify-center">
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
         onClick={handleClose}
       />
 
-      <div className="relative w-full h-full sm:h-auto sm:max-w-[450px] bg-white sm:rounded-2xl shadow-2xl overflow-y-auto animate-in fade-in zoom-in duration-300">
+      <div className="relative w-full h-full sm:h-auto sm:max-w-112.5 bg-white sm:rounded-2xl shadow-2xl overflow-y-auto animate-in fade-in zoom-in duration-300">
         <Button
           type="button"
           variant="ghost"
@@ -71,26 +78,37 @@ export function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegister }: Log
               alt="Logo Pro Finance"
               className="h-12 mx-auto mb-3 object-contain"
             />
-      
           </div>
 
           <div className="flex-1 px-8 py-12 sm:p-12">
-            <div className="max-w-[340px] mx-auto w-full">
+            <div className="max-w-85 mx-auto w-full">
               <div className="text-center mb-10">
-                <h1 className="text-3xl font-black text-gray-900 mb-2">Iniciar Sesión</h1>
-                <p className="text-gray-500 text-sm font-medium">Ingresa tus credenciales para acceder</p>
+                <h1 className="text-3xl font-black text-gray-900 mb-2">
+                  Iniciar Sesión
+                </h1>
+                <p className="text-gray-500 text-sm font-medium">
+                  Ingresa tus credenciales para acceder
+                </p>
               </div>
 
               {error && (
-                <Alert variant="destructive" className="mb-6 bg-red-50 border-red-100 text-red-600 animate-in slide-in-from-top-2">
+                <Alert
+                  variant="destructive"
+                  className="mb-6 bg-red-50 border-red-100 text-red-600 animate-in slide-in-from-top-2"
+                >
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-sm font-semibold">{error}</AlertDescription>
+                  <AlertDescription className="text-sm font-semibold">
+                    {error}
+                  </AlertDescription>
                 </Alert>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                 <div>
-                  <label htmlFor="login-email" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+                  <label
+                    htmlFor="login-email"
+                    className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1"
+                  >
                     Email
                   </label>
                   <input
@@ -108,7 +126,10 @@ export function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegister }: Log
 
                 <div>
                   <div className="flex justify-between items-center mb-1.5 ml-1">
-                    <label htmlFor="login-password" className="block text-xs font-bold text-gray-400 uppercase tracking-widest">
+                    <label
+                      htmlFor="login-password"
+                      className="block text-xs font-bold text-gray-400 uppercase tracking-widest"
+                    >
                       Contraseña
                     </label>
                     <Button
@@ -149,7 +170,7 @@ export function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegister }: Log
 
                 <div className="text-center pt-6">
                   <p className="text-gray-500 text-sm font-medium">
-                    ¿No tienes una cuenta?{' '}
+                    ¿No tienes una cuenta?{" "}
                     <Button
                       type="button"
                       variant="link"

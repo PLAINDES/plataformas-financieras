@@ -1,11 +1,11 @@
 // src/features/landing/layout/LandingFooter.tsx
-import { useState } from 'react';
-import type { FormEvent } from 'react'
-import { Pencil } from 'lucide-react';
-import { EditableText } from '@/shared/components/editable/EditableText';
-import { FooterEditModal } from './FooterEditModal';
-import { useAuthContext } from '@/features/auth/hooks/useAuthContext';
-import type { EditableContent } from '@/shared/types/editable.types';
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { Pencil } from "lucide-react";
+import { EditableText } from "@/shared/components/editable/EditableText";
+import { FooterEditModal } from "./FooterEditModal";
+import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
+import type { EditableContent } from "@/shared/types/editable.types";
 
 interface FooterLink {
   id: string;
@@ -14,7 +14,7 @@ interface FooterLink {
 }
 
 interface FooterSection {
-  id: string
+  id: string;
   title: string;
   links: FooterLink[];
 }
@@ -30,14 +30,14 @@ interface LandingFooterProps {
 }
 
 export function LandingFooter({ content, onSave }: LandingFooterProps) {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [editModalOpen, setEditModalOpen] = useState(false);
   const { isAdmin } = useAuthContext();
 
   const handleSubscription = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('Email subscription:', email);
-    setEmail('');
+    console.log("Email subscription:", email);
+    setEmail("");
   };
 
   const handleSaveCopyright = async (editable: EditableContent) => {
@@ -45,10 +45,9 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
   };
 
   if (!content) return null;
-  console.log("content", content)
+  console.log("content", content);
   return (
     <footer className="mb-0 relative">
-
       {/* Botón flotante editar — solo admin, esquina superior derecha del footer */}
       {isAdmin && (
         <button
@@ -62,14 +61,16 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
       )}
 
       <div className="bs-landing-footer pt-8 pb-4">
-
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12">
-
             {/* Izquierda: Logo & Suscripción */}
             <div className="lg:col-span-4">
               <div className="mb-4">
-                <img alt="Logo" src="/images/logo.png" className="h-[40px] object-contain" />
+                <img
+                  alt="Logo"
+                  src="/images/logo.png"
+                  className="h-10 object-contain"
+                />
               </div>
               <div>
                 <h3 className="text-gray-300 text-sm font-medium mb-3 leading-relaxed">
@@ -86,7 +87,10 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
                       placeholder="tu@email.com"
                       required
                     />
-                    <button type="submit" className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors whitespace-nowrap font-medium">
+                    <button
+                      type="submit"
+                      className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors whitespace-nowrap font-medium"
+                    >
                       Enviar
                     </button>
                   </div>
@@ -105,7 +109,10 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
                     <ul className="space-y-2">
                       {(section.links ?? []).map((link, li) => (
                         <li key={li}>
-                          <a href={link.url} className="text-gray-300 hover:text-white text-sm transition-colors inline-block">
+                          <a
+                            href={link.url}
+                            className="text-gray-300 hover:text-white text-sm transition-colors inline-block"
+                          >
                             {link.label}
                           </a>
                         </li>
@@ -115,7 +122,6 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
                 ))}
               </div>
             </div>
-
           </div>
         </div>
 
@@ -126,14 +132,18 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
         <div className="container mx-auto px-4">
           <div className="flex justify-center items-center">
             <EditableText
-              content={{ id: 'footer_copyright', type: 'text', section: 'footer', value: content.copyright }}
+              content={{
+                id: "footer_copyright",
+                type: "text",
+                section: "footer",
+                value: content.copyright,
+              }}
               onSave={handleSaveCopyright}
               as="p"
               className="text-gray-400 text-xs text-center"
             />
           </div>
         </div>
-
       </div>
 
       <FooterEditModal

@@ -68,11 +68,7 @@ function App() {
       </Route>
 
       {/* Rutas internas */}
-      <Route
-        element={
-          <InternalLayout user={user} onLogout={logout} company={COMPANY} />
-        }
-      >
+      <Route element={<InternalLayout />}>
         <Route path="/kapital" element={<KapitalPage />} />
         <Route path="/valora" element={<ValoraPage />} />
         <Route path="usuario/proyectos" element={<ProyectosUsuarioPage />} />
@@ -91,7 +87,10 @@ function App() {
         <Route index element={<DashboardPage />} />
         <Route path="master/plantillas" element={<PlantillasMaestrasPage />} />
         <Route path="kapital/reportes" element={<ReportesKapitalPage />} />
-        <Route path="kapital/reportes/:id/editar" element={<ReporteKapitalEditor />} />
+        <Route
+          path="kapital/reportes/:id/editar"
+          element={<ReporteKapitalEditor />}
+        />
         <Route path="valora/reportes" element={<ReportesValoraPage />} />
         <Route path="configuraciones" element={<ConfiguracionPage />} />
       </Route>

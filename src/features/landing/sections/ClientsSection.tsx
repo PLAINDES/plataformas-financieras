@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react';
-import { ChevronUp, ChevronDown, Pencil, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from "react";
+import { ChevronUp, ChevronDown, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { EditableText } from "@/shared/components/editable/EditableText";
 import { EditableCollection } from "@/shared/components/editable/EditableCollection";
-import type { EditableContent, EditableCollectionData, CollectionItem } from '@/shared/types/editable.types';
-import { useAuthContext } from '../../auth/hooks/useAuthContext';
+import type {
+  EditableContent,
+  EditableCollectionData,
+  CollectionItem,
+} from "@/shared/types/editable.types";
+import { useAuthContext } from "../../auth/hooks/useAuthContext";
 
 interface ClientLogoEditable extends CollectionItem {
   name: string;
@@ -23,10 +27,16 @@ interface ClientsSectionProps {
     }>;
   };
   onSave?: (content: EditableContent) => Promise<void>;
-  onSaveCollection?: <T extends CollectionItem>(data: EditableCollectionData<T>) => Promise<void>;
+  onSaveCollection?: <T extends CollectionItem>(
+    data: EditableCollectionData<T>
+  ) => Promise<void>;
 }
 
-export function ClientsSection({ content = {}, onSave, onSaveCollection }: ClientsSectionProps) {
+export function ClientsSection({
+  content = {},
+  onSave,
+  onSaveCollection,
+}: ClientsSectionProps) {
   const { isAdmin } = useAuthContext();
   const [selectedLogoId, setSelectedLogoId] = useState<string | null>(null);
 
@@ -40,52 +50,60 @@ export function ClientsSection({ content = {}, onSave, onSaveCollection }: Clien
 
   useEffect(() => {
     if (content.logos) {
-      setItems(content.logos.map((logo, index) => ({
-        ...logo,
-        id: String(logo.id),
-        order: index,
-      })));
+      setItems(
+        content.logos.map((logo, index) => ({
+          ...logo,
+          id: String(logo.id),
+          order: index,
+        }))
+      );
     }
   }, [content.logos]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (!target.closest('[data-client-logo]') && !target.closest('[data-client-controls]')) {
+      if (
+        !target.closest("[data-client-logo]") &&
+        !target.closest("[data-client-controls]")
+      ) {
         setSelectedLogoId(null);
       }
     };
     if (isAdmin && selectedLogoId) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
     }
   }, [isAdmin, selectedLogoId]);
 
-  const handleSaveClients = async (data: EditableCollectionData<ClientLogoEditable>) => {
+  const handleSaveClients = async (
+    data: EditableCollectionData<ClientLogoEditable>
+  ) => {
     const previousItems = items;
     setItems(data.items);
     if (onSaveCollection) {
       try {
-        await onSaveCollection({ ...data, id: 'clients-logos' });
+        await onSaveCollection({ ...data, id: "clients-logos" });
       } catch (error) {
         setItems(previousItems);
+        console.error("Error al guardar los logos de clientes:", error);
       }
     }
   };
 
   const createNewClient = (): ClientLogoEditable => ({
     id: `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    name: 'Nuevo Cliente',
-    imageUrl: 'https://via.placeholder.com/140x40?text=Logo',
-    alt: 'Logo del cliente',
+    name: "Nuevo Cliente",
+    imageUrl: "https://via.placeholder.com/140x40?text=Logo",
+    alt: "Logo del cliente",
     order: items.length,
   });
 
   const titleContent: EditableContent = {
-    id: 'clients_title',
-    type: 'text',
-    value: content.title || 'Ellos confiaron en nosotros',
-    section: 'clients',
+    id: "clients_title",
+    type: "text",
+    value: content.title || "Ellos confiaron en nosotros",
+    section: "clients",
   };
 
   if ((!items || items.length === 0) && !isAdmin) return null;
@@ -103,7 +121,12 @@ export function ClientsSection({ content = {}, onSave, onSaveCollection }: Clien
         </div>
 
         <EditableCollection
-          data={{ id: 'clients-logos', section: 'clients', items, type: 'collection' }}
+          data={{
+            id: "clients-logos",
+            section: "clients",
+            items,
+            type: "collection",
+          }}
           onSave={handleSaveClients}
           createNewItem={createNewClient}
           addButtonText="Agregar Cliente"
@@ -113,6 +136,7 @@ export function ClientsSection({ content = {}, onSave, onSaveCollection }: Clien
           className="flex flex-wrap justify-center items-center gap-5 md:gap-8 px-3 md:px-5"
           renderItem={(client, index, helpers) => (
             <ClientLogoCard
+              key={index}
               client={client}
               helpers={helpers}
               isSelected={selectedLogoId === client.id}
@@ -134,7 +158,13 @@ interface ClientLogoCardProps {
   onDeselect?: () => void;
 }
 
-function ClientLogoCard({ client, helpers, isSelected = false, onSelect, onDeselect }: ClientLogoCardProps) {
+function ClientLogoCard({
+  client,
+  helpers,
+  isSelected = false,
+  onSelect,
+  onDeselect,
+}: ClientLogoCardProps) {
   const [editedClient, setEditedClient] = useState<ClientLogoEditable>(client);
   const { isAdmin } = useAuthContext();
 
@@ -164,28 +194,49 @@ function ClientLogoCard({ client, helpers, isSelected = false, onSelect, onDesel
   if (helpers.isEditing) {
     return (
       <div
-        className="relative min-w-[280px] max-w-[320px] sm:min-w-full sm:max-w-full border border-slate-200 rounded-xl p-5 bg-white z-[100] shadow-2xl mb-4 sm:mb-0 animate-in fade-in zoom-in duration-200"
+        className="relative min-w-70 max-w-[320px] sm:min-w-full sm:max-w-full border border-slate-200 rounded-xl p-5 bg-white z-100 shadow-2xl mb-4 sm:mb-0 animate-in fade-in zoom-in duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-full">
           <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
             <div className="w-2 h-2 rounded-full bg-blue-500" />
-            <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Editar Cliente</h3>
+            <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+              Editar Cliente
+            </h3>
           </div>
 
           <div className="space-y-4">
             {[
-              { label: 'Nombre de la empresa', field: 'name', placeholder: 'Ej: Microsoft' },
-              { label: 'URL del Logo', field: 'imageUrl', placeholder: 'https://ejemplo.com/logo.png' },
-              { label: 'Texto Alternativo (SEO)', field: 'alt', placeholder: 'Descripción de la imagen' },
+              {
+                label: "Nombre de la empresa",
+                field: "name",
+                placeholder: "Ej: Microsoft",
+              },
+              {
+                label: "URL del Logo",
+                field: "imageUrl",
+                placeholder: "https://ejemplo.com/logo.png",
+              },
+              {
+                label: "Texto Alternativo (SEO)",
+                field: "alt",
+                placeholder: "Descripción de la imagen",
+              },
             ].map(({ label, field, placeholder }) => (
               <div key={field}>
-                <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1 ml-1">{label}</label>
+                <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1 ml-1">
+                  {label}
+                </label>
                 <input
                   type="text"
                   className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                  value={(editedClient as any)[field] || ''}
-                  onChange={(e) => setEditedClient({ ...editedClient, [field]: e.target.value })}
+                  value={(editedClient as any)[field] || ""}
+                  onChange={(e) =>
+                    setEditedClient({
+                      ...editedClient,
+                      [field]: e.target.value,
+                    })
+                  }
                   placeholder={placeholder}
                 />
               </div>
@@ -193,13 +244,18 @@ function ClientLogoCard({ client, helpers, isSelected = false, onSelect, onDesel
 
             {editedClient.imageUrl && (
               <div className="relative group mt-2">
-                <p className="text-[10px] text-center text-slate-400 mb-1">Vista previa</p>
+                <p className="text-[10px] text-center text-slate-400 mb-1">
+                  Vista previa
+                </p>
                 <div className="flex items-center justify-center p-4 rounded-lg border border-dashed border-slate-200 bg-slate-50/50">
                   <img
                     src={editedClient.imageUrl}
                     alt="Preview"
-                    className="max-h-[40px] w-auto object-contain filter drop-shadow-sm"
-                    onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/140x40?text=Error+al+cargar'; }}
+                    className="max-h-10 w-auto object-contain filter drop-shadow-sm"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        "https://via.placeholder.com/140x40?text=Error+al+cargar";
+                    }}
                   />
                 </div>
               </div>
@@ -234,10 +290,10 @@ function ClientLogoCard({ client, helpers, isSelected = false, onSelect, onDesel
     <div
       data-client-logo
       className={`
-        relative min-w-[70px] max-w-[140px] flex justify-center items-center
+        relative min-w-17.5 max-w-35 flex justify-center items-center
         transition-all duration-200
-        ${isAdmin ? 'cursor-pointer' : ''}
-        ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2 rounded-lg p-1' : ''}
+        ${isAdmin ? "cursor-pointer" : ""}
+        ${isSelected ? "ring-2 ring-blue-500 ring-offset-2 rounded-lg p-1" : ""}
       `}
       title={client.name}
       onClick={handleLogoClick}
@@ -246,13 +302,16 @@ function ClientLogoCard({ client, helpers, isSelected = false, onSelect, onDesel
         src={client.imageUrl}
         alt={client.alt || client.name}
         className={`
-          max-h-[22px] md:max-h-[30px] lg:max-h-[35px] w-auto object-contain
+          max-h-5.5 md:max-h-7.5 lg:max-h-8.75 w-auto object-contain
           grayscale brightness-85 opacity-40
           transition-all duration-300
           hover:grayscale-0 hover:brightness-100 hover:opacity-60 hover:scale-110
-          ${isSelected ? 'grayscale-0 brightness-100 opacity-80 scale-110' : ''}
+          ${isSelected ? "grayscale-0 brightness-100 opacity-80 scale-110" : ""}
         `}
-        onError={(e) => { e.currentTarget.src = 'https://www.svgrepo.com/show/508699/landscape-placeholder.svg'; }}
+        onError={(e) => {
+          e.currentTarget.src =
+            "https://www.svgrepo.com/show/508699/landscape-placeholder.svg";
+        }}
       />
 
       {isAdmin && isSelected && (
@@ -262,27 +321,59 @@ function ClientLogoCard({ client, helpers, isSelected = false, onSelect, onDesel
           onClick={(e) => e.stopPropagation()}
         >
           {helpers.canMoveUp && (
-            <Button variant="ghost" size="icon" className="w-7 h-7" title="Mover arriba"
-              onClick={(e) => { e.stopPropagation(); helpers.onMoveUp?.(); }}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-7 h-7"
+              title="Mover arriba"
+              onClick={(e) => {
+                e.stopPropagation();
+                helpers.onMoveUp?.();
+              }}
             >
               <ChevronUp className="w-4 h-4 text-gray-600" />
             </Button>
           )}
           {helpers.canMoveDown && (
-            <Button variant="ghost" size="icon" className="w-7 h-7" title="Mover abajo"
-              onClick={(e) => { e.stopPropagation(); helpers.onMoveDown?.(); }}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-7 h-7"
+              title="Mover abajo"
+              onClick={(e) => {
+                e.stopPropagation();
+                helpers.onMoveDown?.();
+              }}
             >
               <ChevronDown className="w-4 h-4 text-gray-600" />
             </Button>
           )}
-          {(helpers.canMoveUp || helpers.canMoveDown) && <div className="w-px h-6 bg-gray-300" />}
-          <Button variant="ghost" size="icon" className="w-7 h-7 hover:bg-blue-50 group" title="Editar"
-            onClick={(e) => { e.stopPropagation(); helpers.onEdit(); onDeselect?.(); }}
+          {(helpers.canMoveUp || helpers.canMoveDown) && (
+            <div className="w-px h-6 bg-gray-300" />
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-7 h-7 hover:bg-blue-50 group"
+            title="Editar"
+            onClick={(e) => {
+              e.stopPropagation();
+              helpers.onEdit();
+              onDeselect?.();
+            }}
           >
             <Pencil className="w-4 h-4 text-gray-600 group-hover:text-blue-600" />
           </Button>
-          <Button variant="ghost" size="icon" className="w-7 h-7 hover:bg-red-50 group" title="Eliminar"
-            onClick={(e) => { e.stopPropagation(); helpers.onDelete(); onDeselect?.(); }}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-7 h-7 hover:bg-red-50 group"
+            title="Eliminar"
+            onClick={(e) => {
+              e.stopPropagation();
+              helpers.onDelete();
+              onDeselect?.();
+            }}
           >
             <Trash2 className="w-4 h-4 text-gray-600 group-hover:text-red-600" />
           </Button>

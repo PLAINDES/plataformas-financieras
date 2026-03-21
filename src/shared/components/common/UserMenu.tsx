@@ -1,10 +1,10 @@
 // src/components/common/UserMenu.tsx
 
-import { useState, useRef, useEffect, Children } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { User } from "../../types/user.types";
 
 interface UserMenuBaseProps {
-  user: User;
+  user: User | null;
   onLogout: () => void;
   children?: React.ReactNode;
   onlyLogout?: boolean;
@@ -68,17 +68,17 @@ export function UserMenu({
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className={`absolute ${customTrigger ? "bottom-full left-0 mb-2" : "right-0 mt-2"} w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-[1000] animate-in fade-in zoom-in duration-200`}
+          className={`absolute ${customTrigger ? "bottom-full left-0 mb-2" : "right-0 mt-2"} w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-1000 animate-in fade-in zoom-in duration-200`}
         >
           {/* Nombre + email */}
-          {!onlyLogout && (
+          {!onlyLogout && user && (
             <div className="px-5 py-4 border-b border-gray-50 mb-1">
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-gray-900 truncate">
-                    {user.name} {user.lastname}
+                    {user.name} {user.lastname || ""}
                   </span>
-                  <span className="flex-shrink-0 inline-flex items-center justify-center w-4 h-4 bg-green-100 rounded-full">
+                  <span className="shrink-0 inline-flex items-center justify-center w-4 h-4 bg-green-100 rounded-full">
                     <svg
                       className="w-2.5 h-2.5 text-green-600"
                       fill="currentColor"

@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const ResultCard: React.FC<{
   icon: string;
   title: string;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,10 +49,12 @@ interface PlatformCardsSectionProps {
 
 export function PlatformCardsSection({
   content = {},
-  onSave,
+  onSave: _onSave,
   onSaveCollection,
 }: PlatformCardsSectionProps) {
-  const { isAdmin } = useAuthContext();
+  void _onSave;
+  const { isAdmin: _isAdmin } = useAuthContext();
+  void _isAdmin;
 
   const [cardsData, setCardsData] = useState<
     EditableCollectionData<PlatformCardItem>
@@ -85,9 +87,10 @@ export function PlatformCardsSection({
   const [activeVideoUrl, setActiveVideoUrl] = useState<string>(
     cardsData.items[0]?.videoUrl || ""
   );
-  const [activeVideoTitle, setActiveVideoTitle] = useState<string>(
+  const [_activeVideoTitle, setActiveVideoTitle] = useState<string>(
     cardsData.items[0]?.name || ""
   );
+  void _activeVideoTitle;
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(
     cardsData.items[0]?.id || null
   );
@@ -448,7 +451,7 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
   };
 
   return (
-    <div className="video-card editing p-4 min-w-[300px] max-w-[350px]">
+    <div className="video-card editing p-4 min-w-75 max-w-87.5">
       <h6 className="mb-4 text-sm font-semibold">Editando Card</h6>
 
       <div className="grid gap-3">

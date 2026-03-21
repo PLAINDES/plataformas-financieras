@@ -1,45 +1,50 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { FinancePageTemplate } from '../components/MainPage';
-import { UploadTemplateModal } from './components/UploadTemplateModal';
-import { ValoraResults } from './components/ValoraResults';
-import { LoadingOverlay } from '@/shared/components/common/LoadingOverlay';
-import { ToastStack } from '@/shared/components/common/ToastStack';
-import type { FinancialTable, FormData } from '@/shared/types/ValoraTypes';
-import type { ToastType } from '@/shared/types/toast.types';
-import { MainPageFooter } from '../components/MainPageFooter';
-import { parseFinancialTablesFromFile } from './types/valoraFileParsing';
-import { NavBar } from './components/Navbar';
-import { NavigationTabs } from './components/ValoraNavigationTabs';
-import { ValoraFormPanel } from './components/ValoraFormPanel';
-import { ReportSidebar } from '../components/ReportSidebar';
+import { useEffect, useRef, useState } from "react";
+import { FinancePageTemplate } from "../components/MainPage";
+import { UploadTemplateModal } from "./components/UploadTemplateModal";
+import { ValoraResults } from "./components/ValoraResults";
+import { LoadingOverlay } from "@/shared/components/common/LoadingOverlay";
+import { ToastStack } from "@/shared/components/common/ToastStack";
+import type { FinancialTable, FormData } from "@/shared/types/ValoraTypes";
+import type { ToastType } from "@/shared/types/toast.types";
+import { MainPageFooter } from "../components/MainPageFooter";
+import { parseFinancialTablesFromFile } from "./types/valoraFileParsing";
+import { NavBar } from "./components/Navbar";
+import { NavigationTabs } from "./components/ValoraNavigationTabs";
+import { ValoraFormPanel } from "./components/ValoraFormPanel";
+import { ReportSidebar } from "../components/ReportSidebar";
 
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useAuth } from "@/features/auth/hooks/useAuth";
 const ValoraPage: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
-    date: '',
-    country: '',
-    currency: '',
-    sector: '',
-    fileUsername: '',
-    action: '',
-    longgrowth: '',
-    capitalcost: '',
-    revenuegrowth: ''
+    date: "",
+    country: "",
+    currency: "",
+    sector: "",
+    fileUsername: "",
+    action: "",
+    longgrowth: "",
+    capitalcost: "",
+    revenuegrowth: "",
   });
   const [fileUploaded, setFileUploaded] = useState(false);
   const [isDesktopFormOpen, setIsDesktopFormOpen] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [toasts, setToasts] = useState<Array<{ id: string; type: ToastType; message: string }>>([]);
+  const [toasts, setToasts] = useState<
+    Array<{ id: string; type: ToastType; message: string }>
+  >([]);
   const toastTimeoutsRef = useRef<Map<string, number>>(new Map());
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
   const [uploadResetKey, setUploadResetKey] = useState(0);
-  const [resultsSection, setResultsSection] = useState<'estados' | 'resultados' | 'analisis' | 'metodologia'>('resultados');
-  const [isResultsSidebarOpen, setIsResultsSidebarOpen] = useState(false);
+  const [resultsSection, setResultsSection] = useState<
+    "estados" | "resultados" | "analisis" | "metodologia"
+  >("resultados");
+  const [_isResultsSidebarOpen, setIsResultsSidebarOpen] = useState(false);
   const [isReportSidebarOpen, setIsReportSidebarOpen] = useState(false);
   const [isReportViewerOpen, setIsReportViewerOpen] = useState(false);
-  const [selectedReportProductId, setSelectedReportProductId] = useState('datos');
+  const [selectedReportProductId, setSelectedReportProductId] =
+    useState("datos");
   const [balanceTable, setBalanceTable] = useState<FinancialTable | null>(null);
   const [resultsTable, setResultsTable] = useState<FinancialTable | null>(null);
   const mainContent = showResults ? (
@@ -48,7 +53,9 @@ const ValoraPage: React.FC = () => {
         <section className="flex justify-center w-full px-4 pb-10 sm:px-8 lg:pt-6">
           <div className="w-full max-w-7xl rounded-lg border border-gray-200 bg-white shadow">
             <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-              <h4 className="text-sm font-semibold text-gray-800">REPORTE DE DATOS</h4>
+              <h4 className="text-sm font-semibold text-gray-800">
+                REPORTE DE DATOS
+              </h4>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -83,54 +90,67 @@ const ValoraPage: React.FC = () => {
           formData={formData}
         />
       )}
-      <MainPageFooter 
-        brandName={"Valora"} 
-        brandHref={"/valora"} 
-        />
+      <MainPageFooter brandName={"Valora"} brandHref={"/valora"} />
     </div>
   ) : (
-    <FinancePageTemplate 
-        brandName="Kapital"
-        brandHref="/kapital"
-        heroTitle="Bienvenido a Valora"
-        onOpenForm={() => setIsDesktopFormOpen(prev => !prev)}
+    <FinancePageTemplate
+      brandName="Kapital"
+      brandHref="/kapital"
+      heroTitle="Bienvenido a Valora"
+      onOpenForm={() => setIsDesktopFormOpen((prev) => !prev)}
     />
   );
 
   // Sample data
-  const dates = ['2024-Q1', '2024-Q2', '2024-Q3', '2024-Q4'];
-  const countries = ['Perú', 'Estados Unidos', 'Chile', 'Colombia', 'México'];
-  const currencies = ['USD', 'PEN', 'EUR', 'CLP', 'COP', 'MXN'];
-  const sectors = ['Tecnología', 'Finanzas', 'Manufactura', 'Servicios', 'Retail', 'Salud', 'Energía'];
+  const dates = ["2024-Q1", "2024-Q2", "2024-Q3", "2024-Q4"];
+  const countries = ["Perú", "Estados Unidos", "Chile", "Colombia", "México"];
+  const currencies = ["USD", "PEN", "EUR", "CLP", "COP", "MXN"];
+  const sectors = [
+    "Tecnología",
+    "Finanzas",
+    "Manufactura",
+    "Servicios",
+    "Retail",
+    "Salud",
+    "Energía",
+  ];
   const reportProducts = [
     {
-      id: 'datos',
-      title: 'REPORTE DE DATOS',
-      iconClassName: 'fa-solid fa-laptop text-2xl text-gray-400'
+      id: "datos",
+      title: "REPORTE DE DATOS",
+      iconClassName: "fa-solid fa-laptop text-2xl text-gray-400",
     },
     {
-      id: 'especializado',
-      title: 'REPORTE ESPECIALIZADO',
-      iconClassName: 'fa-solid fa-laptop text-2xl text-gray-400'
-    }
+      id: "especializado",
+      title: "REPORTE ESPECIALIZADO",
+      iconClassName: "fa-solid fa-laptop text-2xl text-gray-400",
+    },
   ];
 
-  useEffect(() => () => {
-    toastTimeoutsRef.current.forEach(timeoutId => window.clearTimeout(timeoutId));
-    toastTimeoutsRef.current.clear();
-  }, []);
+  useEffect(
+    () => () => {
+      toastTimeoutsRef.current.forEach((timeoutId) =>
+        window.clearTimeout(timeoutId)
+      );
+      toastTimeoutsRef.current.clear();
+    },
+    []
+  );
 
-  useEffect(() => () => {
-    if (uploadedFileUrl) {
-      URL.revokeObjectURL(uploadedFileUrl);
-    }
-  }, [uploadedFileUrl]);
+  useEffect(
+    () => () => {
+      if (uploadedFileUrl) {
+        URL.revokeObjectURL(uploadedFileUrl);
+      }
+    },
+    [uploadedFileUrl]
+  );
 
   const handleResultsSectionChange = (
-    nextSection: 'estados' | 'resultados' | 'analisis' | 'metodologia'
+    nextSection: "estados" | "resultados" | "analisis" | "metodologia"
   ) => {
     setResultsSection(nextSection);
-    if (nextSection === 'metodologia' && isDesktopFormOpen) {
+    if (nextSection === "metodologia" && isDesktopFormOpen) {
       setIsDesktopFormOpen(false);
     }
   };
@@ -144,10 +164,6 @@ const ValoraPage: React.FC = () => {
 
   const handleReportSidebarClose = () => {
     setIsReportSidebarOpen(false);
-  };
-
-  const toggleResultsSidebar = () => {
-    setIsResultsSidebarOpen(prev => !prev);
   };
 
   const handleReportViewerOpen = () => {
@@ -165,9 +181,15 @@ const ValoraPage: React.FC = () => {
     }
   }, [showResults]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  /*const toggleResultsSidebar = () => {
+    setIsResultsSidebarOpen((prev) => !prev);
+  };*/
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -175,23 +197,23 @@ const ValoraPage: React.FC = () => {
     const missingFields: string[] = [];
 
     if (!formData.date) {
-      missingFields.push('Fecha');
+      missingFields.push("Fecha");
     }
     if (!formData.country) {
-      missingFields.push('Pais');
+      missingFields.push("Pais");
     }
     if (!formData.currency) {
-      missingFields.push('Moneda');
+      missingFields.push("Moneda");
     }
     if (!formData.sector) {
-      missingFields.push('Sector');
+      missingFields.push("Sector");
     }
     if (!fileUploaded) {
-      missingFields.push('Plantilla EEFF');
+      missingFields.push("Plantilla EEFF");
     }
 
     if (missingFields.length > 0) {
-      addToast('warn', `Completa los campos: ${missingFields.join(', ')}`);
+      addToast("warn", `Completa los campos: ${missingFields.join(", ")}`);
       return;
     }
 
@@ -203,14 +225,14 @@ const ValoraPage: React.FC = () => {
       setShowResults(true);
       setIsResultsSidebarOpen(true);
       setIsDesktopFormOpen(false);
-      addToast('success', 'Resultados generados correctamente.');
+      addToast("success", "Resultados generados correctamente.");
     }, 1000);
   };
 
   const downloadTemplate = () => {
-    const link = document.createElement('a');
-    link.href = '/files/PlantillaUsuarioValora.xlsx';
-    link.download = 'PlantillaUsuarioValora.xlsx';
+    const link = document.createElement("a");
+    link.href = "/files/PlantillaUsuarioValora.xlsx";
+    link.download = "PlantillaUsuarioValora.xlsx";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -221,7 +243,7 @@ const ValoraPage: React.FC = () => {
   };
 
   const removeToast = (id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
     const timeoutId = toastTimeoutsRef.current.get(id);
     if (timeoutId) {
       window.clearTimeout(timeoutId);
@@ -230,42 +252,43 @@ const ValoraPage: React.FC = () => {
   };
 
   const addToast = (type: ToastType, message: string) => {
-    const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const id =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-    setToasts(prev => [...prev, { id, type, message }]);
+    setToasts((prev) => [...prev, { id, type, message }]);
     const timeoutId = window.setTimeout(() => removeToast(id), 3500);
     toastTimeoutsRef.current.set(id, timeoutId);
   };
 
   const handleUploadTemplate = (file: File) => {
-    setUploadedFileUrl(prevUrl => {
+    setUploadedFileUrl((prevUrl) => {
       if (prevUrl) {
         URL.revokeObjectURL(prevUrl);
       }
       return URL.createObjectURL(file);
     });
-    setFormData(prev => ({ ...prev, fileUsername: file.name }));
+    setFormData((prev) => ({ ...prev, fileUsername: file.name }));
     setFileUploaded(true);
     setIsUploadModalOpen(false);
-    addToast('success', 'Plantilla cargada en el formulario.');
+    addToast("success", "Plantilla cargada en el formulario.");
     parseFinancialTables(file);
   };
 
   const handleClearUploadedFile = () => {
-    setUploadedFileUrl(prevUrl => {
+    setUploadedFileUrl((prevUrl) => {
       if (prevUrl) {
         URL.revokeObjectURL(prevUrl);
       }
       return null;
     });
-    setFormData(prev => ({ ...prev, fileUsername: '' }));
+    setFormData((prev) => ({ ...prev, fileUsername: "" }));
     setFileUploaded(false);
-    setUploadResetKey(prev => prev + 1);
+    setUploadResetKey((prev) => prev + 1);
     setBalanceTable(null);
     setResultsTable(null);
-    addToast('info', 'Archivo eliminado del formulario.');
+    addToast("info", "Archivo eliminado del formulario.");
   };
 
   const parseFinancialTables = async (file: File) => {
@@ -277,61 +300,64 @@ const ValoraPage: React.FC = () => {
       setResultsTable(parsedResults);
 
       if (!parsedBalance && !parsedResults) {
-        addToast('warn', 'No se encontraron las tablas en el archivo.');
+        addToast("warn", "No se encontraron las tablas en el archivo.");
       } else if (!parsedBalance) {
-        addToast('warn', 'Falta la tabla: Balance General.');
+        addToast("warn", "Falta la tabla: Balance General.");
       } else if (!parsedResults) {
-        addToast('warn', 'Falta la tabla: Estado de Resultados.');
+        addToast("warn", "Falta la tabla: Estado de Resultados.");
       }
     } catch (error) {
-      console.error('Error parsing Excel:', error);
-      addToast('error', 'No se pudo leer el archivo Excel.');
+      console.error("Error parsing Excel:", error);
+      addToast("error", "No se pudo leer el archivo Excel.");
     }
   };
 
-   const getSelectedView = (): 'estados' | 'resultados' | 'analisis' | 'metodologia' | '' => {
-    if (!showResults) return '';
+  const getSelectedView = ():
+    | "estados"
+    | "resultados"
+    | "analisis"
+    | "metodologia"
+    | "" => {
+    if (!showResults) return "";
     return resultsSection;
   };
 
   const { user } = useAuth();
 
-
   const handleLogout = () => {
-    return ''
-  }
+    // TODO: Implement logout functionality
+  };
 
   return (
     <div className="min-h-dvh bg-gray-50">
-      
-    <NavBar
-      user={user}
-      onLogout={handleLogout}
-      onToggleForm={() => setIsDesktopFormOpen(prev => !prev)}
-      isFormOpen={isDesktopFormOpen}
-      hasResults={showResults}
-      logoHref="/valora"
-      logoSrc="/public/images/logo-valora-small.png"
-      logoAlt="Valora Logo"
-      projectsHref="/usuario/proyectos"
-      selected={getSelectedView()}
-      onNavigate={handleResultsSectionChange}
-      onOpenReport={handleReportSidebarOpen}
-    />
+      <NavBar
+        user={user}
+        onLogout={handleLogout}
+        onToggleForm={() => setIsDesktopFormOpen((prev) => !prev)}
+        isFormOpen={isDesktopFormOpen}
+        hasResults={showResults}
+        logoHref="/valora"
+        logoSrc="/public/images/logo-valora-small.png"
+        logoAlt="Valora Logo"
+        projectsHref="/usuario/proyectos"
+        selected={getSelectedView()}
+        onNavigate={handleResultsSectionChange}
+        onOpenReport={handleReportSidebarOpen}
+      />
 
-       <NavigationTabs
+      <NavigationTabs
         selected={getSelectedView()}
         onNavigate={handleResultsSectionChange}
         onOpenReport={handleReportSidebarOpen}
         hasResults={showResults}
       />
       <main
-        className={`${showResults ? 'pt-24 lg:pt-16' : 'pt-12 lg:pt-16'} transition-all h-screen duration-300 ${isDesktopFormOpen ? 'lg:pl-105' : 'lg:pl-0'}`}
+        className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} transition-all h-screen duration-300 ${isDesktopFormOpen ? "lg:pl-105" : "lg:pl-0"}`}
       >
         {mainContent}
       </main>
       <aside
-        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-105 border-r border-gray-200 bg-white shadow-sm transition-transform duration-200 ${isDesktopFormOpen ? 'translate-x-0' : '-translate-x-105'}`}
+        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-105 border-r border-gray-200 bg-white shadow-sm transition-transform duration-200 ${isDesktopFormOpen ? "translate-x-0" : "-translate-x-105"}`}
       >
         <div className="h-full overflow-y-auto p-4">
           <ValoraFormPanel
@@ -350,7 +376,7 @@ const ValoraPage: React.FC = () => {
           />
         </div>
       </aside>
- 
+
       <UploadTemplateModal
         key={uploadResetKey}
         isOpen={isUploadModalOpen}

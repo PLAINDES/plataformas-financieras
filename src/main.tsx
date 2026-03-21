@@ -1,12 +1,12 @@
 // src/main.tsx
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import App from './App';
-import { AuthProvider } from './features/auth/context/AuthContext';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import App from "./App";
+import { AuthProvider } from "./features/auth/context/AuthContext";
 
-import './index.css';
-import './App.css'
+import "./index.css";
+import "./App.css";
 
 declare global {
   interface Window {
@@ -18,11 +18,11 @@ declare global {
 }
 
 window.AppFinanceWeb = {
-  api: import.meta.env.VITE_API_URL_FINANCE || '',
-  margarita: import.meta.env.VITE_API_URL_MARGARITA || '',
+  api: import.meta.env.VITE_API_URL_FINANCE || "",
+  margarita: import.meta.env.VITE_API_URL_MARGARITA || "",
 };
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>

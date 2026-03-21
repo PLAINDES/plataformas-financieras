@@ -1,23 +1,27 @@
 export interface FormData {
   date: string;
   sector: string;
-  instrument: string; 
-  bono: string;
+  instrument?: string;
+  bono?: string;
   country: string;
-  devaluation: string;
-  tax: string;
+  devaluation?: string;
+  tax?: string;
   currency: string;
-  kd: string;
-  debt: string;
-  capital: string;
-  typeId: boolean;
-  useFinancialData: boolean;
-  dc_ratio: string;
-  effective_tax_rate: string;
-  beta_levered: string;
-  beta_unlevered: string;
+  kd?: string;
+  debt?: string;
+  capital?: string;
+  typeId?: boolean;
+  useFinancialData?: boolean;
+  dc_ratio?: string;
+  effective_tax_rate?: string;
+  beta_levered?: string;
+  beta_unlevered?: string;
+  fileUsername: string;
+  action: string;
+  longgrowth: string;
+  capitalcost: string;
+  revenuegrowth: string;
 }
-
 
 export interface FinancialTableRow {
   label: string;

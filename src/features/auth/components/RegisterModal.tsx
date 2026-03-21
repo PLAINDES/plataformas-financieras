@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import type { FormEvent } from 'react';
-import { X, Loader2, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import type { RegisterData, User } from '../types/user.types';
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { X, Loader2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import type { RegisterData, User } from "../types/user.types";
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -12,12 +12,17 @@ interface RegisterModalProps {
   onSwitchToLogin: () => void;
 }
 
-export function RegisterModal({ isOpen, onClose, onRegister, onSwitchToLogin }: RegisterModalProps) {
+export function RegisterModal({
+  isOpen,
+  onClose,
+  onRegister,
+  onSwitchToLogin,
+}: RegisterModalProps) {
   const [formData, setFormData] = useState<RegisterData>({
-    name: '',
-    lastname: '',
-    email: '',
-    password: '',
+    name: "",
+    lastname: "",
+    email: "",
+    password: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,33 +32,33 @@ export function RegisterModal({ isOpen, onClose, onRegister, onSwitchToLogin }: 
     setError(null);
 
     if (formData.password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+      setError("La contraseña debe tener al menos 6 caracteres");
       return;
     }
     if (!formData.name.trim() || !formData.lastname.trim()) {
-      setError('El nombre y apellido son requeridos');
+      setError("El nombre y apellido son requeridos");
       return;
     }
 
     setLoading(true);
     try {
       await onRegister(formData);
-      setFormData({ name: '', lastname: '', email: '', password: '' });
+      setFormData({ name: "", lastname: "", email: "", password: "" });
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Error al crear la cuenta. Intenta nuevamente.');
+      setError(err.message || "Error al crear la cuenta. Intenta nuevamente.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleChange = (field: keyof RegisterData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleClose = () => {
     if (!loading) {
-      setFormData({ name: '', lastname: '', email: '', password: '' });
+      setFormData({ name: "", lastname: "", email: "", password: "" });
       setError(null);
       onClose();
     }
@@ -62,13 +67,13 @@ export function RegisterModal({ isOpen, onClose, onRegister, onSwitchToLogin }: 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[1050] flex items-center justify-center">
+    <div className="fixed inset-0 z-1050 flex items-center justify-center">
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
         onClick={handleClose}
       />
 
-      <div className="relative w-full h-full sm:h-auto sm:max-w-[480px] bg-white sm:rounded-2xl shadow-2xl overflow-y-auto animate-in fade-in zoom-in duration-300">
+      <div className="relative w-full h-full sm:h-auto sm:max-w-120 bg-white sm:rounded-2xl shadow-2xl overflow-y-auto animate-in fade-in zoom-in duration-300">
         <Button
           type="button"
           variant="ghost"
@@ -87,20 +92,28 @@ export function RegisterModal({ isOpen, onClose, onRegister, onSwitchToLogin }: 
               alt="Logo Pro Finance"
               className="h-12 mx-auto mb-3 object-contain"
             />
-
           </div>
 
           <div className="flex-1 px-6 py-10 sm:p-12">
-            <div className="max-w-[360px] mx-auto w-full">
+            <div className="max-w-90 mx-auto w-full">
               <div className="text-center mb-8">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2">Crea tu cuenta</h1>
-                <p className="text-gray-500 text-sm sm:text-base font-medium">Registra tus credenciales para acceder</p>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2">
+                  Crea tu cuenta
+                </h1>
+                <p className="text-gray-500 text-sm sm:text-base font-medium">
+                  Registra tus credenciales para acceder
+                </p>
               </div>
 
               {error && (
-                <Alert variant="destructive" className="mb-6 bg-red-50 border-red-100 text-red-600 animate-shake">
+                <Alert
+                  variant="destructive"
+                  className="mb-6 bg-red-50 border-red-100 text-red-600 animate-shake"
+                >
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-sm font-medium">{error}</AlertDescription>
+                  <AlertDescription className="text-sm font-medium">
+                    {error}
+                  </AlertDescription>
                 </Alert>
               )}
 
@@ -110,7 +123,7 @@ export function RegisterModal({ isOpen, onClose, onRegister, onSwitchToLogin }: 
                     type="text"
                     placeholder="Nombre"
                     value={formData.name}
-                    onChange={(e) => handleChange('name', e.target.value)}
+                    onChange={(e) => handleChange("name", e.target.value)}
                     disabled={loading}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
                   />
@@ -118,7 +131,7 @@ export function RegisterModal({ isOpen, onClose, onRegister, onSwitchToLogin }: 
                     type="text"
                     placeholder="Apellido"
                     value={formData.lastname}
-                    onChange={(e) => handleChange('lastname', e.target.value)}
+                    onChange={(e) => handleChange("lastname", e.target.value)}
                     disabled={loading}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
                   />
@@ -128,7 +141,7 @@ export function RegisterModal({ isOpen, onClose, onRegister, onSwitchToLogin }: 
                   type="email"
                   placeholder="Correo electrónico"
                   value={formData.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
+                  onChange={(e) => handleChange("email", e.target.value)}
                   disabled={loading}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
                 />
@@ -137,7 +150,7 @@ export function RegisterModal({ isOpen, onClose, onRegister, onSwitchToLogin }: 
                   type="password"
                   placeholder="Contraseña (mín. 6 caracteres)"
                   value={formData.password}
-                  onChange={(e) => handleChange('password', e.target.value)}
+                  onChange={(e) => handleChange("password", e.target.value)}
                   disabled={loading}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
                 />
@@ -153,13 +166,13 @@ export function RegisterModal({ isOpen, onClose, onRegister, onSwitchToLogin }: 
                       <span>Procesando...</span>
                     </>
                   ) : (
-                    'Crear mi cuenta'
+                    "Crear mi cuenta"
                   )}
                 </Button>
 
                 <div className="text-center pt-4">
                   <p className="text-gray-500 text-sm font-medium">
-                    ¿Ya tienes una cuenta?{' '}
+                    ¿Ya tienes una cuenta?{" "}
                     <Button
                       type="button"
                       variant="link"

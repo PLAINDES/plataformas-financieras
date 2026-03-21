@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const FormSection: React.FC<{
   title: string;
   number: number;
@@ -13,17 +11,17 @@ export const FormSection: React.FC<{
     <div className="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
       <div className="flex items-center gap-3">
         {/* Badge circular */}
-        <span className="flex-shrink-0 flex items-center justify-center w-7 h-7 bg-blue-600 text-white rounded-full text-xs font-bold shadow-sm">
+        <span className="shrink-0 flex items-center justify-center w-7 h-7 bg-blue-600 text-white rounded-full text-xs font-bold shadow-sm">
           {number}
         </span>
-        
+
         {/* Título y Subtítulo */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide truncate">
               {title}
             </h3>
-            
+
             {/* Toggle Switch */}
             {toggle !== undefined && (
               <button
@@ -33,11 +31,19 @@ export const FormSection: React.FC<{
                 aria-label="Alternar sección"
               >
                 {toggle ? (
-                  <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-8 h-8 text-blue-600"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M16 7H8C5.243 7 3 9.243 3 12s2.243 5 8 5h8c2.757 0 5-2.243 5-5s-2.243-5-5-5zM16 14a2 2 0 110-4 2 2 0 010 4z" />
                   </svg>
                 ) : (
-                  <svg className="w-8 h-8 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-8 h-8 text-gray-300"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M8 7h8c2.757 0 5 2.243 5 5s-2.243 5-5 5H8c-2.757 0-5-2.243-5-5s2.243-5 5-5zm0 7a2 2 0 100-4 2 2 0 000 4z" />
                   </svg>
                 )}
@@ -54,12 +60,16 @@ export const FormSection: React.FC<{
     </div>
 
     {/* Body Section con animación de colapso */}
-    <div 
+    <div
       className={`
         px-4 transition-all duration-300 ease-in-out
-        ${toggle !== undefined 
-          ? (toggle ? 'max-h-[2000px] opacity-100 py-4' : 'max-h-0 opacity-0 py-0 overflow-hidden') 
-          : 'py-4'}
+        ${
+          toggle !== undefined
+            ? toggle
+              ? "max-h-500 opacity-100 py-4"
+              : "max-h-0 opacity-0 py-0 overflow-hidden"
+            : "py-4"
+        }
       `}
     >
       {children}
