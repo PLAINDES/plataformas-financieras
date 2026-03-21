@@ -77,10 +77,7 @@ export const MainService = {
     return api.get<Report>(`main/reports/${id}`);
   },
 
-  updateReport: async (
-    id: number,
-    data: ReportUpdate
-  ): Promise<{ message: string }> => {
+  updateReport: async (id: number, data: ReportUpdate): Promise<{ message: string }> => {
     return api.put<{ message: string }>(`main/reports/${id}`, data);
   },
 
@@ -97,9 +94,7 @@ export const MainService = {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(
-        (err as { detail?: string }).detail ?? `Upload failed: ${res.status}`
-      );
+      throw new Error((err as { detail?: string }).detail ?? `Upload failed: ${res.status}`);
     }
   },
 
