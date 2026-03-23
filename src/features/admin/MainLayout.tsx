@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { useState } from "react";
-=======
 import React, { useState } from "react";
->>>>>>> 629f442 (feat: adding new routes for covers and reports. Also removing videos in landing page, also adding new icons for admin sidebar. normalizing styles in admin with breadcrumbs and header)
 import Sidebar from "./SideBar";
 import { ScrollTop, Footer } from "./AdminLayout";
 
