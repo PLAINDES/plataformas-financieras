@@ -37,8 +37,34 @@ interface ColorPickerProps {
   icon: React.ReactNode;
 }
 
-const FONT_SIZES = ["8", "9", "10", "11", "12", "13", "14", "16", "18", "20", "22", "24", "28", "32", "36", "48", "72"];
-const FONT_FAMILIES = ["sans-serif", "serif", "monospace", "Georgia", "Arial", "Courier New", "Times New Roman"];
+const FONT_SIZES = [
+  "8",
+  "9",
+  "10",
+  "11",
+  "12",
+  "13",
+  "14",
+  "16",
+  "18",
+  "20",
+  "22",
+  "24",
+  "28",
+  "32",
+  "36",
+  "48",
+  "72",
+];
+const FONT_FAMILIES = [
+  "sans-serif",
+  "serif",
+  "monospace",
+  "Georgia",
+  "Arial",
+  "Courier New",
+  "Times New Roman",
+];
 
 const DEFAULT_CONTENT = `<h2 style="text-align: left"><strong>1. INTRODUCCIÓN</strong></h2>
 <p style="text-align: justify">El presente reporte contiene los resultados de la estimación del costo de capital de la empresa, además de una explicación de la metodología utilizada. El proceso de estimación tiene tres etapas. Primero, se realiza una estimación del costo de capital en un mercado desarrollado en base al sector al que pertenece la empresa. Segundo, se ajusta dicha estimación para reflejar el riesgo del país en el que opera principalmente la empresa. Y tercero, se realiza un conjunto de ajustes finales para reflejar el nivel de apalancamiento financiero de la empresa, la divisa en la que quiere expresarse la tasa, y otros riesgos que pueda enfrentar la empresa.</p>
@@ -84,7 +110,12 @@ const FontSizeSelect: React.FC<FontSizeSelectProps> = ({ value, onChange }) => (
   </select>
 );
 
-const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, title, icon }) => {
+const ColorPicker: React.FC<ColorPickerProps> = ({
+  value,
+  onChange,
+  title,
+  icon,
+}) => {
   const inputRef = useRef<HTMLInputElement>(null);
   return (
     <div className="relative">
@@ -94,7 +125,9 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, title, icon 
         onClick={() => inputRef.current?.click()}
         className="flex h-7 w-7 flex-col items-center justify-center rounded transition-all hover:bg-slate-100"
       >
-        <span className="text-xs font-bold leading-none text-slate-700">{icon}</span>
+        <span className="text-xs font-bold leading-none text-slate-700">
+          {icon}
+        </span>
         <span
           className="mt-0.5 h-1 w-4 rounded-sm"
           style={{ backgroundColor: value }}
@@ -143,7 +176,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       Superscript,
     ],
     content: initialContent,
-    onUpdate({editor}){
+    onUpdate({ editor }) {
       onChange?.(editor.getHTML());
     },
     editorProps: {
@@ -195,17 +228,25 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const applyFontSize = useCallback(
     (size: string) => {
       setFontSize(size);
-      editor?.chain().focus().setMark("textStyle", { fontSize: `${size}pt` }).run();
+      editor
+        ?.chain()
+        .focus()
+        .setMark("textStyle", { fontSize: `${size}pt` })
+        .run();
     },
-    [editor],
+    [editor]
   );
 
   const applyFontFamily = useCallback(
     (family: string) => {
       setFontFamily(family);
-      editor?.chain().focus().setMark("textStyle", { fontFamily: family }).run();
+      editor
+        ?.chain()
+        .focus()
+        .setMark("textStyle", { fontFamily: family })
+        .run();
     },
-    [editor],
+    [editor]
   );
 
   if (!editor) return null;
@@ -341,7 +382,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             </svg>
           </ToolbarButton>
           <ToolbarButton
-            onClick={() => editor.chain().focus().sinkListItem("listItem").run()}
+            onClick={() =>
+              editor.chain().focus().sinkListItem("listItem").run()
+            }
             disabled={!editor.can().sinkListItem("listItem")}
             title="Aumentar sangría"
           >
@@ -396,7 +439,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               <path d="M20 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 2v3H5V5h15zm-9 5h4v4h-4v-4zm0 9v-3h4v3h-4zM5 10h4v4H5v-4zm0 6v-3h4v3H5zm11-6h4v4h-4v-4zm0 6v-3h4v3h-4z" />
             </svg>
           </ToolbarButton>
-          <ToolbarButton onClick={setLink} active={editor.isActive("link")} title="Insertar enlace">
+          <ToolbarButton
+            onClick={setLink}
+            active={editor.isActive("link")}
+            title="Insertar enlace"
+          >
             <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current">
               <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
             </svg>
@@ -416,16 +463,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             onClick={() => {
               const html = editor.getHTML();
               const w = window.open("", "_blank");
-              if (w) w.document.write(`<pre>${html.replace(/</g, "&lt;")}</pre>`);
+              if (w)
+                w.document.write(`<pre>${html.replace(/</g, "&lt;")}</pre>`);
             }}
             title="Ver HTML"
           >
             <span className="font-mono text-[10px]">&lt;/&gt;</span>
           </ToolbarButton>
-          <ToolbarButton
-            onClick={() => window.print()}
-            title="Ayuda"
-          >
+          <ToolbarButton onClick={() => window.print()} title="Ayuda">
             <span className="text-[13px]">?</span>
           </ToolbarButton>
         </div>
@@ -434,7 +479,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       {editor && (
         <BubbleMenu
           editor={editor}
-          tippyOptions={{ duration: 100 }}
           className="flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white px-1.5 py-1 shadow-lg"
         >
           <ToolbarButton

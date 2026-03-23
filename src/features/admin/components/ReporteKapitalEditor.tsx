@@ -26,8 +26,10 @@ interface ReportFormData {
   sectorEmpresa: string;
   bonoAjustado: string;
   contenido: string;
+  contentEditor: string;
   linkPago: string;
   portadaId: number | null;
+  type: "valora" | "kapital";
 }
 
 interface CollapsiblePanelProps {
@@ -40,19 +42,17 @@ const INITIAL_FORM: ReportFormData = {
   nombre: "",
   activo: true,
   precio: 0,
-  moneda: "SOLES",
+  moneda: "",
   sectorEmpresa: "",
   bonoAjustado: "",
   contenido: "",
+  contentEditor: "",
   linkPago: "",
   portadaId: null,
+  type: "kapital",
 };
 
-const DEFAULT_CONTENT = `<h2 style="text-align: left"><strong>1. INTRODUCCIÓN</strong></h2>
-<p style="text-align: justify">El presente reporte contiene los resultados de la estimación del costo de capital de la empresa, además de una explicación de la metodología utilizada. El proceso de estimación tiene tres etapas. Primero, se realiza una estimación del costo de capital en un mercado desarrollado en base al sector al que pertenece la empresa. Segundo, se ajusta dicha estimación para reflejar el riesgo del país en el que opera principalmente la empresa. Y tercero, se realiza un conjunto de ajustes finales para reflejar el nivel de apalancamiento financiero de la empresa, la divisa en la que quiere expresarse la tasa, y otros riesgos que pueda enfrentar la empresa.</p>
-<p style="text-align: justify">A continuación, se describe en detalle estas tres etapas, mostrando los resultados obtenidos en cada caso.</p>
-<h2 style="text-align: left"><strong>2. COSTO DE CAPITAL EN UN MERCADO DESARROLLADO</strong></h2>
-<p style="text-align: justify">La primera etapa consiste en estimar el costo de capital en un mercado desarrollado de referencia. La característica de "desarrollado" se refiere al nivel de liquidez, representatividad, e historial estadístico de sus mercados bursátiles. Esto es sumamente importante, pues la información obtenida de los mercados bursátiles es la base para una correcta estimación.</p>`;
+const DEFAULT_CONTENT = "";
 
 function reportToForm(report: Report): ReportFormData {
   return {
@@ -63,12 +63,17 @@ function reportToForm(report: Report): ReportFormData {
     sectorEmpresa: report.sector_empresa ?? "",
     bonoAjustado: report.bono_ajustado ?? "",
     contenido: report.contenido ?? "",
+    contentEditor: (report as any).contentEditor ?? "",
     linkPago: report.link_pago ?? "",
     portadaId: report.portada?.id ?? null,
+    type: (report.type as "kapital" | "valora") ?? "kapital",
   };
 }
 
-const FieldItem: React.FC<{ field: TemplateCodeBasic }> = ({ field }) => (
+const FieldItem: React.FC<{
+  field: TemplateCodeBasic;
+  largeImage?: boolean;
+}> = ({ field, largeImage = false }) => (
   <div
     draggable
     onDragStart={(e) => {
@@ -77,17 +82,42 @@ const FieldItem: React.FC<{ field: TemplateCodeBasic }> = ({ field }) => (
     }}
     className="flex cursor-grab active:cursor-grabbing items-center gap-3 rounded-lg border border-transparent px-3 py-2 transition-all hover:border-blue-100 hover:bg-blue-50"
   >
-    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-blue-100">
-      <BarChart2 className="h-3.5 w-3.5 text-blue-600" />
-    </div>
+    {/** show thumbnail if available */}
+    {((field as any).template_code_image_url as string) && (
+      <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center bg-blue-100 overflow-hidden">
+        <img
+          src={(field as any).template_code_image_url}
+          alt={field.code}
+          className="h-14 w-14 object-fill"
+        />
+      </div>
+    )}
     <div className="min-w-0 flex-1">
-      <p className="truncate font-mono text-[11px] font-semibold text-blue-500">
-        {field.code}
-      </p>
-      <p className="truncate text-xs font-medium text-slate-700">
-        {field.nombre}
-      </p>
-      <p className="truncate text-[10px] text-slate-400">{field.hoja ?? "—"}</p>
+      {largeImage ? (
+        <div className="flex flex-col">
+          <p className="truncate font-mono text-[10px] font-semibold text-blue-500">
+            {field.code}
+          </p>
+          <p className="truncate text-[11px] font-bold text-slate-700">
+            {field.nombre}
+          </p>
+          <p className="truncate text-[9px] text-slate-400">
+            {field.hoja ?? "—"}
+          </p>
+        </div>
+      ) : (
+        <>
+          <p className="truncate font-mono text-[11px] font-semibold text-blue-500">
+            {field.code}
+          </p>
+          <p className="truncate text-xs font-medium text-slate-700">
+            {field.nombre}
+          </p>
+          <p className="truncate text-[10px] text-slate-400">
+            {field.hoja ?? "—"}
+          </p>
+        </>
+      )}
     </div>
   </div>
 );
@@ -140,7 +170,15 @@ export const ReporteKapitalEditor: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
-  const templateCodes = report?.template?.template_codes ?? [];
+  const [currentTemplateCodes, setCurrentTemplateCodes] = useState<
+    TemplateCodeBasic[] | null
+  >(null);
+  const [codesLoading, setCodesLoading] = useState(false);
+  const PAGE_SIZE = 5;
+  const [fieldsPage, setFieldsPage] = useState(0);
+  const [chartsPage, setChartsPage] = useState(0);
+  const templateCodes =
+    report?.template?.template_codes ?? currentTemplateCodes ?? [];
   const portadaUrl = report?.portada?.portada?.url;
   const selectedCover = form.portadaId
     ? covers.find((c) => c.id === form.portadaId)
@@ -172,9 +210,82 @@ export const ReporteKapitalEditor: React.FC = () => {
   const chartsAndTables = templateCodes.filter(isChartOrTable);
   const fields = templateCodes.filter((tc) => !isChartOrTable(tc));
 
+  const [fieldsQuery, setFieldsQuery] = useState("");
+  const [chartsQuery, setChartsQuery] = useState("");
+
+  // pagination reset when template codes change
+  useEffect(() => {
+    setFieldsPage(0);
+    setChartsPage(0);
+  }, [templateCodes]);
+
+  const filteredFields = fields.filter((f) => {
+    if (!fieldsQuery) return true;
+    const q = fieldsQuery.toLowerCase();
+    return `${f.code} ${f.nombre}`.toLowerCase().includes(q);
+  });
+
+  const filteredCharts = chartsAndTables.filter((f) => {
+    if (!chartsQuery) return true;
+    const q = chartsQuery.toLowerCase();
+    return `${f.code} ${f.nombre}`.toLowerCase().includes(q);
+  });
+
+  const fieldsVisible = filteredFields.slice(
+    fieldsPage * PAGE_SIZE,
+    (fieldsPage + 1) * PAGE_SIZE
+  );
+  const chartsVisible = filteredCharts.slice(
+    chartsPage * PAGE_SIZE,
+    (chartsPage + 1) * PAGE_SIZE
+  );
+
   // Load covers list
   useEffect(() => {
     MainService.getCovers().then(setCovers);
+  }, []);
+
+  // Load current master template codes (fallback when report has no template)
+  useEffect(() => {
+    setCodesLoading(true);
+    MainService.getCurrentMasterTemplateCodes()
+      .then((res) => {
+        const codes: TemplateCodeBasic[] = [];
+        const grouped = res?.extracted_codes || {};
+        ["kapital", "valora"].forEach((t) => {
+          const list = grouped[t] || [];
+          for (const item of list) {
+            if (!item) continue;
+            // item can be a string fallback or an object from backend
+            if (typeof item === "string") {
+              codes.push({
+                id: -1,
+                nombre: item,
+                code: item,
+                type: t as "kapital" | "valora",
+                hoja: null,
+              });
+            } else if (item.code) {
+              const nombre =
+                item.nombre ?? item.original_name ?? item.filename ?? item.code;
+              // preserve optional image url if backend provided it
+              const entry: any = {
+                id: item.id ?? -1,
+                nombre,
+                code: item.code,
+                type: t as "kapital" | "valora",
+                hoja: item.hoja ?? null,
+              };
+              if (item.template_code_image_url)
+                entry.template_code_image_url = item.template_code_image_url;
+              codes.push(entry);
+            }
+          }
+        });
+        setCurrentTemplateCodes(codes);
+      })
+      .catch(() => setCurrentTemplateCodes([]))
+      .finally(() => setCodesLoading(false));
   }, []);
 
   useEffect(() => {
@@ -198,7 +309,8 @@ export const ReporteKapitalEditor: React.FC = () => {
             setEditorContent(DEFAULT_CONTENT);
           }
         } else {
-          setEditorContent(DEFAULT_CONTENT);
+          // if backend already has editor content persisted on the report row, use it
+          setEditorContent((r as any).contentEditor ?? DEFAULT_CONTENT);
         }
 
         setEditorKey((k) => k + 1);
@@ -216,21 +328,42 @@ export const ReporteKapitalEditor: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!id) return;
     setSaving(true);
 
     try {
-      await MainService.updateReport(Number(id), {
-        nombre: form.nombre,
-        precio: form.precio,
-        moneda: form.moneda,
-        sector_empresa: form.sectorEmpresa,
-        bono_ajustado: form.bonoAjustado,
-        contenido: form.contenido,
-        link_pago: form.linkPago,
-        activo: form.activo,
-        portada_id: form.portadaId,
-      });
+      let reportId = id ? Number(id) : undefined;
+
+      if (!reportId) {
+        // create new report first
+        const created = await MainService.createReport({
+          nombre: form.nombre,
+          precio: form.precio,
+          moneda: form.moneda,
+          sector_empresa: form.sectorEmpresa,
+          bono_ajustado: form.bonoAjustado,
+          contenido: form.contenido,
+          contentEditor: editorContent,
+          link_pago: form.linkPago,
+          activo: form.activo,
+          portada_id: form.portadaId,
+          type: form.type,
+        });
+        reportId = created.id;
+      } else {
+        await MainService.updateReport(Number(reportId), {
+          nombre: form.nombre,
+          precio: form.precio,
+          moneda: form.moneda,
+          sector_empresa: form.sectorEmpresa,
+          bono_ajustado: form.bonoAjustado,
+          contenido: form.contenido,
+          contentEditor: editorContent,
+          link_pago: form.linkPago,
+          activo: form.activo,
+          portada_id: form.portadaId,
+          type: form.type,
+        });
+      }
 
       const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
         import("jspdf"),
@@ -247,13 +380,45 @@ export const ReporteKapitalEditor: React.FC = () => {
         "top:-9999px",
         "left:0",
       ].join(";");
-      element.innerHTML = editorContent;
-      document.body.appendChild(element);
 
-      await new Promise<void>((res) => requestAnimationFrame(() => res()));
+      const sanitizeContent = (html: string) =>
+        html
+          // remove oklch(...) optionally followed by an alpha slash part
+          .replace(/oklch\([^)]*\)(?:\/[^)\s;\"]*)?/gi, "#333333")
+          // also handle oklab(...) just in case
+          .replace(/oklab\([^)]*\)(?:\/[^)\s;\"]*)?/gi, "#333333");
 
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-      document.body.removeChild(element);
+      const sanitized = sanitizeContent(editorContent);
+
+      // Render inside an isolated iframe so html2canvas doesn't parse global styles
+      const iframe = document.createElement("iframe");
+      iframe.style.cssText = [
+        "width:794px",
+        "height: auto",
+        "position:absolute",
+        "top:-9999px",
+        "left:0",
+        "border:0",
+      ].join(";");
+      document.body.appendChild(iframe);
+
+      const idoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!idoc)
+        throw new Error("Could not create iframe document for PDF rendering");
+
+      const html = `<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><style>html,body{margin:0;padding:0;background:transparent} .__rk_wrapper{width:794px;padding:40px;background:white;font-family:sans-serif;box-sizing:border-box}</style></head><body><div class=\"__rk_wrapper\">${sanitized}</div></body></html>`;
+      idoc.open();
+      idoc.write(html);
+      idoc.close();
+
+      // wait a tick for iframe to render resources
+      await new Promise<void>((res) => setTimeout(() => res(), 120));
+
+      const target = idoc.querySelector(".__rk_wrapper") as HTMLElement;
+      if (!target) throw new Error("Rendered content missing in iframe");
+
+      const canvas = await html2canvas(target, { scale: 2, useCORS: true });
+      document.body.removeChild(iframe);
 
       const pdf = new jsPDF({
         unit: "px",
@@ -281,14 +446,23 @@ export const ReporteKapitalEditor: React.FC = () => {
 
       const blob = pdf.output("blob");
       const formData = new FormData();
-      formData.append("file", blob, `Reporte-${id}.pdf`);
+      formData.append("file", blob, `Reporte-${reportId}.pdf`);
       formData.append("html", editorContent);
 
-      await MainService.uploadReportFile(Number(id), formData);
+      await MainService.uploadReportFile(reportId!, formData);
 
-      navigate("/admin/kapital/reportes");
-    } catch (err) {
-      console.error(err);
+      navigate("/admin/reportes");
+    } catch (err: any) {
+      console.error("Error en handleSave:", err);
+      try {
+        if (err && err.message) console.error("message:", err.message);
+        if (err && err.stack) console.error("stack:", err.stack);
+        // attempt to stringify if it's a plain object
+        if (typeof err === "object")
+          console.error("error object:", JSON.stringify(err));
+      } catch (e) {
+        // ignore stringify errors
+      }
       alert(
         "Error al guardar el reporte. Revisa la consola para más detalles."
       );
@@ -376,6 +550,25 @@ export const ReporteKapitalEditor: React.FC = () => {
                     placeholder="Nombre del reporte..."
                     className="h-9 text-sm"
                   />
+                </div>
+                <div className="sm:w-48">
+                  <Label className="mb-1.5 block text-xs font-semibold text-slate-600 uppercase">
+                    Tipo
+                  </Label>
+                  <Select
+                    value={form.type}
+                    onValueChange={(v) =>
+                      handleChange("type", v as "kapital" | "valora")
+                    }
+                  >
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kapital">Kapital</SelectItem>
+                      <SelectItem value="valora">Valora</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex items-center gap-2 pb-1">
                   <Checkbox
@@ -632,7 +825,7 @@ export const ReporteKapitalEditor: React.FC = () => {
                 variant="outline"
                 size="sm"
                 className="text-sm h-9 px-4"
-                onClick={() => navigate("/admin/kapital/reportes")}
+                onClick={() => navigate("/admin/reportes")}
               >
                 Cancelar
               </Button>
@@ -654,11 +847,60 @@ export const ReporteKapitalEditor: React.FC = () => {
             </p>
             <div className="flex flex-col gap-3">
               <CollapsiblePanel title="Campos" defaultOpen>
-                {fields.length > 0 ? (
+                <div className="px-2 pb-2">
+                  <Input
+                    value={fieldsQuery}
+                    onChange={(e) => setFieldsQuery(e.target.value)}
+                    placeholder="Buscar por código o nombre..."
+                    className="h-10 text-sm"
+                  />
+                </div>
+                {codesLoading ? (
+                  <div className="flex items-center justify-center p-6 text-sm text-slate-400">
+                    Cargando...
+                  </div>
+                ) : filteredFields.length > 0 ? (
                   <div className="space-y-1">
-                    {fields.map((tc) => (
-                      <FieldItem key={tc.id} field={tc} />
+                    {fieldsVisible.map((tc) => (
+                      <FieldItem key={tc.id + tc.code} field={tc} />
                     ))}
+                    {filteredFields.length > PAGE_SIZE && (
+                      <div className="mt-2 flex items-center justify-between px-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFieldsPage((p) => Math.max(0, p - 1))
+                          }
+                          disabled={fieldsPage === 0}
+                          className="text-xs text-slate-500 disabled:opacity-40"
+                        >
+                          Anterior
+                        </button>
+                        <div className="text-xs text-slate-400">
+                          {fieldsPage + 1} /{" "}
+                          {Math.ceil(filteredFields.length / PAGE_SIZE)}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFieldsPage((p) =>
+                              Math.min(
+                                Math.ceil(filteredFields.length / PAGE_SIZE) -
+                                  1,
+                                p + 1
+                              )
+                            )
+                          }
+                          disabled={
+                            (fieldsPage + 1) * PAGE_SIZE >=
+                            filteredFields.length
+                          }
+                          className="text-xs text-slate-500 disabled:opacity-40"
+                        >
+                          Siguiente
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="px-3 py-4 text-center text-[10px] text-slate-400">
@@ -668,11 +910,60 @@ export const ReporteKapitalEditor: React.FC = () => {
               </CollapsiblePanel>
 
               <CollapsiblePanel title="Tablas / Gráficos" defaultOpen={false}>
-                {chartsAndTables.length > 0 ? (
+                <div className="px-2 pb-2">
+                  <Input
+                    value={chartsQuery}
+                    onChange={(e) => setChartsQuery(e.target.value)}
+                    placeholder="Buscar gráficos o tablas..."
+                    className="h-10 text-sm"
+                  />
+                </div>
+                {codesLoading ? (
+                  <div className="flex items-center justify-center p-6 text-sm text-slate-400">
+                    Cargando...
+                  </div>
+                ) : filteredCharts.length > 0 ? (
                   <div className="space-y-1">
-                    {chartsAndTables.map((tc) => (
-                      <FieldItem key={tc.id} field={tc} />
+                    {chartsVisible.map((tc) => (
+                      <FieldItem key={tc.id + tc.code} field={tc} largeImage />
                     ))}
+                    {filteredCharts.length > PAGE_SIZE && (
+                      <div className="mt-2 flex items-center justify-between px-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setChartsPage((p) => Math.max(0, p - 1))
+                          }
+                          disabled={chartsPage === 0}
+                          className="text-xs text-slate-500 disabled:opacity-40"
+                        >
+                          Anterior
+                        </button>
+                        <div className="text-xs text-slate-400">
+                          {chartsPage + 1} /{" "}
+                          {Math.ceil(filteredCharts.length / PAGE_SIZE)}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setChartsPage((p) =>
+                              Math.min(
+                                Math.ceil(filteredCharts.length / PAGE_SIZE) -
+                                  1,
+                                p + 1
+                              )
+                            )
+                          }
+                          disabled={
+                            (chartsPage + 1) * PAGE_SIZE >=
+                            filteredCharts.length
+                          }
+                          className="text-xs text-slate-500 disabled:opacity-40"
+                        >
+                          Siguiente
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="px-3 py-4 text-center text-[10px] text-slate-400">

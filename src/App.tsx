@@ -89,6 +89,7 @@ function App() {
         <Route index element={<DashboardPage />} />
         <Route path="master/plantillas" element={<PlantillasMaestrasPage />} />
         <Route path="reportes" element={<ReportesKapitalPage />} />
+        <Route path="reportes/nuevo" element={<ReporteKapitalEditor />} />
         <Route path="portadas" element={<PortadasPage />} />
         <Route path="portadas/nuevo" element={<PortadaCreatePage />} />
         <Route path="portadas/:id/editar" element={<PortadaEditPage />} />

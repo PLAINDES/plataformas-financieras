@@ -88,11 +88,12 @@ export const MainService = {
     return api.get<Report>(`main/reports/${id}`);
   },
 
-  updateReport: async (
-    id: number,
-    data: ReportUpdate
-  ): Promise<{ message: string }> => {
-    return api.put<{ message: string }>(`main/reports/${id}`, data);
+  updateReport: async (id: number, data: ReportUpdate): Promise<Report> => {
+    return api.put<Report>(`main/reports/${id}`, data);
+  },
+
+  createReport: async (data: ReportUpdate): Promise<Report> => {
+    return api.post<Report>("main/reports", data);
   },
 
   getReportContent: async (id: number): Promise<string> => {
@@ -101,7 +102,9 @@ export const MainService = {
   },
 
   uploadReportFile: async (id: number, formData: FormData): Promise<void> => {
-    const BASE_URL = `${import.meta.env.VITE_API_URL}/api/v1/`;
+    const BASE_URL = import.meta.env.DEV
+      ? `${window.location.origin}/api/v1/`
+      : `${import.meta.env.VITE_API_URL}/api/v1/`;
     const res = await fetch(`${BASE_URL}main/reports/${id}/upload`, {
       method: "POST",
       body: formData,
@@ -228,6 +231,9 @@ export const MainService = {
     return api.get<any>(`main/master-templates/${id}/chart-images`, {
       token: getAuthToken(token),
     });
+  },
+  getCurrentMasterTemplateCodes: async (): Promise<any> => {
+    return api.get<any>(`main/reports/get-current-codes`);
   },
   createCover: async (formData: FormData): Promise<Cover> => {
     // By passing FormData to api.post (assuming it's an axios instance),

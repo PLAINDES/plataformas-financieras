@@ -109,7 +109,6 @@ export interface Calculation {
   updated_at: string;
 }
 
-
 export interface MediaBasic {
   id: number;
   url: string;
@@ -157,6 +156,7 @@ export interface Report {
   bono_ajustado: string | null;
   link_pago: string | null;
   contenido: string | null;
+  contentEditor?: string | null;
   activo: boolean;
   created_at: string;
   updated_at: string;
@@ -179,7 +179,6 @@ export interface Cover {
   imagen_fondo: MediaBasic | null;
 }
 
-
 export interface CoverUpdate {
   portada_id?: number | null;
   primer_imagen_footer_id?: number | null;
@@ -200,4 +199,7 @@ export interface ReportUpdate {
   contenido?: string | null;
   activo?: boolean;
   cover_data?: CoverUpdate;
+  type?: "valora" | "kapital";
+  portada_id?: number | null;
+  contentEditor?: string | null;
 }
