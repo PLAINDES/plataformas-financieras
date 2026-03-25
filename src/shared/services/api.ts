@@ -20,10 +20,15 @@ class APIClient {
     this.baseURL = baseURL;
   }
 
-  private getHeaders(token?: string): HeadersInit {
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-    };
+  private getHeaders(token?: string, isFormData: boolean = false): HeadersInit {
+    const headers: HeadersInit = {};
+
+    // Solo agregamos Content-Type: application/json si NO es FormData.
+    // fetch() necesita calcular automáticamente el Content-Type para FormData
+    // y asignar el boundary. Si lo seteamos manualmente fallará.
+    if (!isFormData) {
+      headers["Content-Type"] = "application/json";
+    }
 
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
@@ -51,9 +56,13 @@ class APIClient {
       let errorMessage = `HTTP error! status: ${response.status}`;
 
       try {
-        const errorData: APIError = await response.json();
-        errorMessage = errorData.detail || errorMessage;
-      } catch {}
+        const errorData: any = await response.json();
+        console.error("[API Error Response Data]:", errorData);
+        errorMessage =
+          errorData.detail || JSON.stringify(errorData) || errorMessage;
+      } catch {
+        console.error("[API Error Response Text]: Could not parse JSON");
+      }
 
       throw new Error(errorMessage);
     }
@@ -83,10 +92,11 @@ class APIClient {
   ): Promise<T> {
     const url = this.buildURL(endpoint, options?.params);
 
+    const isFormData = data instanceof FormData;
     const response = await fetch(url, {
       method: "POST",
-      headers: this.getHeaders(options?.token),
-      body: data ? JSON.stringify(data) : undefined,
+      headers: this.getHeaders(options?.token, isFormData),
+      body: isFormData ? data : data ? JSON.stringify(data) : undefined,
     });
 
     return this.handleResponse<T>(response);
@@ -99,10 +109,12 @@ class APIClient {
   ): Promise<T> {
     const url = this.buildURL(endpoint, options?.params);
 
+    const isFormData = data instanceof FormData;
+
     const response = await fetch(url, {
       method: "PUT",
-      headers: this.getHeaders(options?.token),
-      body: JSON.stringify(data),
+      headers: this.getHeaders(options?.token, isFormData),
+      body: isFormData ? data : JSON.stringify(data),
     });
 
     return this.handleResponse<T>(response);
@@ -115,10 +127,12 @@ class APIClient {
   ): Promise<T> {
     const url = this.buildURL(endpoint, options?.params);
 
+    const isFormData = data instanceof FormData;
+
     const response = await fetch(url, {
       method: "PATCH",
-      headers: this.getHeaders(options?.token),
-      body: JSON.stringify(data),
+      headers: this.getHeaders(options?.token, isFormData),
+      body: isFormData ? data : JSON.stringify(data),
     });
 
     return this.handleResponse<T>(response);

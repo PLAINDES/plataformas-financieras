@@ -1,5 +1,6 @@
 import React from "react";
 import "./AdminLayout.css";
+import { Footer } from "./AdminLayout";
 // Example Dashboard Component
 const DashboardPage: React.FC = () => {
   return (
@@ -45,7 +46,7 @@ const DashboardPage: React.FC = () => {
             >
               {/* Content */}
               <div className="mb-10 text-center">
-                <div className="mb-8 text-3xl font-bold text-gray-800 md:mb-13 md:text-5xl">
+                <div className="mb-8 text-xl font-bold text-gray-800 md:mb-13 md:text-3xl">
                   <span className="mr-2">
                     ADMINISTRADOR
                     <br />

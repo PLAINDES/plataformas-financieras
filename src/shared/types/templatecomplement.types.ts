@@ -138,7 +138,6 @@ export type FinancialItem =
   | MarketPremiumItem
   | CountryRiskItem
   | DamodaranItem
-  | DamodaranSpreadItem
   | DynamicCountryItem;
 
 // Alias para compatibilidad con ConfiguracionPage

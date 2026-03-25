@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import Sidebar from "./SideBar";
 import { ScrollTop, Footer } from "./AdminLayout";
 
@@ -24,7 +24,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       {/* Main Content Area */}
       <div
         className={`flex flex-1 flex-col transition-all duration-300 ${
-          isSidebarMinimized ? "lg:ml-0" : "lg:ml-0"
+          isSidebarMinimized ? "lg:ml-[75px]" : "lg:ml-[250px]"
         }`}
       >
         {/* Content */}

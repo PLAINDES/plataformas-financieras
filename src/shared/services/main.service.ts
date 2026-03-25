@@ -24,8 +24,12 @@ export const MainService = {
   /**
    * List all template complements
    */
-  getTemplateComplements: async (): Promise<TemplateComplement[]> => {
-    return api.get<TemplateComplement[]>("main/template-complements");
+  getTemplateComplements: async (
+    activeTab: string
+  ): Promise<TemplateComplement[]> => {
+    return api.get<TemplateComplement[]>(
+      `main/template-complements/by-name/${activeTab}`
+    );
   },
 
   /**
@@ -69,16 +73,27 @@ export const MainService = {
   deleteCalculation: async (id: number): Promise<void> => {
     return api.delete<void>(`main/calculations/${id}`);
   },
-  getReports: async (): Promise<Report[]> => {
-    return api.get<Report[]>("main/reports");
+
+  getReports: async (params?: {
+    limit?: number;
+    page?: number;
+    search?: string;
+    type?: string;
+    activo?: boolean;
+  }): Promise<Report[]> => {
+    return api.get<Report[]>("main/reports", { params });
   },
 
   getReport: async (id: number): Promise<Report> => {
     return api.get<Report>(`main/reports/${id}`);
   },
 
-  updateReport: async (id: number, data: ReportUpdate): Promise<{ message: string }> => {
-    return api.put<{ message: string }>(`main/reports/${id}`, data);
+  updateReport: async (id: number, data: ReportUpdate): Promise<Report> => {
+    return api.put<Report>(`main/reports/${id}`, data);
+  },
+
+  createReport: async (data: ReportUpdate): Promise<Report> => {
+    return api.post<Report>("main/reports", data);
   },
 
   getReportContent: async (id: number): Promise<string> => {
@@ -87,21 +102,24 @@ export const MainService = {
   },
 
   uploadReportFile: async (id: number, formData: FormData): Promise<void> => {
-    const BASE_URL = `${import.meta.env.VITE_API_URL}/api/v1/`;
+    const BASE_URL = import.meta.env.DEV
+      ? `${window.location.origin}/api/v1/`
+      : `${import.meta.env.VITE_API_URL}/api/v1/`;
     const res = await fetch(`${BASE_URL}main/reports/${id}/upload`, {
       method: "POST",
       body: formData,
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error((err as { detail?: string }).detail ?? `Upload failed: ${res.status}`);
+      throw new Error(
+        (err as { detail?: string }).detail ?? `Upload failed: ${res.status}`
+      );
     }
   },
 
   getCovers: async (): Promise<Cover[]> => {
     return api.get<Cover[]>("main/covers");
   },
-
   // ==================== MASTER TEMPLATES ====================
 
   getMasterTemplates: async (options?: {
@@ -213,5 +231,39 @@ export const MainService = {
     return api.get<any>(`main/master-templates/${id}/chart-images`, {
       token: getAuthToken(token),
     });
+  },
+  getCurrentMasterTemplateCodes: async (): Promise<any> => {
+    return api.get<any>(`main/reports/get-current-codes`);
+  },
+  createCover: async (formData: FormData): Promise<Cover> => {
+    // By passing FormData to api.post (assuming it's an axios instance),
+    // it will automatically set the correct headers (multipart/form-data)
+    return api.post<Cover>("main/covers", formData);
+  },
+
+  getCover: async (id: number): Promise<Cover> => {
+    return api.get<Cover>(`main/covers/${id}`);
+  },
+
+  updateCover: async (id: number, formData: FormData): Promise<Cover> => {
+    const BASE_URL = `${import.meta.env.VITE_API_URL}/api/v1/`;
+    const res = await fetch(`${BASE_URL}main/covers/${id}`, {
+      method: "PUT",
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(
+        (err as { detail?: string }).detail ?? `Update failed: ${res.status}`
+      );
+    }
+    return res.json();
+  },
+
+  /**
+   * Delete a cover by id
+   */
+  deleteCover: async (id: number): Promise<void> => {
+    return api.delete<void>(`main/covers/${id}`);
   },
 };
