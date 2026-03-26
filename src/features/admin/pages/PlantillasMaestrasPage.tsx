@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MainService } from "@/shared/services/main.service";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
-import { ViewCodesModal } from "../components/ViewCodesModal";
-import { ReUploadComparisonModal } from "../components/ReUploadComparisonModal";
+import {
+  CodesModal,
+  type CodesModalComparison,
+  type CodesModalMode,
+} from "@/shared/components/common/CodesModal";
 import {
   ToastStack,
   type ToastItem,
 } from "@/shared/components/common/ToastStack";
+import { ConfirmationModal } from "@/shared/components/common/ConfirmationModal";
 import type {
   MasterTemplate,
   MasterTemplateCreate,
@@ -18,12 +22,14 @@ interface FormState {
   nombre: string;
   description: string;
   is_active: boolean;
+  is_default: boolean;
 }
 
 const EMPTY_FORM: FormState = {
   nombre: "",
   description: "",
   is_active: true,
+  is_default: false,
 };
 
 // === MAIN PAGE ================================================================
@@ -49,39 +55,26 @@ export const PlantillasMaestrasPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadTargetId = useRef<number | null>(null);
 
-  // Upload success modal
-  // Removido: estados no necesarios ahora que abres ViewCodesModal directamente
-
   // Delete confirm
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // View codes modal
-  const [viewCodesModalOpen, setViewCodesModalOpen] = useState(false);
-  const [viewingTemplateId, setViewingTemplateId] = useState<number | null>(
-    null
-  );
-  const [viewingTemplateName, setViewingTemplateName] = useState<string>("");
-
-  // Re-upload modal
+  // Re-upload state
   const [reUploadingId, setReUploadingId] = useState<number | null>(null);
-  const [reUploadComparisonOpen, setReUploadComparisonOpen] = useState(false);
-  const [reUploadComparison, setReUploadComparison] = useState<{
-    new_codes: {
-      valora: string[];
-      kapital: string[];
-    };
-    new_images: {
-      valora: string[];
-      kapital: string[];
-    };
-    total_new_codes: number;
-    total_new_images: number;
-  } | null>(null);
-  const [reUploadErrors, setReUploadErrors] = useState<string[]>([]);
-  const [reUploadTemplateName, setReUploadTemplateName] = useState<string>("");
+  const [settingDefaultId, setSettingDefaultId] = useState<number | null>(null);
   const reUploadInputRef = useRef<HTMLInputElement>(null);
   const reUploadTargetId = useRef<number | null>(null);
+
+  // Shared codes modal (view all and view new)
+  const [codesModalOpen, setCodesModalOpen] = useState(false);
+  const [codesModalMode, setCodesModalMode] = useState<CodesModalMode>("all");
+  const [codesModalTemplateId, setCodesModalTemplateId] = useState<number | null>(
+    null
+  );
+  const [codesModalTemplateName, setCodesModalTemplateName] = useState<string>("");
+  const [codesModalComparison, setCodesModalComparison] =
+    useState<CodesModalComparison | null>(null);
+  const [codesModalErrors, setCodesModalErrors] = useState<string[]>([]);
 
   // == Toast helpers =======================================================
   const addToast = useCallback(
@@ -123,7 +116,7 @@ export const PlantillasMaestrasPage = () => {
   // == Dialog helpers =======================================================
   const openCreate = () => {
     setEditingId(null);
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, is_default: templates.length === 0 });
     setDialogOpen(true);
   };
 
@@ -133,6 +126,7 @@ export const PlantillasMaestrasPage = () => {
       nombre: t.nombre,
       description: t.description ?? "",
       is_active: t.is_active,
+      is_default: t.is_default,
     });
     setDialogOpen(true);
   };
@@ -161,6 +155,7 @@ export const PlantillasMaestrasPage = () => {
           nombre: form.nombre.trim(),
           description: form.description.trim() || undefined,
           is_active: form.is_active,
+          is_default: form.is_default,
         };
         plantilla = await MainService.createMasterTemplate(
           payload,
@@ -173,6 +168,7 @@ export const PlantillasMaestrasPage = () => {
           nombre: form.nombre.trim(),
           description: form.description.trim() || undefined,
           is_active: form.is_active,
+          is_default: form.is_default,
         };
         plantilla = await MainService.updateMasterTemplate(
           editingId,
@@ -204,9 +200,12 @@ export const PlantillasMaestrasPage = () => {
           ]);
 
           // Abrir automáticamente modal de códigos/imágenes
-          setViewingTemplateId(plantilla.id);
-          setViewingTemplateName(plantilla.nombre);
-          setViewCodesModalOpen(true);
+          setCodesModalMode("all");
+          setCodesModalTemplateId(plantilla.id);
+          setCodesModalTemplateName(plantilla.nombre);
+          setCodesModalComparison(null);
+          setCodesModalErrors([]);
+          setCodesModalOpen(true);
 
           addToast(
             `Archivo "${excelFile.name}" subido a OneDrive correctamente.`,
@@ -255,10 +254,13 @@ export const PlantillasMaestrasPage = () => {
       const token = getToken() ?? undefined;
       await MainService.uploadMasterTemplateFile(id, file, token);
 
-      // Mostrar ViewCodesModal automáticamente
-      setViewingTemplateId(id);
-      setViewingTemplateName(templateName);
-      setViewCodesModalOpen(true);
+      // Mostrar modal de códigos automáticamente
+      setCodesModalMode("all");
+      setCodesModalTemplateId(id);
+      setCodesModalTemplateName(templateName);
+      setCodesModalComparison(null);
+      setCodesModalErrors([]);
+      setCodesModalOpen(true);
 
       loadTemplates();
       addToast(
@@ -318,7 +320,8 @@ export const PlantillasMaestrasPage = () => {
   // == Re-Upload Excel =======================================================
   const triggerReUpload = (templateId: number, templateName: string) => {
     reUploadTargetId.current = templateId;
-    setReUploadTemplateName(templateName);
+    setCodesModalTemplateId(templateId);
+    setCodesModalTemplateName(templateName);
     reUploadInputRef.current?.click();
   };
 
@@ -330,7 +333,7 @@ export const PlantillasMaestrasPage = () => {
 
     try {
       setReUploadingId(reUploadTargetId.current);
-      setReUploadErrors([]);
+      setCodesModalErrors([]);
 
       const formData = new FormData();
       formData.append("file", file);
@@ -355,9 +358,10 @@ export const PlantillasMaestrasPage = () => {
       const data = await response.json();
 
       // Show comparison modal
-      setReUploadComparison(data.comparison);
-      setReUploadErrors(data.errors || []);
-      setReUploadComparisonOpen(true);
+      setCodesModalMode("new");
+      setCodesModalComparison(data.comparison || null);
+      setCodesModalErrors(data.errors || []);
+      setCodesModalOpen(true);
 
       // Show toast
       if (
@@ -397,9 +401,31 @@ export const PlantillasMaestrasPage = () => {
 
   // == View Codes =============================================================
   const handleViewCodes = (templateId: number, templateName: string) => {
-    setViewingTemplateId(templateId);
-    setViewingTemplateName(templateName);
-    setViewCodesModalOpen(true);
+    setCodesModalMode("all");
+    setCodesModalTemplateId(templateId);
+    setCodesModalTemplateName(templateName);
+    setCodesModalComparison(null);
+    setCodesModalErrors([]);
+    setCodesModalOpen(true);
+  };
+
+  const handleSetDefault = async (templateId: number) => {
+    try {
+      setSettingDefaultId(templateId);
+      await MainService.setDefaultMasterTemplate(
+        templateId,
+        getToken() ?? undefined
+      );
+      addToast("Plantilla establecida como predeterminada.", "success");
+      await loadTemplates();
+    } catch (e: any) {
+      addToast(
+        e.message || "No se pudo establecer como predeterminada",
+        "error"
+      );
+    } finally {
+      setSettingDefaultId(null);
+    }
   };
 
   // == Delete ================================================================
@@ -513,6 +539,9 @@ export const PlantillasMaestrasPage = () => {
                     Nombre
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Predeterminada
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Archivo OneDrive
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -540,6 +569,15 @@ export const PlantillasMaestrasPage = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {t.is_default ? (
+                        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                          Predeterminada
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">No</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {t.onedrive_filename ? (
                         <span
                           className="text-xs text-blue-600 font-medium truncate max-w-40 block"
@@ -558,6 +596,54 @@ export const PlantillasMaestrasPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => handleSetDefault(t.id)}
+                          disabled={t.is_default || settingDefaultId === t.id}
+                          title={
+                            t.is_default
+                              ? "Ya es predeterminada"
+                              : "Establecer como predeterminada"
+                          }
+                          className="text-emerald-600 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 p-1.5 rounded-md transition-colors disabled:opacity-50"
+                        >
+                          {settingDefaultId === t.id ? (
+                            <svg
+                              className="animate-spin w-4 h-4"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v8H4z"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          )}
+                        </button>
+
                         <button
                           onClick={() => openEdit(t)}
                           title="Editar"
@@ -839,6 +925,24 @@ export const PlantillasMaestrasPage = () => {
                   />
                 </div>
 
+                <div className="flex items-center gap-2">
+                  <input
+                    id="default-template"
+                    type="checkbox"
+                    checked={form.is_default}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, is_default: e.target.checked }))
+                    }
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label
+                    htmlFor="default-template"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Marcar como plantilla predeterminada
+                  </label>
+                </div>
+
                 {/* Archivo Excel (solo al crear) */}
                 {editingId === null && (
                   <div>
@@ -920,60 +1024,33 @@ export const PlantillasMaestrasPage = () => {
         )}
 
         {/* == Delete Confirm Dialog =========================================== */}
-        {deleteConfirmId !== null && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-2">
-                Eliminar Plantilla
-              </h2>
-              <p className="text-sm text-gray-600 mb-6">
-                ¿Estás seguro de que deseas eliminar esta plantilla? Esta acción
-                no se puede deshacer.
-              </p>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setDeleteConfirmId(null)}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50"
-                >
-                  {deleting ? "Eliminando…" : "Eliminar"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ConfirmationModal
+          isOpen={deleteConfirmId !== null}
+          onClose={() => setDeleteConfirmId(null)}
+          onConfirm={handleDelete}
+          title="Eliminar Plantilla"
+          description="¿Estás seguro de que deseas eliminar esta plantilla? Esta acción no se puede deshacer."
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          variant="destructive"
+          isLoading={deleting}
+        />
 
-        {/* == View Codes Modal ================================================ */}
-        {viewingTemplateId !== null && (
-          <ViewCodesModal
-            isOpen={viewCodesModalOpen}
-            templateId={viewingTemplateId}
-            templateName={viewingTemplateName}
-            onClose={() => {
-              setViewCodesModalOpen(false);
-              setViewingTemplateId(null);
-              setViewingTemplateName("");
-            }}
-          />
-        )}
-
-        {/* == Re-Upload Comparison Modal ====================================== */}
-        <ReUploadComparisonModal
-          isOpen={reUploadComparisonOpen}
-          templateName={reUploadTemplateName}
-          comparison={reUploadComparison}
-          errors={reUploadErrors}
+        {/* == Shared Codes Modal ============================================= */}
+        <CodesModal
+          isOpen={codesModalOpen}
+          mode={codesModalMode}
+          templateId={codesModalTemplateId}
+          templateName={codesModalTemplateName}
+          comparison={codesModalComparison}
+          errors={codesModalErrors}
           onClose={() => {
-            setReUploadComparisonOpen(false);
-            setReUploadComparison(null);
-            setReUploadErrors([]);
-            setReUploadTemplateName("");
+            setCodesModalOpen(false);
+            setCodesModalMode("all");
+            setCodesModalTemplateId(null);
+            setCodesModalTemplateName("");
+            setCodesModalComparison(null);
+            setCodesModalErrors([]);
           }}
         />
 

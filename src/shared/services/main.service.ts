@@ -171,6 +171,19 @@ export const MainService = {
     });
   },
 
+  setDefaultMasterTemplate: async (
+    id: number,
+    token?: string
+  ): Promise<MasterTemplate> => {
+    return api.post<MasterTemplate>(
+      `main/master-templates/${id}/set-default`,
+      {},
+      {
+        token: getAuthToken(token),
+      }
+    );
+  },
+
   deleteMasterTemplate: async (id: number, token?: string): Promise<void> => {
     return api.delete<void>(`main/master-templates/${id}`, {
       token: getAuthToken(token),

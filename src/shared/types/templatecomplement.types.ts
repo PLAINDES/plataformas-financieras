@@ -54,6 +54,7 @@ export interface MasterTemplate {
   nombre: string;
   description: string | null;
   is_active: boolean;
+  is_default: boolean;
   hojas_config: Record<string, any> | null;
   onedrive_env: string | null;
   onedrive_folder: string | null;
@@ -70,6 +71,7 @@ export interface MasterTemplateCreate {
   nombre: string;
   description?: string;
   is_active?: boolean;
+  is_default?: boolean;
   hojas_config?: Record<string, any>;
 }
 
@@ -77,6 +79,7 @@ export interface MasterTemplateUpdate {
   nombre?: string;
   description?: string;
   is_active?: boolean;
+  is_default?: boolean;
   hojas_config?: Record<string, any>;
 }
 
