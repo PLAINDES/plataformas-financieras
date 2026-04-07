@@ -1,5 +1,6 @@
 services:
   frontend:
+    container_name: ${FRONTEND_CONTAINER_NAME:-new-financieras-web-test}
     env_file:
       - .env.test
     build:
@@ -8,5 +9,14 @@ services:
       target: production
       args:
         VITE_API_URL: ${VITE_API_URL:-http://new-financieras-api:8000}
-    ports: []
-    volumes: []
+    restart: always
+    networks:
+      - frontend_network
+      - npm_network
+
+networks:
+  frontend_network:
+    driver: bridge
+  npm_network:
+    external: true
+    name: ${NPM_EXTERNAL_NETWORK:-npm_network}
