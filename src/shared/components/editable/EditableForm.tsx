@@ -98,7 +98,7 @@ export function EditableForm({
     });
   };
 
-  const handleCancelEdit = (fieldId: string) => {
+  const handleCancelEdit = () => {
     setEditingFieldId(null);
   };
 
@@ -491,7 +491,7 @@ export function EditableForm({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleCancelEdit(field.id);
+                            handleCancelEdit();
                           }}
                           className={`${buttonBaseClass} hover:text-red-600 hover:border-red-400`}
                           title="Cancelar"
@@ -506,7 +506,7 @@ export function EditableForm({
                             strokeWidth="2"
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            class="lucide lucide-x-icon lucide-x"
+                            className="lucide lucide-x-icon lucide-x"
                           >
                             <path d="M18 6 6 18" />
                             <path d="m6 6 12 12" />

@@ -1,7 +1,5 @@
 // src/services/api.ts
 
-import type { APIError } from "../types/api.types";
-
 // In dev, route through Vite's proxy (/api → backend) to avoid CORS.
 // In production, use the explicit API URL from env.
 const API_BASE_URL = import.meta.env.DEV

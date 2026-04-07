@@ -1,6 +1,5 @@
 import React from "react";
 import "./AdminLayout.css";
-import { Footer } from "./AdminLayout";
 // Example Dashboard Component
 const DashboardPage: React.FC = () => {
   return (

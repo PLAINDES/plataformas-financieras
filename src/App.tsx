@@ -37,7 +37,6 @@ function App() {
     register,
     loading: authLoading,
   } = useAuthContext();
-  console.log("REGISTRO", register);
 
   if (authLoading) {
     return (
@@ -73,7 +72,10 @@ function App() {
       <Route element={<InternalLayout />}>
         <Route path="/kapital" element={<KapitalPage />} />
         <Route path="/valora" element={<ValoraPage />} />
-        <Route path="usuario/proyectos" element={<ProyectosUsuarioPage />} />
+        <Route
+          path="usuario/proyectos"
+          element={<ProyectosUsuarioPage onOpenForm={() => {}} />}
+        />
       </Route>
 
       <Route

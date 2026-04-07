@@ -1,5 +1,3 @@
-import React from "react";
-
 interface DevPlaceholderProps {
   title?: string;
   message?: string;

@@ -15,7 +15,10 @@ import { useLandingData } from "@/features/landing/hooks/useLandingData";
 import { useLandingCMS } from "@/features/landing/hooks/useLandingCMS";
 import type { Company } from "@/shared/types";
 import type { User } from "@/shared/types/user.types";
-import type { LoginCredentials } from "../auth/types/user.types";
+import type {
+  LoginCredentials,
+  RegisterData,
+} from "../auth/types/user.types";
 
 const COMPANY: Company = {
   id: 1,
@@ -105,7 +108,6 @@ export function LandingPage({
 
       <BenefitsSection
         content={getContentData("benefits-home")}
-        isAdmin={isAdmin}
         onSave={handleSaveContent}
       />
       <ProductsSection

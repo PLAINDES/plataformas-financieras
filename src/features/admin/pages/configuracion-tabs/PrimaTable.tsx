@@ -1,4 +1,3 @@
-import React from "react";
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
 import { formatPercentageValue } from "@/lib/formatPercentageValue";
 
