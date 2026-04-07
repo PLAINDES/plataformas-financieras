@@ -1,7 +1,5 @@
-import React from "react";
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
 import { formatPercentageValue } from "@/lib/formatPercentageValue";
-import type { RiskFreeRateItem } from "@/shared/types";
 
 interface RfTableProps {
   data: any[];

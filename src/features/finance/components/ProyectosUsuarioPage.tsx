@@ -10,14 +10,13 @@ interface ProyectosUsuarioPageProps {
   heroTitle?: string;
   brandName?: string;
   brandHref?: string;
-  onOpenForm: () => void;
+  onOpenForm?: () => void;
 }
 
 const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
   heroTitle = "Kapital",
   brandName = "Kapital",
   brandHref = "Kapital",
-  onOpenForm,
 }) => {
   const [isDesktopFormOpen, setIsDesktopFormOpen] = useState<boolean>(true);
   const [isReportSidebarOpen, setIsReportSidebarOpen] = useState<boolean>(false);
@@ -31,7 +30,6 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
 
   void heroTitle;
   void isReportSidebarOpen;
-  void onOpenForm;
 
   if (!user) {
     return <div>Please log in to access this page.</div>;

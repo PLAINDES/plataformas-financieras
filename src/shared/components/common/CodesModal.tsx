@@ -70,7 +70,7 @@ export const CodesModal = ({
   onClose,
 }: CodesModalProps) => {
   const [loading, setLoading] = useState(false);
-  const [extracting, setExtracting] = useState(false);
+  const [extracting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [codesData, setCodesData] = useState<{
     valora: CodeItem[];

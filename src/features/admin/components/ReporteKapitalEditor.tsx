@@ -66,7 +66,7 @@ function reportToForm(report: Report): ReportFormData {
     contentEditor: (report as any).contentEditor ?? "",
     linkPago: report.link_pago ?? "",
     portadaId: report.portada?.id ?? null,
-    type: (report.type as "kapital" | "valora") ?? "kapital",
+    type: report.type ?? "kapital",
   };
 }
 

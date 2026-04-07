@@ -66,13 +66,6 @@ const PortadasPage: React.FC = () => {
 
   const closeGallery = () => setGalleryOpen(false);
 
-  const prevImage = () =>
-    setGalleryIndex(
-      (i) => (i - 1 + galleryImages.length) % galleryImages.length
-    );
-  const nextImage = () =>
-    setGalleryIndex((i) => (i + 1) % galleryImages.length);
-
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);

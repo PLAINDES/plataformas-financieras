@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
 import { useNavigate } from "react-router-dom";
 import { MainService } from "@/shared/services/main.service";
@@ -9,9 +9,9 @@ export const ReportesKapitalPage = () => {
   const [data, setData] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [limit, setLimit] = useState<number>(50);
-  const [page, setPage] = useState<number>(1);
-  const [search, setSearch] = useState<string>("");
+  const [limit] = useState<number>(50);
+  const [page] = useState<number>(1);
+  const [search] = useState<string>("");
   const navigate = useNavigate();
 
   useEffect(() => {

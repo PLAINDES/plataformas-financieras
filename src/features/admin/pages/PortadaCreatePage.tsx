@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MainService } from "@/shared/services/main.service";
 import { LoadingOverlay } from "@/shared/components/common/LoadingOverlay";
@@ -28,8 +28,6 @@ const PortadaCreatePage: React.FC = () => {
     null
   );
   const [centerPreview, setCenterPreview] = useState<string | null>(null);
-  const textoLateralRef = useRef<HTMLParagraphElement | null>(null);
-  const textoColaboracionRef = useRef<HTMLParagraphElement | null>(null);
 
   useEffect(() => {
     if (imageBackground) {

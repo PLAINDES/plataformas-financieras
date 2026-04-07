@@ -149,6 +149,7 @@ export interface TemplateWithCodes {
 export interface Report {
   id: number;
   nombre: string;
+  type?: "valora" | "kapital" | null;
   file: string | null;
   precio: number | null;
   moneda: string;

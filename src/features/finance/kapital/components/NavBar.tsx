@@ -13,6 +13,10 @@ interface NavbarProps {
   isFormOpen: boolean;
   hasResults: boolean;
   selected: "result" | "analysis" | "methodology" | "";
+  logoHref?: string;
+  logoSrc?: string;
+  logoAlt?: string;
+  projectsHref?: string;
   onNavigate?: (view: "result" | "analysis" | "methodology") => void;
   onOpenReport?: () => void;
 }
@@ -24,6 +28,10 @@ export const NavBar: React.FC<NavbarProps> = ({
   isFormOpen,
   hasResults,
   selected,
+  logoHref = "/kapital",
+  logoSrc = "/public/images/logo-kapital-small.png",
+  logoAlt = "Kapital Logo",
+  projectsHref = "/usuario/proyectos",
   onNavigate,
   onOpenReport,
 }) => {
@@ -98,13 +106,13 @@ export const NavBar: React.FC<NavbarProps> = ({
   return (
     <FinanceNavbar
       logo={{
-        src: "/public/images/logo-kapital-small.png",
-        alt: "Kapital Logo",
-        href: "/kapital",
+        src: logoSrc,
+        alt: logoAlt,
+        href: logoHref,
       }}
       tabs={tabs}
       selectedTabId={selected}
-      onNavigate={(id) => onNavigate(id as any)}
+      onNavigate={(id) => onNavigate?.(id as any)}
       isFormOpen={isFormOpen}
       onToggleForm={onToggleForm}
       actions={
@@ -120,7 +128,7 @@ export const NavBar: React.FC<NavbarProps> = ({
 
           <UserMenu user={user} onLogout={onLogout}>
             <a
-              href="/usuario/proyectos"
+              href={projectsHref}
               className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
               Mis proyectos

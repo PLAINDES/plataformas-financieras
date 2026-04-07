@@ -140,7 +140,7 @@ export const ConfiguracionPage = () => {
   // Generic Handlers (simplified for demo)
   const handleDelete = async (
     setter: React.Dispatch<React.SetStateAction<any[]>>,
-    id: number,
+    _id: number,
     item: any
   ) => {
     setModalState({
@@ -203,7 +203,7 @@ export const ConfiguracionPage = () => {
   };
 
   // Wrapper for delete to pass the item
-  const createDeleteHandler = (setter: any, data: any[]) => (item: any) =>
+  const createDeleteHandler = (setter: any) => (item: any) =>
     handleDelete(setter, item.id, item);
 
   // EXCEL HANDLING
@@ -533,9 +533,6 @@ export const ConfiguracionPage = () => {
                 (k) => k !== "fecha" && k !== "id" && k !== "_complementId"
               );
               // Verificar si existen claves numéricas típicas de RF
-              const hasRfKeys = keys.some(
-                (k) => !isNaN(Number(k)) && Number(k) > 0
-              );
               // O verificar si TIENE columnas que NO son países y SI son números como strings '0.08', '1.00'
               // La estrategia simple: si no tiene ninguna columna tipo "0.08", "1.00", etc, probablemente no es RF
               const knownRfKeys = [
@@ -853,7 +850,7 @@ export const ConfiguracionPage = () => {
             <RfTable
               data={rfData}
               isLoading={isLoading}
-              onDelete={createDeleteHandler(setRfData, rfData)}
+              onDelete={createDeleteHandler(setRfData)}
             />
           )}
 
@@ -861,7 +858,7 @@ export const ConfiguracionPage = () => {
             <EmbiTable
               data={embiData}
               isLoading={isLoading}
-              onDelete={createDeleteHandler(setEmbiData, embiData)}
+              onDelete={createDeleteHandler(setEmbiData)}
             />
           )}
 
@@ -869,7 +866,7 @@ export const ConfiguracionPage = () => {
             <PrimaTable
               data={primaData}
               isLoading={isLoading}
-              onDelete={createDeleteHandler(setPrimaData, primaData)}
+              onDelete={createDeleteHandler(setPrimaData)}
             />
           )}
 
@@ -877,7 +874,7 @@ export const ConfiguracionPage = () => {
             <IrTable
               data={irData}
               isLoading={isLoading}
-              onDelete={createDeleteHandler(setIrData, irData)}
+              onDelete={createDeleteHandler(setIrData)}
             />
           )}
 
@@ -885,7 +882,7 @@ export const ConfiguracionPage = () => {
             <DamodaranTable
               data={damodaranData}
               isLoading={isLoading}
-              onDelete={createDeleteHandler(setDamodaranData, damodaranData)}
+              onDelete={createDeleteHandler(setDamodaranData)}
             />
           )}
 
@@ -893,10 +890,7 @@ export const ConfiguracionPage = () => {
             <DevaluacionTable
               data={devaluacionData}
               isLoading={isLoading}
-              onDelete={createDeleteHandler(
-                setDevaluacionData,
-                devaluacionData
-              )}
+              onDelete={createDeleteHandler(setDevaluacionData)}
             />
           )}
         </div>
