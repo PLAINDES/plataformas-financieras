@@ -1,0 +1,13 @@
+services:
+  frontend:
+    container_name: ${FRONTEND_CONTAINER_NAME:-financiera-web}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    networks:
+      - frontend_network
+
+networks:
+  frontend_network:
+    driver: bridge

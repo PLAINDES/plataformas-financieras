@@ -1,0 +1,12 @@
+services:
+  frontend:
+    env_file:
+      - .env.test
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://new-financieras-api:8000}
+    ports: []
+    volumes: []
