@@ -1,11 +1,10 @@
 // features/finance/kapital/components/KapitalResults.tsx
 
-import React, { useState } from 'react';
-import { KapitalResultadosSection } from './KapitalResultadosSection';
-import { KapitalAnalisisSection } from './KapitalAnalisisSection';
-import { KapitalMetodologiaSection } from './MethodologyView';
-import { LoadingOverlay } from '@/shared/components/common/LoadingOverlay';
-
+import { useState } from "react";
+import { KapitalResultadosSection } from "./KapitalResultadosSection";
+import { KapitalAnalisisSection } from "./KapitalAnalisisSection";
+import { KapitalMetodologiaSection } from "./MethodologyView";
+import { LoadingOverlay } from "@/shared/components/common/LoadingOverlay";
 
 interface FormData {
   typeId: boolean;
@@ -29,11 +28,11 @@ interface Results {
 }
 
 export interface KapitalResultsProps {
-  section: 'result' | 'analysis' | 'methodology';
+  section: "result" | "analysis" | "methodology";
   results: Results | null;
   formData: FormData;
-  resultCurrency: 'pen' | 'usd';
-  onResultCurrencyChange: (currency: 'pen' | 'usd') => void;
+  resultCurrency: "pen" | "usd";
+  onResultCurrencyChange: (currency: "pen" | "usd") => void;
   analysisDC: string;
   analysisKd: string;
   analysisCurrency: string;
@@ -69,11 +68,13 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
   onAnalysisCurrencyChange,
   onAnalysisSubmit,
   loading,
-  methodologyCategories,
+  //methodologyCategories,
 }) => {
   const [isCategoriaOpen, setIsCategoriaOpen] = useState(false);
   const [isModuloOpen, setIsModuloOpen] = useState(false);
-  const [selectedMetodologiaItem, setSelectedMetodologiaItem] = useState<'curso' | 'mercado'>('curso');
+  const [selectedMetodologiaItem, setSelectedMetodologiaItem] = useState<
+    "curso" | "mercado"
+  >("curso");
 
   if (loading) {
     return <LoadingOverlay />;
@@ -87,8 +88,7 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
     <div className="flex-12 flex flex-col w-full h-full lg:pb-10 py-10 lg:pt-10 bg-[#f3f6f9] min-h-dvh">
       <div className="flex-1 w-full px-4 sm:px-8">
         <div className="mx-auto flex w-full max-w-300 flex-col gap-6">
-
-          {section === 'result' && (
+          {section === "result" && (
             <KapitalResultadosSection
               results={results}
               formData={formData}
@@ -97,7 +97,7 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
             />
           )}
 
-          {section === 'analysis' && (
+          {section === "analysis" && (
             <KapitalAnalisisSection
               results={results}
               formData={formData}
@@ -114,18 +114,17 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
             />
           )}
 
-          {section === 'methodology' && (
+          {section === "methodology" && (
             <KapitalMetodologiaSection
               selectedMetodologiaItem={selectedMetodologiaItem}
               isCategoriaOpen={isCategoriaOpen}
               isModuloOpen={isModuloOpen}
-              onToggleCategoria={() => setIsCategoriaOpen(open => !open)}
-              onToggleModulo={() => setIsModuloOpen(open => !open)}
-              onSelectCurso={() => setSelectedMetodologiaItem('curso')}
-              onSelectMercado={() => setSelectedMetodologiaItem('mercado')}
+              onToggleCategoria={() => setIsCategoriaOpen((open) => !open)}
+              onToggleModulo={() => setIsModuloOpen((open) => !open)}
+              onSelectCurso={() => setSelectedMetodologiaItem("curso")}
+              onSelectMercado={() => setSelectedMetodologiaItem("mercado")}
             />
           )}
-
         </div>
       </div>
     </div>

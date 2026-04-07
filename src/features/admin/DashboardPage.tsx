@@ -1,13 +1,11 @@
-import React from 'react';
-import MainLayout from './MainLayout';
-import './AdminLayout.css';
-import { Footer } from './AdminLayout';
+import React from "react";
+import "./AdminLayout.css";
 // Example Dashboard Component
 const DashboardPage: React.FC = () => {
   return (
-    <MainLayout>
+    <>
       {/* Toolbar */}
-      <div className="bg-white py-3 shadow-sm md:py-6">
+      <div className=" py-3 md:py-6">
         <div className="container mx-auto flex flex-col flex-wrap justify-between px-4 md:flex-row md:items-center">
           {/* Page Title */}
           <div className="mb-3 flex flex-col justify-center md:mb-0 md:mr-3">
@@ -39,15 +37,15 @@ const DashboardPage: React.FC = () => {
           {/* Main Card */}
           <div className="overflow-hidden rounded-lg bg-white shadow-sm">
             <div
-              className="flex min-h-[400px] flex-col justify-between bg-cover bg-center bg-no-repeat p-6 pb-0 md:min-h-[500px] md:p-9"
+              className="flex min-h-100 flex-col justify-between bg-cover bg-center bg-no-repeat p-6 pb-0 md:min-h-125 md:p-9"
               style={{
                 backgroundImage: "url('assets/media/stock/900x600/42.png')",
-                backgroundPosition: '100% 50%',
+                backgroundPosition: "100% 50%",
               }}
             >
               {/* Content */}
               <div className="mb-10 text-center">
-                <div className="mb-8 text-3xl font-bold text-gray-800 md:mb-13 md:text-5xl">
+                <div className="mb-8 text-xl font-bold text-gray-800 md:mb-13 md:text-3xl">
                   <span className="mr-2">
                     ADMINISTRADOR
                     <br />
@@ -79,13 +77,9 @@ const DashboardPage: React.FC = () => {
               </div>
             </div>
           </div>
-
-
- 
         </div>
-        
       </div>
-    </MainLayout>
+    </>
   );
 };
 

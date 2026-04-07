@@ -1,23 +1,23 @@
 // src/hooks/useAuth.ts
 
-import { useState, useEffect, useCallback } from 'react';
-import { authService } from '../api/auth.service';
-import type { 
-  User, 
-  LoginCredentials, 
-  RegisterData 
-} from '../types/user.types';
-import { mapUserResponseToUser, mapTokenResponseToAuth } from '../types/user.types';
+import { useState, useEffect, useCallback } from "react";
+import { authService } from "../api/auth.service";
+import type { User, LoginCredentials, RegisterData } from "../types/user.types";
+import {
+  mapUserResponseToUser,
+  mapTokenResponseToAuth,
+} from "../types/user.types";
 
-const AUTH_TOKEN_KEY = 'auth_token';
-const USER_DATA_KEY = 'user_data';
+const AUTH_TOKEN_KEY = "auth_token";
+const USER_DATA_KEY = "user_data";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const isAdmin = user?.role === 'admin' || user?.perfil === 1;
+  const isAdmin =
+    user?.role === "admin" || user?.role === "master" || user?.perfil === 1;
 
   useEffect(() => {
     const loadUser = async () => {
@@ -36,15 +36,15 @@ export function useAuth() {
             localStorage.setItem(USER_DATA_KEY, JSON.stringify(validatedUser));
           } catch (err) {
             // Token inválido, limpiar
-            console.warn('Token inválido, cerrando sesión');
+            console.warn("Token inválido, cerrando sesión");
             localStorage.removeItem(AUTH_TOKEN_KEY);
             localStorage.removeItem(USER_DATA_KEY);
             setUser(null);
           }
         }
       } catch (err) {
-        console.error('Error loading user:', err);
-        setError('Error al cargar sesión');
+        console.error("Error loading user:", err);
+        setError("Error al cargar sesión");
       } finally {
         setLoading(false);
       }
@@ -53,101 +53,96 @@ export function useAuth() {
     loadUser();
   }, []);
 
+  const login = useCallback(
+    async (credentials: LoginCredentials): Promise<User> => {
+      try {
+        setError(null);
 
-  const login = useCallback(async (credentials: LoginCredentials): Promise<User> => {
-    try {
-      setError(null);
-      
-      const tokenResponse = await authService.login(credentials);
-      const authResponse = mapTokenResponseToAuth(tokenResponse);
-      
-      localStorage.setItem(AUTH_TOKEN_KEY, authResponse.access_token);
-      localStorage.setItem(USER_DATA_KEY, JSON.stringify(authResponse.user));
-      
-      setUser(authResponse.user);
-      return authResponse.user;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Error al iniciar sesión';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    }
-  }, []);
+        const tokenResponse = await authService.login(credentials);
+        const authResponse = mapTokenResponseToAuth(tokenResponse);
 
+        localStorage.setItem(AUTH_TOKEN_KEY, authResponse.access_token);
+        localStorage.setItem(USER_DATA_KEY, JSON.stringify(authResponse.user));
+
+        setUser(authResponse.user);
+        return authResponse.user;
+      } catch (err: any) {
+        const errorMessage = err.message || "Error al iniciar sesión";
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      }
+    },
+    []
+  );
 
   const register = useCallback(async (data: RegisterData): Promise<User> => {
     try {
       setError(null);
-      
+
       const tokenResponse = await authService.register(data);
       const authResponse = mapTokenResponseToAuth(tokenResponse);
-      
+
       localStorage.setItem(AUTH_TOKEN_KEY, authResponse.access_token);
       localStorage.setItem(USER_DATA_KEY, JSON.stringify(authResponse.user));
-      
+
       setUser(authResponse.user);
       return authResponse.user;
     } catch (err: any) {
-      const errorMessage = err.message || 'Error al registrar usuario';
+      const errorMessage = err.message || "Error al registrar usuario";
       setError(errorMessage);
       throw new Error(errorMessage);
     }
   }, []);
 
- 
   const logout = useCallback(async () => {
     try {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      
+
       if (token) {
         try {
           await authService.logout(token);
         } catch (err) {
-          console.warn('Error al cerrar sesión en el backend:', err);
+          console.warn("Error al cerrar sesión en el backend:", err);
         }
       }
-      
+
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(USER_DATA_KEY);
       setUser(null);
       setError(null);
     } catch (err: any) {
-      console.error('Error during logout:', err);
+      console.error("Error during logout:", err);
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(USER_DATA_KEY);
       setUser(null);
     }
   }, []);
 
-
   const refreshToken = useCallback(async (): Promise<void> => {
     try {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      
+
       if (!token) {
-        throw new Error('No hay token para refrescar');
+        throw new Error("No hay token para refrescar");
       }
-      
+
       const tokenResponse = await authService.refreshToken(token);
       const authResponse = mapTokenResponseToAuth(tokenResponse);
-      
+
       localStorage.setItem(AUTH_TOKEN_KEY, authResponse.access_token);
       localStorage.setItem(USER_DATA_KEY, JSON.stringify(authResponse.user));
-      
+
       setUser(authResponse.user);
     } catch (err: any) {
-      console.error('Error refreshing token:', err);
+      console.error("Error refreshing token:", err);
       await logout();
       throw err;
     }
   }, [logout]);
 
-
   const getToken = useCallback((): string | null => {
     return localStorage.getItem(AUTH_TOKEN_KEY);
   }, []);
-
- 
-
 
   return {
     user,

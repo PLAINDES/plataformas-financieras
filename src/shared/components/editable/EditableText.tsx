@@ -1,21 +1,21 @@
 // src/components/editable/EditableText.tsx
 
-import { useState, useRef, useEffect } from 'react';
-import type { EditableContent } from '../../types/editable.types';
-import { useAuthContext } from '@/features/auth/hooks/useAuthContext';
+import { useState, useRef, useEffect } from "react";
+import type { EditableContent } from "../../types/editable.types";
+import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 
 interface EditableTextProps {
   content: EditableContent;
   onSave: (content: EditableContent) => Promise<void>;
   className?: string;
-  as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'span' | 'div';
+  as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span" | "div";
 }
 
 export function EditableText({
   content,
   onSave,
-  className = '',
-  as: Component = 'p',
+  className = "",
+  as: Component = "p",
 }: EditableTextProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(content.value);
@@ -34,12 +34,15 @@ export function EditableText({
   useEffect(() => {
     if (!isEditing) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         handleCancel();
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isEditing]);
 
   const handleSave = async () => {
@@ -53,8 +56,8 @@ export function EditableText({
       await onSave({ ...content, value });
       setIsEditing(false);
     } catch (error) {
-      console.error('Error saving:', error);
-      alert('Error al guardar. Intenta nuevamente.');
+      console.error("Error saving:", error);
+      alert("Error al guardar. Intenta nuevamente.");
       setValue(content.value);
     } finally {
       setIsSaving(false);
@@ -67,9 +70,9 @@ export function EditableText({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && e.ctrlKey) {
+    if (e.key === "Enter" && e.ctrlKey) {
       handleSave();
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       handleCancel();
     }
   };
@@ -80,10 +83,7 @@ export function EditableText({
 
   if (isEditing) {
     return (
-      <div 
-        ref={containerRef}
-        className="relative inline-block min-w-[200px] w-full"
-      >
+      <div ref={containerRef} className="relative inline-block min-w-50 w-full">
         {/* Textarea de edición */}
         <textarea
           ref={inputRef}
@@ -92,7 +92,7 @@ export function EditableText({
           onKeyDown={handleKeyDown}
           disabled={isSaving}
           rows={1}
-          className="w-full min-h-[40px] p-2 border-2 border-blue-500 rounded-md shadow-lg outline-none resize-y bg-white text-inherit font-inherit leading-inherit"
+          className="w-full min-h-10 p-2 border-2 border-blue-500 rounded-md shadow-lg outline-none resize-y bg-white text-inherit font-inherit leading-inherit"
         />
 
         {/* Panel compacto debajo */}
@@ -111,7 +111,7 @@ export function EditableText({
               disabled={isSaving}
               className="px-3 py-1 bg-blue-600 text-white rounded text-[10px] font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400"
             >
-              {isSaving ? '...' : 'Guardar'}
+              {isSaving ? "..." : "Guardar"}
             </button>
           </div>
 

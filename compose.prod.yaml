@@ -1,0 +1,22 @@
+services:
+  frontend:
+    container_name: ${FRONTEND_CONTAINER_NAME:-new-financieras-web}
+    env_file:
+      - .env.prod
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_URL: ${VITE_API_URL:-https://apinewfinancieras.proideas.org}
+    restart: always
+    networks:
+      - frontend_network
+      - npm_network
+
+networks:
+  frontend_network:
+    driver: bridge
+  npm_network:
+    external: true
+    name: ${NPM_EXTERNAL_NETWORK:-npm_network}

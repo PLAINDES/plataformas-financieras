@@ -1,7 +1,7 @@
 // src/features/landing/hooks/useLandingData.ts
-import { useState, useEffect, useCallback } from 'react';
-import { cmsService } from '@/shared/services/cms.service';
-import type { LandingDataResponse, MenuItem } from '@/shared/types';
+import { useState, useEffect, useCallback } from "react";
+import { cmsService } from "@/shared/services/cms.service";
+import type { LandingDataResponse, MenuItem } from "@/shared/types";
 
 export function useLandingData() {
   const [loading, setLoading] = useState(true);
@@ -9,7 +9,8 @@ export function useLandingData() {
 
   const loadData = useCallback(() => {
     setLoading(true);
-    cmsService.getLandingData()
+    cmsService
+      .getLandingData()
       .then((res) => setData(res))
       .catch((err) => console.error("Error loading landing data", err))
       .finally(() => setLoading(false));
@@ -20,32 +21,33 @@ export function useLandingData() {
   }, [loadData]);
 
   const findContent = (slug: string) =>
-    data?.page.contents.find(c => c.slug === slug);
+    (data?.page as any)?.contents?.find((c: any) => c.slug === slug);
 
-  const getContentData = (slug: string) =>
-    findContent(slug)?.data;
+  const getContentData = (slug: string) => findContent(slug)?.data;
 
-  const menuItems: MenuItem[] = (getContentData("header-principal")?.item_header ?? [])
-    .map((item: { title: string }, index: number) => ({
-      id: index,
-      name: item.title,
-      slug: item.title.toLowerCase().replace(/\s+/g, '-'),
-      visible: true,
-      target: '_self' as const,
-      order: index,
-    }));
+  const menuItems: MenuItem[] = (
+    getContentData("header-principal")?.item_header ?? []
+  ).map((item: { title: string }, index: number) => ({
+    id: index,
+    name: item.title,
+    slug: item.title.toLowerCase().replace(/\s+/g, "-"),
+    visible: true,
+    target: "_self" as const,
+    order: index,
+  }));
 
   const updateContentLocally = (slug: string, newData: any) => {
-    setData(prev => {
+    setData((prev) => {
       if (!prev) return prev;
+      const prevPage = prev.page as any;
       return {
         ...prev,
         page: {
-          ...prev.page,
-          contents: prev.page.contents.map(content =>
+          ...prevPage,
+          contents: (prevPage.contents ?? []).map((content: any) =>
             content.slug === slug ? { ...content, data: newData } : content
-          )
-        }
+          ),
+        },
       };
     });
   };

@@ -8,7 +8,7 @@ export type ParsedTablesResult = {
 };
 
 export const parseFinancialTablesFromFile = async (
-  file: File,
+  file: File
 ): Promise<ParsedTablesResult> => {
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: "array" });
@@ -23,21 +23,21 @@ export const parseFinancialTablesFromFile = async (
       {
         header: 1,
         raw: true,
-      },
+      }
     ) as Array<Array<string | number | null>>;
 
     if (!parsedBalance) {
       parsedBalance = parseTable(
         data,
         "BALANCE GENERAL",
-        "ESTADO DE RESULTADOS",
+        "ESTADO DE RESULTADOS"
       );
     }
     if (!parsedResults) {
       parsedResults = parseTable(
         data,
         "ESTADO DE RESULTADOS",
-        "BALANCE GENERAL",
+        "BALANCE GENERAL"
       );
     }
 
@@ -55,7 +55,7 @@ export const parseFinancialTablesFromFile = async (
 const parseTable = (
   data: Array<Array<string | number | null>>,
   title: string,
-  stopTitle: string,
+  stopTitle: string
 ): FinancialTable | null => {
   const normalize = (value: string | number | null | undefined) =>
     String(value ?? "")
@@ -69,7 +69,7 @@ const parseTable = (
   const normalizedStopTitle = normalize(stopTitle);
 
   const titleIndex = data.findIndex((row) =>
-    row.some((cell) => normalize(cell) === normalizedTitle),
+    row.some((cell) => normalize(cell) === normalizedTitle)
   );
   if (titleIndex < 0) {
     return null;
@@ -125,9 +125,9 @@ const parseTable = (
 
   if (yearIndexes.length === 0) {
     const fallbackRow = data[titleIndex + 1] ?? [];
-    const lastFilledIndex = fallbackRow.reduce(
+    const lastFilledIndex = fallbackRow.reduce<number>(
       (last, cell, index) => (String(cell ?? "").trim() ? index : last),
-      0,
+      0
     );
 
     for (let i = 1; i <= lastFilledIndex; i += 1) {

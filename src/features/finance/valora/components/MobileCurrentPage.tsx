@@ -1,11 +1,7 @@
-import React from 'react';
-
 export interface MobileCurrentPageProps {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }
 
-export const MobileCurrentPage: React.FC<MobileCurrentPageProps> = ({ children }) => (
-    <div className="flex-1 overflow-auto">
-        {children}
-    </div>
-);
+export const MobileCurrentPage: React.FC<MobileCurrentPageProps> = ({
+  children,
+}) => <div className="flex-1 overflow-auto">{children}</div>;

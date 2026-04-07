@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import Sidebar from './SideBar';
-import { ScrollTop, Footer } from './AdminLayout';
+import React, { useState } from "react";
+import Sidebar from "./SideBar";
+import { ScrollTop, Footer } from "./AdminLayout";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -16,21 +16,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div className="flex min-h-screen bg-[#e9edf1]">
       {/* Sidebar */}
-      <Sidebar 
-        isMinimized={isSidebarMinimized} 
-        onToggleMinimize={toggleSidebar} 
+      <Sidebar
+        isMinimized={isSidebarMinimized}
+        onToggleMinimize={toggleSidebar}
       />
 
       {/* Main Content Area */}
-      <div 
+      <div
         className={`flex flex-1 flex-col transition-all duration-300 ${
-          isSidebarMinimized ? 'lg:ml-0' : 'lg:ml-0'
+          isSidebarMinimized ? "lg:ml-[75px]" : "lg:ml-[250px]"
         }`}
       >
         {/* Content */}
-        <main className="flex-1 pb-20">
-          {children}
-        </main>
+        <main className="flex-1 pb-20">{children}</main>
 
         {/* Footer */}
         <Footer />
