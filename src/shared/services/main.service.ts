@@ -203,6 +203,19 @@ export const MainService = {
     });
   },
 
+  reUploadMasterTemplateFile: async (
+    id: number,
+    file: File,
+    token?: string
+  ): Promise<any> => {
+    const form = new FormData();
+    form.append("file", file);
+    // Retorna { comparison, errors, statistics }
+    return api.postForm<any>(`main/master-templates/${id}/re-upload`, form, {
+      token: getAuthToken(token),
+    });
+  },
+
   downloadMasterTemplateUrl: (id: number): string => {
     const base = import.meta.env.DEV
       ? `${window.location.origin}/api/v1/`
