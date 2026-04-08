@@ -68,10 +68,11 @@ export const PlantillasMaestrasPage = () => {
   // Shared codes modal (view all and view new)
   const [codesModalOpen, setCodesModalOpen] = useState(false);
   const [codesModalMode, setCodesModalMode] = useState<CodesModalMode>("all");
-  const [codesModalTemplateId, setCodesModalTemplateId] = useState<number | null>(
-    null
-  );
-  const [codesModalTemplateName, setCodesModalTemplateName] = useState<string>("");
+  const [codesModalTemplateId, setCodesModalTemplateId] = useState<
+    number | null
+  >(null);
+  const [codesModalTemplateName, setCodesModalTemplateName] =
+    useState<string>("");
   const [codesModalComparison, setCodesModalComparison] =
     useState<CodesModalComparison | null>(null);
   const [codesModalErrors, setCodesModalErrors] = useState<string[]>([]);
@@ -335,27 +336,12 @@ export const PlantillasMaestrasPage = () => {
       setReUploadingId(reUploadTargetId.current);
       setCodesModalErrors([]);
 
-      const formData = new FormData();
-      formData.append("file", file);
-
       const token = getToken();
-      const response = await fetch(
-        `/api/v1/main/master-templates/${reUploadTargetId.current}/re-upload`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
+      const data = await MainService.reUploadMasterTemplateFile(
+        reUploadTargetId.current,
+        file,
+        token || undefined
       );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Error al re-subir el archivo");
-      }
-
-      const data = await response.json();
 
       // Show comparison modal
       setCodesModalMode("new");

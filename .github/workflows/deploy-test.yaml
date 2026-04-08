@@ -1,0 +1,30 @@
+name: Deploy Frontend Test - New Financieras
+
+on:
+  push:
+    branches: ["dev"]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create .env.test
+        run: echo "${{ secrets.ENV_TEST }}" > .env.test
+
+      - name: Sync project to server folder
+        run: |
+          mkdir -p /home/ubuntu/projects/new_financieras/plataformas-financieras-test
+          rsync -av --delete ./ /home/ubuntu/projects/new_financieras/plataformas-financieras-test
+
+      - name: Build and run
+        run: |
+          cd /home/ubuntu/projects/new_financieras/plataformas-financieras-test
+          docker compose -f compose.yaml -f compose.test.yaml --env-file .env.test build --no-cache
+          docker compose -f compose.yaml -f compose.test.yaml --env-file .env.test up -d
+
+      - name: Cleanup
+        run: docker image prune -f
