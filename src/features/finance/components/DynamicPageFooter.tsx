@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 export const DynamicPageFooter: React.FC = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, _setIsCollapsed] = useState(false);
 
   return (
     <div
