@@ -71,6 +71,7 @@ function App() {
       {/* Rutas internas */}
       <Route element={<InternalLayout />}>
         <Route path="/kapital" element={<KapitalPage />} />
+        <Route path="/kapital/:code" element={<KapitalPage />} />
         <Route path="/valora" element={<ValoraPage />} />
         <Route
           path="usuario/proyectos"

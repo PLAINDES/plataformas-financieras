@@ -4,6 +4,8 @@ import type {
   TemplateComplementCreate,
   TemplateComplementUpdate,
   Calculation,
+  CalculationCreate,
+  CalculationUpdate,
   Report,
   ReportUpdate,
   Cover,
@@ -21,36 +23,50 @@ const getAuthToken = (token?: string): string | undefined => {
 export const MainService = {
   // ==================== TEMPLATE COMPLEMENTS ====================
 
-  /**
-   * List all template complements
-   */
+  /*
+  List all template complements
+  */
   getTemplateComplements: async (
-    activeTab: string
-  ): Promise<TemplateComplement[]> => {
+    activeTab: string,
+    onlyName?: boolean,
+    onlyDate?: boolean
+  ): Promise<any> => {
+    const params = new URLSearchParams();
+
+    if (onlyName) {
+      params.append("only-name", "true");
+    }
+
+    if (onlyDate) {
+      params.append("only-date", "true");
+    }
+
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+
     return api.get<TemplateComplement[]>(
-      `main/template-complements/by-name/${activeTab}`
+      `main/template-complements/by-name/${activeTab}${queryString}`
     );
   },
 
-  /**
-   * Get a specific template complement by ID
-   */
+  /*
+  Get a specific template complement by ID
+  */
   getTemplateComplement: async (id: number): Promise<TemplateComplement> => {
     return api.get<TemplateComplement>(`main/template-complements/${id}`);
   },
 
-  /**
-   * Create a new template complement
-   */
+  /*
+  Create a new template complement
+  */
   createTemplateComplement: async (
     data: TemplateComplementCreate
   ): Promise<TemplateComplement> => {
     return api.post<TemplateComplement>("main/template-complements", data);
   },
 
-  /**
-   * Update an existing template complement
-   */
+  /*
+  Update an existing template complement
+  */
   updateTemplateComplement: async (
     id: number,
     data: TemplateComplementUpdate
@@ -58,16 +74,39 @@ export const MainService = {
     return api.put<TemplateComplement>(`main/template-complements/${id}`, data);
   },
 
-  /**
-   * Delete a template complement
-   */
+  /*
+  Delete a template complement
+  */
   deleteTemplateComplement: async (id: number): Promise<void> => {
     return api.delete<void>(`main/template-complements/${id}`);
   },
 
+  /*
+  ============ CALCULATIONS =============
+  */
+
   getCalculations: async (userId?: number): Promise<Calculation[]> => {
     const params = userId !== undefined ? `?user_id=${userId}` : "";
     return api.get<Calculation[]>(`main/calculations${params}`);
+  },
+
+  getCalculation: async (id: number): Promise<Calculation> => {
+    return api.get<Calculation>(`main/calculations/${id}`);
+  },
+
+  getCalculationByCode: async (code: string): Promise<Calculation> => {
+    return api.get<Calculation>(`main/calculations/by-code/${code}`);
+  },
+
+  createCalculation: async (data: CalculationCreate): Promise<Calculation> => {
+    return api.post<Calculation>("main/calculations", data);
+  },
+
+  updateCalculation: async (
+    id: number,
+    data: CalculationUpdate
+  ): Promise<Calculation> => {
+    return api.put<Calculation>(`main/calculations/${id}`, data);
   },
 
   deleteCalculation: async (id: number): Promise<void> => {
@@ -101,20 +140,10 @@ export const MainService = {
     return res.html;
   },
 
+  // Reemplaza tu uploadReportFile actual por este:
   uploadReportFile: async (id: number, formData: FormData): Promise<void> => {
-    const BASE_URL = import.meta.env.DEV
-      ? `${window.location.origin}/api/v1/`
-      : `${import.meta.env.VITE_API_URL}/api/v1/`;
-    const res = await fetch(`${BASE_URL}main/reports/${id}/upload`, {
-      method: "POST",
-      body: formData,
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(
-        (err as { detail?: string }).detail ?? `Upload failed: ${res.status}`
-      );
-    }
+    // api.post ya detecta si es FormData y omite el Content-Type automáticamente
+    return api.post<void>(`main/reports/${id}/upload`, formData);
   },
 
   getCovers: async (): Promise<Cover[]> => {
@@ -285,6 +314,14 @@ export const MainService = {
     }
     return res.json();
   },
+
+  /*
+  // Reemplaza tu updateCover actual por este:
+  updateCover: async (id: number, formData: FormData): Promise<Cover> => {
+    // api.put también maneja FormData perfectamente según tu api.ts
+    return api.put<Cover>(`main/covers/${id}`, formData);
+  },
+  */
 
   /**
    * Delete a cover by id

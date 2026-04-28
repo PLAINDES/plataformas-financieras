@@ -29,7 +29,7 @@ export const NavBar: React.FC<NavbarProps> = ({
   hasResults,
   selected,
   logoHref = "/kapital",
-  logoSrc = "/public/images/logo-kapital-small.png",
+  logoSrc = "/images/logo-kapital-small.png",
   logoAlt = "Kapital Logo",
   projectsHref = "/usuario/proyectos",
   onNavigate,
@@ -120,7 +120,7 @@ export const NavBar: React.FC<NavbarProps> = ({
           {hasResults && (
             <button
               onClick={onOpenReport}
-              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm border border-purple-600 text-purple-600 hover:bg-purple-50"
+              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm border border-purple-600 text-purple-600 hover:bg-purple-50 cursor-pointer"
             >
               Reportes
             </button>
