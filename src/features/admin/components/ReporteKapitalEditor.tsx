@@ -73,13 +73,15 @@ function reportToForm(report: Report): ReportFormData {
 const FieldItem: React.FC<{
   field: TemplateCodeBasic;
   largeImage?: boolean;
-}> = ({ field, largeImage = false }) => (
+  onCodeClick?: (code: string) => void;
+}> = ({ field, largeImage = false, onCodeClick }) => (
   <div
     draggable
     onDragStart={(e) => {
       e.dataTransfer.setData("text/plain", field.code);
       e.dataTransfer.effectAllowed = "copy";
     }}
+    onClick={() => onCodeClick?.(field.code)}
     className="flex cursor-grab active:cursor-grabbing items-center gap-3 rounded-lg border border-transparent px-3 py-2 transition-all hover:border-blue-100 hover:bg-blue-50"
   >
     {/** show thumbnail if available */}
@@ -325,6 +327,29 @@ export const ReporteKapitalEditor: React.FC = () => {
     value: ReportFormData[K]
   ): void => {
     setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleAddCode = (code: string): void => {
+    setEditorContent((prevContent) => {
+      const trimmed = prevContent.trim();
+
+      // Busca la última etiqueta HTML al final del contenido (</p>, </div>, </span>)
+      const lastTagMatch = trimmed.match(/(<\/[a-zA-Z0-9]+>)$/i);
+
+      if (lastTagMatch && lastTagMatch.index !== undefined) {
+        // Inserta el código justo antes de esa última etiqueta para mantenerlo en la misma línea
+        return (
+          trimmed.substring(0, lastTagMatch.index) +
+          code +
+          trimmed.substring(lastTagMatch.index)
+        );
+      }
+
+      // Fallback si es texto plano sin HTML
+      return prevContent + code;
+    });
+    // Fuerza al editor a renderizar otra vez
+    setEditorKey((k) => k + 1);
   };
 
   const handleSave = async () => {
@@ -595,27 +620,31 @@ export const ReporteKapitalEditor: React.FC = () => {
                       label: "Precio",
                       type: "number",
                       key: "precio" as const,
+                      options: undefined,
                     },
                     {
                       id: "moneda",
                       label: "Moneda",
                       type: "text",
                       key: "moneda" as const,
+                      options: undefined,
                     },
                     {
                       id: "sector",
                       label: "Sector / Empresa",
-                      type: "text",
+                      type: "select",
                       key: "sectorEmpresa" as const,
+                      options: ["Empresa", "Sectorial"],
                     },
                     {
                       id: "bono",
                       label: "Bono / Ajustado",
-                      type: "text",
+                      type: "select",
                       key: "bonoAjustado" as const,
+                      options: ["Bono EE.UU", "Ajustado Rf"],
                     },
                   ] as const
-                ).map(({ id: fieldId, label, type, key }) => (
+                ).map(({ id: fieldId, label, type, key, options }) => (
                   <div key={fieldId}>
                     <Label
                       htmlFor={fieldId}
@@ -623,20 +652,38 @@ export const ReporteKapitalEditor: React.FC = () => {
                     >
                       {label}
                     </Label>
-                    <Input
-                      id={fieldId}
-                      type={type}
-                      value={form[key] as string | number}
-                      onChange={(e) =>
-                        handleChange(
-                          key,
-                          type === "number"
-                            ? Number(e.target.value)
-                            : e.target.value
-                        )
-                      }
-                      className="h-9 text-sm"
-                    />
+                    {type === "select" ? (
+                      <select
+                        id={fieldId}
+                        value={form[key] as string}
+                        onChange={(e) => handleChange(key, e.target.value)}
+                        className="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 cursor-pointer"
+                      >
+                        <option value="" disabled>
+                          Seleccione...
+                        </option>
+                        {options?.map((opt: string) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <Input
+                        id={fieldId}
+                        type={type}
+                        value={form[key] as string | number}
+                        onChange={(e) =>
+                          handleChange(
+                            key,
+                            type === "number"
+                              ? Number(e.target.value)
+                              : e.target.value
+                          )
+                        }
+                        className="h-9 text-sm"
+                      />
+                    )}
                   </div>
                 ))}
               </div>
@@ -862,7 +909,11 @@ export const ReporteKapitalEditor: React.FC = () => {
                 ) : filteredFields.length > 0 ? (
                   <div className="space-y-1">
                     {fieldsVisible.map((tc) => (
-                      <FieldItem key={tc.id + tc.code} field={tc} />
+                      <FieldItem
+                        key={tc.id + tc.code}
+                        field={tc}
+                        onCodeClick={handleAddCode}
+                      />
                     ))}
                     {filteredFields.length > PAGE_SIZE && (
                       <div className="mt-2 flex items-center justify-between px-1">
@@ -925,7 +976,12 @@ export const ReporteKapitalEditor: React.FC = () => {
                 ) : filteredCharts.length > 0 ? (
                   <div className="space-y-1">
                     {chartsVisible.map((tc) => (
-                      <FieldItem key={tc.id + tc.code} field={tc} largeImage />
+                      <FieldItem
+                        key={tc.id + tc.code}
+                        field={tc}
+                        largeImage
+                        onCodeClick={handleAddCode}
+                      />
                     ))}
                     {filteredCharts.length > PAGE_SIZE && (
                       <div className="mt-2 flex items-center justify-between px-1">

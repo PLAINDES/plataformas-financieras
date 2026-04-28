@@ -21,22 +21,10 @@ export const PrimaTable = ({ data, isLoading, onDelete }: PrimaTableProps) => {
           ),
         },
         {
-          header: "PRM (T-bonds) actual",
-          accessorKey: "PRM (T-bonds) actual",
+          header: "PRM Kroll",
+          accessorKey: "PRM Kroll",
           cell: (item) => (
-            <span>{formatPercentageValue(item["PRM (T-bonds) actual"])}</span>
-          ),
-        },
-        {
-          header: "Rm",
-          accessorKey: "Rm",
-          cell: (item) => <span>{formatPercentageValue(item["Rm"])}</span>,
-        },
-        {
-          header: "Rf (t-bonds)",
-          accessorKey: "Rf (t-bonds)",
-          cell: (item) => (
-            <span>{formatPercentageValue(item["Rf (t-bonds)"])}</span>
+            <span>{formatPercentageValue(item["PRM Kroll"])}</span>
           ),
         },
       ]}

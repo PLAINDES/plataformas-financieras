@@ -6,6 +6,14 @@ interface DevaluacionTableProps {
   onDelete: (item: any) => void;
 }
 
+// Función auxiliar para renderizar los porcentajes correctamente
+const formatPercentage = (value: any) => {
+  // Validamos si no hay dato
+  if ([undefined, null, 0, ""].includes(value)) return <span>-</span>;
+
+  return <span>{(parseFloat(value) * 100).toFixed(2)}%</span>;
+};
+
 export const DevaluacionTable = ({
   data,
   isLoading,
@@ -22,81 +30,45 @@ export const DevaluacionTable = ({
           cell: (item) => {
             if ([undefined, null, ""].includes(item.periodo))
               return <span>-</span>;
+
             const val = parseFloat(item.periodo);
-            return <span>{isNaN(val) ? item.periodo : val.toFixed(4)}</span>;
+            return <span>{isNaN(val) ? item.periodo : val}</span>;
           },
         },
         {
           header: "Argentina",
           accessorKey: "Argentina",
-          cell: (item) => {
-            if ([undefined, 0, ""].includes(item["Argentina"]))
-              return <span>-</span>;
-            return <span>{parseFloat(item["Argentina"]).toFixed(4)}%</span>;
-          },
+          cell: (item) => formatPercentage(item["Argentina"]),
         },
         {
           header: "Brazil",
           accessorKey: "Brazil",
-          cell: (item) => {
-            if ([undefined, 0, ""].includes(item["Brazil"]))
-              return <span>-</span>;
-            return <span>{parseFloat(item["Brazil"]).toFixed(4)}%</span>;
-          },
+          cell: (item) => formatPercentage(item["Brazil"]),
         },
         {
           header: "Chile",
           accessorKey: "Chile",
-          cell: (item) => {
-            if ([undefined, 0, ""].includes(item["Chile"]))
-              return <span>-</span>;
-            return <span>{parseFloat(item["Chile"]).toFixed(4)}%</span>;
-          },
+          cell: (item) => formatPercentage(item["Chile"]),
         },
         {
           header: "Colombia",
           accessorKey: "Colombia",
-          cell: (item) => {
-            if ([undefined, 0, ""].includes(item["Colombia"]))
-              return <span>-</span>;
-            return <span>{parseFloat(item["Colombia"]).toFixed(4)}%</span>;
-          },
+          cell: (item) => formatPercentage(item["Colombia"]),
         },
         {
           header: "Ecuador",
           accessorKey: "Ecuador",
-          cell: (item) => {
-            if ([undefined, 0, ""].includes(item["Ecuador"]))
-              return <span>-</span>;
-            return <span>{parseFloat(item["Ecuador"]).toFixed(4)}%</span>;
-          },
+          cell: (item) => formatPercentage(item["Ecuador"]),
         },
         {
           header: "México",
           accessorKey: "Mexico",
-          cell: (item) => {
-            if ([undefined, 0, ""].includes(item["Mexico"]))
-              return <span>-</span>;
-            return <span>{parseFloat(item["Mexico"]).toFixed(4)}%</span>;
-          },
+          cell: (item) => formatPercentage(item["Mexico"]),
         },
         {
           header: "Perú",
           accessorKey: "Peru",
-          cell: (item) => {
-            if ([undefined, 0, ""].includes(item["Peru"]))
-              return <span>-</span>;
-            return <span>{parseFloat(item["Peru"]).toFixed(4)}%</span>;
-          },
-        },
-        {
-          header: "United States",
-          accessorKey: "United States",
-          cell: (item) => {
-            if ([undefined, 0, ""].includes(item["United States"]))
-              return <span>-</span>;
-            return <span>{parseFloat(item["United States"]).toFixed(4)}%</span>;
-          },
+          cell: (item) => formatPercentage(item["Peru"]),
         },
       ]}
       onDelete={onDelete}
