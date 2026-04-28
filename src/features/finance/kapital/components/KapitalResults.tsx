@@ -5,32 +5,12 @@ import { KapitalResultadosSection } from "./KapitalResultadosSection";
 import { KapitalAnalisisSection } from "./KapitalAnalisisSection";
 import { KapitalMetodologiaSection } from "./MethodologyView";
 import { LoadingOverlay } from "@/shared/components/common/LoadingOverlay";
-
-interface FormData {
-  typeId: boolean;
-  // ... otros campos
-}
-
-interface MarketResults {
-  cppc: number;
-  kd: number;
-  ke: number;
-  koa: number;
-}
-
-interface Results {
-  cppc: number;
-  kd: number;
-  ke: number;
-  koa: number;
-  emergent: MarketResults;
-  developed: MarketResults;
-}
+import type { Results, SensibilizacionEntry } from "../KapitalPage";
 
 export interface KapitalResultsProps {
   section: "result" | "analysis" | "methodology";
   results: Results | null;
-  formData: FormData;
+  showCompanyCard: boolean;
   resultCurrency: "pen" | "usd";
   onResultCurrencyChange: (currency: "pen" | "usd") => void;
   analysisDC: string;
@@ -42,6 +22,10 @@ export interface KapitalResultsProps {
   onAnalysisSubmit: (e: React.FormEvent) => void;
   loading: boolean;
   methodologyCategories: MethodologyCategory[];
+  showComparison: boolean;
+  onToggleComparison: () => void;
+  sensibilizaciones: SensibilizacionEntry[];
+  onOpenReport?: () => void;
 }
 
 interface MethodologyItem {
@@ -57,7 +41,7 @@ interface MethodologyCategory {
 export const KapitalResults: React.FC<KapitalResultsProps> = ({
   section,
   results,
-  formData,
+  showCompanyCard,
   resultCurrency,
   onResultCurrencyChange,
   analysisDC,
@@ -68,7 +52,11 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
   onAnalysisCurrencyChange,
   onAnalysisSubmit,
   loading,
+  showComparison,
+  onToggleComparison,
+  sensibilizaciones,
   //methodologyCategories,
+  onOpenReport,
 }) => {
   const [isCategoriaOpen, setIsCategoriaOpen] = useState(false);
   const [isModuloOpen, setIsModuloOpen] = useState(false);
@@ -85,22 +73,21 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
   }
 
   return (
-    <div className="flex-12 flex flex-col w-full h-full lg:pb-10 py-10 lg:pt-10 bg-[#f3f6f9] min-h-dvh">
-      <div className="flex-1 w-full px-4 sm:px-8">
+    <div className="flex-12 flex flex-row w-full h-full p-6 lg:p-8 bg-[#f3f6f9]">
+      <div className="flex-1 w-full mx-2">
         <div className="mx-auto flex w-full max-w-300 flex-col gap-6">
           {section === "result" && (
             <KapitalResultadosSection
               results={results}
-              formData={formData}
+              showCompanyCard={showCompanyCard}
               resultCurrency={resultCurrency}
               onResultCurrencyChange={onResultCurrencyChange}
             />
           )}
-
           {section === "analysis" && (
             <KapitalAnalisisSection
               results={results}
-              formData={formData}
+              showCompanyCard={showCompanyCard}
               resultCurrency={resultCurrency}
               onResultCurrencyChange={onResultCurrencyChange}
               analysisDC={analysisDC}
@@ -111,6 +98,9 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
               onAnalysisCurrencyChange={onAnalysisCurrencyChange}
               onAnalysisSubmit={onAnalysisSubmit}
               loading={loading}
+              showComparison={showComparison}
+              onToggleComparison={onToggleComparison}
+              sensibilizaciones={sensibilizaciones}
             />
           )}
 
@@ -127,6 +117,16 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
           )}
         </div>
       </div>
+      {/*section === "result" && (
+        <aside className="hidden lg:flex shrink-0 w-40 xl:w-48 ml-8 items-center justify-center overflow-hidden">
+          <img
+            src="/images/side-proideas.jpeg"
+            alt="Sidebar Proideas Reporte"
+            onClick={onOpenReport}
+            className="cursor-pointer rounded-xl h-full w-fit"
+          />
+        </aside>
+      )*/}
     </div>
   );
 };

@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import type { PageResponse, SectionResponse } from "./api.types";
 
 export type {
@@ -98,16 +97,25 @@ export type TemplateComplementCreate = Omit<
 export type TemplateComplementUpdate = Partial<TemplateComplementCreate>;
 
 export interface Calculation {
-  code: ReactNode;
+  code: string;
   id: number;
-  calculation_file_id: number | null;
+  calculation_file_id: string | null;
   user_id: number;
-  report_code: string;
   type: "valora" | "kapital";
   data: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }
+
+export interface CalculationCreate {
+  calculation_file_id?: string | null;
+  user_id: number;
+  code: string;
+  type: "valora" | "kapital";
+  data?: Record<string, unknown> | null;
+}
+
+export type CalculationUpdate = Partial<CalculationCreate>;
 
 export interface MediaBasic {
   id: number;

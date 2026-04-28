@@ -325,7 +325,7 @@ const ValoraMethodology: React.FC<{ uid?: string }> = ({ uid = "demo" }) => {
               <a href="/valora">
                 <img
                   alt="Logo"
-                  src="/public/images/logo-valora-small.png"
+                  src="/images/logo-valora-small.png"
                   className="h-35px"
                 />
               </a>
@@ -338,7 +338,7 @@ const ValoraMethodology: React.FC<{ uid?: string }> = ({ uid = "demo" }) => {
                 className="cursor-pointer symbol"
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
-                <img src="/public/images/blank.png" alt="perfil" />
+                <img src="/images/blank.png" alt="perfil" />
               </div>
 
               {showUserMenu && (

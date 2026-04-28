@@ -76,15 +76,6 @@ export const EmbiTable = ({ data, isLoading, onDelete }: EmbiTableProps) => {
             return <span>{parseFloat(item["Peru"]).toFixed(2)}</span>;
           },
         },
-        {
-          header: "United States",
-          accessorKey: "United States",
-          cell: (item) => {
-            if ([undefined, 0, ""].includes(item["United States"]))
-              return <span>-</span>;
-            return <span>{parseFloat(item["United States"]).toFixed(2)}</span>;
-          },
-        },
       ]}
       onDelete={onDelete}
     />

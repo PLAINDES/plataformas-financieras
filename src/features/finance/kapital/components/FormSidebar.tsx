@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { FormField } from "../../components/FormField";
 import { FormSection } from "../../components/FormSection";
 
@@ -8,12 +9,16 @@ interface FormSidebarProps {
   ) => void;
   onSubmit: (e: React.FormEvent) => void;
   loading: boolean;
+  isWaccCalculated: boolean;
+  hasSensibilizaciones: boolean;
   dates: string[];
   sectors: string[];
   instruments: string[];
   bonos: string[];
   countries: string[];
   currencies: string[];
+  industryTranslations: Record<string, string>;
+  bonosTranslations: Record<string, string>;
 }
 
 export const FormSidebar: React.FC<FormSidebarProps> = ({
@@ -21,26 +26,47 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
   onInputChange,
   onSubmit,
   loading,
+  isWaccCalculated,
+  hasSensibilizaciones,
   dates,
   sectors,
   instruments,
   bonos,
   countries,
   currencies,
+  industryTranslations,
+  bonosTranslations,
 }) => {
+  const [collapsed, setCollapsed] = useState({ step1: false, step2: false });
+
+  const toggleCollapse = (step: "step1" | "step2") => {
+    setCollapsed((prev) => ({ ...prev, [step]: !prev[step] }));
+  };
+
+  const handleCustomInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    onInputChange(e);
+  };
+
   return (
-    <form onSubmit={onSubmit} className="flex h-full flex-col">
-      <div className="flex-1 bg-white p-2">
-        <div className="overflow-auto pb-6">
+    <form id="wacc-form" onSubmit={onSubmit} className="flex h-full flex-col">
+      <div className="flex-1 bg-white p-2 flex flex-col">
+        <div className="flex-1 overflow-y-auto flex flex-col gap-2 pb-2">
           {/* Section 1: Industry */}
-          <FormSection title="Inputs de la industria" step={1}>
-            <div className="flex gap-4 flex-col pt-6">
+          <FormSection
+            title="Inputs de la industria"
+            step={1}
+            isCollapsed={collapsed.step1}
+            onToggleCollapse={() => toggleCollapse("step1")}
+          >
+            <div className="flex gap-2 flex-col">
               <FormField
                 label="Fecha"
                 name="date"
                 type="select"
                 value={formData.date}
-                onChange={onInputChange}
+                onChange={handleCustomInputChange}
                 options={dates}
                 required
               />
@@ -49,8 +75,10 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 name="sector"
                 type="select"
                 value={formData.sector}
-                onChange={onInputChange}
+                onChange={handleCustomInputChange}
                 options={sectors}
+                translations={industryTranslations}
+                disabled={hasSensibilizaciones}
                 required
               />
               <FormField
@@ -58,7 +86,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 name="instrument"
                 type="select"
                 value={formData.instrument}
-                onChange={onInputChange}
+                onChange={handleCustomInputChange}
                 options={instruments}
                 required
               />
@@ -67,43 +95,53 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 name="bono"
                 type="select"
                 value={formData.bono}
-                onChange={onInputChange}
+                onChange={handleCustomInputChange}
                 options={bonos}
+                translations={bonosTranslations}
                 required
               />
             </div>
           </FormSection>
 
           {/* Section 2: Sector */}
-          <FormSection title="Inputs del sector" step={2}>
-            <div className="flex gap-4 flex-col pt-6">
+          <FormSection
+            title="Inputs del sector"
+            step={2}
+            isCollapsed={collapsed.step2}
+            onToggleCollapse={() => toggleCollapse("step2")}
+          >
+            <div className="flex gap-2 flex-col">
               <FormField
                 label="País"
                 name="country"
                 type="select"
                 value={formData.country}
-                onChange={onInputChange}
+                onChange={handleCustomInputChange}
                 options={countries}
                 required
               />
               <FormField
                 label="Devaluación"
                 name="devaluation"
-                type="text"
+                type="number"
+                step="any"
                 value={formData.devaluation}
-                onChange={onInputChange}
-                placeholder="Ej: 3.5"
-                tooltip="Porcentaje anual de devaluación de la moneda local"
+                onChange={handleCustomInputChange}
+                suffix="%"
+                disabled
               />
               <FormField
                 label="Tasa impositiva"
                 name="tax"
-                type="text"
+                type="number"
+                min={0}
+                max={100}
+                step="any"
                 value={formData.tax}
-                onChange={onInputChange}
+                onChange={handleCustomInputChange}
                 placeholder="Ej: 30"
                 suffix="%"
-                tooltip="Tasa de impuesto a la renta aplicable al sector"
+                disabled
               />
             </div>
           </FormSection>
@@ -113,70 +151,54 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
             title="Inputs de su empresa"
             step={3}
             toggle={formData.typeId}
-            onToggle={() => {
-              const event = {
+            onToggle={() =>
+              handleCustomInputChange({
                 target: { name: "typeId", value: !formData.typeId },
-              } as any;
-              onInputChange(event);
-            }}
+              } as any)
+            }
           >
-            <div className="space-y-4">
+            <div className="flex gap-2 flex-col">
               {/* Costo de deuda con selector de moneda */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Costo de deuda
-                </label>
-                <div className="flex gap-2">
-                  <select
-                    className="w-24 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    name="currency"
-                    value={formData.currency}
-                    onChange={onInputChange}
-                  >
-                    {currencies.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="flex-1 flex">
-                    <input
-                      type="text"
-                      className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
-                      name="kd"
-                      placeholder="Escriba su Kd"
-                      value={formData.kd}
-                      onChange={onInputChange}
-                      required={formData.typeId}
-                    />
-                    <span className="inline-flex items-center px-3 text-xs font-bold text-gray-500 bg-gray-50 border border-l-0 border-gray-300 rounded-r-lg">
-                      %
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <FormField
+                label="Costo de deuda"
+                name="kd"
+                type="number"
+                min={0}
+                step="any"
+                value={formData.kd}
+                onChange={handleCustomInputChange}
+                placeholder="Ej: 8.5"
+                suffix="%"
+                prefixSelect={{
+                  name: "currency",
+                  value: formData.currency,
+                  options: currencies,
+                }}
+              />
 
               <FormField
                 label="% de deuda"
                 name="debt"
-                type="text"
+                type="number"
+                min={0}
+                max={100}
+                step="any"
                 value={formData.debt}
-                onChange={onInputChange}
+                onChange={handleCustomInputChange}
                 placeholder="Ej: 40"
                 suffix="%"
-                tooltip="Proporción de deuda en la estructura de capital"
-                required={formData.typeId}
               />
               <FormField
                 label="% de capital"
                 name="capital"
-                type="text"
+                type="number"
+                min={0}
+                max={100}
+                step="any"
                 value={formData.capital}
-                onChange={onInputChange}
+                onChange={handleCustomInputChange}
                 placeholder="Ej: 60"
                 suffix="%"
-                tooltip="Proporción de capital en la estructura de capital"
-                required={formData.typeId}
               />
             </div>
           </FormSection>
@@ -185,20 +207,12 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
           <FormSection
             title="Datos financieros optimizados"
             step={4}
-            toggle={formData.useFinancialData}
-            onToggle={() => {
-              const event = {
-                target: {
-                  name: "useFinancialData",
-                  value: !formData.useFinancialData,
-                },
-              } as any;
-              onInputChange(event);
-            }}
+            tooltip="Use el chatbot de análisis
+                  financiero para obtener estos datos automáticamente."
           >
-            <div className="space-y-4">
+            <div className="flex gap-2 flex-col">
               {/* Info Alert */}
-              <div className="flex items-start gap-2 px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-lg">
+              {/*<div className="flex items-start gap-2 px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-lg">
                 <svg
                   className="w-4 h-4 text-blue-600 shrink-0 mt-0.5"
                   fill="currentColor"
@@ -214,44 +228,18 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                   <strong>Sugerencia:</strong> Use el chatbot de análisis
                   financiero para obtener estos datos automáticamente.
                 </p>
-              </div>
-
-              <FormField
-                label="D/C Ratio"
-                name="dc_ratio"
-                type="text"
-                value={formData.dc_ratio}
-                onChange={onInputChange}
-                placeholder="Ej: 0.67"
-                tooltip="Relación Deuda/Capital de la empresa"
-              />
-              <FormField
-                label="Tasa Efectiva Impuesto"
-                name="effective_tax_rate"
-                type="text"
-                value={formData.effective_tax_rate}
-                onChange={onInputChange}
-                placeholder="Ej: 28.5"
-                suffix="%"
-                tooltip="Tasa impositiva efectiva considerando escudos fiscales"
-              />
-              <FormField
-                label="Beta Apalancado"
-                name="beta_levered"
-                type="text"
-                value={formData.beta_levered}
-                onChange={onInputChange}
-                placeholder="Ej: 1.2"
-                tooltip="Beta del sector considerando el apalancamiento financiero"
-              />
+              </div>*/}
               <FormField
                 label="Beta Desapalancado"
                 name="beta_unlevered"
-                type="text"
+                type="number"
+                step="any"
                 value={formData.beta_unlevered}
-                onChange={onInputChange}
+                onChange={handleCustomInputChange}
                 placeholder="Ej: 0.9"
-                tooltip="Beta del sector sin apalancamiento financiero"
+                suffix="coef."
+                disabled={!isWaccCalculated}
+                /*tooltip="Beta del sector sin apalancamiento financiero"*/
               />
             </div>
           </FormSection>
@@ -262,14 +250,13 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
           <button
             type="submit"
             form="wacc-form"
-            onClick={onSubmit}
             disabled={loading}
             className={`
-                w-full py-3 px-6 rounded-lg font-bold text-sm transition-all duration-200
+                cursor-pointer w-full py-3 px-6 rounded-lg font-bold text-sm transition-all duration-200
                 ${
                   loading
                     ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                    : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl active:scale-95"
+                    : "bg-valora-primary text-white hover:bg-valora-secondary shadow-lg hover:shadow-xl active:scale-95"
                 }
               `}
           >

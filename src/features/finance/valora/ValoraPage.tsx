@@ -337,7 +337,7 @@ const ValoraPage: React.FC = () => {
         isFormOpen={isDesktopFormOpen}
         hasResults={showResults}
         logoHref="/valora"
-        logoSrc="/public/images/logo-valora-small.png"
+        logoSrc="/images/logo-valora-small.png"
         logoAlt="Valora Logo"
         projectsHref="/usuario/proyectos"
         selected={getSelectedView()}

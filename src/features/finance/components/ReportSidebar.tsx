@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 import { ReportCheckbox } from "./ReportCheckbox";
 import { ReportProductCard } from "./ReportProductCard";
@@ -32,8 +32,41 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
   const [quotePhone, setQuotePhone] = useState("");
   const [quoteMessage, setQuoteMessage] = useState("");
 
+  // Refs para controlar el drag-to-scroll sin provocar re-renders
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+  const hasDragged = useRef(false); // Diferencia entre clic normal y arrastre
+
   const handleQuoteSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+  };
+
+  // --- Funciones para el Drag-to-Scroll ---
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    isDragging.current = true;
+    hasDragged.current = false; // Reiniciamos el estado de arrastre al hacer clic
+    startX.current = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current = scrollRef.current.scrollLeft;
+  };
+
+  const handleMouseLeave = () => {
+    isDragging.current = false;
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !scrollRef.current) return;
+    e.preventDefault();
+    hasDragged.current = true; // Si el ratón se mueve mientras está presionado, es un arrastre
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5;
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
   };
 
   return (
@@ -72,15 +105,37 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
                 <h4 className="text-lg font-bold">
                   Seleccione el producto de su preferencia:
                 </h4>
-                <div className="flex gap-4 my-12 lg:justify-start justify-center">
+                {/* Contenedor del Drag-to-Scroll */}
+                <div
+                  ref={scrollRef}
+                  onMouseDown={handleMouseDown}
+                  onMouseLeave={handleMouseLeave}
+                  onMouseUp={handleMouseUp}
+                  onMouseMove={handleMouseMove}
+                  className="flex gap-4 my-6 lg:justify-start justify-start overflow-x-auto cursor-grab active:cursor-grabbing select-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] w-full"
+                >
                   {reportProducts.map((product) => (
-                    <ReportProductCard
+                    <div
                       key={product.id}
-                      title={product.title}
-                      iconClassName={product.iconClassName}
-                      selected={selectedReportProductId === product.id}
-                      onSelect={() => onSelectReportProduct(product.id)}
-                    />
+                      className="shrink-0"
+                      onClickCapture={(e) => {
+                        // Si el usuario arrastró, evitamos que el clic seleccione la tarjeta
+                        if (hasDragged.current) {
+                          e.stopPropagation();
+                        }
+                      }}
+                    >
+                      <ReportProductCard
+                        title={product.title}
+                        iconClassName={product.iconClassName}
+                        selected={selectedReportProductId === product.id}
+                        onSelect={() => {
+                          if (!hasDragged.current) {
+                            onSelectReportProduct(product.id);
+                          }
+                        }}
+                      />
+                    </div>
                   ))}
                 </div>
                 <h4 className="text-lg font-bold">Contenido:</h4>
