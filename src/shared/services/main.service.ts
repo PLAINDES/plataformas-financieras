@@ -130,6 +130,10 @@ export const MainService = {
     return api.delete<void>(`main/calculations/${id}`);
   },
 
+  prewarmSession: async (): Promise<{ session_id: string }> => {
+    return api.post<{ session_id: string }>("main/calculations/prewarm");
+  },
+
   getReports: async (params?: {
     limit?: number;
     page?: number;

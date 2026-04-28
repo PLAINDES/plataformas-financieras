@@ -496,16 +496,10 @@ const KapitalPage: React.FC = () => {
   useEffect(() => {
     const preWarmSession = async () => {
       try {
-        const response = await fetch("/api/v1/main/calculations/prewarm", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        });
+        const data = await MainService.prewarmSession();
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.session_id) {
-            setPrewarmedSessionId(data.session_id);
-          }
+        if (data && data.session_id) {
+          setPrewarmedSessionId(data.session_id);
         }
       } catch (e) {
         console.error("Fallo pre-warm. Se creará la sesión al dar clic.", e);
