@@ -7,11 +7,11 @@ export const MainPageFooter: React.FC<MainPageFooterProps> = ({
   brandName,
   brandHref,
 }) => (
-  <footer className="flex-1/6 bg-green-50 border-t border-green-100">
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="grid md:grid-cols-2 gap-8">
-        <div>
-          <h2 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
+  <footer className="flex-1/6 bg-[#e8fff3] border-t border-green-100">
+    <section className="container mx-auto px-4 py-5 w-full">
+      <main className="grid md:grid-cols-2 gap-5">
+        <article className="max-w-lg mx-auto">
+          <h2 className="text-lg xl:text-xl font-bold text-gray-900 flex items-center gap-2">
             <svg
               className="w-5 h-5 text-green-600"
               fill="currentColor"
@@ -26,16 +26,16 @@ export const MainPageFooter: React.FC<MainPageFooterProps> = ({
             {brandName}
           </h2>
           <p className="text-sm text-gray-600">
-            Calcula el costo de capital de tu empresa, proyecto o inversion; de
-            forma rapida y confiable
+            Obtén una evaluación precisa y confiable para tomar decisiones
+            informadas.
           </p>
-          <a className="text-sm text-green-600" href={brandHref}>
-            <i className="fas fa-link me-1 text-primary"></i>
-            Ingresa a {brandName}
+          <a className="text-sm text-valora-primary" href={brandHref}>
+            Evalua el verdadero valor de tu empresa con nuestra plataforma de
+            valoración financiera.
           </a>
-        </div>
-        <div>
-          <h2 className="text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
+        </article>
+        <article className="max-w-lg mx-auto">
+          <h2 className="text-lg xl:text-xl font-bold text-gray-900 flex items-center gap-2">
             <svg
               className="w-5 h-5 text-green-600"
               fill="currentColor"
@@ -45,35 +45,37 @@ export const MainPageFooter: React.FC<MainPageFooterProps> = ({
             </svg>
             Suscríbete
           </h2>
-          <p className="text-sm text-gray-600 mb-3">
-            Suscríbete ahora para estar al tanto de lo último en finanzas, como
-            webinars, noticias y ofertas.
-          </p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              alert(`Suscripción: ${formData.get("email")}`);
-              e.currentTarget.reset();
-            }}
-            className="flex gap-2"
-          >
-            <input
-              type="email"
-              name="email"
-              placeholder="Tu email"
-              required
-              className="flex-1 px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
-            />
-            <button
-              type="submit"
-              className="px-6 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors"
+          <div className="flex flex-col gap-y-2">
+            <p className="text-sm text-gray-600">
+              Suscríbete ahora para estar al tanto de lo último en finanzas,
+              como webinars, noticias y ofertas.
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                alert(`Suscripción: ${formData.get("email")}`);
+                e.currentTarget.reset();
+              }}
+              className="flex gap-2"
             >
-              Suscribirse
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
+              <input
+                type="email"
+                name="email"
+                placeholder="Escriba acá su E-mail"
+                required
+                className="bg-white flex-1 px-4 py-1 text-sm border border-gray-300 rounded-sm focus:ring-2 focus:ring-green-700 focus:border-valora-secring-valora-secondary outline-none"
+              />
+              <button
+                type="submit"
+                className="cursor-pointer px-6 py-2 bg-green-600 text-white text-sm font-semibold rounded-sm hover:bg-green-700 transition-colors"
+              >
+                Suscribirse
+              </button>
+            </form>
+          </div>
+        </article>
+      </main>
+    </section>
   </footer>
 );

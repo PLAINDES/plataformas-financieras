@@ -36,7 +36,7 @@ export const FinanceNavbar: React.FC<FinanceNavbarProps> = ({
 
           <button
             onClick={onToggleForm}
-            className={`p-3 rounded-lg transition-all ${isFormOpen ? "bg-blue-50 text-blue-600" : "text-gray-400 hover:bg-gray-50"}`}
+            className={`cursor-pointer p-3 rounded-lg transition-all ${isFormOpen ? "bg-blue-50 text-blue-600" : "text-gray-400 hover:bg-gray-50"}`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -77,7 +77,7 @@ export const FinanceNavbar: React.FC<FinanceNavbarProps> = ({
               <button
                 key={tab.id}
                 onClick={() => onNavigate(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   selectedTabId === tab.id
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-700 hover:bg-gray-50"
