@@ -49,6 +49,23 @@ export const MainService = {
   },
 
   /*
+  Get a specific exact value for complements like tax (ir) and devaluation
+  */
+  getComplementSpecificValue: async (
+    name: string,
+    year: string,
+    country: string,
+    period?: string
+  ): Promise<{ valor: number | null }> => {
+    const params = new URLSearchParams({ year, country });
+    if (period) params.append("period", period);
+
+    return api.get<{ valor: number | null }>(
+      `main/template-complements/by-name/${name}?${params.toString()}`
+    );
+  },
+
+  /*
   Get a specific template complement by ID
   */
   getTemplateComplement: async (id: number): Promise<TemplateComplement> => {

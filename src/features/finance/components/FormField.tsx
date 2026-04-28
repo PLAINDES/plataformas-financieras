@@ -5,7 +5,7 @@ import type { FormData } from "@/shared/types/ValoraTypes";
 export interface FormFieldProps {
   label: string;
   name: keyof FormData;
-  type: "select" | "text";
+  type: "select" | "text" | "number";
   value: string;
   options?: string[];
   required?: boolean;
@@ -13,6 +13,16 @@ export interface FormFieldProps {
   tooltip?: string;
   suffix?: string;
   readOnly?: boolean;
+  disabled?: boolean;
+  translations?: Record<string, string>;
+  min?: number;
+  max?: number;
+  step?: string;
+  prefixSelect?: {
+    name: string;
+    value: string;
+    options: string[];
+  };
   onChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => void;
@@ -29,6 +39,12 @@ export const FormField: React.FC<FormFieldProps> = ({
   tooltip = "",
   suffix = "",
   readOnly = false,
+  disabled = false,
+  translations,
+  min,
+  max,
+  step,
+  prefixSelect,
   onChange,
 }) => {
   const [query, setQuery] = useState("");
@@ -40,10 +56,11 @@ export const FormField: React.FC<FormFieldProps> = ({
     if (!normalizedQuery) {
       return options;
     }
-    return options.filter((option) =>
-      option.toLowerCase().includes(normalizedQuery)
-    );
-  }, [options, query]);
+    return options.filter((option) => {
+      const displayLabel = translations?.[option] || option;
+      return displayLabel.toLowerCase().includes(normalizedQuery);
+    });
+  }, [options, query, translations]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -82,28 +99,43 @@ export const FormField: React.FC<FormFieldProps> = ({
     setQuery("");
   };
 
+  // Intercepta el cambio para bloquear números fuera de rango en tiempo real
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (type === "number" && e.target.value !== "") {
+      const numVal = Number(e.target.value);
+      if (max !== undefined && numVal > max) return; // Bloquea si supera max
+      if (min !== undefined && numVal < min) return; // Bloquea si es menor a min
+    }
+    onChange(e);
+  };
+
+  const displayValue = value ? translations?.[value] || value : "";
+
   return (
     <div className="grid grid-cols-1 gap-2 md:grid-cols-12 md:items-center">
       {label != "" && (
-        <label className="text-sm text-gray-600 md:col-span-4 font-semibold">
-          {label}
-        </label>
+        <label className="text-sm text-gray-600 md:col-span-4">{label}</label>
       )}
       <div className="md:col-span-8 bg-white">
         {type === "select" ? (
           <div ref={containerRef} className="relative">
             <button
               type="button"
-              className="w-full rounded border border-gray-300 px-3 py-2 pr-16 text-left text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className={`w-full rounded border border-gray-300 px-3 py-1.5 pr-16 text-left text-sm focus:border-valora-primary ${
+                disabled
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "cursor-pointer"
+              }`}
               onClick={() => setIsOpen((prev) => !prev)}
               aria-haspopup="listbox"
               aria-expanded={isOpen}
+              disabled={disabled}
             >
               <span className={value ? "text-gray-900" : "text-[#aaa]"}>
-                {value || "SELECCIONE"}
+                {displayValue || "SELECCIONE"}
               </span>
             </button>
-            {value && (
+            {value && !disabled && (
               <button
                 type="button"
                 className="absolute right-9 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
@@ -135,12 +167,12 @@ export const FormField: React.FC<FormFieldProps> = ({
                 className="hidden"
               />
             )}
-            {isOpen && (
+            {isOpen && !disabled && (
               <div className="absolute z-20 mt-2 w-full overflow-hidden rounded border border-gray-200 bg-white text-sm shadow">
                 <div className="border-b border-gray-100 p-2">
                   <input
                     type="text"
-                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                    className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-valora-primary"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     autoComplete="off"
@@ -149,44 +181,91 @@ export const FormField: React.FC<FormFieldProps> = ({
                 </div>
                 <div className="max-h-52 overflow-auto">
                   {filteredOptions.length === 0 ? (
-                    <div className="px-3 py-2 text-gray-500">
+                    <div className="px-3 py-1.5 text-gray-500">
                       Sin resultados
                     </div>
                   ) : (
-                    filteredOptions.map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        className="w-full px-3 py-2 text-left hover:bg-sky-50"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => handleSelect(option)}
-                      >
-                        {option}
-                      </button>
-                    ))
+                    filteredOptions.map((option) => {
+                      const itemLabel = translations?.[option] || option;
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          className="w-full px-3 py-1.5 text-left hover:bg-sky-50"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => handleSelect(option)}
+                        >
+                          {itemLabel}
+                        </button>
+                      );
+                    })
                   )}
                 </div>
               </div>
             )}
           </div>
         ) : (
-          <div className="relative">
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                className={`flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                placeholder={placeholder}
-                value={value}
-                name={name}
-                onChange={onChange}
-                required={required}
-                readOnly={readOnly}
-              />
+          <div className="relative flex-1">
+            <div
+              className={`flex items-stretch border border-gray-300 rounded transition-colors focus-within:border-valora-primary ${
+                disabled ? "bg-gray-200" : ""
+              }`}
+            >
+              {prefixSelect && (
+                <select
+                  name={prefixSelect.name}
+                  value={prefixSelect.value}
+                  onChange={onChange}
+                  className={`px-2 py-1.5 text-sm border-r border-gray-300 outline-none focus:outline-none ${
+                    disabled
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-gray-50 cursor-pointer hover:bg-gray-100"
+                  }`}
+                  disabled={disabled}
+                >
+                  {prefixSelect.options.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <div className="relative flex-1 flex items-center">
+                <input
+                  type={type === "number" ? "number" : "text"}
+                  min={min}
+                  max={max}
+                  step={step}
+                  className={`w-full flex-1 px-3 py-1.5 text-sm outline-none focus:outline-none bg-transparent pr-8
+                    ${readOnly || disabled ? "bg-gray-200 text-gray-500 cursor-not-allowed" : ""} 
+                    ${type === "number" ? "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" : ""}
+                  `}
+                  placeholder={placeholder}
+                  value={value}
+                  name={name}
+                  onChange={handleInputChange}
+                  required={required}
+                  readOnly={readOnly}
+                  disabled={disabled}
+                />
+                {value && !readOnly && !disabled && (
+                  <button
+                    type="button"
+                    className="absolute right-2 text-gray-400 hover:text-gray-600"
+                    aria-label="Limpiar"
+                    onClick={handleClear}
+                  >
+                    <i className="fa-solid fa-xmark text-xs"></i>
+                  </button>
+                )}
+              </div>
               {suffix && (
-                <span className="text-sm text-gray-600">{suffix}</span>
+                <span className="text-sm text-gray-600 px-3 py-1.5 bg-slate-100/80 border-l border-gray-300 whitespace-nowrap">
+                  {suffix}
+                </span>
               )}
               {tooltip && (
-                <div className="group relative">
+                <div className="group relative flex items-center pr-3">
                   <i className="fa-solid fa-circle-info text-gray-400 cursor-help"></i>
                   <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                     {tooltip}
@@ -194,16 +273,6 @@ export const FormField: React.FC<FormFieldProps> = ({
                 </div>
               )}
             </div>
-            {value && (
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                aria-label="Limpiar"
-                onClick={handleClear}
-              >
-                <i className="fa-solid fa-xmark text-xs"></i>
-              </button>
-            )}
           </div>
         )}
       </div>
