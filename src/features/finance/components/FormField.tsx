@@ -216,7 +216,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                   name={prefixSelect.name}
                   value={prefixSelect.value}
                   onChange={onChange}
-                  className={`px-2 py-1.5 text-sm border-r border-gray-300 outline-none focus:outline-none ${
+                  className={`px-0.5 py-1.5 text-sm border-r border-gray-300 outline-none focus:outline-none text-wrap ${
                     disabled
                       ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                       : "bg-gray-50 cursor-pointer hover:bg-gray-100"
