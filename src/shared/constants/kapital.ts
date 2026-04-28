@@ -76,12 +76,23 @@ export const BONOS_TRANSLATIONS: Record<string, string> = {
 
 export const COUNTRIES = [
   "Argentina",
-  "Brasil",
+  "Brazil",
+  "Mexico",
   "Chile",
   "Colombia",
   "Ecuador",
-  "Perú",
+  "Peru",
 ];
+
+export const COUNTRIES_TRANSLATIONS: Record<string, string> = {
+  Argentina: "Argentina",
+  Brazil: "Brasil",
+  Chile: "Chile",
+  Colombia: "Colombia",
+  Ecuador: "Ecuador",
+  Mexico: "México",
+  Peru: "Perú",
+};
 
 export const CURRENCIES = ["USD", "PEN", "EUR"];
 

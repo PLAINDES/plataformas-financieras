@@ -19,6 +19,7 @@ import {
   INSTRUMENTS,
   BONOS,
   COUNTRIES,
+  COUNTRIES_TRANSLATIONS,
   CURRENCIES,
   REPORT_PRODUCTS,
   METHODOLOGY_CATEGORIES,
@@ -566,7 +567,16 @@ const KapitalPage: React.FC = () => {
   // Comprobación de cambios en fecha o país para auto-rellenar complementos de IR y Devaluación
   useEffect(() => {
     const fetchAutoFillData = async () => {
-      if (!formData.date || !formData.country) return;
+      if (!formData.date || !formData.country) {
+        setFormData((prev) => {
+          // Solo actualizamos si realmente tienen algo, para evitar re-renderizados innecesarios
+          if (prev.tax !== "" || prev.devaluation !== "") {
+            return { ...prev, tax: "", devaluation: "" };
+          }
+          return prev;
+        });
+        return;
+      }
 
       const { year, quarter } = getYearAndQuarter(formData.date);
       if (!year) return;
@@ -588,11 +598,15 @@ const KapitalPage: React.FC = () => {
           // Actualizamos Tasa Impositiva si el backend encontró el valor
           if (irResponse?.valor !== null && irResponse?.valor !== undefined) {
             updates.tax = (Number(irResponse.valor) * 100).toFixed(2);
+          } else {
+            updates.tax = "";
           }
 
           // Actualizamos Devaluación si el backend encontró el valor
           if (devResponse?.valor !== null && devResponse?.valor !== undefined) {
             updates.devaluation = (Number(devResponse.valor) * 100).toFixed(2);
+          } else {
+            updates.devaluation = "";
           }
 
           return updates;
@@ -936,6 +950,7 @@ const KapitalPage: React.FC = () => {
             bonos={BONOS}
             bonosTranslations={BONOS_TRANSLATIONS}
             countries={COUNTRIES}
+            countriesTranslations={COUNTRIES_TRANSLATIONS}
             currencies={CURRENCIES}
           />
         </div>

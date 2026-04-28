@@ -37,7 +37,7 @@ export const BalanceSheetBlock: React.FC<{
             {/* Ocultamos la etiqueta en modo compacto si no entra, o puedes dejarla */}
           </div>
           <div
-            className={`text-center w-full text-gray-800 ${compact ? "text-[10px] mt-2.5" : "mt-auto mb-auto font-medium text-sm"}`}
+            className={`text-center w-full text-gray-800 ${compact ? "text-[10px] mt-2.5" : "mt-auto mb-auto font-medium text-[11px]"}`}
           >
             Kd(1-T) = {kd}
           </div>

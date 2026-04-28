@@ -19,6 +19,7 @@ interface FormSidebarProps {
   currencies: string[];
   industryTranslations: Record<string, string>;
   bonosTranslations: Record<string, string>;
+  countriesTranslations: Record<string, string>;
 }
 
 export const FormSidebar: React.FC<FormSidebarProps> = ({
@@ -36,6 +37,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
   currencies,
   industryTranslations,
   bonosTranslations,
+  countriesTranslations,
 }) => {
   const [collapsed, setCollapsed] = useState({ step1: false, step2: false });
 
@@ -118,6 +120,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 value={formData.country}
                 onChange={handleCustomInputChange}
                 options={countries}
+                translations={countriesTranslations}
                 required
               />
               <FormField
@@ -139,7 +142,6 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 step="any"
                 value={formData.tax}
                 onChange={handleCustomInputChange}
-                placeholder="Ej: 30"
                 suffix="%"
                 disabled
               />
