@@ -109,7 +109,7 @@ export interface Calculation {
 
 export interface CalculationCreate {
   calculation_file_id?: string | null;
-  user_id: number;
+  user_id: number | null;
   code: string;
   type: "valora" | "kapital";
   data?: Record<string, unknown> | null;

@@ -680,14 +680,6 @@ const KapitalPage: React.FC = () => {
       }
     }
 
-    if (!currentUserId) {
-      addToast(
-        "error",
-        "No se pudo identificar al usuario para guardar el cálculo."
-      );
-      return;
-    }
-
     setShowResults(false);
     setIsLoading(true);
 
@@ -712,7 +704,7 @@ const KapitalPage: React.FC = () => {
         // CREATE new calculation
         const created = await MainService.createCalculation({
           calculation_file_id: null,
-          user_id: currentUserId,
+          user_id: currentUserId || null,
           code: generateCalculationCode(),
           type: "kapital",
           data: {
