@@ -1,6 +1,6 @@
 import { MainPageHero } from "./MainPageHero";
 import { MainPageFooter } from "./MainPageFooter";
-import Chatbot from "./Chatbot";
+
 type FinancePageTemplateProps = {
   brandName: string;
   brandHref: string;

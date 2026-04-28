@@ -56,7 +56,6 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
   onToggleComparison,
   sensibilizaciones,
   //methodologyCategories,
-  onOpenReport,
 }) => {
   const [isCategoriaOpen, setIsCategoriaOpen] = useState(false);
   const [isModuloOpen, setIsModuloOpen] = useState(false);

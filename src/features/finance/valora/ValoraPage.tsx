@@ -97,6 +97,7 @@ const ValoraPage: React.FC = () => {
       brandName="Kapital"
       brandHref="/kapital"
       heroTitle="Bienvenido a Valora"
+      btnText="Valora"
       onOpenForm={() => setIsDesktopFormOpen((prev) => !prev)}
     />
   );

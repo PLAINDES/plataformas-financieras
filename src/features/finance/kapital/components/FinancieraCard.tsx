@@ -29,14 +29,6 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
   onResultCurrencyChange,
   compact = false,
 }) => {
-  let borderStyles = "border-gray-200 border";
-  if (isEmpresa && resultCurrency) {
-    borderStyles =
-      resultCurrency === "usd"
-        ? "border-orange-500 border-2"
-        : "border-green-500 border-2";
-  }
-
   return (
     <article
       className={`max-w-100 mx-auto bg-white shadow-md shadow-slate-300 flex flex-col ${

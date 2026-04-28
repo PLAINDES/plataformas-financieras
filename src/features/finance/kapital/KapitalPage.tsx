@@ -123,32 +123,6 @@ const toRate = (value: unknown): number => {
   return raw > 1 ? raw / 100 : raw;
 };
 
-const getYearAndQuarter = (dateStr: string) => {
-  if (!dateStr) return { year: null, quarter: null };
-
-  // Si la fecha es simplemente un año (ej. "2025")
-  if (/^\d{4}$/.test(dateStr.trim())) {
-    return { year: dateStr.trim(), quarter: "Q1" };
-  }
-
-  // Intentar parsear como fecha estándar ISO
-  const date = new Date(dateStr);
-  if (!isNaN(date.getTime())) {
-    const year = date.getFullYear().toString();
-    const month = date.getMonth() + 1; // getMonth es 0 indexado
-    const quarter = `Q${Math.ceil(month / 3)}`; // 1-3 -> Q1, 4-6 -> Q2, etc.
-    return { year, quarter };
-  }
-
-  // Fallback por si llega en formato raro (DD/MM/YYYY)
-  const yearMatch = dateStr.match(/\d{4}/);
-  if (yearMatch) {
-    return { year: yearMatch[0], quarter: "Q1" };
-  }
-
-  return { year: null, quarter: null };
-};
-
 const toMarketResults = (
   source: Record<string, unknown> | null
 ): MarketResults => {
