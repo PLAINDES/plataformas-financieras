@@ -94,7 +94,7 @@ export const COUNTRIES_TRANSLATIONS: Record<string, string> = {
   Peru: "Perú",
 };
 
-export const CURRENCIES = ["USD", "Moneda Local", "EUR"];
+export const CURRENCIES = ["USD", "Moneda Local"];
 
 export const REPORT_PRODUCTS = [
   {
