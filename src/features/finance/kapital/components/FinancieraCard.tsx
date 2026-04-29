@@ -51,7 +51,7 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
                     onResultCurrencyChange(e.target.value as "pen" | "usd")
                   }
                 >
-                  <option value="pen">PEN</option>
+                  <option value="pen">Moneda Local</option>
                   <option value="usd">USD</option>
                 </select>
               </div>

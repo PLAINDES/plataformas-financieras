@@ -83,7 +83,14 @@ const toOptionalNumber = (value: unknown): number | undefined => {
 };
 
 const toPossibleNumber = (value: string): string | number => {
-  const trimmed = value.trim();
+  // 1. Si ya es un número (viene del json del backend), lo pasamos directo
+  if (typeof value === "number") {
+    return value;
+  }
+
+  // 2. Para evitar crasheos por si llega un null o undefined accidental, lo forzamos a string de forma segura
+  const trimmed = String(value || "").trim();
+
   if (!trimmed) {
     return "";
   }
@@ -621,6 +628,24 @@ const KapitalPage: React.FC = () => {
 
     fetchAutoFillData();
   }, [formData.date, formData.country]);
+
+  // Sincroniza la moneda de los resultados con la moneda guardada en el cálculo oficial
+  useEffect(() => {
+    const inputs = currentCalculation?.data?.inputs;
+
+    if (Array.isArray(inputs) && inputs.length > 0) {
+      // 2. Declaramos que el elemento 0 es un objeto que puede tener cualquier propiedad
+      const firstInput = inputs[0] as Record<string, any>;
+      const savedCurrency = firstInput.moneda;
+
+      if (savedCurrency === "USD") {
+        setResultCurrency("usd");
+      } else if (savedCurrency) {
+        // "Moneda Local" o cualquier otro valor
+        setResultCurrency("pen");
+      }
+    }
+  }, [currentCalculation]);
 
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
