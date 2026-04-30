@@ -397,28 +397,43 @@ const KapitalPage: React.FC = () => {
   // Fetch del cálculo si la URL tiene un código (UUID)
   useEffect(() => {
     const loadFromUrl = async () => {
-      // Extrae el código de la URL, asumiendo formato /kapital/{code}
+      // Extrae el código de la URL, formato /kapital/{code}
       const pathParts = window.location.pathname.split("/");
       const code = pathParts[pathParts.length - 1];
 
       if (code && code !== "kapital" && code !== "") {
         try {
           setIsLoading(true);
-          const calc = await MainService.getCalculationByCode(code);
 
-          if (calc) {
-            setCurrentCalculation(calc);
+          const [calc, prewarmData] = await Promise.allSettled([
+            MainService.getCalculationByCode(code),
+            MainService.prewarmSession(),
+          ]);
+
+          // Si el pre-warm fue exitoso, guardamos el ID para que arranque el Heartbeat
+          if (
+            prewarmData.status === "fulfilled" &&
+            prewarmData.value?.session_id
+          ) {
+            setPrewarmedSessionId(prewarmData.value.session_id);
+          }
+          if (calc.status === "fulfilled" && calc.value) {
+            const calculationData = calc.value;
+            setCurrentCalculation(calculationData);
 
             // Reconstruir resultados y sensibilizaciones
             const { results: rebuiltResults, showCompanyCard: hasCompanyData } =
-              computeResultsFromCalculationData(calc.data);
-            const sensibilizacionData = extractSensibilizaciones(calc.data);
+              computeResultsFromCalculationData(calculationData.data);
+            const sensibilizacionData = extractSensibilizaciones(
+              calculationData.data
+            );
 
             // Reconstruir el formData con el último input guardado
-            const dataObj = calc.data as { inputs?: any[] };
+            const dataObj = calculationData.data as { inputs?: any[] };
             const latestInput = Array.isArray(dataObj.inputs)
               ? dataObj.inputs[0]
               : undefined;
+
             if (latestInput) {
               setFormData((prev) => ({
                 ...prev,
@@ -571,6 +586,42 @@ const KapitalPage: React.FC = () => {
     return { year: null, quarter: null };
   };
 
+  // UseEffect
+  useEffect(() => {
+    let intervalId: number;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 10; // 10 intentos * 2 min = 20 minutos máximo de vida
+
+    if (prewarmedSessionId) {
+      // 4 minutos = 240,000 ms (justo antes de los 5 min de expiración)
+      intervalId = window.setInterval(async () => {
+        attempts++;
+        if (attempts > MAX_ATTEMPTS) {
+          clearInterval(intervalId);
+          console.log(
+            "Se dejó expirar la sesión de Excel para ahorrar recursos."
+          );
+          return;
+        }
+
+        try {
+          await MainService.keepAliveSession(prewarmedSessionId);
+          console.log(
+            `Sesión Excel refrescada (intento ${attempts}/${MAX_ATTEMPTS})`
+          );
+        } catch (e) {
+          console.warn("Fallo el keep-alive, la sesión podría morir.", e);
+        }
+      }, 240000);
+    }
+
+    // Cleanup: Si el usuario cambia de página o cierra el componente, el intervalo se limpia
+    // y la sesión en Microsoft morirá a los 5 minutos solita.
+    return () => {
+      if (intervalId) window.clearInterval(intervalId);
+    };
+  }, [prewarmedSessionId]);
+
   // Comprobación de cambios en fecha o país para auto-rellenar complementos de IR y Devaluación
   useEffect(() => {
     const fetchAutoFillData = async () => {
@@ -721,6 +772,7 @@ const KapitalPage: React.FC = () => {
           {
             data: {
               inputs: [enrichCalculationInputPayload(formData)],
+              active_session_id: prewarmedSessionId,
             },
           }
         );
@@ -747,25 +799,18 @@ const KapitalPage: React.FC = () => {
         );
       }
 
+      const newSessionId = persistedCalculation.data?.active_session_id as
+        | string
+        | undefined;
+      if (newSessionId && newSessionId !== prewarmedSessionId) {
+        setPrewarmedSessionId(newSessionId);
+      }
+
       const { results: rebuiltResults, showCompanyCard: hasCompanyData } =
         computeResultsFromCalculationData(persistedCalculation.data);
       const sensibilizacionData = extractSensibilizaciones(
         persistedCalculation.data
       );
-
-      // Autorellenar el input de devaluación con la respuesta de Excel
-      /*if (rebuiltResults.expected_devaluation !== undefined) {
-        let devVal = rebuiltResults.expected_devaluation;
-        if (devVal > 0 && devVal < 1) {
-          devVal = devVal * 100;
-        }
-
-        // Actualizamos el form para que aparezca en el FormField deshabilitado
-        setFormData((prev) => ({
-          ...prev,
-          devaluation: devVal.toFixed(2),
-        }));
-      }*/
 
       setResults(rebuiltResults);
       setShowCompanyCard(hasCompanyData);
