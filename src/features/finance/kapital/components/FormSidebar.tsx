@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { FormField } from "../../components/FormField";
 import { FormSection } from "../../components/FormSection";
+import { Bot } from "lucide-react";
 
 interface FormSidebarProps {
   formData: any;
@@ -93,7 +94,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 onChange={handleCustomInputChange}
                 options={sectors}
                 translations={industryTranslations}
-                disabled={hasSensibilizaciones}
+                disabled={hasSensibilizaciones || isWaccCalculated}
                 layout="horizontal"
                 required
               />
@@ -104,7 +105,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 step="any"
                 value={formData.beta_unlevered_industry}
                 onChange={handleCustomInputChange}
-                suffix="%"
+                suffix="coef."
                 layout="horizontal"
                 disabled
               />
@@ -255,7 +256,12 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                   value={formData.beta_unlevered}
                   onChange={handleCustomInputChange}
                   placeholder="Ej: 0.9"
-                  suffix="coef."
+                  suffix={
+                    <>
+                      <Bot className="w-4 h-4 text-valora-primary" />
+                      <span className="font-bold text-valora-primary">IA</span>
+                    </>
+                  }
                   layout="horizontal"
                   disabled={!isWaccCalculated}
                 />

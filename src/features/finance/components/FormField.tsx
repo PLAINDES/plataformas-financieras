@@ -11,7 +11,7 @@ export interface FormFieldProps {
   required?: boolean;
   placeholder?: string;
   tooltip?: string;
-  suffix?: string;
+  suffix?: React.ReactNode;
   readOnly?: boolean;
   disabled?: boolean;
   translations?: Record<string, string>;
@@ -280,7 +280,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                 )}
               </div>
               {suffix && (
-                <span className="text-sm text-gray-600 px-2 py-1.5 bg-slate-100/80 border-l border-gray-300 whitespace-nowrap">
+                <span className="text-sm text-gray-600 px-2 py-1.5 bg-slate-100/80 border-l border-gray-300 whitespace-nowrap flex items-center justify-center gap-1">
                   {suffix}
                 </span>
               )}

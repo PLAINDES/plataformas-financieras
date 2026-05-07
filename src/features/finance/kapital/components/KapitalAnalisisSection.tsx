@@ -123,18 +123,10 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
           <section className="flex items-center border border-slate-600 rounded-[24px] bg-white shadow-md max-w-105 w-full xl:w-fit overflow-hidden">
             <div className="relative w-30 h-30 shrink-0 overflow-hidden shadow-inner">
               <img
-                src="/images/reportes-bg.jpg"
+                src="/images/prueba_portada.jpg"
                 alt="Fondo de reporte"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute flex flex-col justify-center items-center bottom-0 left-0 right-0 bg-white text-center shadow-sm w-full h-15 gap-0.5">
-                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-wide">
-                  Reporte Especializado
-                </p>
-                <p className="text-[10px] font-bold text-black uppercase leading-tight">
-                  Costo de Capital
-                </p>
-              </div>
             </div>
             <div className="flex flex-col justify-center gap-2 w-50 px-4 flex-1">
               <button

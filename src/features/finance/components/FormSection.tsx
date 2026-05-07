@@ -38,8 +38,8 @@ export const FormSection: React.FC<FormSectionProps> = ({
         <div className="flex items-center gap-1.5 shrink-0">
           {onToggleCollapse && (
             <svg
-              onClick={() => onToggleCollapse}
-              className={`w-5 h-5 text-gray-400  ${isCollapsed ? "rotate-180" : "rotate-0"}`}
+              onClick={onToggleCollapse}
+              className={`w-5 h-5 text-gray-400 cursor-pointer ${isCollapsed ? "rotate-180" : "rotate-0"}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

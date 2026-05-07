@@ -7,7 +7,7 @@ import {
   type FinancialData,
   type ChatbotProps,
 } from "./chatbot.interfaces";
-import { Sparkles, ArrowUp, RotateCcw, X } from "lucide-react";
+import { Bot, Sparkles, ArrowUp, RotateCcw, X } from "lucide-react";
 import { YahooResults, BetaUpdateCard } from "./ChatbotUI";
 
 const now = (): string =>
@@ -190,7 +190,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
           sumBetaUnlevered += randomBoa;
           return {
             ticker: ticker,
-            company_name: `Empresa Corp ${ticker}`,
+            company_name: `${ticker}`,
             country: "USA",
             sector: externalFormData.sector || "General",
             dc_ratio: 0.25,
@@ -320,7 +320,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
           isOpen ? "scale-90 opacity-0 pointer-events-none" : ""
         }`}
       >
-        <Sparkles className="h-6 w-6" />
+        <Bot className="h-6 w-6" />
       </button>
 
       {/* Ventana del Chatbot */}

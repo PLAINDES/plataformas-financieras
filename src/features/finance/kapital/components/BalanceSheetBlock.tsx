@@ -3,7 +3,14 @@ export const BalanceSheetBlock: React.FC<{
   kd: string;
   ke: string;
   compact: boolean;
-}> = ({ koa, kd, ke, compact }) => (
+}> = ({ koa, kd, ke, compact }) => {
+  const kdNum = parseFloat(kd) || 0;
+  const keNum = parseFloat(ke) || 0;
+  const total = kdNum + keNum;
+  const kdPerc = total > 0 ? (kdNum / total) * 100 : 33.33;
+  const kePerc = total > 0 ? (keNum / total) * 100 : 66.67;
+
+  return (
   <section
     className={`flex flex-col p-2 mx-auto w-full max-w-90 ${compact ? "gap-2" : "gap-3"}`}
   >
@@ -26,8 +33,8 @@ export const BalanceSheetBlock: React.FC<{
 
       {/* Lado Derecho: PASIVO Y PATRIMONIO */}
       <div className="w-1/2 flex flex-col p-0.5 gap-1">
-        {/* Pasivo (1/3 de la altura) */}
-        <div className="h-1/3 border-[3px] border-[#4caf50] rounded-tr-xl relative p-2 flex flex-col items-center justify-center shadow-sm">
+        {/* Pasivo */}
+        <div style={{ height: `${kdPerc}%` }} className="border-[3px] border-[#4caf50] rounded-tr-xl relative p-2 flex flex-col items-center justify-center shadow-sm min-h-[20%] transition-all duration-500">
           <div
             className={`absolute top-1 font-medium text-gray-400 text-center w-full uppercase tracking-wider ${compact ? "text-[10px] mb-2" : "text-[10px] block"}`}
           >
@@ -40,8 +47,8 @@ export const BalanceSheetBlock: React.FC<{
           </div>
         </div>
 
-        {/* Patrimonio (2/3 de la altura) */}
-        <div className="h-2/3 border-[3px] border-[#03a9f4] rounded-br-xl relative p-2 flex flex-col items-center justify-center shadow-sm">
+        {/* Patrimonio */}
+        <div style={{ height: `${kePerc}%` }} className="border-[3px] border-[#03a9f4] rounded-br-xl relative p-2 flex flex-col items-center justify-center shadow-sm min-h-[20%] transition-all duration-500">
           <div
             className={`absolute top-2 text-gray-400 text-center w-full uppercase tracking-wider ${compact ? "text-[10px]" : "font-medium text-[11px] block"}`}
           >
@@ -74,4 +81,5 @@ export const BalanceSheetBlock: React.FC<{
       </div>
     </footer>
   </section>
-);
+  );
+};
