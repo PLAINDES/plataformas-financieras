@@ -25,6 +25,7 @@ const ValoraPage: React.FC = () => {
     longgrowth: "",
     capitalcost: "",
     revenuegrowth: "",
+    beta_unlevered_industry: "",
   });
   const [fileUploaded, setFileUploaded] = useState(false);
   const [isDesktopFormOpen, setIsDesktopFormOpen] = useState(true);

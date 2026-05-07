@@ -134,6 +134,12 @@ export const MainService = {
     return api.post<{ session_id: string }>("main/calculations/prewarm");
   },
 
+  keepAliveSession: async (sessionId: string): Promise<void> => {
+    return api.post<void>("main/calculations/prewarm/keep-alive", {
+      session_id: sessionId,
+    });
+  },
+
   getReports: async (params?: {
     limit?: number;
     page?: number;

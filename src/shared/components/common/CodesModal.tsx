@@ -690,10 +690,7 @@ export const CodesModal = ({
         ) : (
           <div className="rounded-lg border border-gray-200 px-6 py-12 text-center text-gray-500">
             <p className="font-medium">No hay codigos ni graficos asociados</p>
-            <p className="text-sm mt-1">
-              Esta vista muestra codigos ya vinculados a la plantilla maestra.
-            </p>
-            <p className="text-sm mt-1 text-green-600">
+            <p className="text-base mt-1 text-green-600">
               Sube el Excel con los codigos para extraerlos y vincularlos a la
               plantilla.
             </p>

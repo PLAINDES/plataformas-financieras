@@ -1,14 +1,12 @@
 // features/finance/kapital/components/KapitalResults.tsx
 
-import { useState } from "react";
 import { KapitalResultadosSection } from "./KapitalResultadosSection";
 import { KapitalAnalisisSection } from "./KapitalAnalisisSection";
-import { KapitalMetodologiaSection } from "./MethodologyView";
 import { LoadingOverlay } from "@/shared/components/common/LoadingOverlay";
 import type { Results, SensibilizacionEntry } from "../KapitalPage";
 
 export interface KapitalResultsProps {
-  section: "result" | "analysis" | "methodology";
+  section: "result" | "sensitivity";
   results: Results | null;
   showCompanyCard: boolean;
   resultCurrency: "pen" | "usd";
@@ -23,9 +21,10 @@ export interface KapitalResultsProps {
   loading: boolean;
   methodologyCategories: MethodologyCategory[];
   showComparison: boolean;
-  onToggleComparison: () => void;
+  onToggleComparison: (show: boolean) => void;
   sensibilizaciones: SensibilizacionEntry[];
   onOpenReport?: () => void;
+  onSensibilizaClick: () => void;
 }
 
 interface MethodologyItem {
@@ -55,14 +54,9 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
   showComparison,
   onToggleComparison,
   sensibilizaciones,
-  //methodologyCategories,
+  onSensibilizaClick,
+  onOpenReport,
 }) => {
-  const [isCategoriaOpen, setIsCategoriaOpen] = useState(false);
-  const [isModuloOpen, setIsModuloOpen] = useState(false);
-  const [selectedMetodologiaItem, setSelectedMetodologiaItem] = useState<
-    "curso" | "mercado"
-  >("curso");
-
   if (loading) {
     return <LoadingOverlay />;
   }
@@ -81,9 +75,11 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
               showCompanyCard={showCompanyCard}
               resultCurrency={resultCurrency}
               onResultCurrencyChange={onResultCurrencyChange}
+              onSensibilizaClick={onSensibilizaClick}
+              onOpenReport={onOpenReport}
             />
           )}
-          {section === "analysis" && (
+          {section === "sensitivity" && (
             <KapitalAnalisisSection
               results={results}
               showCompanyCard={showCompanyCard}
@@ -100,32 +96,11 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
               showComparison={showComparison}
               onToggleComparison={onToggleComparison}
               sensibilizaciones={sensibilizaciones}
-            />
-          )}
-
-          {section === "methodology" && (
-            <KapitalMetodologiaSection
-              selectedMetodologiaItem={selectedMetodologiaItem}
-              isCategoriaOpen={isCategoriaOpen}
-              isModuloOpen={isModuloOpen}
-              onToggleCategoria={() => setIsCategoriaOpen((open) => !open)}
-              onToggleModulo={() => setIsModuloOpen((open) => !open)}
-              onSelectCurso={() => setSelectedMetodologiaItem("curso")}
-              onSelectMercado={() => setSelectedMetodologiaItem("mercado")}
+              onOpenReport={onOpenReport}
             />
           )}
         </div>
       </div>
-      {/*section === "result" && (
-        <aside className="hidden lg:flex shrink-0 w-40 xl:w-48 ml-8 items-center justify-center overflow-hidden">
-          <img
-            src="/images/side-proideas.jpeg"
-            alt="Sidebar Proideas Reporte"
-            onClick={onOpenReport}
-            className="cursor-pointer rounded-xl h-full w-fit"
-          />
-        </aside>
-      )*/}
     </div>
   );
 };

@@ -31,8 +31,8 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
 }) => {
   return (
     <article
-      className={`max-w-100 mx-auto bg-white shadow-md shadow-slate-300 flex flex-col ${
-        compact ? "rounded-2xl w-70 h-75" : "rounded-4xl h-full w-full"
+      className={`max-w-100 mx-auto bg-white shadow-md shadow-slate-300 flex flex-col w-full ${
+        compact ? "rounded-2xl h-full" : "rounded-4xl h-full"
       } `}
     >
       <main className="flex flex-col gap-y-2 flex-1">
@@ -42,10 +42,18 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
           }`}
         >
           <header className="flex flex-col gap-y-1 w-full relative">
-            {isEmpresa && onResultCurrencyChange && resultCurrency && (
-              <div className="absolute -top-2 right-0 z-10">
+            <div className="flex flex-row justify-between items-center w-full">
+              <h2
+                className={`font-semibold text-center my-auto text-gray-700 ${
+                  compact ? "text-sm " : "text-base"
+                }`}
+              >
+                {title}
+              </h2>
+
+              {isEmpresa && onResultCurrencyChange && resultCurrency && (
                 <select
-                  className="px-2 py-1 text-xs font-medium border border-gray-300 rounded focus:ring-2 focus:ring-valora-primary outline-none cursor-pointer bg-white"
+                  className="px-2 py-1 w-1/4 h-fit text-xs font-medium border border-gray-300 rounded focus:ring-2 focus:ring-valora-primary outline-none cursor-pointer bg-white my-auto"
                   value={resultCurrency}
                   onChange={(e) =>
                     onResultCurrencyChange(e.target.value as "pen" | "usd")
@@ -54,46 +62,34 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
                   <option value="pen">Moneda Local</option>
                   <option value="usd">USD</option>
                 </select>
-              </div>
-            )}
-
-            <h2
-              className={`font-semibold text-center text-gray-700 ${isEmpresa ? "mt-4" : ""} ${
-                compact ? "text-sm mt-1" : "text-base mt-3"
-              }`}
-            >
-              {title}
-            </h2>
+              )}
+            </div>
 
             {/* Layout de CPPC centrado y Kd a la derecha */}
-            <div className="relative w-full mt-2 flex flex-col items-center">
-              <span
-                className={`font-black text-gray-900 ${
-                  compact ? "text-xl" : "text-3xl"
-                }`}
-              >
-                {formatterx100p(data.cppc)}
-              </span>
-              <p
-                className={`${compact ? "text-[10px]" : "text-base"} text-gray-500 font-bold uppercase tracking-widest`}
-              >
-                CPPC
-              </p>
-              <div className="absolute bottom-0 right-0">
+            <div className="relative w-2/3 mt-2 flex flex-row items-center justify-between mx-auto">
+              <div className="px-4 text-center">
                 <span
-                  className={`font-bold text-gray-900 ${compact ? "text-xs" : "text-sm"}`}
+                  className={`font-black text-gray-900 ${
+                    compact ? "text-xl" : "text-3xl"
+                  }`}
                 >
-                  Kd={formatterx100p(data.kd)}
+                  {formatterx100p(data.cppc)}
                 </span>
+                <p
+                  className={`${compact ? "text-[10px]" : "text-base"} text-gray-500 font-bold uppercase tracking-widest text-center`}
+                >
+                  CPPC
+                </p>
               </div>
+              <span
+                className={`font-bold text-gray-900 ${compact ? "text-xs" : "text-sm"}`}
+              >
+                Kd={formatterx100p(data.kd)}
+              </span>
             </div>
           </header>
 
-          <div
-            className={`border-t border-gray-100 ${
-              compact ? "" : "mt-auto pt-3"
-            }`}
-          >
+          <div className={` ${compact ? "" : "mt-auto"}`}>
             <BalanceSheetBlock
               koa={formatterx100p(data.koa)}
               kd={formatterx100p(data.kd)}

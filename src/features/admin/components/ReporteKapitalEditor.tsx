@@ -888,7 +888,7 @@ export const ReporteKapitalEditor: React.FC = () => {
           </div>
 
           {/* ── Sidebar ── */}
-          <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0">
+          <aside className="w-full lg:w-72 xl:w-80 shrink-0">
             <p className="mb-3 text-[14px] font-bold tracking-widest text-slate-700 uppercase">
               Estructura de Tablas y Gráficos
             </p>

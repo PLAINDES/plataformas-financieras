@@ -2,8 +2,8 @@
 import { useState, useEffect } from "react";
 
 interface NavigationTabsProps {
-  selected: "result" | "analysis" | "methodology" | "";
-  onNavigate: (view: "result" | "analysis" | "methodology") => void;
+  selected: "result" | "sensitivity" | "";
+  onNavigate: (view: "result" | "sensitivity") => void;
   onOpenReport: () => void;
   hasResults: boolean;
 }
@@ -86,11 +86,11 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
           </button>
 
           <button
-            onClick={() => onNavigate("analysis")}
+            onClick={() => onNavigate("sensitivity")}
             className={`
               flex flex-row items-center justify-center gap-2 px-3 py-2.5 rounded-lg font-medium text-xs transition-all duration-200 flex-1
               ${
-                selected === "analysis"
+                selected === "sensitivity"
                   ? "bg-blue-50 text-blue-600 shadow-sm"
                   : "text-gray-700 hover:bg-gray-50"
               }
@@ -98,7 +98,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
           >
             <span
               className={
-                selected === "analysis" ? "text-blue-600" : "text-gray-400"
+                selected === "sensitivity" ? "text-blue-600" : "text-gray-400"
               }
             >
               <svg

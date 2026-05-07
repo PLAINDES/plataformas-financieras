@@ -1,6 +1,7 @@
 export interface FormData {
   date: string;
   sector: string;
+  beta_unlevered_industry: string;
   instrument?: string;
   bono?: string;
   country: string;

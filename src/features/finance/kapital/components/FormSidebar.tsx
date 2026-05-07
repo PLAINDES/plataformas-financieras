@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { FormField } from "../../components/FormField";
 import { FormSection } from "../../components/FormSection";
 
@@ -39,11 +39,23 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
   bonosTranslations,
   countriesTranslations,
 }) => {
-  const [collapsed, setCollapsed] = useState({ step1: false, step2: false });
-
-  const toggleCollapse = (step: "step1" | "step2") => {
+  const [collapsed, setCollapsed] = useState({
+    step1: false,
+    step2: false,
+    step3: false,
+  });
+  const hasAutoCollapsed = useRef(false);
+  const toggleCollapse = (step: "step1" | "step2" | "step3") => {
     setCollapsed((prev) => ({ ...prev, [step]: !prev[step] }));
   };
+
+  useEffect(() => {
+    if (isWaccCalculated && !hasAutoCollapsed.current) {
+      setCollapsed({ step1: true, step2: true, step3: true });
+
+      hasAutoCollapsed.current = true;
+    }
+  }, [isWaccCalculated]);
 
   const handleCustomInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -70,6 +82,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 value={formData.date}
                 onChange={handleCustomInputChange}
                 options={dates}
+                layout="horizontal"
                 required
               />
               <FormField
@@ -81,7 +94,19 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 options={sectors}
                 translations={industryTranslations}
                 disabled={hasSensibilizaciones}
+                layout="horizontal"
                 required
+              />
+              <FormField
+                label="Beta desapalancado"
+                name="beta_unlevered_industry"
+                type="number"
+                step="any"
+                value={formData.beta_unlevered_industry}
+                onChange={handleCustomInputChange}
+                suffix="%"
+                layout="horizontal"
+                disabled
               />
               <FormField
                 label="Tasa libre de riesgo"
@@ -90,6 +115,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 value={formData.instrument}
                 onChange={handleCustomInputChange}
                 options={instruments}
+                layout="horizontal"
                 required
               />
               <FormField
@@ -100,6 +126,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 onChange={handleCustomInputChange}
                 options={bonos}
                 translations={bonosTranslations}
+                layout="horizontal"
                 required
               />
             </div>
@@ -112,7 +139,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
             isCollapsed={collapsed.step2}
             onToggleCollapse={() => toggleCollapse("step2")}
           >
-            <div className="flex gap-2 flex-col">
+            <section className="flex gap-2 flex-col">
               <FormField
                 label="País"
                 name="country"
@@ -121,6 +148,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 onChange={handleCustomInputChange}
                 options={countries}
                 translations={countriesTranslations}
+                layout="horizontal"
                 required
               />
               <FormField
@@ -131,6 +159,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 value={formData.devaluation}
                 onChange={handleCustomInputChange}
                 suffix="%"
+                layout="horizontal"
                 disabled
               />
               <FormField
@@ -143,15 +172,18 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 value={formData.tax}
                 onChange={handleCustomInputChange}
                 suffix="%"
+                layout="horizontal"
                 disabled
               />
-            </div>
+            </section>
           </FormSection>
 
           {/* Section 3: Company */}
           <FormSection
             title="Inputs de su empresa"
             step={3}
+            isCollapsed={collapsed.step3}
+            onToggleCollapse={() => toggleCollapse("step3")}
             toggle={formData.typeId}
             onToggle={() =>
               handleCustomInputChange({
@@ -159,7 +191,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
               } as any)
             }
           >
-            <div className="flex gap-2 flex-col">
+            <section className="flex gap-2 flex-col">
               {/* Costo de deuda con selector de moneda */}
               <FormField
                 label="Costo de deuda"
@@ -171,13 +203,13 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 onChange={handleCustomInputChange}
                 placeholder="Ej: 8.5"
                 suffix="%"
+                layout="horizontal"
                 prefixSelect={{
                   name: "currency",
                   value: formData.currency,
                   options: currencies,
                 }}
               />
-
               <FormField
                 label="% de deuda"
                 name="debt"
@@ -189,6 +221,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 onChange={handleCustomInputChange}
                 placeholder="Ej: 40"
                 suffix="%"
+                layout="horizontal"
               />
               <FormField
                 label="% de capital"
@@ -201,50 +234,34 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 onChange={handleCustomInputChange}
                 placeholder="Ej: 60"
                 suffix="%"
+                layout="horizontal"
               />
-            </div>
+            </section>
           </FormSection>
 
           {/* Section 4: Financial Data */}
-          <FormSection
-            title="Datos financieros optimizados"
-            step={4}
-            tooltip="Use el chatbot de análisis
-                  financiero para obtener estos datos automáticamente."
-          >
-            <div className="flex gap-2 flex-col">
-              {/* Info Alert */}
-              {/*<div className="flex items-start gap-2 px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-lg">
-                <svg
-                  className="w-4 h-4 text-blue-600 shrink-0 mt-0.5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <p className="text-xs text-blue-800 leading-relaxed">
-                  <strong>Sugerencia:</strong> Use el chatbot de análisis
-                  financiero para obtener estos datos automáticamente.
-                </p>
-              </div>*/}
-              <FormField
-                label="Beta Desapalancado"
-                name="beta_unlevered"
-                type="number"
-                step="any"
-                value={formData.beta_unlevered}
-                onChange={handleCustomInputChange}
-                placeholder="Ej: 0.9"
-                suffix="coef."
-                disabled={!isWaccCalculated}
-                /*tooltip="Beta del sector sin apalancamiento financiero"*/
-              />
-            </div>
-          </FormSection>
+          {isWaccCalculated && (
+            <FormSection
+              title="Sensibiliza tu beta"
+              step={4}
+              tooltip="Use el chatbot de análisis financiero para obtener estos datos automáticamente."
+            >
+              <div className="flex gap-2 flex-col">
+                <FormField
+                  label="Beta Desapalancado"
+                  name="beta_unlevered"
+                  type="number"
+                  step="any"
+                  value={formData.beta_unlevered}
+                  onChange={handleCustomInputChange}
+                  placeholder="Ej: 0.9"
+                  suffix="coef."
+                  layout="horizontal"
+                  disabled={!isWaccCalculated}
+                />
+              </div>
+            </FormSection>
+          )}
         </div>
 
         {/* Footer - Submit Button */}
@@ -285,6 +302,8 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 </svg>
                 Calculando...
               </span>
+            ) : isWaccCalculated ? (
+              "COMPARAR TU WACC"
             ) : (
               "CALCULA TU WACC"
             )}
