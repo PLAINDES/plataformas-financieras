@@ -3,10 +3,11 @@
 import { BalanceSheetBlock } from "./BalanceSheetBlock";
 
 export interface MarketResults {
-  cppc: number;
-  kd: number;
-  ke: number;
-  koa: number;
+  cppc: number | string;
+  kd: number | string;
+  ke: number | string;
+  koa: number | string;
+  "kd(1-t)": string | number;
 }
 
 interface FinancieraCardProps {
@@ -18,8 +19,28 @@ interface FinancieraCardProps {
   compact?: boolean;
 }
 
-const formatterx100p = (value: number): string =>
-  `${(value * 100).toFixed(2)}%`;
+const formatterx100p = (value: number | string): string => {
+  if (typeof value === "string") return value;
+  return `${(value * 100).toFixed(2)}%`;
+};
+
+const formatSmartPercentage = (value?: string | number): string => {
+  if (value === undefined || value === null || value === "") {
+    return "0,00%";
+  }
+
+  // Si ya es un texto del backend (ej: "8,32%"), lo devolvemos tal cual
+  if (typeof value === "string") {
+    return value;
+  }
+
+  // Si es un número decimal puro (ej: 0.0832), lo formateamos a texto
+  if (typeof value === "number" && !isNaN(value)) {
+    return `${(value * 100).toFixed(2).replace(".", ",")}%`;
+  }
+
+  return "0,00%";
+};
 
 export const FinancieraCard: React.FC<FinancieraCardProps> = ({
   title,
@@ -92,7 +113,7 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
           <div className={` ${compact ? "" : "mt-auto"}`}>
             <BalanceSheetBlock
               koa={formatterx100p(data.koa)}
-              kd={formatterx100p(data.kd)}
+              kd_1_minus_t={formatSmartPercentage(data["kd(1-t)"])}
               ke={formatterx100p(data.ke)}
               compact={compact}
             />

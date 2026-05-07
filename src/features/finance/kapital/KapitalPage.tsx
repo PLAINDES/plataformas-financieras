@@ -57,17 +57,18 @@ export interface FormData {
 }
 
 export interface MarketResults {
-  cppc: number;
-  kd: number;
-  ke: number;
-  koa: number;
+  cppc: number | string;
+  kd: number | string;
+  ke: number | string;
+  koa: number | string;
+  "kd(1-t)": string | number;
 }
 
 export interface Results {
-  cppc: number;
-  kd: number;
-  ke: number;
-  koa: number;
+  cppc: number | string;
+  kd: number | string;
+  ke: number | string;
+  koa: number | string;
   boa?: number;
   emergent: MarketResults;
   developed: MarketResults;

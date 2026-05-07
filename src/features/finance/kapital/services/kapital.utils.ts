@@ -69,6 +69,10 @@ export const toMarketResults = (
     koa: toRate(source?.koa),
     kd: toRate(source?.kd),
     cppc: toRate(source?.cppc),
+    "kd(1-t)":
+      source?.["kd(1-t)"] !== undefined
+        ? toRate(source?.["kd(1-t)"])
+        : toRate(source?.["kd(1-T)"]),
   };
 };
 
