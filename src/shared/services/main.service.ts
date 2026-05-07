@@ -356,4 +356,13 @@ export const MainService = {
   deleteCover: async (id: number): Promise<void> => {
     return api.delete<void>(`main/covers/${id}`);
   },
+
+  // ==================== CHATBOT ====================
+  sendChatMessage: async (payload: {
+    message: string;
+    history: any[];
+    form_data: any;
+  }): Promise<any> => {
+    return api.post<any>("chatbot/chat", payload);
+  },
 };

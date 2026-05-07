@@ -556,7 +556,6 @@ export const ConfiguracionPage = () => {
             sheets.forEach((sheetName) => {
               const ws = wb.Sheets[sheetName];
               const data = utils.sheet_to_json(ws);
-              console.log(data);
               const mapped = data.map((row: any) => mapRow(row, sheetName));
               let normalizedMapped = mapped;
               if (activeTab === "damodaran") {
@@ -571,8 +570,6 @@ export const ConfiguracionPage = () => {
             });
           }
         }
-        console.log(parsedData);
-        console.log("ES TRIMESTRAL " + isTrimestral);
         parsedData = parsedData.sort((a, b) => {
           a = new Date(a.fecha).getTime();
           b = new Date(b.fecha).getTime();

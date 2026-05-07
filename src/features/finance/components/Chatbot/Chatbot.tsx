@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { MainService } from "@/shared/services/main.service";
 import {
   type CompanyData,
   type YahooFinanceData,
@@ -237,16 +238,8 @@ export const Chatbot: React.FC<ChatbotProps> = ({
           history: history,
           form_data: externalFormData,
         };
-        console.log("ENVIANDO A GEMINI:", payloadToVerify);
 
-        const res = await fetch("/api/v1/chatbot/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payloadToVerify),
-        });
-
-        if (!res.ok) throw new Error(`API error: ${res.status}`);
-        const data = await res.json();
+        const data = await MainService.sendChatMessage(payloadToVerify);
 
         // 1. Mostrar la respuesta de texto de la IA (limpia de tags técnicos)
         if (data.text) {
