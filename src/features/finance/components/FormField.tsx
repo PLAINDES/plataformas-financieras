@@ -18,6 +18,7 @@ export interface FormFieldProps {
   min?: number;
   max?: number;
   step?: string;
+  layout?: "vertical" | "horizontal";
   prefixSelect?: {
     name: string;
     value: string;
@@ -44,6 +45,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   min,
   max,
   step,
+  layout = "vertical",
   prefixSelect,
   onChange,
 }) => {
@@ -112,11 +114,29 @@ export const FormField: React.FC<FormFieldProps> = ({
   const displayValue = value ? translations?.[value] || value : "";
 
   return (
-    <div className="grid grid-cols-1 gap-2 md:grid-cols-12 md:items-center">
+    <div
+      className={
+        layout === "vertical"
+          ? "flex flex-col gap-1"
+          : "grid grid-cols-1 gap-2 md:grid-cols-12 md:items-center"
+      }
+    >
       {label != "" && (
-        <label className="text-sm text-gray-600 md:col-span-4">{label}</label>
+        <label
+          className={
+            layout === "vertical"
+              ? "text-sm text-gray-600"
+              : "text-sm text-gray-600 md:col-span-4"
+          }
+        >
+          {label}
+        </label>
       )}
-      <div className="md:col-span-8 bg-white">
+      <div
+        className={
+          layout === "horizontal" ? "md:col-span-8 bg-white" : "bg-white"
+        }
+      >
         {type === "select" ? (
           <div ref={containerRef} className="relative">
             <button
@@ -236,7 +256,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                   min={min}
                   max={max}
                   step={step}
-                  className={`w-full flex-1 px-3 py-1.5 text-sm outline-none focus:outline-none bg-transparent pr-8
+                  className={`w-full flex-1 px-3 py-1.5 text-sm outline-none focus:outline-none bg-transparent
                     ${readOnly || disabled ? "bg-gray-200 text-gray-500 cursor-not-allowed" : ""} 
                     ${type === "number" ? "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" : ""}
                   `}
@@ -260,7 +280,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                 )}
               </div>
               {suffix && (
-                <span className="text-sm text-gray-600 px-3 py-1.5 bg-slate-100/80 border-l border-gray-300 whitespace-nowrap">
+                <span className="text-sm text-gray-600 px-2 py-1.5 bg-slate-100/80 border-l border-gray-300 whitespace-nowrap">
                   {suffix}
                 </span>
               )}

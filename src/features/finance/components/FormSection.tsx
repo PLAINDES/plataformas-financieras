@@ -15,13 +15,11 @@ export const FormSection: React.FC<FormSectionProps> = ({
   step,
   title,
   children,
-  toggle,
-  onToggle,
   isCollapsed,
   onToggleCollapse,
   tooltip,
 }) => {
-  const isVisible = toggle !== undefined ? toggle : !isCollapsed;
+  const isVisible = !isCollapsed;
   return (
     <div className="rounded-lg w-full">
       <div className="flex items-center gap-2 border-b border-gray-50 bg-gray-50 px-3.5 py-2">
@@ -41,7 +39,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
           {onToggleCollapse && (
             <svg
               onClick={() => onToggleCollapse}
-              className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isCollapsed ? "rotate-180" : "rotate-0"}`}
+              className={`w-5 h-5 text-gray-400  ${isCollapsed ? "rotate-180" : "rotate-0"}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -53,35 +51,6 @@ export const FormSection: React.FC<FormSectionProps> = ({
                 d="M19 9l-7 7-7-7"
               />
             </svg>
-          )}
-
-          {toggle !== undefined && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onToggle) onToggle();
-              }}
-              className="cursor-pointer focus:outline-none transition-transform active:scale-90"
-              type="button"
-            >
-              {toggle ? (
-                <svg
-                  className="w-7 h-7 text-valora-primary"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M16 7H8C5.243 7 3 9.243 3 12s2.243 5 8 5h8c2.757 0 5-2.243 5-5s-2.243-5-5-5zM16 14a2 2 0 110-4 2 2 0 010 4z" />
-                </svg>
-              ) : (
-                <svg
-                  className="w-7 h-7 text-gray-300 hover:text-valora-primary"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M8 7h8c2.757 0 5 2.243 5 5s-2.243 5-5 5H8c-2.757 0-5-2.243-5-5s2.243-5 5-5zm0 7a2 2 0 100-4 2 2 0 000 4z" />
-                </svg>
-              )}
-            </button>
           )}
 
           {tooltip && (
@@ -109,7 +78,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
       </div>
 
       <div
-        className={`flex flex-col gap-3 transition-all duration-300 ease-in-out pl-3.5 overflow-visible
+        className={`flex flex-col pl-2 gap-3 transition-all duration-300 ease-in-out overflow-visible
           ${isVisible ? "max-h-250 opacity-100 pt-2" : "max-h-0 opacity-0 py-0"}`}
       >
         {children}

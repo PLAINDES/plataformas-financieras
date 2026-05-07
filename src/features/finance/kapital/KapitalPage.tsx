@@ -9,7 +9,7 @@ import { LoadingOverlay } from "@/shared/components/common/LoadingOverlay";
 import { ToastStack } from "@/shared/components/common/ToastStack";
 import { MainPageFooter } from "../components/MainPageFooter";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import Chatbot from "../components/Chatbot";
+import Chatbot from "../components/Chatbot/Chatbot";
 import type { ToastType } from "@/shared/types/toast.types";
 import { MainService } from "@/shared/services/main.service";
 import type { Calculation } from "@/shared/types";
@@ -27,9 +27,19 @@ import {
   BONOS_TRANSLATIONS,
 } from "@/shared/constants/kapital";
 
-interface FormData {
+import {
+  toOptionalNumber,
+  computeResultsFromCalculationData,
+  extractSensibilizaciones,
+  enrichCalculationInputPayload,
+  buildCalculationDataPayload,
+  generateCalculationCode,
+} from "./services/kapital.utils";
+
+export interface FormData {
   date: string;
   sector: string;
+  beta_unlevered_industry: string;
   instrument: string;
   bono: string;
   country: string;
@@ -74,222 +84,11 @@ export interface SensibilizacionEntry {
   empresa_soles?: MarketResults;
 }
 
-const toOptionalNumber = (value: unknown): number | undefined => {
-  if (value === null || value === undefined || value === "") {
-    return undefined;
-  }
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
-};
-
-const toPossibleNumber = (value: string): string | number => {
-  // 1. Si ya es un número (viene del json del backend), lo pasamos directo
-  if (typeof value === "number") {
-    return value;
-  }
-
-  // 2. Para evitar crasheos por si llega un null o undefined accidental, lo forzamos a string de forma segura
-  const trimmed = String(value || "").trim();
-
-  if (!trimmed) {
-    return "";
-  }
-  const parsed = Number(trimmed);
-  return Number.isFinite(parsed) ? parsed : trimmed;
-};
-
-const generateCalculationCode = () => {
-  const raw =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID().replaceAll("-", "")
-      : `${Date.now()}${Math.random().toString(36).slice(2, 18)}`;
-  return raw.slice(0, 32);
-};
-
-const hasCompanyInputData = (data: Record<string, unknown> | null): boolean => {
-  if (!data) return false;
-  const kd = toOptionalNumber(data.costo_deuda ?? data.kd);
-  const debt = toOptionalNumber(data.porcentaje_deuda ?? data.debt);
-  const capital = toOptionalNumber(data.porcentaje_capital ?? data.capital);
-
-  return kd !== undefined || debt !== undefined || capital !== undefined;
-};
-
-const toRate = (value: unknown): number => {
-  if (value === null || value === undefined || value === "") return 0;
-  // Handle string percentage values like "8,50%" or "10.19%"
-  if (typeof value === "string") {
-    const cleaned = value.replace("%", "").replace(/\s/g, "").replace(",", ".");
-    const parsed = parseFloat(cleaned);
-    if (!Number.isFinite(parsed)) return 0;
-    // If the value had % sign or is > 1, it's already in percentage form
-    if (value.includes("%")) return parsed / 100;
-    return parsed > 1 ? parsed / 100 : parsed;
-  }
-  const raw = toOptionalNumber(value);
-  if (raw === undefined) return 0;
-  return raw > 1 ? raw / 100 : raw;
-};
-
-const toMarketResults = (
-  source: Record<string, unknown> | null
-): MarketResults => {
-  return {
-    ke: toRate(source?.ke),
-    koa: toRate(source?.koa),
-    kd: toRate(source?.kd),
-    cppc: toRate(source?.cppc),
-  };
-};
-
-const pickBlock = (
-  resultEntry: Record<string, unknown>,
-  keys: string[]
-): Record<string, unknown> | null => {
-  for (const key of keys) {
-    const candidate = resultEntry[key];
-    if (candidate && typeof candidate === "object") {
-      return candidate as Record<string, unknown>;
-    }
-  }
-  return null;
-};
-
-const computeResultsFromCalculationData = (
-  data: Record<string, unknown> | null
-): { results: Results; showCompanyCard: boolean } => {
-  const root = data ?? {};
-  const inputs = Array.isArray(root.inputs) ? root.inputs : [];
-  const latestInput = inputs[inputs.length - 1];
-  const source =
-    latestInput && typeof latestInput === "object"
-      ? (latestInput as Record<string, unknown>)
-      : root;
-
-  const resultadosArray = Array.isArray(root.resultados)
-    ? root.resultados
-    : Array.isArray(root.resutados)
-      ? root.resutados
-      : [];
-  const latestResult =
-    resultadosArray.length > 0 && typeof resultadosArray[0] === "object"
-      ? (resultadosArray[0] as Record<string, unknown>)
-      : null;
-
-  const developedBlock = latestResult
-    ? pickBlock(latestResult, ["mercado_desarrollado", "Mercado Desarrollado"])
-    : null;
-  const emergentBlock = latestResult
-    ? pickBlock(latestResult, ["mercado_emergente", "Mercado Emergente"])
-    : null;
-  const companyUsdBlock = latestResult
-    ? pickBlock(latestResult, ["empresa_dolares", "Empresa Dolares"])
-    : null;
-  const companySolesBlock = latestResult
-    ? pickBlock(latestResult, ["empresa_soles", "Empresa Soles"])
-    : null;
-
-  const developed = toMarketResults(developedBlock);
-  const emergent = toMarketResults(emergentBlock);
-  const empresa_dolares = toMarketResults(companyUsdBlock);
-  const empresa_soles = toMarketResults(companySolesBlock);
-
-  const showCompanyCard = hasCompanyInputData(source);
-
-  // Choose which data to show in the top-level results (cppc, kd, ke, koa)
-  const primary = showCompanyCard ? empresa_dolares : emergent;
-
-  return {
-    results: {
-      cppc: primary.cppc,
-      kd: primary.kd,
-      ke: primary.ke,
-      koa: primary.koa,
-      boa: toOptionalNumber(latestResult?.boa),
-      emergent,
-      developed,
-      empresa_dolares,
-      empresa_soles,
-    },
-    showCompanyCard,
-  };
-};
-
-const extractSensibilizaciones = (
-  data: Record<string, unknown> | null
-): SensibilizacionEntry[] => {
-  const root = data ?? {};
-  const arr = Array.isArray(root.sensibilizacion) ? root.sensibilizacion : [];
-  return arr
-    .filter((e): e is Record<string, unknown> => !!e && typeof e === "object")
-    .map((entry) => ({
-      created_at: entry.created_at as string | undefined,
-      boa: toOptionalNumber(entry.boa),
-      mercado_desarrollado: toMarketResults(
-        pickBlock(entry, ["mercado_desarrollado"])
-      ),
-      mercado_emergente: toMarketResults(
-        pickBlock(entry, ["mercado_emergente"])
-      ),
-      empresa_dolares: toMarketResults(pickBlock(entry, ["empresa_dolares"])),
-      empresa_soles: toMarketResults(pickBlock(entry, ["empresa_soles"])),
-    }));
-};
-
-const buildCalculationDataPayload = () => {
-  return {
-    inputs: [],
-    resultados: [],
-    sensibilizacion: [],
-  } as Record<string, unknown>;
-};
-
-const enrichCalculationInputPayload = (formData: FormData) => {
-  const payload = {
-    fecha: toPossibleNumber(formData.date),
-    industria: toPossibleNumber(formData.sector),
-    tasa_libre_riesgo: toPossibleNumber(formData.instrument),
-    anio_bono: toPossibleNumber(formData.bono),
-    pais: toPossibleNumber(formData.country),
-    moneda: toPossibleNumber(formData.currency),
-  } as Record<string, unknown>;
-
-  const tax = toOptionalNumber(formData.tax);
-  const devaluation = toOptionalNumber(formData.devaluation);
-  const kd = toOptionalNumber(formData.kd);
-  const debt = toOptionalNumber(formData.debt);
-  const capital = toOptionalNumber(formData.capital);
-  const dcRatio = toOptionalNumber(formData.dc_ratio);
-  const effectiveTaxRate = toOptionalNumber(formData.effective_tax_rate);
-  const betaLevered = toOptionalNumber(formData.beta_levered);
-  const betaUnlevered = toOptionalNumber(formData.beta_unlevered);
-
-  if (tax !== undefined) payload.tasa_impositiva = tax;
-  if (devaluation !== undefined) payload.devaluacion = devaluation;
-  if (betaUnlevered !== undefined) payload.beta_desapalancado = betaUnlevered;
-  if (
-    formData.typeId ||
-    kd !== undefined ||
-    debt !== undefined ||
-    capital !== undefined
-  ) {
-    if (kd !== undefined) payload.costo_deuda = kd;
-    if (debt !== undefined) payload.porcentaje_deuda = debt;
-    if (capital !== undefined) payload.porcentaje_capital = capital;
-    if (dcRatio !== undefined) payload.dc_ratio = dcRatio;
-    if (effectiveTaxRate !== undefined) {
-      payload.tasa_efectiva_impuesto = effectiveTaxRate;
-    }
-    if (betaLevered !== undefined) payload.beta_apalancado = betaLevered;
-  }
-
-  return payload;
-};
-
 const KapitalPage: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     date: "",
     sector: "",
+    beta_unlevered_industry: "",
     instrument: "",
     bono: "",
     country: "",
@@ -307,11 +106,13 @@ const KapitalPage: React.FC = () => {
   });
 
   const [isFormOpen, setIsFormOpen] = useState(true);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isWaccCalculated, setIsWaccCalculated] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [resultsSection, setResultsSection] = useState<
-    "result" | "analysis" | "methodology"
+    "result" | "sensitivity"
   >("result");
   const [isReportSidebarOpen, setIsReportSidebarOpen] = useState(false);
   const [isReportViewerOpen, setIsReportViewerOpen] = useState(false);
@@ -343,9 +144,9 @@ const KapitalPage: React.FC = () => {
   const [dynamicDates, setDynamicDates] = useState<string[]>([]);
 
   // Booleans para controlar donde debe aparecer el boton de IA
-  const isViewingMethodology = showResults && resultsSection === "methodology";
-  const shouldShowChatbot = !isReportViewerOpen && !isViewingMethodology;
-
+  //const isViewingMethodology = showResults && resultsSection === "methodology";
+  //const shouldShowChatbot = !isReportViewerOpen && !isViewingMethodology && isWaccCalculated;
+  const shouldShowChatbot = !isReportViewerOpen && isWaccCalculated;
   // Estado para controlar el botón de Mostrar comparraciones
   const [showComparison, setShowComparison] = useState(false);
 
@@ -508,6 +309,81 @@ const KapitalPage: React.FC = () => {
       }
     }
   }, [formData.capital]);
+
+  // Comprobación para calcular automáticamente "Beta Unlevered Industry"
+  useEffect(() => {
+    const calculateBetaIndustry = async () => {
+      // 1. Validar que tengamos fecha y sector
+      if (!formData.date || !formData.sector) {
+        setFormData((prev) =>
+          prev.beta_unlevered_industry !== ""
+            ? { ...prev, beta_unlevered_industry: "" }
+            : prev
+        );
+        return;
+      }
+
+      const { year } = getYearAndQuarter(formData.date);
+      if (!year) return;
+
+      try {
+        // 2. Traer los complementos completos
+        // (Asumiendo que llamar a getTemplateComplements sin banderas trae el JSON completo)
+        const [damodaranResponse, taxResponse] = await Promise.all([
+          MainService.getTemplateComplements("damodaran"),
+          MainService.getTemplateComplements("tax"),
+        ]);
+
+        // Extraer los arrays "data" de las respuestas
+        const damodaranData = damodaranResponse?.[0]?.data || [];
+        const taxData = taxResponse?.[0]?.data || [];
+
+        // 3. Buscar los registros exactos por Año y Sector
+        const damoMatch = damodaranData.find(
+          (item: any) =>
+            String(item.fecha) === String(year) &&
+            item.industria === formData.sector
+        );
+
+        const taxMatch = taxData.find(
+          (item: any) => String(item.fecha) === String(year)
+        );
+
+        // 4. Si encontramos ambos, aplicamos la fórmula
+        if (damoMatch && taxMatch) {
+          const beta = Number(damoMatch.beta);
+          const d_sobre_def = Number(damoMatch.d_sobre_def);
+          const e_sobre_de = Number(damoMatch.e_sobre_de);
+          const tax_rate = Number(taxMatch.tax_rate);
+
+          // Prevenir divisiones entre cero o valores inválidos
+          if (
+            !isNaN(beta) &&
+            !isNaN(d_sobre_def) &&
+            !isNaN(e_sobre_de) &&
+            !isNaN(tax_rate) &&
+            e_sobre_de !== 0
+          ) {
+            // Fórmula: beta / (1 + (1-tax_rate) * (d_sobre_def / e_sobre_de))
+            const denominator = 1 + (1 - tax_rate) * (d_sobre_def / e_sobre_de);
+            const calculatedBeta = beta / denominator;
+
+            setFormData((prev) => ({
+              ...prev,
+              beta_unlevered_industry: calculatedBeta.toFixed(2),
+            }));
+          }
+        } else {
+          // Si no hay datos en la BD para ese año/sector, limpiamos el campo
+          setFormData((prev) => ({ ...prev, beta_unlevered_industry: "" }));
+        }
+      } catch (error) {
+        console.error("Error calculando beta unlevered industry:", error);
+      }
+    };
+
+    calculateBetaIndustry();
+  }, [formData.date, formData.sector]);
 
   useEffect(() => {
     if (!showResults) {
@@ -821,8 +697,9 @@ const KapitalPage: React.FC = () => {
       setIsFormOpen(false);
 
       if (isBetaUpdate) {
-        // Navigate a analysis cuando se manda el beta desapalancado para sensibilización
-        setResultsSection("analysis");
+        // Navigate a sensitivity cuando se manda el beta desapalancado para sensibilización
+        setResultsSection("sensitivity");
+        setShowComparison(false);
         addToast(
           "success",
           `Sensibilización calculada con β=${betaUnlevered} (cálculo #${persistedCalculation.id}).`
@@ -855,7 +732,7 @@ const KapitalPage: React.FC = () => {
   };
 
   const handleResultsSectionChange = (
-    nextSection: "result" | "analysis" | "methodology"
+    nextSection: "result" | "sensitivity"
   ) => {
     if (isReportViewerOpen) {
       setIsReportViewerOpen(false);
@@ -864,14 +741,24 @@ const KapitalPage: React.FC = () => {
       setIsReportSidebarOpen(false);
     }
     setResultsSection(nextSection);
-    if (nextSection === "methodology" && isFormOpen) {
+    /*if (nextSection === "methodology" && isFormOpen) {
       setIsFormOpen(false);
-    }
+    }*/
   };
 
   const handleReportSidebarOpen = () => {
     setIsReportSidebarOpen(true);
     if (isFormOpen) setIsFormOpen(false);
+  };
+
+  const handleOpenSensibilizacion = () => {
+    if (isChatbotOpen) {
+      setIsChatbotOpen(false);
+      setIsFormOpen(false);
+    } else {
+      setIsFormOpen(true);
+      setIsChatbotOpen(true);
+    }
   };
 
   const handleReportViewerOpen = () => {
@@ -883,7 +770,7 @@ const KapitalPage: React.FC = () => {
     // TODO: Implement logout functionality
   };
 
-  const getSelectedView = (): "result" | "analysis" | "methodology" | "" => {
+  const getSelectedView = (): "result" | "sensitivity" | "" => {
     if (!showResults || isReportViewerOpen) return "";
     return resultsSection;
   };
@@ -944,15 +831,14 @@ const KapitalPage: React.FC = () => {
           loading={isLoading}
           methodologyCategories={METHODOLOGY_CATEGORIES}
           showComparison={showComparison}
-          onToggleComparison={() => setShowComparison(true)}
+          onToggleComparison={setShowComparison}
           sensibilizaciones={sensibilizaciones}
           onOpenReport={handleReportSidebarOpen}
+          onSensibilizaClick={handleOpenSensibilizacion}
         />
       )}
 
-      {!showComparison && (
-        <MainPageFooter brandName="Valora" brandHref="/valora" />
-      )}
+      <MainPageFooter brandName="Valora" brandHref="/valora" />
     </div>
   ) : (
     <FinancePageTemplate
@@ -989,13 +875,13 @@ const KapitalPage: React.FC = () => {
       />
 
       <main
-        className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} h-screen transition-all duration-300 ${isFormOpen ? "lg:pl-105" : "lg:pl-0"}`}
+        className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} h-screen transition-all duration-300 ${isFormOpen ? "lg:pl-110" : "lg:pl-0"}`}
       >
         {mainContent}
       </main>
 
       <aside
-        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-105 border-r border-gray-200 bg-white shadow-sm transition-transform duration-200 ${isFormOpen ? "translate-x-0" : "-translate-x-105"}`}
+        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-110 border-r border-gray-200 bg-white shadow-sm transition-transform duration-200 ${isFormOpen ? "translate-x-0" : "-translate-x-105"}`}
       >
         <div className="h-full overflow-hidden">
           <FormSidebar
@@ -1027,7 +913,14 @@ const KapitalPage: React.FC = () => {
         onOpenReportViewer={handleReportViewerOpen}
       />
 
-      {shouldShowChatbot && <Chatbot geminiApiKey="" />}
+      {shouldShowChatbot && (
+        <Chatbot
+          formData={formData}
+          isWaccCalculated={isWaccCalculated}
+          isOpen={isChatbotOpen}
+          setIsOpen={setIsChatbotOpen}
+        />
+      )}
 
       <ToastStack toasts={toasts} onDismiss={removeToast} />
       {isLoading && <LoadingOverlay />}

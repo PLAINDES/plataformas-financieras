@@ -5,6 +5,7 @@ import { FinanceNavbar } from "@/features/finance/components/FinanceNavbar";
 import type { NavTab } from "@/features/finance/components/FinanceNavbar";
 import { UserMenu } from "@/shared/components/common/UserMenu";
 import type { User } from "@/shared/types/user.types";
+import { ChevronRight } from "lucide-react";
 
 interface NavbarProps {
   user: User | null;
@@ -12,12 +13,12 @@ interface NavbarProps {
   onToggleForm: () => void;
   isFormOpen: boolean;
   hasResults: boolean;
-  selected: "result" | "analysis" | "methodology" | "";
+  selected: "result" | "sensitivity" | "";
   logoHref?: string;
   logoSrc?: string;
   logoAlt?: string;
   projectsHref?: string;
-  onNavigate?: (view: "result" | "analysis" | "methodology") => void;
+  onNavigate?: (view: "result" | "sensitivity") => void;
   onOpenReport?: () => void;
 }
 
@@ -33,7 +34,6 @@ export const NavBar: React.FC<NavbarProps> = ({
   logoAlt = "Kapital Logo",
   projectsHref = "/usuario/proyectos",
   onNavigate,
-  onOpenReport,
 }) => {
   const tabs: NavTab[] = useMemo(() => {
     if (!hasResults) return [];
@@ -59,8 +59,8 @@ export const NavBar: React.FC<NavbarProps> = ({
         ),
       },
       {
-        id: "analysis",
-        label: "Análisis",
+        id: "sensitivity",
+        label: "Sensibilidad",
         icon: (
           <svg
             className="w-5 h-5"
@@ -77,7 +77,7 @@ export const NavBar: React.FC<NavbarProps> = ({
           </svg>
         ),
       },
-      {
+      /*{
         id: "methodology",
         label: "Metodología",
         icon: (
@@ -99,7 +99,7 @@ export const NavBar: React.FC<NavbarProps> = ({
           </svg>
         ),
         isInHeader: true,
-      },
+      },*/
     ];
   }, [hasResults]);
 
@@ -117,15 +117,18 @@ export const NavBar: React.FC<NavbarProps> = ({
       onToggleForm={onToggleForm}
       actions={
         <>
-          {hasResults && (
+          {/*hasResults && (
             <button
               onClick={onOpenReport}
               className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm border border-purple-600 text-purple-600 hover:bg-purple-50 cursor-pointer"
             >
               Reportes
             </button>
-          )}
-
+          )*/}
+          <a className="flex flex-row gap-1 px-3 py-2 bg-valora-primary text-white rounded-lg text-sm font-semibold hover:bg-valora-secondary cursor-pointer">
+            Curso de capacitación
+            <ChevronRight className="w-4 h-4 my-auto" />
+          </a>
           <UserMenu user={user} onLogout={onLogout}>
             <a
               href={projectsHref}
