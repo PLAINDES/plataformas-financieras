@@ -57,7 +57,7 @@ export const KapitalResultadosSection: React.FC<
 
   return (
     <>
-      <header className="flex flex-col md:flex-row justify-between items-center w-full">
+      <header className="max-lg:text-center mt-2 lg:mt-0 flex flex-col lg:flex-row justify-between items-center w-full gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">
             Resultados generales

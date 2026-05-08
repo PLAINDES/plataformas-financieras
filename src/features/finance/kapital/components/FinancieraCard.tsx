@@ -8,6 +8,7 @@ export interface MarketResults {
   ke: number | string;
   koa: number | string;
   "kd(1-t)": string | number;
+  D_empresa: string | number;
 }
 
 interface FinancieraCardProps {
@@ -116,6 +117,7 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
               kd_1_minus_t={formatSmartPercentage(data["kd(1-t)"])}
               ke={formatterx100p(data.ke)}
               compact={compact}
+              D_empresa={formatSmartPercentage(data.D_empresa)}
             />
           </div>
         </div>

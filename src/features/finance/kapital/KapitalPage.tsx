@@ -62,6 +62,7 @@ export interface MarketResults {
   ke: number | string;
   koa: number | string;
   "kd(1-t)": string | number;
+  D_empresa: string | number;
 }
 
 export interface Results {
@@ -74,6 +75,7 @@ export interface Results {
   developed: MarketResults;
   empresa_dolares: MarketResults;
   empresa_soles: MarketResults;
+  D_empresa: string | number;
 }
 
 export interface SensibilizacionEntry {
@@ -882,7 +884,7 @@ const KapitalPage: React.FC = () => {
       </main>
 
       <aside
-        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-110 border-r border-gray-200 bg-white shadow-sm transition-transform duration-200 ${isFormOpen ? "translate-x-0" : "-translate-x-105"}`}
+        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-105 border-r border-gray-200 bg-white shadow-sm transition-transform duration-200 ${isFormOpen ? "translate-x-0" : "-translate-x-105"}`}
       >
         <div className="h-full overflow-hidden">
           <FormSidebar
