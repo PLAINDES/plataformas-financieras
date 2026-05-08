@@ -66,7 +66,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
 
   return (
     <form id="wacc-form" onSubmit={onSubmit} className="flex h-full flex-col">
-      <div className="flex-1 bg-white p-2 flex flex-col">
+      <div className="flex-1 bg-white p-2 pb-0 flex flex-col">
         <div className="flex-1 overflow-y-auto flex flex-col gap-2 pb-2">
           {/* Section 1: Industry */}
           <FormSection
@@ -107,6 +107,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 onChange={handleCustomInputChange}
                 suffix="coef."
                 layout="horizontal"
+                showClearButton={false}
                 disabled
               />
               <FormField
@@ -128,6 +129,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 options={bonos}
                 translations={bonosTranslations}
                 layout="horizontal"
+                showClearButton={false}
                 required
               />
             </div>
@@ -161,6 +163,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 onChange={handleCustomInputChange}
                 suffix="%"
                 layout="horizontal"
+                showClearButton={false}
                 disabled
               />
               <FormField
@@ -174,6 +177,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 onChange={handleCustomInputChange}
                 suffix="%"
                 layout="horizontal"
+                showClearButton={false}
                 disabled
               />
             </section>
@@ -199,12 +203,14 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 name="kd"
                 type="number"
                 min={0}
+                max={200}
                 step="any"
                 value={formData.kd}
                 onChange={handleCustomInputChange}
                 placeholder="Ej: 8.5"
                 suffix="%"
                 layout="horizontal"
+                showClearButton={false}
                 prefixSelect={{
                   name: "currency",
                   value: formData.currency,
@@ -223,6 +229,8 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 placeholder="Ej: 40"
                 suffix="%"
                 layout="horizontal"
+                inputClassName="md:col-span-5"
+                showClearButton={false}
               />
               <FormField
                 label="% de capital"
@@ -236,6 +244,8 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 placeholder="Ej: 60"
                 suffix="%"
                 layout="horizontal"
+                inputClassName="md:col-span-5"
+                showClearButton={false}
               />
             </section>
           </FormSection>
@@ -252,6 +262,8 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                   label="Beta Desapalancado"
                   name="beta_unlevered"
                   type="number"
+                  min={0}
+                  max={3}
                   step="any"
                   value={formData.beta_unlevered}
                   onChange={handleCustomInputChange}
@@ -264,6 +276,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                   }
                   layout="horizontal"
                   disabled={!isWaccCalculated}
+                  showClearButton={false}
                 />
               </div>
             </FormSection>

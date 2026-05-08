@@ -19,6 +19,10 @@ export interface FormFieldProps {
   max?: number;
   step?: string;
   layout?: "vertical" | "horizontal";
+  showClearButton?: boolean;
+  inputClassName?: string;
+  integerOnly?: boolean;
+  maxDecimals?: number;
   prefixSelect?: {
     name: string;
     value: string;
@@ -46,6 +50,10 @@ export const FormField: React.FC<FormFieldProps> = ({
   max,
   step,
   layout = "vertical",
+  showClearButton = true,
+  inputClassName = "",
+  integerOnly = false,
+  maxDecimals,
   prefixSelect,
   onChange,
 }) => {
@@ -104,11 +112,35 @@ export const FormField: React.FC<FormFieldProps> = ({
   // Intercepta el cambio para bloquear números fuera de rango en tiempo real
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (type === "number" && e.target.value !== "") {
-      const numVal = Number(e.target.value);
-      if (max !== undefined && numVal > max) return; // Bloquea si supera max
-      if (min !== undefined && numVal < min) return; // Bloquea si es menor a min
+      const valString = e.target.value;
+
+      // 1. Bloquear si es solo enteros y escriben un punto/coma
+      if (integerOnly && (valString.includes(".") || valString.includes(","))) {
+        return;
+      }
+
+      // 2. Limitar decimales
+      if (maxDecimals !== undefined && valString.includes(".")) {
+        const decimals = valString.split(".")[1];
+        if (decimals && decimals.length > maxDecimals) return;
+      }
+
+      // 3. Limitar valor maximo y minimo
+      const numVal = Number(valString);
+      if (max !== undefined && numVal > max) return;
+      if (min !== undefined && numVal < min) return;
     }
     onChange(e);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const blockedKeys = ["e", "E", "+", "-"];
+    if (integerOnly) {
+      blockedKeys.push(".", ","); // Bloquea el punto si es entero
+    }
+    if (type === "number" && blockedKeys.includes(e.key)) {
+      e.preventDefault();
+    }
   };
 
   const displayValue = value ? translations?.[value] || value : "";
@@ -118,7 +150,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       className={
         layout === "vertical"
           ? "flex flex-col gap-1"
-          : "grid grid-cols-1 gap-2 md:grid-cols-12 md:items-center"
+          : "grid grid-cols-1 gap-2 md:grid-cols-16 md:items-center"
       }
     >
       {label != "" && (
@@ -126,7 +158,7 @@ export const FormField: React.FC<FormFieldProps> = ({
           className={
             layout === "vertical"
               ? "text-sm text-gray-600"
-              : "text-sm text-gray-600 md:col-span-4"
+              : "text-sm text-gray-600 md:col-span-6"
           }
         >
           {label}
@@ -134,7 +166,9 @@ export const FormField: React.FC<FormFieldProps> = ({
       )}
       <div
         className={
-          layout === "horizontal" ? "md:col-span-8 bg-white" : "bg-white"
+          layout === "horizontal"
+            ? `bg-white ${inputClassName || "md:col-span-10"}`
+            : "bg-white"
         }
       >
         {type === "select" ? (
@@ -155,7 +189,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                 {displayValue || "SELECCIONE"}
               </span>
             </button>
-            {value && !disabled && (
+            {value && !disabled && showClearButton && (
               <button
                 type="button"
                 className="absolute right-9 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
@@ -225,7 +259,7 @@ export const FormField: React.FC<FormFieldProps> = ({
             )}
           </div>
         ) : (
-          <div className="relative flex-1">
+          <div className="relative flex-1 flex items-center">
             <div
               className={`flex items-stretch border border-gray-300 rounded transition-colors focus-within:border-valora-primary ${
                 disabled ? "bg-gray-200" : ""
@@ -264,11 +298,12 @@ export const FormField: React.FC<FormFieldProps> = ({
                   value={value}
                   name={name}
                   onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
                   required={required}
                   readOnly={readOnly}
                   disabled={disabled}
                 />
-                {value && !readOnly && !disabled && (
+                {value && !readOnly && !disabled && showClearButton && (
                   <button
                     type="button"
                     className="absolute right-2 text-gray-400 hover:text-gray-600"
