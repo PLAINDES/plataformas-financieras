@@ -73,6 +73,7 @@ export const toMarketResults = (
       source?.["kd(1-t)"] !== undefined
         ? toRate(source?.["kd(1-t)"])
         : toRate(source?.["kd(1-T)"]),
+    D_empresa: toRate(source?.D_empresa),
   };
 };
 
@@ -147,6 +148,7 @@ export const computeResultsFromCalculationData = (
       developed,
       empresa_dolares,
       empresa_soles,
+      D_empresa: toRate(latestResult?.D_empresa),
     },
     showCompanyCard,
   };

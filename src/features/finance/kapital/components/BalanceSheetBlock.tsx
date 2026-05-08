@@ -3,20 +3,17 @@ export const BalanceSheetBlock: React.FC<{
   kd_1_minus_t: string;
   ke: string;
   compact: boolean;
-}> = ({ koa, kd_1_minus_t, ke, compact }) => {
-  // Función para parsear valores que pueden venir con comas (formato europeo) y símbolo %
+  D_empresa: string;
+}> = ({ koa, kd_1_minus_t, ke, compact, D_empresa }) => {
+  // 1. Convertimos el string ("44,00%") a un número válido para CSS (44)
   const parsePercentageValue = (value: string): number => {
     if (!value) return 0;
-    // Reemplazar comas por puntos y remover %
     const cleaned = value.replace(",", ".").replace("%", "");
     return parseFloat(cleaned) || 0;
   };
 
-  const kd1tNum = parsePercentageValue(kd_1_minus_t);
-  const keNum = parsePercentageValue(ke);
-  const total = kd1tNum + keNum;
-  const kd1tPerc = total > 0 ? (kd1tNum / total) * 100 : 33.33;
-  const kePerc = total > 0 ? (keNum / total) * 100 : 66.67;
+  const pasivoPerc = parsePercentageValue(D_empresa);
+  const patrimonioPerc = 100 - pasivoPerc;
 
   return (
     <section
@@ -41,10 +38,10 @@ export const BalanceSheetBlock: React.FC<{
 
         {/* Lado Derecho: PASIVO Y PATRIMONIO */}
         <div className="w-1/2 flex flex-col p-0.5 gap-1">
-          {/* Pasivo */}
+          {/* Pasivo (Deuda) */}
           <div
-            style={{ height: `${kd1tPerc}%` }}
-            className="border-[3px] border-[#4caf50] rounded-tr-xl relative p-2 flex flex-col items-center justify-center shadow-sm min-h-[25%] transition-all duration-500"
+            style={{ height: `calc(${pasivoPerc}% - 2px)` }}
+            className="border-[3px] border-[#4caf50] rounded-tr-xl relative p-2 flex flex-col items-center justify-center shadow-sm transition-all duration-500 overflow-hidden"
           >
             <div
               className={`absolute top-1 font-medium text-gray-400 text-center w-full uppercase tracking-wider ${compact ? "text-[10px] mb-2" : "text-[10px] block"}`}
@@ -58,10 +55,10 @@ export const BalanceSheetBlock: React.FC<{
             </div>
           </div>
 
-          {/* Patrimonio */}
+          {/* Patrimonio (Equity) */}
           <div
-            style={{ height: `${kePerc}%` }}
-            className="border-[3px] border-[#03a9f4] rounded-br-xl relative p-2 flex flex-col items-center justify-center shadow-sm min-h-[30%] transition-all duration-500"
+            style={{ height: `calc(${patrimonioPerc}% - 2px)` }}
+            className="border-[3px] border-[#03a9f4] rounded-br-xl relative p-2 flex flex-col items-center justify-center shadow-sm transition-all duration-500 overflow-hidden"
           >
             <div
               className={`absolute top-2 text-gray-400 text-center w-full uppercase tracking-wider ${compact ? "text-[10px]" : "font-medium text-[11px] block"}`}

@@ -7,7 +7,7 @@ import {
   type FinancialData,
   type ChatbotProps,
 } from "./chatbot.interfaces";
-import { Bot, Sparkles, ArrowUp, RotateCcw, X } from "lucide-react";
+import { Bot, ArrowUp, RotateCcw, X } from "lucide-react";
 import { YahooResults, BetaUpdateCard } from "./ChatbotUI";
 
 const now = (): string =>
@@ -164,24 +164,17 @@ export const Chatbot: React.FC<ChatbotProps> = ({
       addSimple("Buscando empresas comparables en el mercado...", "ai");
       setLoading(true);
       try {
-        /*const res = await fetch("/api/analyze-companies", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tickers }),
-        });
-        if (!res.ok) throw new Error(`Error ${res.status}`);
-        const data: YahooFinanceData = await res.json();
-        if (data.success && data.valid_companies?.length) {
-          pushItem({ id: uid(), type: "yahoo", yahooData: data, time: now() });
+        const res = await MainService.analyzeCompanies(tickers);
+
+        if (res.success && res.valid_companies?.length) {
+          pushItem({ id: uid(), type: "yahoo", yahooData: res, time: now() });
         } else {
           addSimple(
-            "⚠️ No se pudieron obtener datos válidos de Yahoo Finance.",
+            "No se pudieron obtener datos válidos de Yahoo Finance para los tickers proporcionados.",
             "ai"
           );
-        }*/
-        // Retraso simulado
-        await new Promise((resolve) => setTimeout(resolve, 300));
-
+        }
+        /*
         let sumBetaUnlevered = 0;
 
         // Datos de prueba para cada ticker
@@ -219,9 +212,9 @@ export const Chatbot: React.FC<ChatbotProps> = ({
             "No se pudieron obtener datos válidos de Yahoo Finance.",
             "ai"
           );
-        }
+        }*/
       } catch (e: any) {
-        addSimple(`❌ Error analizando empresas: ${e.message}`, "ai");
+        addSimple(`Error analizando empresas: ${e.message}`, "ai");
       } finally {
         setLoading(false);
       }
@@ -316,7 +309,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? "Cerrar chat" : "Abrir chat"}
-        className={`cursor-pointer fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-valora-primary text-white shadow-xl shadow-valora-primary/30 transition-all hover:scale-105 active:scale-95 ${
+        className={`cursor-pointer fixed bottom-8 right-3 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-valora-primary text-white shadow-xl shadow-valora-primary/30 transition-all hover:scale-105 active:scale-95 ${
           isOpen ? "scale-90 opacity-0 pointer-events-none" : ""
         }`}
       >
@@ -325,7 +318,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 
       {/* Ventana del Chatbot */}
       <div
-        className={`fixed bottom-6 right-6 z-50 flex w-[calc(100vw-3rem)] max-w-105 flex-col overflow-hidden rounded-[24px] border border-gray-200 bg-gray-50 shadow-2xl transition-all duration-300 h-[min(650px,calc(100vh-3rem))] ${
+        className={`fixed bottom-8 right-8 z-50 flex w-[calc(100vw-3rem)] max-w-105 flex-col overflow-hidden rounded-[24px] border border-gray-200 bg-gray-50 shadow-2xl transition-all duration-300 h-[min(650px,calc(100vh-3rem))] ${
           isOpen
             ? "translate-y-0 opacity-100"
             : "pointer-events-none translate-y-4 opacity-0"
@@ -336,7 +329,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
           {/* Píldora Central */}
           <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-sm border border-gray-100">
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-valora-primary text-white">
-              <Sparkles className="h-3.5 w-3.5" />
+              <Bot className="h-3.5 w-3.5" />
             </div>
             <span className="text-[13px] font-bold text-gray-800">
               Betito WACC
@@ -367,7 +360,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
           {isEmpty ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm border border-gray-200 rotate-3">
-                <Sparkles className="h-8 w-8 text-valora-primary" />
+                <Bot className="h-8 w-8 text-valora-primary" />
               </div>
               <h3 className="text-[17px] font-bold text-gray-800">
                 Hola, soy Betito
@@ -419,7 +412,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                         // Burbuja del Bot
                         <div className="flex max-w-[90%] gap-2.5">
                           <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-valora-primary text-white shadow-sm">
-                            <Sparkles className="h-3.5 w-3.5" />
+                            <Bot className="h-3.5 w-3.5" />
                           </div>
                           <div className="flex flex-col items-start w-full overflow-hidden">
                             <div className="rounded-4xl rounded-tl-sm border border-gray-100 bg-white px-4 py-2.5 text-[14px] text-gray-800 shadow-sm max-w-full">
@@ -445,7 +438,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                       className="flex max-w-[95%] gap-2.5 animate-in slide-in-from-bottom-2 fade-in duration-300"
                     >
                       <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-valora-primary text-white shadow-sm">
-                        <Sparkles className="h-3.5 w-3.5" />
+                        <Bot className="h-3.5 w-3.5" />
                       </div>
                       <div className="flex w-full flex-col items-start">
                         <div className="w-full rounded-2xl rounded-tl-sm border border-gray-100 bg-white p-4 shadow-sm flex flex-col gap-3">
@@ -479,7 +472,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                       className="flex max-w-[95%] gap-2.5 animate-in slide-in-from-bottom-2 fade-in duration-300"
                     >
                       <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-800 text-white shadow-sm">
-                        <Sparkles className="h-3.5 w-3.5" />
+                        <Bot className="h-3.5 w-3.5" />
                       </div>
                       <div className="flex w-full flex-col items-start">
                         <div className="w-full rounded-4xl rounded-tl-sm border border-gray-100 bg-white p-3.5 shadow-sm">
@@ -503,7 +496,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
               {loading && items[items.length - 1]?.msg?.sender === "user" && (
                 <div className="flex max-w-[85%] gap-2.5 animate-in fade-in">
                   <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-800 text-white shadow-sm">
-                    <Sparkles className="h-3.5 w-3.5" />
+                    <Bot className="h-3.5 w-3.5" />
                   </div>
                   <div className="flex items-center gap-1.5 rounded-4xl rounded-tl-sm border border-gray-100 bg-white px-4 py-3.5 shadow-sm">
                     <span
@@ -569,7 +562,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
           <div className="bg-white rounded-xl shadow-2xl w-[90vw] max-w-2xl max-h-[85vh] overflow-hidden flex flex-col animate-in zoom-in-95">
             <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100 bg-gray-50/50">
               <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-valora-primary" />
+                <Bot className="w-5 h-5 text-valora-primary" />
                 Empresas Comparables
               </h3>
               <button

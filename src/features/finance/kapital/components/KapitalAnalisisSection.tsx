@@ -120,12 +120,12 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
 
         {/* Lado Derecho: Banner de Reporte */}
         <div className="xl:w-1/3 flex justify-center xl:justify-end w-full">
-          <section className="flex items-center border border-slate-600 rounded-[24px] bg-white shadow-md max-w-105 w-full xl:w-fit overflow-hidden">
-            <div className="relative w-30 h-30 shrink-0 overflow-hidden shadow-inner">
+          <section className="flex items-center border border-slate-400/50 rounded-[24px] bg-white shadow-md max-w-105 w-full xl:w-fit overflow-hidden">
+            <div className="relative w-30 h-30 shrink-0 overflow-hidden shadow-inner px-1 py-2">
               <img
                 src="/images/prueba_portada.jpg"
                 alt="Fondo de reporte"
-                className="w-full h-full object-cover"
+                className="h-full mx-auto object-cover object-top border border-slate-600 rounded-xs shadow-xs shadow-slate-600"
               />
             </div>
             <div className="flex flex-col justify-center gap-2 w-50 px-4 flex-1">
@@ -150,7 +150,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
         {showComparison ? (
           <div className="flex flex-col xl:flex-row w-full max-w-350 mx-auto gap-2 items-center">
             {/* COLUMNA IZQUIERDA: Mercado Desarrollado estático */}
-            <div className="flex flex-col justify-center w-2/5">
+            <div className="flex flex-col justify-center w-full md:w-2/5">
               <FinancieraCard
                 title="Mercado Desarrollado"
                 data={developedData}

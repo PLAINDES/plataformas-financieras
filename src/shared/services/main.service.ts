@@ -365,4 +365,8 @@ export const MainService = {
   }): Promise<any> => {
     return api.post<any>("chatbot/chat", payload);
   },
+
+  analyzeCompanies: async (tickers: string[]): Promise<any> => {
+    return api.post<any>("chatbot/analyze-companies", { tickers });
+  },
 };
