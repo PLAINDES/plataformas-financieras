@@ -164,6 +164,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 suffix="%"
                 layout="horizontal"
                 showClearButton={false}
+                inputClassName="col-span-4"
                 disabled
               />
               <FormField
@@ -178,6 +179,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 suffix="%"
                 layout="horizontal"
                 showClearButton={false}
+                inputClassName="col-span-4"
                 disabled
               />
             </section>
