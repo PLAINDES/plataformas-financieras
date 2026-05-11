@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FinancieraCard } from "./FinancieraCard";
 import type { Results, SensibilizacionEntry } from "../KapitalPage";
-import { File } from "lucide-react";
+import { Book } from "./Book";
 
 const BoaIndicator = ({ value }: { value: number | string }) => (
   <div className="w-1/4 flex justify-center items-center h-full m-auto px-4">
@@ -72,7 +72,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
 
   return (
     <>
-      <header className="flex flex-col xl:flex-row justify-between items-center w-full gap-6">
+      <header className="flex flex-col xl:flex-row mt-2 lg:mt-0 justify-between items-center w-full gap-6">
         <div className="xl:w-1/3 text-center xl:text-left">
           <h1 className="text-2xl font-bold text-gray-900 mb-1">
             Resultados generales
@@ -120,26 +120,21 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
 
         {/* Lado Derecho: Banner de Reporte */}
         <div className="xl:w-1/3 flex justify-center xl:justify-end w-full">
-          <section className="flex items-center border border-slate-400/50 rounded-[24px] bg-white shadow-md max-w-105 w-full xl:w-fit overflow-hidden">
-            <div className="relative w-30 h-30 shrink-0 overflow-hidden shadow-inner px-1 py-2">
-              <img
-                src="/images/prueba_portada.jpg"
-                alt="Fondo de reporte"
-                className="h-full mx-auto object-cover object-top border border-slate-600 rounded-xs shadow-xs shadow-slate-600"
-              />
-            </div>
-            <div className="flex flex-col justify-center gap-2 w-50 px-4 flex-1">
+          <section className="flex flex-row items-center justify-center rounded-[24px] max-w-105 w-full xl:w-fit overflow-visible">
+            <Book
+              href="/images/prueba_portada.jpg"
+              width={120}
+              height={160}
+              interactive={false}
+            />
+            <div className="flex flex-col justify-center gap-2 flex-1">
               <button
                 onClick={onOpenReport}
-                className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-xs font-bold py-4 px-3 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer"
+                className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer "
               >
-                Genera Tu Reporte
-              </button>
-              <button className="flex items-center justify-center gap-2 group bg-slate-100 border border-slate-300 rounded-2xl px-1 py-1 text-slate-500 cursor-pointer hover:bg-slate-200 transition-colors">
-                <File className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-semibold group-hover:text-slate-700 transition-colors">
-                  Conozca la metodología
-                </span>
+                Reporte de
+                <br />
+                Costo de Capital
               </button>
             </div>
           </section>
@@ -190,7 +185,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
 
               {/* SELECTOR DE SENSIBILIZACIÓN */}
               {sensibilizaciones.length > 1 && (
-                <div className="w-full border-gray-200 flex items-center justify-center gap-3">
+                <div className="w-full border-gray-200 flex flex-col md:flex-row items-center justify-center gap-3">
                   <label className="text-sm font-semibold text-gray-700">
                     Sensibilización:
                   </label>

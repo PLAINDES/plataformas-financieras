@@ -150,7 +150,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       className={
         layout === "vertical"
           ? "flex flex-col gap-1"
-          : "grid grid-cols-1 gap-2 md:grid-cols-16 md:items-center"
+          : "grid gap-2 grid-cols-16 md:items-center"
       }
     >
       {label != "" && (
@@ -158,7 +158,7 @@ export const FormField: React.FC<FormFieldProps> = ({
           className={
             layout === "vertical"
               ? "text-sm text-gray-600"
-              : "text-sm text-gray-600 md:col-span-6"
+              : "text-sm text-gray-600 col-span-6"
           }
         >
           {label}
@@ -167,7 +167,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       <div
         className={
           layout === "horizontal"
-            ? `bg-white ${inputClassName || "md:col-span-10"}`
+            ? `bg-white ${inputClassName || "col-span-10"}`
             : "bg-white"
         }
       >
@@ -175,7 +175,7 @@ export const FormField: React.FC<FormFieldProps> = ({
           <div ref={containerRef} className="relative">
             <button
               type="button"
-              className={`w-full rounded border border-gray-300 px-3 py-1.5 pr-16 text-left text-sm focus:border-valora-primary ${
+              className={`w-full rounded border border-gray-300 px-2 py-1.5 pr-16 text-left text-sm focus:border-valora-primary ${
                 disabled
                   ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                   : "cursor-pointer"
@@ -226,7 +226,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                 <div className="border-b border-gray-100 p-2">
                   <input
                     type="text"
-                    className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-valora-primary"
+                    className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:border-valora-primary"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     autoComplete="off"
@@ -235,7 +235,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                 </div>
                 <div className="max-h-52 overflow-auto">
                   {filteredOptions.length === 0 ? (
-                    <div className="px-3 py-1.5 text-gray-500">
+                    <div className="px-2 py-1.5 text-gray-500">
                       Sin resultados
                     </div>
                   ) : (
@@ -245,7 +245,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                         <button
                           key={option}
                           type="button"
-                          className="w-full px-3 py-1.5 text-left hover:bg-sky-50"
+                          className="w-full px-2 py-1.5 text-left hover:bg-sky-50"
                           onMouseDown={(event) => event.preventDefault()}
                           onClick={() => handleSelect(option)}
                         >
@@ -290,7 +290,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                   min={min}
                   max={max}
                   step={step}
-                  className={`w-full flex-1 px-3 py-1.5 text-sm outline-none focus:outline-none bg-transparent
+                  className={`w-full flex-1 px-2 py-1.5 text-sm outline-none focus:outline-none bg-transparent
                     ${readOnly || disabled ? "bg-gray-200 text-gray-500 cursor-not-allowed" : ""} 
                     ${type === "number" ? "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" : ""}
                   `}

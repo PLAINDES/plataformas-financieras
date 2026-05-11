@@ -778,6 +778,20 @@ const KapitalPage: React.FC = () => {
     return resultsSection;
   };
 
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 540;
+
+    if (isFormOpen && isMobile) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isFormOpen]);
+
   const mainContent = showResults ? (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       {isReportViewerOpen ? (
@@ -878,15 +892,15 @@ const KapitalPage: React.FC = () => {
       />
 
       <main
-        className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} h-screen transition-all duration-300 ${isFormOpen ? "lg:pl-110" : "lg:pl-0"}`}
+        className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} h-screen transition-all duration-300 ${isFormOpen ? "lg:pl-100" : "lg:pl-0"}`}
       >
         {mainContent}
       </main>
 
       <aside
-        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-105 border-r border-gray-200 bg-white shadow-sm transition-transform duration-200 ${isFormOpen ? "translate-x-0" : "-translate-x-105"}`}
+        className={`fixed left-0 top-16 max-[540px]:z-70 z-40 h-[calc(100dvh-4rem)] max-[540px]:w-full w-100 border-r border-gray-200 bg-white shadow-sm transition-transform duration-200 ${isFormOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <div className="h-full overflow-hidden">
+        <div className="h-full">
           <FormSidebar
             formData={formData}
             onInputChange={handleInputChange}
@@ -921,7 +935,12 @@ const KapitalPage: React.FC = () => {
           formData={formData}
           isWaccCalculated={isWaccCalculated}
           isOpen={isChatbotOpen}
-          setIsOpen={setIsChatbotOpen}
+          setIsOpen={(val: boolean) => {
+            setIsChatbotOpen(val);
+            if (val && !isFormOpen) {
+              setIsFormOpen(true);
+            }
+          }}
         />
       )}
 

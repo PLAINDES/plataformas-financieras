@@ -309,7 +309,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? "Cerrar chat" : "Abrir chat"}
-        className={`cursor-pointer fixed bottom-8 right-3 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-valora-primary text-white shadow-xl shadow-valora-primary/30 transition-all hover:scale-105 active:scale-95 ${
+        className={`cursor-pointer fixed bottom-8 right-3 max-[540px]:bottom-3 z-80 flex h-14 w-14 items-center justify-center rounded-full bg-valora-primary text-white shadow-xl shadow-valora-primary/30 transition-all hover:scale-105 active:scale-95 ${
           isOpen ? "scale-90 opacity-0 pointer-events-none" : ""
         }`}
       >
@@ -318,7 +318,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 
       {/* Ventana del Chatbot */}
       <div
-        className={`fixed bottom-8 right-8 z-50 flex w-[calc(100vw-3rem)] max-w-105 flex-col overflow-hidden rounded-[24px] border border-gray-200 bg-gray-50 shadow-2xl transition-all duration-300 h-[min(650px,calc(100vh-3rem))] ${
+        className={`fixed bottom-8 right-8 z-80 flex w-[calc(100vw-3rem)] max-w-105 flex-col overflow-hidden rounded-[24px] border border-gray-200 bg-gray-50 shadow-2xl transition-all duration-300 h-[min(650px,calc(100vh-3rem))] ${
           isOpen
             ? "translate-y-0 opacity-100"
             : "pointer-events-none translate-y-4 opacity-0"
@@ -326,33 +326,31 @@ export const Chatbot: React.FC<ChatbotProps> = ({
       >
         {/* Header tipo Píldora Flotante */}
         <div className="relative flex w-full items-start justify-between px-4 pt-4 pb-2 z-10">
-          {/* Píldora Central */}
-          <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-sm border border-gray-100">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-valora-primary text-white">
-              <Bot className="h-3.5 w-3.5" />
+          {/* Píldora izquierda */}
+          <section className="flex flex-row gap-1">
+            <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-sm border border-gray-100">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-valora-primary text-white">
+                <Bot className="h-3.5 w-3.5" />
+              </div>
+              <span className="text-[13px] font-bold text-gray-800">
+                Betito WACC
+              </span>
+              <span className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]"></span>
             </div>
-            <span className="text-[13px] font-bold text-gray-800">
-              Betito WACC
-            </span>
-            <span className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]"></span>
-          </div>
-
-          {/* Botones de acción */}
-          <div className="flex gap-1.5 my-auto">
             <button
               onClick={clearHistory}
-              className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-green-600 transition-colors hover:bg-gray-200/80 shadow-sm border"
+              className="my-auto flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-green-600 transition-colors hover:bg-gray-200/80 shadow-sm border"
               title="Reiniciar conversación"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-red-600 transition-colors hover:bg-valora-primary/20 shadow-sm border"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          </section>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="my-auto flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-red-600 transition-colors hover:bg-valora-primary/20 shadow-sm border"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
         {/* Área de Mensajes */}
