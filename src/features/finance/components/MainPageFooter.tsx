@@ -12,14 +12,14 @@ export const MainPageFooter: React.FC<MainPageFooterProps> = ({
   return (
     <footer className="py-2 bg-[#e8fff3] border-t border-green-100 ">
       <section className="container mx-auto px-4 py-5 w-full">
-        <main className="flex flex-row items-center justify-evenly gap-x-16">
+        <main className="flex flex-row items-center justify-evenly gap-x-2 md:gap-x-16">
           <a
-            className="border border-gray-300 relative w-24 h-24 self-end bg-linear-to-br from-slate-300 to-slate-200 rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+            className="border border-gray-300 relative size-18 md:w-24 md:h-24 self-end bg-linear-to-br from-slate-300 to-slate-200 rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-shadow cursor-pointer"
             href={brandHref}
           >
             <img
               src="/images/logo-valora.png"
-              className="absolute w-16 h-10 my-auto"
+              className="absolute w-12 h-8 md:w-16 md:h-10 my-auto"
               alt={brandName || "Logo"}
             />
           </a>
@@ -28,11 +28,11 @@ export const MainPageFooter: React.FC<MainPageFooterProps> = ({
               <img
                 src="/images/logo-profinance.png"
                 alt="Logo Pro Finance"
-                className="w-48 m-auto"
+                className="w-32 md:w-48 m-auto"
               />
               <button
                 type="submit"
-                className="cursor-pointer flex flex-row gap-2 px-8 justify-center items-center py-2 bg-valora-primary text-white text-lg font-semibold rounded-sm hover:bg-valora-secondary transition-colors"
+                className="cursor-pointer flex flex-row gap-2 px-8 justify-center items-center py-2 bg-valora-primary text-white text-sm md:text-lg font-semibold rounded-sm hover:bg-valora-secondary transition-colors"
               >
                 <WhatsAppIcon className="w-5 h-5 shrink-0" />
                 Únete a la comunidad

@@ -66,8 +66,8 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
 
   return (
     <form id="wacc-form" onSubmit={onSubmit} className="flex h-full flex-col">
-      <div className="flex-1 bg-white p-2 pb-0 flex flex-col">
-        <div className="flex-1 overflow-y-auto flex flex-col gap-2 pb-2">
+      <div className="flex-1 min-h-0 bg-white p-2 pb-0 flex flex-col">
+        <div className="flex-1 overflow-y-auto flex flex-col gap-2">
           {/* Section 1: Industry */}
           <FormSection
             title="Inputs de la industria"
@@ -211,6 +211,8 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 suffix="%"
                 layout="horizontal"
                 showClearButton={false}
+                maxDecimals={2}
+                inputClassName=""
                 prefixSelect={{
                   name: "currency",
                   value: formData.currency,
@@ -229,7 +231,8 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 placeholder="Ej: 40"
                 suffix="%"
                 layout="horizontal"
-                inputClassName="md:col-span-5"
+                maxDecimals={0}
+                inputClassName="col-span-4"
                 showClearButton={false}
               />
               <FormField
@@ -244,7 +247,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 placeholder="Ej: 60"
                 suffix="%"
                 layout="horizontal"
-                inputClassName="md:col-span-5"
+                inputClassName="col-span-4"
                 showClearButton={false}
               />
             </section>
@@ -264,6 +267,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                   type="number"
                   min={0}
                   max={3}
+                  maxDecimals={4}
                   step="any"
                   value={formData.beta_unlevered}
                   onChange={handleCustomInputChange}
@@ -275,6 +279,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                     </>
                   }
                   layout="horizontal"
+                  inputClassName="col-span-6"
                   disabled={!isWaccCalculated}
                   showClearButton={false}
                 />
@@ -284,13 +289,17 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
         </div>
 
         {/* Footer - Submit Button */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4">
+        <div
+          className={`sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 transition-all duration-300 ${
+            isWaccCalculated ? "max-[540px]:w-4/5" : "w-full"
+          }`}
+        >
           <button
             type="submit"
             form="wacc-form"
             disabled={loading}
             className={`
-                cursor-pointer w-full py-3 px-6 rounded-lg font-bold text-sm transition-all duration-200
+                cursor-pointer w-full py-3 px-6 rounded-lg font-bold text-sm transition-all duration-200 
                 ${
                   loading
                     ? "bg-gray-400 text-gray-200 cursor-not-allowed"

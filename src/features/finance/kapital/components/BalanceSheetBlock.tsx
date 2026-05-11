@@ -1,3 +1,9 @@
+const parsePercentageValue = (value: string): number => {
+  if (!value) return 0;
+  const cleaned = value.replace(",", ".").replace("%", "");
+  return parseFloat(cleaned) || 0;
+};
+
 export const BalanceSheetBlock: React.FC<{
   koa: string;
   kd_1_minus_t: string;
@@ -5,26 +11,31 @@ export const BalanceSheetBlock: React.FC<{
   compact: boolean;
   D_empresa: string;
 }> = ({ koa, kd_1_minus_t, ke, compact, D_empresa }) => {
-  // 1. Convertimos el string ("44,00%") a un número válido para CSS (44)
-  const parsePercentageValue = (value: string): number => {
-    if (!value) return 0;
-    const cleaned = value.replace(",", ".").replace("%", "");
-    return parseFloat(cleaned) || 0;
-  };
+  const rawPasivoPerc = parsePercentageValue(D_empresa);
+  const rawPatrimonioPerc = 100 - rawPasivoPerc;
 
-  const pasivoPerc = parsePercentageValue(D_empresa);
-  const patrimonioPerc = 100 - pasivoPerc;
+  const MIN_VISUAL_PERC = 25;
+  let visualPasivoPerc = rawPasivoPerc;
+  let visualPatrimonioPerc = rawPatrimonioPerc;
+
+  if (visualPasivoPerc < MIN_VISUAL_PERC) {
+    visualPasivoPerc = MIN_VISUAL_PERC;
+    visualPatrimonioPerc = 100 - MIN_VISUAL_PERC;
+  } else if (visualPatrimonioPerc < MIN_VISUAL_PERC) {
+    visualPatrimonioPerc = MIN_VISUAL_PERC;
+    visualPasivoPerc = 100 - MIN_VISUAL_PERC;
+  }
 
   return (
     <section
-      className={`flex flex-col p-2 mx-auto w-full max-w-90 ${compact ? "gap-2" : "gap-3"}`}
+      className={`flex flex-col mx-auto w-full max-w-90 ${compact ? "gap-2" : "gap-3"}`}
     >
       <main className={`w-full flex ${compact ? "h-44" : "h-48 md:h-52"}`}>
         {/* Lado Izquierdo: ACTIVO */}
         <div className="w-1/2 p-0.5">
-          <div className="h-full border-[3px] border-[#7b1fa2] rounded-l-xl relative p-2 flex flex-col items-center justify-center shadow-sm">
+          <div className="h-full border-[3px] border-[#7b1fa2] rounded-l-xl relative p-1 flex flex-col items-center justify-center shadow-sm">
             <div
-              className={`absolute top-2 text-gray-400 text-center w-full uppercase tracking-wider ${compact ? "text-[10px]" : "font-medium text-[11px] block"}`}
+              className={`absolute top-1 text-gray-400 text-center w-full uppercase tracking-wider ${compact ? "text-[10px]" : "font-medium text-[11px] block"}`}
             >
               Activo
             </div>
@@ -40,16 +51,16 @@ export const BalanceSheetBlock: React.FC<{
         <div className="w-1/2 flex flex-col p-0.5 gap-1">
           {/* Pasivo (Deuda) */}
           <div
-            style={{ height: `calc(${pasivoPerc}% - 2px)` }}
-            className="border-[3px] border-[#4caf50] rounded-tr-xl relative p-2 flex flex-col items-center justify-center shadow-sm transition-all duration-500 overflow-hidden"
+            style={{ height: `calc(${visualPasivoPerc}% - 2px)` }}
+            className="border-[3px] border-[#4caf50] rounded-tr-xl relative p-0.5 flex flex-col items-center justify-center shadow-sm transition-all duration-500 overflow-hidden"
           >
             <div
-              className={`absolute top-1 font-medium text-gray-400 text-center w-full uppercase tracking-wider ${compact ? "text-[10px] mb-2" : "text-[10px] block"}`}
+              className={`absolute top-0.5 font-medium text-gray-400 text-center w-full uppercase tracking-wider ${compact ? "text-[10px] mb-" : "text-[10px] block"}`}
             >
               Pasivo
             </div>
             <div
-              className={`text-center w-full font-bold text-gray-800 ${compact ? "text-xs mt-2.5" : "mt-auto mb-auto text-[11px]"}`}
+              className={`text-center w-full font-bold text-gray-800 ${compact ? "text-xs mt-2.5" : "text-[11px]"}`}
             >
               Kd(1-T) = {kd_1_minus_t}
             </div>
@@ -57,11 +68,11 @@ export const BalanceSheetBlock: React.FC<{
 
           {/* Patrimonio (Equity) */}
           <div
-            style={{ height: `calc(${patrimonioPerc}% - 2px)` }}
+            style={{ height: `calc(${visualPatrimonioPerc}% - 2px)` }}
             className="border-[3px] border-[#03a9f4] rounded-br-xl relative p-2 flex flex-col items-center justify-center shadow-sm transition-all duration-500 overflow-hidden"
           >
             <div
-              className={`absolute top-2 text-gray-400 text-center w-full uppercase tracking-wider ${compact ? "text-[10px]" : "font-medium text-[11px] block"}`}
+              className={`absolute top-1 text-gray-400 text-center w-full uppercase tracking-wider ${compact ? "text-[10px]" : "font-medium text-[11px] block"}`}
             >
               Patrimonio
             </div>

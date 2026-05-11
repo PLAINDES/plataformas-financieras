@@ -60,7 +60,7 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
       <main className="flex flex-col gap-y-2 flex-1">
         <div
           className={`flex flex-col flex-1 ${
-            compact ? "px-5 py-3 gap-y-1" : "px-8 py-5 gap-y-3"
+            compact ? "px-5 py-3 gap-y-1" : "px-4 md:px-8 py-5 gap-y-3"
           }`}
         >
           <header className="flex flex-col gap-y-1 w-full relative">
@@ -88,11 +88,11 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
             </div>
 
             {/* Layout de CPPC centrado y Kd a la derecha */}
-            <div className="relative w-2/3 mt-2 flex flex-row items-center justify-between mx-auto">
+            <div className="relative w-2/3 mt-2 gap-1 flex flex-row items-center justify-between mx-auto">
               <div className="px-4 text-center">
                 <span
                   className={`font-black text-gray-900 ${
-                    compact ? "text-xl" : "text-3xl"
+                    compact ? "text-xl" : "text-2xl md:text-3xl"
                   }`}
                 >
                   {formatterx100p(data.cppc)}
@@ -104,7 +104,7 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
                 </p>
               </div>
               <span
-                className={`font-bold text-gray-900 ${compact ? "text-xs" : "text-sm"}`}
+                className={`font-bold text-gray-900 ${compact ? "text-xs" : "text-base"}`}
               >
                 Kd={formatterx100p(data.kd)}
               </span>

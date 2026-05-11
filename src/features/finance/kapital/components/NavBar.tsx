@@ -125,7 +125,7 @@ export const NavBar: React.FC<NavbarProps> = ({
               Reportes
             </button>
           )*/}
-          <a className="flex flex-row gap-1 px-3 py-2 bg-valora-primary text-white rounded-lg text-sm font-semibold hover:bg-valora-secondary cursor-pointer">
+          <a className="flex flex-row gap-1 px-3 py-2 bg-valora-primary text-white rounded-lg text-xs md:text-sm font-semibold hover:bg-valora-secondary cursor-pointer">
             Curso de capacitación
             <ChevronRight className="w-4 h-4 my-auto" />
           </a>

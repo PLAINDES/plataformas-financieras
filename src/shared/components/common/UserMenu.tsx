@@ -68,7 +68,7 @@ export function UserMenu({
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className={`absolute ${customTrigger ? "bottom-full left-0 mb-2" : "right-0 mt-2"} w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-1000 animate-in fade-in zoom-in duration-200`}
+          className={`absolute ${customTrigger ? "bottom-full left-0 mb-2" : "right-0 mt-2"} w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-100 animate-in fade-in zoom-in duration-200`}
         >
           {/* Nombre + email */}
           {!onlyLogout && user && (
