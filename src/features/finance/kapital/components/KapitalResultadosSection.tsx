@@ -1,7 +1,8 @@
 // features/finance/kapital/components/KapitalResultadosSection.tsx
 import { FinancieraCard } from "./FinancieraCard";
 import type { Results } from "../KapitalPage";
-import { File, Info } from "lucide-react";
+import { Info } from "lucide-react";
+import { Book } from "./Book";
 
 export interface KapitalResultadosSectionProps {
   results: Results;
@@ -64,31 +65,26 @@ export const KapitalResultadosSection: React.FC<
           </h1>
           <p className="text-gray-600">Comparación de resultados</p>
         </div>
-        <section className="flex items-center border border-slate-600 rounded-[24px] bg-white shadow-md max-w-105 w-fit overflow-hidden">
-          <div className="relative w-30 h-30 shrink-0 overflow-hidden shadow-inner">
-            <img
-              src="/images/prueba_portada.jpg"
-              alt="Fondo de reporte"
-              className="w-full h-full object-cover"
+        <div className="xl:w-1/3 flex justify-center xl:justify-end w-full">
+          <section className="flex flex-row items-center justify-center rounded-[24px] max-w-105 w-full xl:w-fit overflow-visible">
+            <Book
+              href="/images/prueba_portada.jpg"
+              width={120}
+              height={160}
+              interactive={false}
             />
-          </div>
-          <div className="flex flex-col justify-center gap-2 w-50 px-4">
-            <button
-              className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-xs font-bold py-4 px-3 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer"
-              onClick={onOpenReport}
-            >
-              Genera Tu Reporte
-            </button>
-            <button className="flex items-center justify-center gap-2 group bg-slate-100 border border-slate-300 rounded-2xl px-1 text-slate-500 cursor-pointer">
-              <div className="py-1 rounded-md group-hover:bg-slate-200 transition-colors">
-                <File className="w-4 h-4" />
-              </div>
-              <span className="text-[11px] font-semibold group-hover:text-slate-700 group-hover:border-slate-400 transition-all">
-                Conozca la metodología
-              </span>
-            </button>
-          </div>
-        </section>
+            <div className="flex flex-col justify-center gap-2 flex-1">
+              <button
+                onClick={onOpenReport}
+                className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer "
+              >
+                Reporte de
+                <br />
+                Costo de Capital
+              </button>
+            </div>
+          </section>
+        </div>
         <div className="flex flex-row items-center gap-2">
           <button
             className="px-4 py-2 bg-valora-primary font-bold text-white rounded-lg h-fit cursor-pointer hover:bg-valora-secondary"
