@@ -1,25 +1,18 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useCalculations } from "../hooks/useCalculations";
 import type { Calculation } from "@/shared/types";
-import {
-  Search,
-  Plus,
-  FolderKanban,
-  Trash2,
-  Eye,
-} from "lucide-react";
+import { Search, Plus, FolderKanban, Trash2, Eye } from "lucide-react";
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
 
 interface Column<T> {
   header: string;
   accessorKey?: keyof T;
-  cell?: (item: T) => React.ReactNode;
+  cell?: (item: T, index?: number) => React.ReactNode;
 }
 
 interface ProyectosProps {
   userId?: number;
 }
-
 
 const PAGE_SIZE = 10;
 
@@ -32,10 +25,17 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
   const [tab, setTab] = useState<Tab>("valora");
   const [pendingDelete, setPendingDelete] = useState<Calculation | null>(null);
 
+  const hasSensibilizacion = (c: Calculation): boolean => {
+    if (!c.data || !c.data.sensibilizacion) return false;
+    return (
+      Array.isArray(c.data.sensibilizacion) && c.data.sensibilizacion.length > 0
+    );
+  };
+
   const accionesCell = (c: Calculation): React.ReactNode => (
     <div className="flex items-center justify-center gap-1">
       <a
-        href={`/${c.type}/${c.code}/resultados`}
+        href={`/${c.type}/${c.code}`}
         className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-colors"
         title="Ver proyecto"
       >
@@ -52,18 +52,20 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
     </div>
   );
 
-  const baseColumns: Column<Calculation>[] = [
+  const getBaseColumns = (): Column<Calculation>[] => [
     {
       header: "N°",
-      cell: (c) => (
-        <span className="text-gray-400 font-medium tabular-nums">{c.id}</span>
+      cell: (_, index) => (
+        <span className="text-gray-400 font-medium tabular-nums">
+          {index !== undefined ? (page - 1) * PAGE_SIZE + index + 1 : "-"}
+        </span>
       ),
     },
     {
       header: "Proyecto",
       cell: (c) => (
         <span className="font-mono text-gray-800 font-medium tracking-tight text-xs">
-          {(c.code)}
+          {c.code}
         </span>
       ),
     },
@@ -78,46 +80,82 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
     { header: "Acciones", cell: accionesCell },
   ];
 
-  const kapitalColumns: Column<Calculation>[] = [
-    {
-      header: "N°",
-      cell: (c) => (
-        <span className="text-gray-400 font-medium tabular-nums">{c.id}</span>
-      ),
-    },
-    {
-      header: "Proyecto",
-      cell: (c) => (
-        <span className="font-mono text-gray-800 font-medium tracking-tight text-xs">
-          {(c.code)}
-        </span>
-      ),
-    },
-    {
-      header: "Fecha de Creación",
-      cell: (c) => (
-        <span className="text-gray-500 tabular-nums text-sm">
-          {new Date(c.created_at).toLocaleString("es-PE")}
-        </span>
-      ),
-    },
-    { header: "Acciones", cell: accionesCell },
-  ];
+  // Generamos las columnas dependiendo del tab activo
+  const getActiveColumns = (): Column<Calculation>[] => {
+    const columns = getBaseColumns();
 
-  const activeColumns = tab === "valora" ? baseColumns : kapitalColumns;
+    if (tab === "kapital") {
+      // Insertamos la columna de sensibilización antes de la fecha
+      columns.splice(2, 0, {
+        header: "Sensibilización (BOA)",
+        cell: (c) => {
+          const hasSensib = hasSensibilizacion(c);
 
-  const filtered = calculations.filter((c) => {
+          let listBoaValue: string[] = [];
+          if (hasSensib && c.data?.sensibilizacion) {
+            const sensibArray = c.data.sensibilizacion as any[];
+            sensibArray.forEach((entry) => {
+              if (entry && typeof entry.boa === "number") {
+                listBoaValue.push(entry.boa.toFixed(2));
+              }
+            });
+          }
+
+          return (
+            <span className="flex justify-center">
+              {hasSensib ? (
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800 border border-green-200">
+                    Con BOA
+                  </span>
+                  {listBoaValue.length > 0 && (
+                    <span className="text-[11px] font-mono text-gray-500 font-semibold">
+                      {listBoaValue.join(", ")}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600">
+                  Básico
+                </span>
+              )}
+            </span>
+          );
+        },
+      });
+    }
+
+    return columns;
+  };
+
+  const filteredAndSorted = useMemo(() => {
     const q = search.toLowerCase();
-    const matchesTab = c.type === tab;
-    const matchesSearch =
-      c.type.includes(q) ||
-      String(c.id).includes(q) ||
-      JSON.stringify(c.data ?? {}).toLowerCase().includes(q);
-    return matchesTab && matchesSearch;
-  });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    return calculations
+      .filter((c) => {
+        const matchesTab = c.type === tab;
+        const matchesSearch =
+          c.type.includes(q) ||
+          String(c.id).includes(q) ||
+          JSON.stringify(c.data ?? {})
+            .toLowerCase()
+            .includes(q);
+        return matchesTab && matchesSearch;
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+  }, [calculations, tab, search]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredAndSorted.length / PAGE_SIZE)
+  );
+  const paginated = filteredAndSorted.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
 
   const handleTabChange = (next: Tab): void => {
     setTab(next);
@@ -176,12 +214,12 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
       )}
 
       <div className="w-full max-w-5xl">
-        <div className="flex items-center justify-between mb-7">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-row max-[540px]:flex-col items-center justify-between mb-7 gap-4">
+          <div className="flex items-center gap-3 max-[540px]:justify-center">
             <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center shadow-md shadow-blue-200 shrink-0">
               <FolderKanban size={20} color="white" strokeWidth={2} />
             </div>
-            <div>
+            <div className="max-[540px]:text-center max-[540px]:w-2/3">
               <h1 className="text-2xl font-bold text-gray-900 tracking-tight leading-tight">
                 Mis proyectos
               </h1>
@@ -246,14 +284,15 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
           ) : (
             <SimpleTable<Calculation>
               data={paginated}
-              columns={activeColumns}
+              columns={getActiveColumns()}
             />
           )}
 
           <div className="px-6 py-3.5 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between">
             <span className="text-xs text-gray-400">
-              {filtered.length} proyecto{filtered.length !== 1 ? "s" : ""}{" "}
-              encontrado{filtered.length !== 1 ? "s" : ""}
+              {filteredAndSorted.length} proyecto
+              {filteredAndSorted.length !== 1 ? "s" : ""} encontrado
+              {filteredAndSorted.length !== 1 ? "s" : ""}
             </span>
             <div className="flex items-center gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
