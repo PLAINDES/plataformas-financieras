@@ -1,4 +1,5 @@
-// constants.ts
+// kapital.ts
+// Archivo de constantes
 
 const parseDate = (dateStr: string): Date => {
   const [day, month, year] = dateStr.split("/");
@@ -94,7 +95,15 @@ export const COUNTRIES_TRANSLATIONS: Record<string, string> = {
   Peru: "Perú",
 };
 
-export const CURRENCIES = ["USD", "Moneda Local"];
+export const COUNTRY_LOCAL_CURRENCIES: Record<string, string> = {
+  Argentina: "ARS",
+  Brazil: "BRL",
+  Mexico: "MXN",
+  Chile: "CLP",
+  Colombia: "COP",
+  Ecuador: "USD",
+  Peru: "PEN",
+};
 
 export const REPORT_PRODUCTS = [
   {
@@ -124,6 +133,12 @@ export const METHODOLOGY_CATEGORIES = [
       },
     ],
   },
+];
+
+export const EXCLUDED_INDUSTRIES: string[] = [
+  "Bank (Money Center)",
+  "Banks (Regional)",
+  "Financial Svcs. (Non-bank & Insurance)",
 ];
 
 export const INDUSTRY_TRANSLATIONS: Record<string, string> = {

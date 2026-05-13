@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, act } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavBar } from "./components/NavBar";
 import { NavigationTabs } from "./components/NavigationTabs";
 import { FormSidebar } from "./components/FormSidebar";

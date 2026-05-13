@@ -17,10 +17,10 @@ interface FormSidebarProps {
   instruments: string[];
   bonos: string[];
   countries: string[];
-  currencies: string[];
   industryTranslations: Record<string, string>;
   bonosTranslations: Record<string, string>;
   countriesTranslations: Record<string, string>;
+  countryLocalCurrencies: Record<string, string>;
 }
 
 export const FormSidebar: React.FC<FormSidebarProps> = ({
@@ -35,10 +35,10 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
   instruments,
   bonos,
   countries,
-  currencies,
   industryTranslations,
   bonosTranslations,
   countriesTranslations,
+  countryLocalCurrencies,
 }) => {
   const [collapsed, setCollapsed] = useState({
     step1: false,
@@ -64,6 +64,16 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
     onInputChange(e);
   };
 
+  const dynamicCurrenciesList = (() => {
+    const localCode = formData.country
+      ? countryLocalCurrencies[formData.country]
+      : null;
+    if (!localCode || localCode === "USD") {
+      return ["USD"];
+    }
+    return ["USD", localCode];
+  })();
+
   return (
     <form id="wacc-form" onSubmit={onSubmit} className="flex h-full flex-col">
       <div className="flex-1 min-h-0 bg-white p-2 pb-0 flex flex-col">
@@ -84,6 +94,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 onChange={handleCustomInputChange}
                 options={dates}
                 layout="horizontal"
+                inputClassName="col-span-12"
                 required
               />
               <FormField
@@ -96,6 +107,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 translations={industryTranslations}
                 disabled={hasSensibilizaciones || isWaccCalculated}
                 layout="horizontal"
+                inputClassName="col-span-19"
                 required
               />
               <FormField
@@ -118,6 +130,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 onChange={handleCustomInputChange}
                 options={instruments}
                 layout="horizontal"
+                inputClassName="col-span-19"
                 required
               />
               <FormField
@@ -129,6 +142,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 options={bonos}
                 translations={bonosTranslations}
                 layout="horizontal"
+                inputClassName="col-span-12"
                 showClearButton={false}
                 required
               />
@@ -152,6 +166,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 options={countries}
                 translations={countriesTranslations}
                 layout="horizontal"
+                inputClassName="col-span-11"
                 required
               />
               <FormField
@@ -164,7 +179,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 suffix="%"
                 layout="horizontal"
                 showClearButton={false}
-                inputClassName="col-span-4"
+                inputClassName="col-span-8"
                 disabled
               />
               <FormField
@@ -179,7 +194,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 suffix="%"
                 layout="horizontal"
                 showClearButton={false}
-                inputClassName="col-span-4"
+                inputClassName="col-span-8"
                 disabled
               />
             </section>
@@ -205,20 +220,20 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 name="kd"
                 type="number"
                 min={0}
-                max={200}
+                max={100}
                 step="any"
                 value={formData.kd}
                 onChange={handleCustomInputChange}
-                placeholder="Ej: 8.5"
+                placeholder=""
                 suffix="%"
                 layout="horizontal"
                 showClearButton={false}
-                maxDecimals={2}
-                inputClassName=""
+                maxDecimals={0}
+                inputClassName="col-span-12"
                 prefixSelect={{
                   name: "currency",
                   value: formData.currency,
-                  options: currencies,
+                  options: dynamicCurrenciesList,
                 }}
               />
               <FormField
@@ -230,11 +245,10 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 step="any"
                 value={formData.debt}
                 onChange={handleCustomInputChange}
-                placeholder="Ej: 40"
                 suffix="%"
                 layout="horizontal"
                 maxDecimals={0}
-                inputClassName="col-span-4"
+                inputClassName="col-span-6"
                 showClearButton={false}
               />
               <FormField
@@ -246,10 +260,9 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 step="any"
                 value={formData.capital}
                 onChange={handleCustomInputChange}
-                placeholder="Ej: 60"
                 suffix="%"
                 layout="horizontal"
-                inputClassName="col-span-4"
+                inputClassName="col-span-6"
                 showClearButton={false}
               />
             </section>
@@ -281,7 +294,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                     </>
                   }
                   layout="horizontal"
-                  inputClassName="col-span-6"
+                  inputClassName="col-span-11"
                   disabled={!isWaccCalculated}
                   showClearButton={false}
                 />
@@ -301,7 +314,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
             form="wacc-form"
             disabled={loading}
             className={`
-                cursor-pointer w-full py-3 px-6 rounded-lg font-bold text-sm transition-all duration-200 
+                cursor-pointer w-full py-3 px-6 rounded-lg font-bold text-xs md:text-sm transition-all duration-200 
                 ${
                   loading
                     ? "bg-gray-400 text-gray-200 cursor-not-allowed"

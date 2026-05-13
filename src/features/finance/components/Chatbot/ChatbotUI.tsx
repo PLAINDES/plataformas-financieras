@@ -1,6 +1,8 @@
 import React from "react";
 import { type CompanyData, type YahooFinanceData } from "./chatbot.interfaces";
-import { MousePointerClick } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ConfirmationModal } from "@/shared/components/common/ConfirmationModal";
+import { MousePointerClick, Trash2 } from "lucide-react";
 
 export const TypingDots: React.FC = () => (
   <div className="flex items-center gap-2 mt-2 px-1">
@@ -120,25 +122,67 @@ interface YahooResultsProps {
   data: YahooFinanceData;
   onApply: (company: CompanyData) => void;
   isWaccCalculated: boolean;
+  onRemove: (ticker: string) => void;
 }
 
 export const YahooResults: React.FC<YahooResultsProps> = ({
   data,
   onApply,
   isWaccCalculated,
+  onRemove,
 }) => {
-  const avgBetaUnlevered = data.group_statistics?.avg_beta_unlevered;
+  const [companies, setCompanies] = useState<CompanyData[]>(
+    data.valid_companies || []
+  );
+  const [tickerToDelete, setTickerToDelete] = useState<string | null>(null);
+
+  // Sincronizar si llegan nuevos datos del backend
+  useEffect(() => {
+    setCompanies(data.valid_companies || []);
+  }, [data.valid_companies]);
+
+  const confirmDelete = () => {
+    if (tickerToDelete) {
+      if (onRemove) {
+        onRemove(tickerToDelete);
+      } else {
+        setCompanies((prev) => prev.filter((c) => c.ticker !== tickerToDelete));
+      }
+      setTickerToDelete(null);
+    }
+  };
+  // Recalcular el BOA Promedio basado
+  const validBetas = companies
+    .map((c) => c.beta_unlevered)
+    .filter((b) => b != null) as number[];
+
+  const avgBetaUnlevered =
+    validBetas.length > 0
+      ? validBetas.reduce((sum, b) => sum + b, 0) / validBetas.length
+      : undefined;
+
+  // Vista de respaldo si borra absolutamente todas las filas
+  if (companies.length === 0) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center p-10 bg-gray-50 border border-gray-200 rounded-xl border-dashed">
+        <Trash2 className="w-10 h-10 text-gray-300 mb-3" />
+        <p className="text-gray-500 font-medium text-center">
+          Todas las empresas han sido eliminadas.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col gap-4">
       {/* Panel Superior: BOA Promedio del Sector */}
       {avgBetaUnlevered !== undefined && (
         <div className="flex items-center justify-between bg-blue-50 border border-blue-200 p-4 rounded-lg shadow-sm">
-          <div className="flex flex-col">
-            <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">
+          <div className="flex flex-col gap-1">
+            <span className="max-[540px]-text[11px] text-xs font-bold text-blue-700 uppercase tracking-wide">
               BOA Promedio del Sector
             </span>
-            <span className="text-2xl font-black text-gray-900 leading-none mt-1">
+            <span className="text-lg sm:text-2xl font-black text-gray-900 leading-none mt-1">
               {avgBetaUnlevered.toFixed(4)}
             </span>
           </div>
@@ -162,13 +206,13 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
                 ? "Debe calcular el WACC primero"
                 : "Insertar promedio al formulario"
             }
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
               isWaccCalculated
                 ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer shadow-md active:scale-95"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}
           >
-            <MousePointerClick className="w-4 h-4" />
+            <MousePointerClick className="w-6 h-6" />
             Insertar Promedio
           </button>
         </div>
@@ -189,33 +233,42 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
             <tbody className="divide-y divide-gray-200 bg-white">
               {data.valid_companies.map((company, idx) => (
                 <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
-                  <td className="px-4 py-3 font-medium text-blue-600">
+                  <td className="text-xs sm:text-sm px-4 py-3 font-medium text-blue-600">
                     {company.ticker}
                   </td>
-                  <td className="px-4 py-3 text-gray-700">
+                  <td className="text-xs sm:text-sm px-4 py-3 text-gray-700">
                     {company.company_name}
                   </td>
-                  <td className="px-4 py-3 font-bold text-gray-800">
+                  <td className="text-sm  px-4 py-3 font-bold text-gray-800">
                     {company.beta_unlevered?.toFixed(4) || "N/A"}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => onApply(company)}
-                      disabled={!isWaccCalculated}
-                      title={
-                        !isWaccCalculated
-                          ? "Debe calcular el WACC primero"
-                          : "Insertar al formulario"
-                      }
-                      className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold mx-auto ${
-                        isWaccCalculated
-                          ? "bg-valora-primary text-white hover:bg-valora-secondary cursor-pointer shadow-sm"
-                          : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      <MousePointerClick className="w-3.5 h-3.5" />
-                      Insertar
-                    </button>
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => onApply(company)}
+                        disabled={!isWaccCalculated}
+                        title={
+                          !isWaccCalculated
+                            ? "Debe calcular el WACC primero"
+                            : "Insertar al formulario"
+                        }
+                        className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold mx-auto ${
+                          isWaccCalculated
+                            ? "bg-valora-primary text-white hover:bg-valora-secondary cursor-pointer shadow-sm"
+                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        }`}
+                      >
+                        <MousePointerClick className="w-3.5 h-3.5" />
+                        Insertar
+                      </button>
+                      <button
+                        onClick={() => setTickerToDelete(company.ticker)}
+                        title="Eliminar de la lista"
+                        className="p-1.5 rounded-md bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-colors cursor-pointer border border-red-100"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -230,6 +283,17 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
           insertar datos optimizados.
         </p>
       )}
+      {/* Componente del Modal */}
+      <ConfirmationModal
+        isOpen={tickerToDelete !== null}
+        onClose={() => setTickerToDelete(null)}
+        onConfirm={confirmDelete}
+        title="Eliminar empresa"
+        description={`¿Estás seguro de eliminar el ticker ${tickerToDelete} de la lista? El promedio se recalculará sin esta empresa.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="destructive"
+      />
     </div>
   );
 };
