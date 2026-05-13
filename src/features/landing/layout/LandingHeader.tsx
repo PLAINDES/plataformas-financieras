@@ -165,7 +165,7 @@ export function LandingHeader({
         {isAdmin && (
           <button
             onClick={() => setEditModalOpen(true)}
-            className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-white text-[11px] font-medium backdrop-blur-sm transition-all shadow-sm"
+            className="absolute top-14 right-2 2xl:top-2 2xl:right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-white text-[11px] font-medium backdrop-blur-sm transition-all shadow-sm"
             title="Editar menú"
           >
             <Pencil size={11} />

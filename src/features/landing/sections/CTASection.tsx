@@ -76,7 +76,7 @@ export function CTASection({ content, isAdmin, onSave }: CTASectionProps) {
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                       Previsualización
                     </span>
-                    <div className="relative flex items-center justify-center gap-3 w-full min-h-[52px] px-6 bg-[#2FA4FF] rounded-xl shadow-lg shadow-blue-200 transition-all">
+                    <div className="relative flex items-center justify-center gap-3 w-full min-h-[52px] px-6 bg-valora-primary rounded-xl shadow-lg shadow-blue-200 transition-all">
                       <WhatsAppIcon className="w-5 h-5 shrink-0 drop-shadow-sm" />
                       <div className="flex-1 relative text-white focus-within:text-gray-900">
                         <EditableText

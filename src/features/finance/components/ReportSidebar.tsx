@@ -76,7 +76,7 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
         className={`fixed inset-0 bg-black/30 backdrop-blur z-100 transition-opacity duration-300 ${isOpen ? "opacity-100" : "pointer-events-none opacity-0"}`}
       />
       <div
-        className={`fixed right-0 top-0 z-110 h-dvh w-full max-w-xl bg-white shadow-xl transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed right-0 top-0 z-130 h-dvh w-full max-w-xl bg-white shadow-xl transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"}`}
         role="dialog"
         aria-modal="true"
       >

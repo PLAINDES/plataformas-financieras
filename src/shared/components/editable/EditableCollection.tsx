@@ -1,6 +1,6 @@
 // src/components/editable/EditableCollection.tsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type {
   CollectionItem,
   EditableCollectionData,
@@ -49,8 +49,48 @@ export function EditableCollection<T extends CollectionItem>({
   const [items, setItems] = useState<T[]>(data.items);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  // NUEVO: Track si el item siendo editado es nuevo (no guardado aún)
   const [isNewItem, setIsNewItem] = useState(false);
+
+  // --- LÓGICA DE DRAG-TO-SCROLL ---
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    isDragging.current = true;
+    scrollRef.current.style.cursor = "grabbing";
+    scrollRef.current.style.userSelect = "none"; // Evita seleccionar texto al arrastrar
+    startX.current = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current = scrollRef.current.scrollLeft;
+  };
+
+  const handleMouseLeave = () => {
+    isDragging.current = false;
+    if (scrollRef.current) {
+      scrollRef.current.style.cursor = "grab";
+      scrollRef.current.style.userSelect = "auto";
+    }
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    if (scrollRef.current) {
+      scrollRef.current.style.cursor = "grab";
+      scrollRef.current.style.userSelect = "auto";
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5; // Multiplicador de velocidad de arrastre
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+  };
+
+  // --------------
 
   const { isAdmin } = useAuthContext();
   useEffect(() => {
@@ -91,7 +131,7 @@ export function EditableCollection<T extends CollectionItem>({
     setIsNewItem(false); // Ya no es nuevo después de guardar
   };
 
-  // NUEVO: Manejar cancelación
+  // Manejar cancelación
   const handleCancelEdit = (id: string) => {
     if (isNewItem) {
       // Si es un item nuevo que no se guardó, eliminarlo
@@ -154,7 +194,14 @@ export function EditableCollection<T extends CollectionItem>({
   // Modo no-admin: solo renderizar items
   if (!isAdmin) {
     return (
-      <div className={className}>
+      <div
+        ref={scrollRef}
+        className={`${className} cursor-grab active:cursor-grabbing`}
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+      >
         {items.map((item, index) =>
           renderItem(item, index, {
             isEditing: false,
@@ -174,22 +221,19 @@ export function EditableCollection<T extends CollectionItem>({
 
   // Modo admin: renderizar con controles
   return (
-    <div className={className} style={{ position: "relative" }}>
+    <div
+      ref={scrollRef}
+      className={`${className} cursor-grab active:cursor-grabbing`}
+      style={{ position: "relative" }}
+      onMouseDown={handleMouseDown}
+      onMouseLeave={handleMouseLeave}
+      onMouseUp={handleMouseUp}
+      onMouseMove={handleMouseMove}
+    >
       {/* Items */}
       {items.length === 0 ? (
-        <div
-          style={{
-            padding: "3rem 1rem",
-            textAlign: "center",
-            color: "#9ca3af",
-            border: "2px dashed #d1d5db",
-            borderRadius: "12px",
-            backgroundColor: "#f9fafb",
-          }}
-        >
-          <p style={{ margin: "0 0 1rem", fontSize: "0.875rem" }}>
-            {emptyMessage}
-          </p>
+        <div className="text-center py-12 px-4 border-dashed border-2 rounded-lg text-gray-400">
+          <p className="mb-4 text-sm">{emptyMessage}</p>
           <button
             onClick={handleAdd}
             disabled={isSaving}
