@@ -11,6 +11,7 @@ export interface KapitalResultadosSectionProps {
   onResultCurrencyChange: (currency: "pen" | "usd") => void;
   onSensibilizaClick: () => void;
   onOpenReport?: () => void;
+  localCurrency?: string;
 }
 
 export const KapitalResultadosSection: React.FC<
@@ -22,6 +23,7 @@ export const KapitalResultadosSection: React.FC<
   onResultCurrencyChange,
   onSensibilizaClick,
   onOpenReport,
+  localCurrency,
 }) => {
   // 1. Armamos el arreglo de tarjetas. Siempre incluimos los mercados.
   const cards = [
@@ -43,10 +45,19 @@ export const KapitalResultadosSection: React.FC<
       resultCurrency === "usd"
         ? results.empresa_dolares
         : results.empresa_soles;
+
+    const secureDEmpresa =
+      empresaData?.D_empresa || results.empresa_dolares?.D_empresa || "0%";
+
+    const newEmpresaData = {
+      ...empresaData,
+      D_empresa: secureDEmpresa,
+    };
+
     cards.push({
       id: "empresa",
       title: "Resultados de la empresa",
-      data: empresaData,
+      data: newEmpresaData,
     });
   }
 
@@ -66,21 +77,21 @@ export const KapitalResultadosSection: React.FC<
           <p className="text-gray-600">Comparación de resultados</p>
         </div>
         <div className="xl:w-1/3 flex justify-center xl:justify-end w-full">
-          <section className="flex flex-row items-center justify-center rounded-[24px] max-w-105 w-full xl:w-fit overflow-visible">
-            <Book
-              href="/images/prueba_portada.jpg"
-              width={120}
-              height={160}
-              interactive={false}
-            />
+          <section className="flex flex-col items-center justify-center rounded-[24px] max-w-105 w-full xl:w-fit overflow-visible mx-auto">
+            <div onClick={onOpenReport} className="w-fit h-fit cursor-pointer">
+              <Book
+                href="/images/portada-kapital-less.webp"
+                width={110}
+                height={150}
+                interactive={true}
+              />
+            </div>
             <div className="flex flex-col justify-center gap-2 flex-1">
               <button
                 onClick={onOpenReport}
                 className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer "
               >
-                Reporte de
-                <br />
-                Costo de Capital
+                Reporte de Costo de Capital
               </button>
             </div>
           </section>
@@ -128,6 +139,7 @@ export const KapitalResultadosSection: React.FC<
             resultCurrency={resultCurrency}
             onResultCurrencyChange={onResultCurrencyChange}
             compact={false}
+            localCurrency={localCurrency}
           />
         ))}
       </section>

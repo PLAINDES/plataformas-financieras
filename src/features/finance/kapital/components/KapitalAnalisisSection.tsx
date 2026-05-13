@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { FinancieraCard } from "./FinancieraCard";
-import type { Results, SensibilizacionEntry } from "../KapitalPage";
+import type {
+  MarketResults,
+  Results,
+  SensibilizacionEntry,
+} from "../KapitalPage";
 import { Book } from "./Book";
 
 const BoaIndicator = ({ value }: { value: number | string }) => (
@@ -36,6 +40,7 @@ export interface KapitalAnalisisSectionProps {
   onToggleComparison: (show: boolean) => void;
   sensibilizaciones: SensibilizacionEntry[];
   onOpenReport?: () => void;
+  localCurrency?: string;
 }
 
 export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
@@ -47,14 +52,26 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
   onToggleComparison,
   sensibilizaciones,
   onOpenReport,
+  localCurrency,
 }) => {
   const [selectedSensIdx, setSelectedSensIdx] = useState(0);
 
   // 1. DATOS ORIGINALES
   const developedData = results.developed;
   const emergentOriginal = results.emergent;
-  const empresaOriginal =
+
+  const empresaOriginalBase =
     resultCurrency === "usd" ? results.empresa_dolares : results.empresa_soles;
+
+  const secureDEmpresaOrig =
+    empresaOriginalBase?.D_empresa ||
+    results.empresa_dolares?.D_empresa ||
+    "0%";
+
+  const empresaOriginal = {
+    ...empresaOriginalBase,
+    D_empresa: secureDEmpresaOrig,
+  } as MarketResults;
 
   // 2. DATOS SENSIBILIZADOS
   const selectedSens =
@@ -64,11 +81,25 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
 
   // Si no hay sensibilización, usamos datos originales
   const emergentSens = selectedSens?.mercado_emergente || emergentOriginal;
-  const empresaSens = selectedSens
+
+  const empresaSensBase = selectedSens
     ? resultCurrency === "usd"
       ? selectedSens.empresa_dolares
       : selectedSens.empresa_soles
-    : empresaOriginal;
+    : empresaOriginalBase;
+
+  const secureDEmpresaSens =
+    empresaSensBase?.D_empresa ||
+    selectedSens?.empresa_dolares?.D_empresa ||
+    results.empresa_dolares?.D_empresa ||
+    "0%";
+
+  const empresaSens = empresaSensBase
+    ? {
+        ...empresaSensBase,
+        D_empresa: secureDEmpresaSens,
+      }
+    : undefined;
 
   return (
     <>
@@ -120,21 +151,21 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
 
         {/* Lado Derecho: Banner de Reporte */}
         <div className="xl:w-1/3 flex justify-center xl:justify-end w-full">
-          <section className="flex flex-row items-center justify-center rounded-[24px] max-w-105 w-full xl:w-fit overflow-visible">
-            <Book
-              href="/images/prueba_portada.jpg"
-              width={120}
-              height={160}
-              interactive={false}
-            />
+          <section className="flex flex-col items-center justify-center rounded-[24px] max-w-105 w-full xl:w-fit overflow-visible mx-auto">
+            <div onClick={onOpenReport} className="w-fit h-fit cursor-pointer">
+              <Book
+                href="/images/portada-kapital-less.webp"
+                width={110}
+                height={150}
+                interactive={true}
+              />
+            </div>
             <div className="flex flex-col justify-center gap-2 flex-1">
               <button
                 onClick={onOpenReport}
                 className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer "
               >
-                Reporte de
-                <br />
-                Costo de Capital
+                Reporte de Costo de Capital
               </button>
             </div>
           </section>
@@ -179,6 +210,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                     resultCurrency={resultCurrency}
                     onResultCurrencyChange={onResultCurrencyChange}
                     compact={true}
+                    localCurrency={localCurrency}
                   />
                 )}
               </div>
@@ -230,6 +262,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                       resultCurrency={resultCurrency}
                       onResultCurrencyChange={onResultCurrencyChange}
                       compact={true}
+                      localCurrency={localCurrency}
                     />
                   )}
                 </div>
@@ -262,11 +295,12 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
             {showCompanyCard && empresaSens && (
               <FinancieraCard
                 title="Tu Empresa"
-                data={developedData}
+                data={empresaOriginal}
                 isEmpresa={true}
                 resultCurrency={resultCurrency}
                 onResultCurrencyChange={onResultCurrencyChange}
                 compact={false}
+                localCurrency={localCurrency}
               />
             )}
           </section>

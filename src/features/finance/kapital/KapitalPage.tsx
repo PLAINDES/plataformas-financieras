@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, act } from "react";
 import { NavBar } from "./components/NavBar";
 import { NavigationTabs } from "./components/NavigationTabs";
 import { FormSidebar } from "./components/FormSidebar";
@@ -14,17 +14,19 @@ import type { ToastType } from "@/shared/types/toast.types";
 import { MainService } from "@/shared/services/main.service";
 import type { Calculation } from "@/shared/types";
 import "./KapitalPage.css";
+import { useLocation } from "react-router-dom";
 
 import {
   INSTRUMENTS,
   BONOS,
   COUNTRIES,
   COUNTRIES_TRANSLATIONS,
-  CURRENCIES,
   REPORT_PRODUCTS,
   METHODOLOGY_CATEGORIES,
   INDUSTRY_TRANSLATIONS,
   BONOS_TRANSLATIONS,
+  EXCLUDED_INDUSTRIES,
+  COUNTRY_LOCAL_CURRENCIES,
 } from "@/shared/constants/kapital";
 
 import {
@@ -108,6 +110,8 @@ const KapitalPage: React.FC = () => {
     beta_unlevered: "",
   });
 
+  const location = useLocation();
+
   const [isFormOpen, setIsFormOpen] = useState(true);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
@@ -148,8 +152,10 @@ const KapitalPage: React.FC = () => {
 
   // Booleans para controlar donde debe aparecer el boton de IA
   //const isViewingMethodology = showResults && resultsSection === "methodology";
-  //const shouldShowChatbot = !isReportViewerOpen && !isViewingMethodology && isWaccCalculated;
-  const shouldShowChatbot = !isReportViewerOpen && isWaccCalculated;
+
+  const isProyectosRoute = location.pathname.includes("/proyectos");
+  const shouldShowChatbot =
+    !isReportViewerOpen && isWaccCalculated && !isProyectosRoute;
   // Estado para controlar el botón de Mostrar comparraciones
   const [showComparison, setShowComparison] = useState(false);
 
@@ -180,7 +186,8 @@ const KapitalPage: React.FC = () => {
         if (Array.isArray(sectorsResponse) && sectorsResponse.length > 0) {
           const cleanSectors = sectorsResponse
             .filter((s) => typeof s === "string" && s.trim() !== "")
-            .map((s) => s.trim());
+            .map((s) => s.trim())
+            .filter((s) => !EXCLUDED_INDUSTRIES.includes(s));
 
           // Eliminamos duplicados finales
           const uniqueSectors = Array.from(new Set(cleanSectors));
@@ -207,22 +214,9 @@ const KapitalPage: React.FC = () => {
 
       if (code && code !== "kapital" && code !== "") {
         try {
-          setIsLoading(true);
+          const calculationData = await MainService.getCalculationByCode(code);
 
-          const [calc, prewarmData] = await Promise.allSettled([
-            MainService.getCalculationByCode(code),
-            MainService.prewarmSession(),
-          ]);
-
-          // Si el pre-warm fue exitoso, guardamos el ID para que arranque el Heartbeat
-          if (
-            prewarmData.status === "fulfilled" &&
-            prewarmData.value?.session_id
-          ) {
-            setPrewarmedSessionId(prewarmData.value.session_id);
-          }
-          if (calc.status === "fulfilled" && calc.value) {
-            const calculationData = calc.value;
+          if (calculationData) {
             setCurrentCalculation(calculationData);
 
             // Reconstruir resultados y sensibilizaciones
@@ -259,6 +253,12 @@ const KapitalPage: React.FC = () => {
                   latestInput.costo_deuda || latestInput.porcentaje_deuda
                 ),
               }));
+
+              if (latestInput.moneda === "USD") {
+                setResultCurrency("usd");
+              } else {
+                setResultCurrency("pen");
+              }
             }
 
             setResults(rebuiltResults);
@@ -270,9 +270,18 @@ const KapitalPage: React.FC = () => {
           }
         } catch (error) {
           console.error("No se encontró el cálculo en la URL", error);
-        } finally {
-          setIsLoading(false);
         }
+        // Iniciamos el pre-warm en segundo plano
+        MainService.prewarmSession()
+          .then((data) => {
+            if (data && data.session_id) {
+              // Si el pre-warm fue exitoso, guardamos el ID para que arranque el Heartbeat
+              setPrewarmedSessionId(data.session_id);
+            }
+          })
+          .catch((e) => {
+            console.warn("Pre-warm background failed", e);
+          });
       }
     };
 
@@ -606,7 +615,24 @@ const KapitalPage: React.FC = () => {
       lastEditedFieldRef.current = name as "debt" | "capital";
     }
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const updates = { ...prev, [name]: value };
+
+      // REINICIO DE MONEDA
+      if (name === "country") {
+        const newLocalCode = COUNTRY_LOCAL_CURRENCIES[value];
+        if (updates.currency !== "USD" && updates.currency !== newLocalCode) {
+          updates.currency = "USD";
+        }
+      }
+
+      // Track para deuda/capital
+      if (name === "debt" || name === "capital") {
+        lastEditedFieldRef.current = name as "debt" | "capital";
+      }
+
+      return updates;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -721,6 +747,15 @@ const KapitalPage: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  const dataObj = currentCalculation?.data as { inputs?: any[] } | undefined;
+  const savedInputs = dataObj?.inputs?.[0];
+  const savedCountry = savedInputs?.pais;
+
+  // La etiqueta de la moneda local siempre depende del país guardado
+  const activeSavedCurrency = savedCountry
+    ? COUNTRY_LOCAL_CURRENCIES[savedCountry] || "Moneda Local"
+    : "Moneda Local";
 
   const handleAnalysisSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -852,6 +887,7 @@ const KapitalPage: React.FC = () => {
           sensibilizaciones={sensibilizaciones}
           onOpenReport={handleReportSidebarOpen}
           onSensibilizaClick={handleOpenSensibilizacion}
+          localCurrency={activeSavedCurrency}
         />
       )}
 
@@ -892,13 +928,13 @@ const KapitalPage: React.FC = () => {
       />
 
       <main
-        className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} h-screen transition-all duration-300 ${isFormOpen ? "lg:pl-100" : "lg:pl-0"}`}
+        className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} h-screen transition-all duration-300 ${isFormOpen ? "lg:pl-90" : "lg:pl-0"}`}
       >
         {mainContent}
       </main>
 
       <aside
-        className={`fixed left-0 top-16 max-[540px]:z-70 z-40 h-[calc(100dvh-4rem)] max-[540px]:w-full w-100 border-r border-gray-200 bg-white shadow-sm transition-transform duration-200 ${isFormOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed left-0 top-16 max-[540px]:z-70 z-40 h-[calc(100dvh-4rem)] max-[540px]:w-full w-90 border-r border-gray-200 bg-white shadow-sm transition-transform duration-200 ${isFormOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="h-full">
           <FormSidebar
@@ -916,7 +952,7 @@ const KapitalPage: React.FC = () => {
             bonosTranslations={BONOS_TRANSLATIONS}
             countries={COUNTRIES}
             countriesTranslations={COUNTRIES_TRANSLATIONS}
-            currencies={CURRENCIES}
+            countryLocalCurrencies={COUNTRY_LOCAL_CURRENCIES}
           />
         </div>
       </aside>

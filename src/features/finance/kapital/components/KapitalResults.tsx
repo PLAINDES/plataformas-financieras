@@ -25,6 +25,7 @@ export interface KapitalResultsProps {
   sensibilizaciones: SensibilizacionEntry[];
   onOpenReport?: () => void;
   onSensibilizaClick: () => void;
+  localCurrency?: string;
 }
 
 interface MethodologyItem {
@@ -56,6 +57,7 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
   sensibilizaciones,
   onSensibilizaClick,
   onOpenReport,
+  localCurrency,
 }) => {
   if (loading) {
     return <LoadingOverlay />;
@@ -77,6 +79,7 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
               onResultCurrencyChange={onResultCurrencyChange}
               onSensibilizaClick={onSensibilizaClick}
               onOpenReport={onOpenReport}
+              localCurrency={localCurrency}
             />
           )}
           {section === "sensitivity" && (
@@ -97,6 +100,7 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
               onToggleComparison={onToggleComparison}
               sensibilizaciones={sensibilizaciones}
               onOpenReport={onOpenReport}
+              localCurrency={localCurrency}
             />
           )}
         </div>
