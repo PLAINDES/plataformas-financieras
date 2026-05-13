@@ -22,7 +22,7 @@ export function Book({
       className={`flex items-center justify-center [perspective:900px] ${
         interactive ? "group" : ""
       }`}
-      style={{ width: width + 60, height: height + 20 }} // Contenedor con margen
+      style={{ width: width + 10, height: height + 20 }}
     >
       <div
         className={`relative transition-transform duration-[750ms] ease-out [transform-style:preserve-3d] [transform:rotateY(-15deg)] ${

@@ -60,9 +60,15 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   }, [items, loading]);
 
   useEffect(() => {
-    if (isOpen) setTimeout(() => inputRef.current?.focus(), 100);
+    if (isOpen) {
+      setTimeout(() => {
+        // Solo hace focus si la pantalla es mayor a 500px (evita abrir teclado en móviles)
+        if (typeof window !== "undefined" && window.innerWidth > 500) {
+          inputRef.current?.focus();
+        }
+      }, 100);
+    }
   }, [isOpen]);
-
   const pushItem = useCallback((item: ConvItem) => {
     setItems((prev) => [...prev, item]);
   }, []);
@@ -264,6 +270,38 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     callChatbotAPI(msg);
   }, [input, loading, addSimple, callChatbotAPI]);
 
+  const handleRemoveTicker = useCallback((tickerToRemove: string) => {
+    // Actualiza el historial
+    setItems((prevItems) =>
+      prevItems.map((item) => {
+        if (item.type === "yahoo" && item.yahooData) {
+          const updatedCompanies = item.yahooData.valid_companies.filter(
+            (c) => c.ticker !== tickerToRemove
+          );
+          return {
+            ...item,
+            yahooData: {
+              ...item.yahooData,
+              valid_companies: updatedCompanies,
+            },
+          };
+        }
+        return item;
+      })
+    );
+
+    // Actualiza el modalData que está actualmente abierto en pantalla
+    setModalData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        valid_companies: prev.valid_companies.filter(
+          (c) => c.ticker !== tickerToRemove
+        ),
+      };
+    });
+  }, []);
+
   const clearHistory = () => {
     setHistory([]);
     setItems([
@@ -318,7 +356,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 
       {/* Ventana del Chatbot */}
       <div
-        className={`fixed bottom-8 right-8 z-80 flex w-[calc(100vw-3rem)] max-w-105 flex-col overflow-hidden rounded-[24px] border border-gray-200 bg-gray-50 shadow-2xl transition-all duration-300 h-[min(650px,calc(100vh-3rem))] ${
+        className={`fixed bottom-8 right-8 z-110 flex w-[calc(100vw-3rem)] max-w-105 flex-col overflow-hidden rounded-[24px] border border-gray-200 bg-gray-50 shadow-2xl transition-all duration-300 h-[min(650px,calc(100vh-3rem))] ${
           isOpen
             ? "translate-y-0 opacity-100"
             : "pointer-events-none translate-y-4 opacity-0"
@@ -556,8 +594,8 @@ export const Chatbot: React.FC<ChatbotProps> = ({
       </div>
       {/* --- MODAL --- */}
       {modalData && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-all animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-2xl w-[90vw] max-w-2xl max-h-[85vh] overflow-hidden flex flex-col animate-in zoom-in-95">
+        <div className="fixed inset-0 z-120 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-all animate-in fade-in">
+          <div className="bg-white rounded-xl shadow-2xl w-[90dvw] max-w-2xl h-[90dvh] sm:max-h-[85dvh] overflow-hidden flex flex-col animate-in zoom-in-95">
             <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100 bg-gray-50/50">
               <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
                 <Bot className="w-5 h-5 text-valora-primary" />
@@ -579,6 +617,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                   applyCompanyData(company);
                   setModalData(null);
                 }}
+                onRemove={handleRemoveTicker}
               />
             </div>
           </div>

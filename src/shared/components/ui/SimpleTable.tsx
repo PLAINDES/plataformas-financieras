@@ -4,7 +4,7 @@ import { Pencil } from "lucide-react";
 interface Column<T> {
   header: string;
   accessorKey?: keyof T;
-  cell?: (item: T) => React.ReactNode;
+  cell?: (item: T, index?: number) => React.ReactNode;
 }
 
 interface SimpleTableProps<T> {
@@ -180,7 +180,7 @@ export function SimpleTable<T extends object>({
           </div>
         )}
       </div>
-      <div className="overflow-x-auto">
+      <div className="">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -258,7 +258,7 @@ export function SimpleTable<T extends object>({
                       className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
                     >
                       {col.cell
-                        ? col.cell(item)
+                        ? col.cell(item, itemIndex)
                         : (item[col.accessorKey as keyof T] as React.ReactNode)}
                     </td>
                   ))}

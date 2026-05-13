@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { MainPageFooter } from "./MainPageFooter";
-import Chatbot from "./Chatbot/Chatbot";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { NavBar } from "../kapital/components/NavBar";
 import { Proyectos } from "./Proyectos";
@@ -25,8 +24,6 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
     setIsReportSidebarOpen(true);
     if (isDesktopFormOpen) setIsDesktopFormOpen(false);
   };
-  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
-
   const handleLogout = (): void => {};
 
   void heroTitle;
@@ -47,8 +44,8 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
         hasResults={false}
         selected={""}
       />
-      <div className="">
-        <div className="flex flex-1 flex-col-3 items-center justify-center py-20 px-6 bg-[#f3f6f9] overflow-y-auto">
+      <div className="h-full flex flex-col p-2">
+        <div className="flex flex-1 flex-col-3 justify-center py-20 px-6 bg-[#f3f6f9] overflow-y-auto">
           <Proyectos userId={user?.id} />
         </div>
         <div>
@@ -56,7 +53,7 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
         </div>
       </div>
 
-      <Chatbot isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} />
+      {/*<Chatbot isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} />*/}
     </div>
   );
 };

@@ -35,7 +35,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-106.25">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && (

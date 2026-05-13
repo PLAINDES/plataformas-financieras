@@ -18,6 +18,8 @@ interface FinancieraCardProps {
   resultCurrency?: "pen" | "usd";
   onResultCurrencyChange?: (currency: "pen" | "usd") => void;
   compact?: boolean;
+  country?: string;
+  localCurrency?: string;
 }
 
 const formatterx100p = (value: number | string): string => {
@@ -50,6 +52,7 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
   resultCurrency,
   onResultCurrencyChange,
   compact = false,
+  localCurrency,
 }) => {
   return (
     <article
@@ -73,18 +76,21 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
                 {title}
               </h2>
 
-              {isEmpresa && onResultCurrencyChange && resultCurrency && (
-                <select
-                  className="px-2 py-1 w-1/4 h-fit text-xs font-medium border border-gray-300 rounded focus:ring-2 focus:ring-valora-primary outline-none cursor-pointer bg-white my-auto"
-                  value={resultCurrency}
-                  onChange={(e) =>
-                    onResultCurrencyChange(e.target.value as "pen" | "usd")
-                  }
-                >
-                  <option value="pen">Moneda Local</option>
-                  <option value="usd">USD</option>
-                </select>
-              )}
+              {isEmpresa &&
+                onResultCurrencyChange &&
+                resultCurrency &&
+                localCurrency !== "USD" && (
+                  <select
+                    className="px-2 py-1 w-1/4 h-fit text-xs font-medium border border-gray-300 rounded focus:ring-2 focus:ring-valora-primary outline-none cursor-pointer bg-white my-auto"
+                    value={resultCurrency}
+                    onChange={(e) =>
+                      onResultCurrencyChange(e.target.value as "pen" | "usd")
+                    }
+                  >
+                    <option value="pen">{localCurrency}</option>
+                    <option value="usd">USD</option>
+                  </select>
+                )}
             </div>
 
             {/* Layout de CPPC centrado y Kd a la derecha */}

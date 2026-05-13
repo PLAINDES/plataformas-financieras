@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Laptop } from "lucide-react";
+import { ChevronLeft, ChevronRight, Laptop, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditableText } from "@/shared/components/editable/EditableText";
 import {
@@ -239,7 +239,7 @@ export function ProductsSection({
 
               if (!isVisible) return null;
 
-              const wrapperClass = `px-4 ${isSingleCard ? "w-full sm:w-[83.33%] md:w-1/2 lg:w-1/3" : "w-full md:w-1/2 lg:w-1/3"}`;
+              const wrapperClass = `${isSingleCard ? "w-full sm:w-[83.33%] md:w-1/2 lg:w-1/3" : "w-full md:w-1/2 lg:w-1/3"}`;
 
               return (
                 <div key={product.id} className={wrapperClass}>
@@ -381,7 +381,7 @@ function ProductEditor({ product, onSave, onCancel }: ProductEditorProps) {
   return (
     <div className="flex flex-col p-6 bg-white border-2 border-[#2FA4FF] rounded-2xl ring-4 ring-[#2FA4FF]/10 min-h-100 shadow-sm">
       <h6 className="mb-4 text-[14px] font-semibold text-[#2FA4FF] flex items-center gap-2">
-        <span>✏️</span> Editando Producto
+        <Pencil className="w-4 h-4" /> Editando Producto
       </h6>
 
       <div className="flex items-center justify-center mb-4 mx-auto h-20 w-20 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600">

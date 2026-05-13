@@ -150,7 +150,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       className={
         layout === "vertical"
           ? "flex flex-col gap-1"
-          : "grid gap-2 grid-cols-16 md:items-center"
+          : "grid gap-2 grid-cols-28 md:items-center"
       }
     >
       {label != "" && (
@@ -158,7 +158,7 @@ export const FormField: React.FC<FormFieldProps> = ({
           className={
             layout === "vertical"
               ? "text-sm text-gray-600"
-              : "text-sm text-gray-600 col-span-6"
+              : "max-[540px]:text-[13px] text-sm text-gray-600 col-span-9"
           }
         >
           {label}
@@ -167,7 +167,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       <div
         className={
           layout === "horizontal"
-            ? `bg-white ${inputClassName || "col-span-10"}`
+            ? `bg-white ${inputClassName || "col-span-12"}`
             : "bg-white"
         }
       >
@@ -290,7 +290,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                   min={min}
                   max={max}
                   step={step}
-                  className={`w-full flex-1 px-2 py-1.5 text-sm outline-none focus:outline-none bg-transparent
+                  className={`w-full flex-1 px-2 py-1.5 text-[13px] sm:text-sm outline-none focus:outline-none bg-transparent
                     ${readOnly || disabled ? "bg-gray-200 text-gray-500 cursor-not-allowed" : ""} 
                     ${type === "number" ? "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" : ""}
                   `}
