@@ -167,7 +167,6 @@ export const MainService = {
     return res.html;
   },
 
-  // Reemplaza tu uploadReportFile actual por este:
   uploadReportFile: async (id: number, formData: FormData): Promise<void> => {
     // api.post ya detecta si es FormData y omite el Content-Type automáticamente
     return api.post<void>(`main/reports/${id}/upload`, formData);

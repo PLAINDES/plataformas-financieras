@@ -9,9 +9,9 @@ export const BalanceSheetBlock: React.FC<{
   kd_1_minus_t: string;
   ke: string;
   compact: boolean;
-  D_empresa: string;
-}> = ({ koa, kd_1_minus_t, ke, compact, D_empresa }) => {
-  const rawPasivoPerc = parsePercentageValue(D_empresa);
+  d_empresa: string;
+}> = ({ koa, kd_1_minus_t, ke, compact, d_empresa }) => {
+  const rawPasivoPerc = parsePercentageValue(d_empresa);
   const rawPatrimonioPerc = 100 - rawPasivoPerc;
 
   const MIN_VISUAL_PERC = 25;

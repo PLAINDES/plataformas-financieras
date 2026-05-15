@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { MainPageFooter } from "./MainPageFooter";
-import { useAuth } from "@/features/auth/hooks/useAuth";
 import { NavBar } from "../kapital/components/NavBar";
 import { Proyectos } from "./Proyectos";
+import { LoginModal } from "@/features/auth/components/LoginModal";
+import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 
 interface ProyectosUsuarioPageProps {
   heroTitle?: string;
@@ -19,13 +20,17 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
   const [isDesktopFormOpen, setIsDesktopFormOpen] = useState<boolean>(true);
   const [isReportSidebarOpen, setIsReportSidebarOpen] =
     useState<boolean>(false);
-  const { user } = useAuth();
   const handleReportSidebarOpen = (): void => {
     setIsReportSidebarOpen(true);
     if (isDesktopFormOpen) setIsDesktopFormOpen(false);
   };
-  const handleLogout = (): void => {};
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
+  const { user, login, logout } = useAuthContext();
+
+  const handleLogout = async () => {
+    await logout();
+  };
   void heroTitle;
   void isReportSidebarOpen;
 
@@ -42,6 +47,7 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
         isFormOpen={isDesktopFormOpen}
         onOpenReport={handleReportSidebarOpen}
         hasResults={false}
+        onLoginClick={() => setIsLoginModalOpen(true)}
         selected={""}
       />
       <div className="h-full flex flex-col p-2">
@@ -52,6 +58,14 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
           <MainPageFooter brandName={brandName} brandHref={brandHref} />
         </div>
       </div>
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLogin={login}
+        onSwitchToRegister={() => {
+          setIsLoginModalOpen(false);
+        }}
+      />
 
       {/*<Chatbot isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} />*/}
     </div>

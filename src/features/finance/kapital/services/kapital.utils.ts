@@ -73,7 +73,7 @@ export const toMarketResults = (
       source?.["kd(1-t)"] !== undefined
         ? toRate(source?.["kd(1-t)"])
         : toRate(source?.["kd(1-T)"]),
-    D_empresa: toRate(source?.D_empresa),
+    d_empresa: toRate(source?.d_empresa),
   };
 };
 
@@ -148,7 +148,7 @@ export const computeResultsFromCalculationData = (
       developed,
       empresa_dolares,
       empresa_soles,
-      D_empresa: toRate(latestResult?.D_empresa),
+      d_empresa: toRate(latestResult?.d_empresa),
     },
     showCompanyCard,
   };
@@ -223,4 +223,55 @@ export const enrichCalculationInputPayload = (formData: FormData) => {
   }
 
   return payload;
+};
+
+export // Función para extraer año y trimestre de la fecha ingresada, con múltiples formatos soportados
+const getYearAndQuarter = (dateStr: string) => {
+  if (!dateStr) return { year: null, quarter: null };
+
+  const trimmed = dateStr.trim();
+
+  // 1. Si la fecha es simplemente un año (ej. "2025")
+  if (/^\d{4}$/.test(trimmed)) {
+    return { year: trimmed, quarter: "Q1" };
+  }
+
+  // 2. Intentar parsear formato DD/MM/YYYY o DD-MM-YYYY (ej: 30/06/2024)
+  const ddMMyyyyMatch = trimmed.match(
+    /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/
+  );
+  if (ddMMyyyyMatch) {
+    const month = parseInt(ddMMyyyyMatch[2], 10);
+    const year = ddMMyyyyMatch[3];
+    const quarter = `Q${Math.ceil(month / 3)}`;
+    return { year, quarter };
+  }
+
+  // 3. Intentar parsear formato YYYY-MM-DD o YYYY/MM/DD (ej: 2024-06-30)
+  const yyyyMMddMatch = trimmed.match(
+    /^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/
+  );
+  if (yyyyMMddMatch) {
+    const year = yyyyMMddMatch[1];
+    const month = parseInt(yyyyMMddMatch[2], 10);
+    const quarter = `Q${Math.ceil(month / 3)}`;
+    return { year, quarter };
+  }
+
+  // 4. Fallback: Intentar parsear como fecha nativa de JS
+  const date = new Date(trimmed);
+  if (!isNaN(date.getTime())) {
+    const year = date.getFullYear().toString();
+    const month = date.getMonth() + 1; // getMonth es 0 indexado (0 = Enero)
+    const quarter = `Q${Math.ceil(month / 3)}`;
+    return { year, quarter };
+  }
+
+  // 5. Extraer cualquier año de 4 dígitos que encuentre
+  const fallbackYearMatch = trimmed.match(/\d{4}/);
+  if (fallbackYearMatch) {
+    return { year: fallbackYearMatch[0], quarter: "Q1" };
+  }
+
+  return { year: null, quarter: null };
 };

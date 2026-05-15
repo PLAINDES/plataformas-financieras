@@ -8,13 +8,13 @@ import { ReportSidebar } from "../components/ReportSidebar";
 import { LoadingOverlay } from "@/shared/components/common/LoadingOverlay";
 import { ToastStack } from "@/shared/components/common/ToastStack";
 import { MainPageFooter } from "../components/MainPageFooter";
-import { useAuth } from "@/features/auth/hooks/useAuth";
 import Chatbot from "../components/Chatbot/Chatbot";
 import type { ToastType } from "@/shared/types/toast.types";
 import { MainService } from "@/shared/services/main.service";
 import type { Calculation } from "@/shared/types";
 import "./KapitalPage.css";
 import { useLocation } from "react-router-dom";
+import { LoginModal } from "@/features/auth/components/LoginModal";
 
 import {
   INSTRUMENTS,
@@ -36,7 +36,9 @@ import {
   enrichCalculationInputPayload,
   buildCalculationDataPayload,
   generateCalculationCode,
+  getYearAndQuarter,
 } from "./services/kapital.utils";
+import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 
 export interface FormData {
   date: string;
@@ -64,7 +66,7 @@ export interface MarketResults {
   ke: number | string;
   koa: number | string;
   "kd(1-t)": string | number;
-  D_empresa: string | number;
+  d_empresa: string | number;
 }
 
 export interface Results {
@@ -77,7 +79,7 @@ export interface Results {
   developed: MarketResults;
   empresa_dolares: MarketResults;
   empresa_soles: MarketResults;
-  D_empresa: string | number;
+  d_empresa: string | number;
 }
 
 export interface SensibilizacionEntry {
@@ -121,8 +123,11 @@ const KapitalPage: React.FC = () => {
   const [resultsSection, setResultsSection] = useState<
     "result" | "sensitivity"
   >("result");
+
   const [isReportSidebarOpen, setIsReportSidebarOpen] = useState(false);
   const [isReportViewerOpen, setIsReportViewerOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
   const [selectedReportProductId, setSelectedReportProductId] = useState("1");
   const [results, setResults] = useState<Results | null>(null);
   const [showCompanyCard, setShowCompanyCard] = useState(false);
@@ -162,7 +167,7 @@ const KapitalPage: React.FC = () => {
   const toastTimeoutsRef = useRef<Map<string, number>>(new Map());
   const lastEditedFieldRef = useRef<"debt" | "capital" | null>(null);
 
-  const { user } = useAuth();
+  const { user, login, logout } = useAuthContext();
 
   useEffect(
     () => () => {
@@ -423,57 +428,6 @@ const KapitalPage: React.FC = () => {
     }
   }, [currentCalculation]);
 
-  // Función para extraer año y trimestre de la fecha ingresada, con múltiples formatos soportados
-  const getYearAndQuarter = (dateStr: string) => {
-    if (!dateStr) return { year: null, quarter: null };
-
-    const trimmed = dateStr.trim();
-
-    // 1. Si la fecha es simplemente un año (ej. "2025")
-    if (/^\d{4}$/.test(trimmed)) {
-      return { year: trimmed, quarter: "Q1" };
-    }
-
-    // 2. Intentar parsear formato DD/MM/YYYY o DD-MM-YYYY (ej: 30/06/2024)
-    const ddMMyyyyMatch = trimmed.match(
-      /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/
-    );
-    if (ddMMyyyyMatch) {
-      const month = parseInt(ddMMyyyyMatch[2], 10);
-      const year = ddMMyyyyMatch[3];
-      const quarter = `Q${Math.ceil(month / 3)}`;
-      return { year, quarter };
-    }
-
-    // 3. Intentar parsear formato YYYY-MM-DD o YYYY/MM/DD (ej: 2024-06-30)
-    const yyyyMMddMatch = trimmed.match(
-      /^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/
-    );
-    if (yyyyMMddMatch) {
-      const year = yyyyMMddMatch[1];
-      const month = parseInt(yyyyMMddMatch[2], 10);
-      const quarter = `Q${Math.ceil(month / 3)}`;
-      return { year, quarter };
-    }
-
-    // 4. Fallback: Intentar parsear como fecha nativa de JS
-    const date = new Date(trimmed);
-    if (!isNaN(date.getTime())) {
-      const year = date.getFullYear().toString();
-      const month = date.getMonth() + 1; // getMonth es 0 indexado (0 = Enero)
-      const quarter = `Q${Math.ceil(month / 3)}`;
-      return { year, quarter };
-    }
-
-    // 5. Extraer cualquier año de 4 dígitos que encuentre
-    const fallbackYearMatch = trimmed.match(/\d{4}/);
-    if (fallbackYearMatch) {
-      return { year: fallbackYearMatch[0], quarter: "Q1" };
-    }
-
-    return { year: null, quarter: null };
-  };
-
   // UseEffect
   useEffect(() => {
     let intervalId: number;
@@ -635,12 +589,20 @@ const KapitalPage: React.FC = () => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent, explicitBeta?: string) => {
+    if (e) e.preventDefault();
+
+    // Si llega beta desde el chabot
+    const dataToSubmit = { ...formData };
+    if (explicitBeta !== undefined) {
+      dataToSubmit.beta_unlevered = explicitBeta;
+      setFormData((prev) => ({ ...prev, beta_unlevered: explicitBeta }));
+    }
+
     const missingFields: string[] = [];
-    if (!formData.date) missingFields.push("Fecha");
-    if (!formData.sector) missingFields.push("Sector");
-    if (!formData.country) missingFields.push("País");
+    if (!dataToSubmit.date) missingFields.push("Fecha");
+    if (!dataToSubmit.sector) missingFields.push("Sector");
+    if (!dataToSubmit.country) missingFields.push("País");
     if (missingFields.length > 0) {
       addToast("warn", `Completa los campos: ${missingFields.join(", ")}`);
       return;
@@ -664,7 +626,7 @@ const KapitalPage: React.FC = () => {
     setShowResults(false);
     setIsLoading(true);
 
-    const betaUnlevered = toOptionalNumber(formData.beta_unlevered);
+    const betaUnlevered = toOptionalNumber(dataToSubmit.beta_unlevered);
     const isBetaUpdate =
       isWaccCalculated && currentCalculation && betaUnlevered !== undefined;
 
@@ -676,7 +638,7 @@ const KapitalPage: React.FC = () => {
           currentCalculation!.id,
           {
             data: {
-              inputs: [enrichCalculationInputPayload(formData)],
+              inputs: [enrichCalculationInputPayload(dataToSubmit)],
               active_session_id: prewarmedSessionId,
             },
           }
@@ -691,7 +653,7 @@ const KapitalPage: React.FC = () => {
           type: "kapital",
           data: {
             ...buildCalculationDataPayload(),
-            inputs: [enrichCalculationInputPayload(formData)],
+            inputs: [enrichCalculationInputPayload(dataToSubmit)],
             prewarmed_session_id: prewarmedSessionId,
           },
         });
@@ -792,9 +754,9 @@ const KapitalPage: React.FC = () => {
   const handleOpenSensibilizacion = () => {
     if (isChatbotOpen) {
       setIsChatbotOpen(false);
-      setIsFormOpen(false);
+      //setIsFormOpen(false);
     } else {
-      setIsFormOpen(true);
+      //setIsFormOpen(true);
       setIsChatbotOpen(true);
     }
   };
@@ -804,8 +766,9 @@ const KapitalPage: React.FC = () => {
     setIsReportSidebarOpen(false);
   };
 
-  const handleLogout = () => {
-    // TODO: Implement logout functionality
+  const handleLogout = async () => {
+    await logout();
+    addToast("success", "Has cerrado sesión exitosamente.");
   };
 
   const getSelectedView = (): "result" | "sensitivity" | "" => {
@@ -826,6 +789,19 @@ const KapitalPage: React.FC = () => {
       document.body.style.overflow = "unset";
     };
   }, [isFormOpen]);
+
+  const hasReachedMaxSens = sensibilizaciones.length >= 2;
+
+  const chatbotComponent =
+    shouldShowChatbot && !hasReachedMaxSens ? (
+      <Chatbot
+        formData={formData}
+        isWaccCalculated={isWaccCalculated}
+        isOpen={isChatbotOpen}
+        setIsOpen={setIsChatbotOpen}
+        onCalculateWacc={(beta: string) => handleSubmit(undefined, beta)}
+      />
+    ) : null;
 
   const mainContent = showResults ? (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
@@ -888,6 +864,7 @@ const KapitalPage: React.FC = () => {
           onOpenReport={handleReportSidebarOpen}
           onSensibilizaClick={handleOpenSensibilizacion}
           localCurrency={activeSavedCurrency}
+          chatbotComponent={chatbotComponent}
         />
       )}
 
@@ -915,9 +892,19 @@ const KapitalPage: React.FC = () => {
         logoSrc="/images/logo-kapital-small.png"
         logoAlt="Kapital Logo"
         projectsHref="/usuario/proyectos"
+        onLoginClick={() => setIsLoginModalOpen(true)}
         selected={getSelectedView()}
         onNavigate={handleResultsSectionChange}
         onOpenReport={handleReportSidebarOpen}
+      />
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLogin={login}
+        onSwitchToRegister={() => {
+          setIsLoginModalOpen(false);
+        }}
       />
 
       <NavigationTabs
@@ -966,19 +953,20 @@ const KapitalPage: React.FC = () => {
         onOpenReportViewer={handleReportViewerOpen}
       />
 
-      {shouldShowChatbot && (
+      {/*shouldShowChatbot && (
         <Chatbot
           formData={formData}
           isWaccCalculated={isWaccCalculated}
           isOpen={isChatbotOpen}
           setIsOpen={(val: boolean) => {
             setIsChatbotOpen(val);
-            if (val && !isFormOpen) {
+            f (val && !isFormOpen) {
               setIsFormOpen(true);
             }
           }}
+          onCalculateWacc={(beta: string) => handleSubmit(undefined, beta)}
         />
-      )}
+      )*/}
 
       <ToastStack toasts={toasts} onDismiss={removeToast} />
       {isLoading && <LoadingOverlay />}

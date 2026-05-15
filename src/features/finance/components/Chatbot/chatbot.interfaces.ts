@@ -46,4 +46,5 @@ export interface ChatbotProps {
   isWaccCalculated?: boolean;
   isOpen: boolean;
   setIsOpen: (val: boolean) => void;
+  onCalculateWacc: (beta: string) => void;
 }

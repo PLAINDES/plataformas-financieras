@@ -26,6 +26,7 @@ export interface KapitalResultsProps {
   onOpenReport?: () => void;
   onSensibilizaClick: () => void;
   localCurrency?: string;
+  chatbotComponent?: React.ReactNode;
 }
 
 interface MethodologyItem {
@@ -58,6 +59,7 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
   onSensibilizaClick,
   onOpenReport,
   localCurrency,
+  chatbotComponent,
 }) => {
   if (loading) {
     return <LoadingOverlay />;
@@ -80,6 +82,7 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
               onSensibilizaClick={onSensibilizaClick}
               onOpenReport={onOpenReport}
               localCurrency={localCurrency}
+              chatbotComponent={chatbotComponent}
             />
           )}
           {section === "sensitivity" && (
@@ -101,6 +104,7 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
               sensibilizaciones={sensibilizaciones}
               onOpenReport={onOpenReport}
               localCurrency={localCurrency}
+              chatbotComponent={chatbotComponent}
             />
           )}
         </div>

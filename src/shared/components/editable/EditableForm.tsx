@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
+import { Settings } from "lucide-react";
 
 interface FormField {
   id: string;
@@ -234,28 +235,18 @@ export function EditableForm({
         >
           <button
             onClick={() => setIsEditing(true)}
-            style={{
-              padding: mobileMode ? "4px 8px" : "6px 12px",
-              border: "none",
-              background: "#3b82f6",
-              color: "white",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: mobileMode ? "0.65rem" : "0.75rem",
-              fontWeight: "500",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
+            className={`flex gap-1 text-white cursor-pointer font-semibold bg-valora-primary hover:bg-valora-secondary transition-colors
+              ${mobileMode ? "px-2 py-1 text-[11px]" : "px-3 py-1.5 text-xs"} rounded-md hover:bg-blue-600`}
             title="Editar configuración del formulario"
           >
-            ⚙️ {mobileMode ? "Edit" : "Editar Form"}
+            <Settings className="size-4" />{" "}
+            {mobileMode ? "Edit" : "Editar Form"}
           </button>
         </div>
 
-        <div className={mobileMode ? "flex-grow flex flex-col pt-8" : "p-8"}>
+        <div className={mobileMode ? "grow flex flex-col pt-8" : "p-8"}>
           <div
-            className={
-              mobileMode ? "flex-grow flex flex-col overflow-auto" : ""
-            }
+            className={mobileMode ? "grow flex flex-col overflow-auto" : ""}
             style={mobileMode ? { minHeight: 0 } : {}}
           >
             {config.fields.map((field, index) => {
@@ -315,7 +306,7 @@ export function EditableForm({
 
           <button
             type="button"
-            className={`w-full bg-[var(--bs-primary)] text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity ${mobileMode ? "mt-2" : "mt-6"}`}
+            className={`w-full bg-(--bs-primary) cursor-pointer text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity ${mobileMode ? "mt-2" : "mt-6"}`}
             onClick={onSubmit}
             style={
               mobileMode

@@ -151,6 +151,7 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
       setTickerToDelete(null);
     }
   };
+
   // Recalcular el BOA Promedio basado
   const validBetas = companies
     .map((c) => c.beta_unlevered)
@@ -174,75 +175,40 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
   }
 
   return (
-    <div className="w-full flex flex-col gap-4">
-      {/* Panel Superior: BOA Promedio del Sector */}
-      {avgBetaUnlevered !== undefined && (
-        <div className="flex items-center justify-between bg-blue-50 border border-blue-200 p-4 rounded-lg shadow-sm">
-          <div className="flex flex-col gap-1">
-            <span className="max-[540px]-text[11px] text-xs font-bold text-blue-700 uppercase tracking-wide">
-              BOA Promedio del Sector
-            </span>
-            <span className="text-lg sm:text-2xl font-black text-gray-900 leading-none mt-1">
-              {avgBetaUnlevered.toFixed(4)}
-            </span>
-          </div>
-          <button
-            onClick={() => {
-              // Pasamos un objeto simulado
-              onApply({
-                ticker: "PROMEDIO",
-                company_name: "Promedio del Sector",
-                country: "-",
-                sector: "-",
-                dc_ratio: null,
-                effective_tax_rate: null,
-                beta_levered: null,
-                beta_unlevered: avgBetaUnlevered,
-              });
-            }}
-            disabled={!isWaccCalculated}
-            title={
-              !isWaccCalculated
-                ? "Debe calcular el WACC primero"
-                : "Insertar promedio al formulario"
-            }
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
-              isWaccCalculated
-                ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer shadow-md active:scale-95"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
-          >
-            <MousePointerClick className="w-6 h-6" />
-            Insertar Promedio
-          </button>
-        </div>
-      )}
-
+    <div className="w-full h-full flex flex-col gap-4 justify-between">
       {/*   Tabla con Scroll y Cabecera Fija */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden flex flex-col">
-        <div className="overflow-y-auto max-h-[50vh] w-full">
+      <div className="flex-1 h-full border border-gray-200 rounded-lg overflow-hidden flex flex-col min-h-0">
+        <div className="overflow-y-auto w-full h-full">
           <table className="min-w-full divide-y divide-gray-200 text-sm text-left relative">
             <thead className="bg-gray-50 text-gray-600 font-semibold sticky top-0 z-30">
               <tr>
-                <th className="px-4 py-3 bg-gray-50">Ticker</th>
-                <th className="px-4 py-3 bg-gray-50">Empresa</th>
-                <th className="px-4 py-3 bg-gray-50">BOA (Desapalancado)</th>
-                <th className="px-4 py-3 bg-gray-50 text-center">Acción</th>
+                <th className="px-2 py-1.5 sm:px-4 sm:py-3 bg-gray-50">
+                  Ticker
+                </th>
+                <th className="px-2 py-1.5 sm:px-4 sm:py-3 bg-gray-50">
+                  Empresa
+                </th>
+                <th className="px-2 py-1.5 sm:px-4 sm:py-3 bg-gray-50">
+                  BOA<span className="hidden sm:inline"> (Desapalancado)</span>
+                </th>
+                <th className="px-2 py-1.5 sm:px-4 sm:py-3 bg-gray-50 text-center">
+                  Acción
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
               {data.valid_companies.map((company, idx) => (
                 <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
-                  <td className="text-xs sm:text-sm px-4 py-3 font-medium text-blue-600">
+                  <td className="text-xs sm:text-sm px-2 py-1.5 sm:px-4 sm:py-3 font-medium text-blue-600">
                     {company.ticker}
                   </td>
-                  <td className="text-xs sm:text-sm px-4 py-3 text-gray-700">
+                  <td className="text-xs sm:text-sm px-2 py-1.5 sm:px-4 sm:py-3 text-gray-700">
                     {company.company_name}
                   </td>
-                  <td className="text-sm  px-4 py-3 font-bold text-gray-800">
+                  <td className="text-sm  px-2 py-1.5 sm:px-4 sm:py-3 font-bold text-gray-800">
                     {company.beta_unlevered?.toFixed(4) || "N/A"}
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-2 py-1.5 sm:px-4 sm:py-3 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <button
                         onClick={() => onApply(company)}
@@ -276,6 +242,47 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
           </table>
         </div>
       </div>
+      {/* BOA Promedio del Sector */}
+      {avgBetaUnlevered !== undefined && (
+        <div className="flex items-center justify-between bg-blue-50 border border-blue-200 p-4 rounded-lg shadow-sm">
+          <div className="flex flex-col gap-1">
+            <span className="max-[540px]-text[11px] text-xs font-bold text-blue-700 uppercase tracking-wide">
+              BOA Promedio del Sector
+            </span>
+            <span className="text-lg sm:text-2xl font-black text-gray-900 leading-none mt-1">
+              {avgBetaUnlevered.toFixed(4)}
+            </span>
+          </div>
+          <button
+            onClick={() => {
+              onApply({
+                ticker: "PROMEDIO",
+                company_name: "Promedio del Sector",
+                country: "-",
+                sector: "-",
+                dc_ratio: null,
+                effective_tax_rate: null,
+                beta_levered: null,
+                beta_unlevered: avgBetaUnlevered,
+              });
+            }}
+            disabled={!isWaccCalculated}
+            title={
+              !isWaccCalculated
+                ? "Debe calcular el WACC primero"
+                : "Insertar promedio al formulario"
+            }
+            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
+              isWaccCalculated
+                ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer shadow-md active:scale-95"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+          >
+            <MousePointerClick className="w-6 h-6" />
+            Insertar Promedio
+          </button>
+        </div>
+      )}
 
       {!isWaccCalculated && (
         <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 text-center">

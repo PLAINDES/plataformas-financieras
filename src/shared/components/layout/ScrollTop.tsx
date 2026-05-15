@@ -30,7 +30,7 @@ export function ScrollTop() {
       id="kt_scrolltop"
       onClick={scrollToTop}
       className={`
-        fixed max-[540px]:bottom-20 bottom-26 right-4 z-60
+        fixed max-[540px]:bottom-6 bottom-26 right-4 z-60
         flex items-center justify-center
         w-12 h-12 rounded-full cursor-pointer shadow-lg
         bg-blue-600 text-white

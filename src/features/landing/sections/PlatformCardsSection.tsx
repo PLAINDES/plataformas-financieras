@@ -134,13 +134,14 @@ export function PlatformCardsSection({
     if (!cardsContainerRef.current) return;
     const container = cardsContainerRef.current;
     const cardElements = container.querySelectorAll(".video-card-wrapper");
+
     if (cardElements[index]) {
       const card = cardElements[index] as HTMLElement;
-      const containerWidth = container.offsetWidth;
-      const cardWidth = card.offsetWidth;
-      const cardLeft = card.offsetLeft;
-      const scrollPosition = cardLeft - containerWidth / 2 + cardWidth / 2;
-      container.scrollTo({ left: scrollPosition, behavior: "smooth" });
+      card.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
       setCurrentIndex(index);
     }
   };
@@ -233,7 +234,7 @@ export function PlatformCardsSection({
           <div
             className={`cards-container-wrapper ${cardsData.items.length > 2 ? "carrousel-desktop-cards" : ""}`}
           >
-            <div className="cards-container pt-2" ref={cardsContainerRef}>
+            <div className="cards-container" ref={cardsContainerRef}>
               <EditableCollection
                 data={cardsData}
                 onSave={handleSaveCards}
@@ -241,9 +242,12 @@ export function PlatformCardsSection({
                 addButtonText="Agregar Card"
                 maxItems={10}
                 allowReorder={true}
-                className="cards-flex-wrapper"
+                className="cards-flex-wrapper "
                 renderItem={(card, index, helpers) => (
-                  <div className="video-card-wrapper" key={card.id}>
+                  <div
+                    className="video-card-wrapper shrink-0 w-[85vw] max-w-[320px] snap-center"
+                    key={card.id}
+                  >
                     <PlatformCard
                       card={card}
                       isActive={hoveredCardId === card.id}

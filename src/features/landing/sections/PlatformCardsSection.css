@@ -81,9 +81,10 @@
     display: flex;
     flex-direction: row;
     gap: 1rem;
-    padding: 1rem;
-    justify-content: center;
-    width: 100%;
+    padding: 1rem 1.5rem;
+    justify-content: flex-start;
+    width: max-content;
+    min-width: 100%;
     align-items: stretch;
     min-height: 360px;
   }
@@ -105,8 +106,9 @@
     flex-direction: row;
     gap: 1.5rem;
     padding: 1rem;
-    justify-content: center;
-    width: 100%;
+    justify-content: flex-start;
+    width: max-content;
+    min-width: 100%;
     align-items: stretch;
     min-height: 380px;
   }
@@ -259,7 +261,6 @@
     width: 100%;
     justify-content: center;
     min-height: 380px;
-    padding-bottom: 1rem;
     align-items: stretch; /* Prevents vertical cut-off */
   }
 
@@ -304,7 +305,7 @@
   .cards-container {
     overflow-x: auto;
     overflow-y: hidden;
-    padding-bottom: 1rem;
+    padding-top: 1rem;
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
     scroll-snap-type: none;
