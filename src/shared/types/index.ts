@@ -144,7 +144,9 @@ export interface TemplateCodeBasic {
   nombre: string;
   code: string;
   type: "valora" | "kapital";
+  value: string | null;
   hoja: string | null;
+  template_code_image_url?: string | null;
 }
 
 export interface TemplateWithCodes {
