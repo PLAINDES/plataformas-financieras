@@ -4,11 +4,14 @@ import {
   type CompanyData,
   type YahooFinanceData,
   type Message,
-  type FinancialData,
   type ChatbotProps,
 } from "./chatbot.interfaces";
-import { Bot, ArrowUp, RotateCcw, X } from "lucide-react";
+import { Bot, ArrowUp, RotateCcw, X, Sparkles, ArrowRight } from "lucide-react";
 import { YahooResults, BetaUpdateCard } from "./ChatbotUI";
+import {
+  handleNumberValidation,
+  handleNumberKeyDown,
+} from "@/shared/utils/inputValidators";
 
 const now = (): string =>
   new Date().toLocaleTimeString("es-ES", {
@@ -30,33 +33,108 @@ interface ConvItem {
   time: string;
 }
 
+const sharedState = {
+  items: [
+    {
+      id: uid(),
+      type: "simple" as const,
+      msg: {
+        id: uid(),
+        text: WELCOME_TEXT,
+        sender: "ai" as const,
+        time: now(),
+      },
+      time: now(),
+    },
+  ] as ConvItem[],
+  history: [] as { role: string; parts: { text: string }[] }[],
+  input: "",
+  betaInput: "",
+  modalData: null as YahooFinanceData | null,
+};
+
 export const Chatbot: React.FC<ChatbotProps> = ({
   formData: externalFormData,
   isWaccCalculated,
   isOpen,
   setIsOpen,
+  onCalculateWacc,
 }) => {
-  //const [isOpen, setIsOpen] = useState(false);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [items, setItems] = useState<ConvItem[]>([
-    {
-      id: uid(),
-      type: "simple",
-      msg: { id: uid(), text: WELCOME_TEXT, sender: "ai", time: now() },
-      time: now(),
-    },
-  ]);
-  const [history, setHistory] = useState<
-    { role: string; parts: { text: string }[] }[]
-  >([]);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [items, setItemsState] = useState<ConvItem[]>(sharedState.items);
+  const [history, setHistoryState] = useState(sharedState.history);
 
-  const [modalData, setModalData] = useState<YahooFinanceData | null>(null);
+  const [input, setInputState] = useState(sharedState.input);
+  const [betaInput, setBetaInputState] = useState(sharedState.betaInput);
+  const [modalData, setModalDataState] = useState<YahooFinanceData | null>(
+    sharedState.modalData
+  );
+
+  const [loading, setLoading] = useState(false);
+
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const setItems = useCallback(
+    (val: ConvItem[] | ((prev: ConvItem[]) => ConvItem[])) => {
+      setItemsState((prev: ConvItem[]) => {
+        const next = typeof val === "function" ? val(prev) : val;
+        sharedState.items = next;
+        return next;
+      });
+    },
+    []
+  );
+
+  const setHistory = useCallback((val: any) => {
+    setHistoryState((prev: { role: string; parts: { text: string }[] }[]) => {
+      const next = typeof val === "function" ? val(prev) : val;
+      sharedState.history = next;
+      return next;
+    });
+  }, []);
+
+  const setInput = useCallback((val: string | ((prev: string) => string)) => {
+    setInputState((prev: string) => {
+      const next = typeof val === "function" ? val(prev) : val;
+      sharedState.input = next;
+      return next;
+    });
+  }, []);
+
+  const setBetaInput = useCallback(
+    (val: string | ((prev: string) => string)) => {
+      setBetaInputState((prev: string) => {
+        const next = typeof val === "function" ? val(prev) : val;
+        sharedState.betaInput = next;
+        return next;
+      });
+    },
+    []
+  );
+
+  const setModalData = useCallback(
+    (
+      val:
+        | YahooFinanceData
+        | null
+        | ((prev: YahooFinanceData | null) => YahooFinanceData | null)
+    ) => {
+      setModalDataState((prev: YahooFinanceData | null) => {
+        const next = typeof val === "function" ? val(prev) : val;
+        sharedState.modalData = next;
+        return next;
+      });
+    },
+    []
+  );
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [items, loading]);
 
   useEffect(() => {
@@ -69,6 +147,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
       }, 100);
     }
   }, [isOpen]);
+
   const pushItem = useCallback((item: ConvItem) => {
     setItems((prev) => [...prev, item]);
   }, []);
@@ -87,80 +166,27 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 
   const applyCompanyData = useCallback(
     (company: CompanyData) => {
-      updateFinancialData({
-        dc_ratio: company.dc_ratio ?? undefined,
-        effective_tax_rate: company.effective_tax_rate ?? undefined,
-        beta_levered: company.beta_levered,
-        beta_unlevered: company.beta_unlevered ?? undefined,
-      });
-      addSimple(
-        `📊 Datos de ${company.company_name} (${company.ticker}) aplicados al formulario exitosamente.`,
-        "ai"
-      );
+      if (company.beta_unlevered != null) {
+        // Formatea a 4 decimales
+        const formattedBeta = Number(company.beta_unlevered).toFixed(4);
+        setBetaInput(formattedBeta);
+
+        addSimple(
+          `Beta de ${company.company_name} (${company.ticker}) seleccionado.`,
+          "ai"
+        );
+      }
     },
     [addSimple]
   ); // eslint-disable-line
 
-  // Función para inyectar valores en un input controlado por React
-  const updateFinancialData = (financialData: FinancialData) => {
-    const fire = (inputName: string, value: string) => {
-      // 1. Buscamos el input por su atributo "name"
-      const el = document.querySelector(
-        `input[name="${inputName}"]`
-      ) as HTMLInputElement | null;
-
-      if (el) {
-        // 2. Extraemos el setter original de HTML (React bloquea el set normal)
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-          window.HTMLInputElement.prototype,
-          "value"
-        )?.set;
-
-        // 3. Forzamos el cambio de valor
-        nativeInputValueSetter?.call(el, value);
-
-        // 4. Lanzamos los eventos para que KapitalPage vea el cambio
-        el.dispatchEvent(new Event("input", { bubbles: true }));
-        el.dispatchEvent(new Event("change", { bubbles: true }));
-      } else {
-        console.warn(`No se encontró el input con name: ${inputName}`);
-      }
-    };
-
-    // Insertamos el Beta Desapalancado (BOA)
-    if (financialData.beta_unlevered != null) {
-      fire("beta_unlevered", financialData.beta_unlevered.toFixed(2));
-      setIsOpen(false);
-    }
-  };
-
-  const updateBetaValue = useCallback(
+  const applyDirectBeta = useCallback(
     (newBeta: number) => {
-      const selectors = [
-        'input[name="beta"]',
-        "#betaInput",
-        'input[name*="beta" i]',
-        'input[name="beta_unlevered"]',
-        'input[name="beta_levered"]',
-      ];
-      let found = false;
-      for (const sel of selectors) {
-        const el = document.querySelector(sel) as HTMLInputElement | null;
-        if (el) {
-          el.value = String(newBeta);
-          el.dispatchEvent(new Event("change", { bubbles: true }));
-          found = true;
-          break;
-        }
-      }
-      if (found) {
-        addSimple(`Beta actualizado a ${newBeta} exitosamente.`, "ai");
-      } else {
-        addSimple(
-          `Para análisis sectorial, el beta ${newBeta} se aplicará como referencia.`,
-          "ai"
-        );
-      }
+      setBetaInput(Number(newBeta).toFixed(4));
+      addSimple(
+        `Beta actualizado a ${newBeta} en el formulario. Haz clic en Calcular.`,
+        "ai"
+      );
     },
     [addSimple]
   );
@@ -180,45 +206,6 @@ export const Chatbot: React.FC<ChatbotProps> = ({
             "ai"
           );
         }
-        /*
-        let sumBetaUnlevered = 0;
-
-        // Datos de prueba para cada ticker
-        const mockCompanies: CompanyData[] = tickers.map((ticker) => {
-          const randomBoa = 0.7 + Math.random() * 0.6; // Entre 0.7 y 1.3
-          sumBetaUnlevered += randomBoa;
-          return {
-            ticker: ticker,
-            company_name: `${ticker}`,
-            country: "USA",
-            sector: externalFormData.sector || "General",
-            dc_ratio: 0.25,
-            effective_tax_rate: 0.21,
-            beta_levered: randomBoa * 1.2,
-            beta_unlevered: randomBoa,
-          };
-        });
-
-        const avgBeta = sumBetaUnlevered / mockCompanies.length;
-
-        const data: YahooFinanceData = {
-          success: true,
-          valid_companies: mockCompanies,
-          group_statistics: {
-            avg_beta_unlevered: avgBeta,
-            avg_dc_ratio: 0.25,
-            avg_tax_rate: 0.21,
-          },
-        };
-
-        if (data.success && data.valid_companies?.length) {
-          pushItem({ id: uid(), type: "yahoo", yahooData: data, time: now() });
-        } else {
-          addSimple(
-            "No se pudieron obtener datos válidos de Yahoo Finance.",
-            "ai"
-          );
-        }*/
       } catch (e: any) {
         addSimple(`Error analizando empresas: ${e.message}`, "ai");
       } finally {
@@ -227,6 +214,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     },
     [addSimple, pushItem]
   );
+
   const callChatbotAPI = useCallback(
     async (userMessage: string) => {
       // Bloque de intercepcion para depuracion local
@@ -252,7 +240,10 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 
         // 3. Actualizar el historial de conversación
         if (data.raw_history_appends) {
-          setHistory((prev) => [...prev, ...data.raw_history_appends]);
+          setHistory((prev: { role: string; parts: { text: string }[] }[]) => [
+            ...prev,
+            ...data.raw_history_appends,
+          ]);
         }
       } catch (e: any) {
         addSimple("Error de conexión con el servidor.", "ai");
@@ -262,6 +253,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     },
     [history, addSimple, analyzeYahooTickers, externalFormData]
   );
+
   const sendMessage = useCallback(() => {
     const msg = input.trim();
     if (!msg || loading) return;
@@ -318,14 +310,13 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   const SUGGESTIONS = [
     "Analiza mi beta actual",
     "Sugiere empresas comparables",
-    "Calcula un nuevo beta",
   ];
 
   // Consideramos "vacío" si solo está el mensaje de bienvenida de Betito
   const isEmpty = items.length <= 1;
 
   return (
-    <>
+    <section className="relative flex flex-col w-full sm:w-95 lg:w-150 max-w-full">
       <style>{`
         /* Scrollbar invisible hasta que se usa */
         .chat-scroll::-webkit-scrollbar {
@@ -342,57 +333,60 @@ export const Chatbot: React.FC<ChatbotProps> = ({
           background-color: #94a3b8;
         }
       `}</style>
-
       {/* Botón Flotante */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? "Cerrar chat" : "Abrir chat"}
-        className={`cursor-pointer fixed bottom-8 right-3 max-[540px]:bottom-3 z-80 flex h-14 w-14 items-center justify-center rounded-full bg-valora-primary text-white shadow-xl shadow-valora-primary/30 transition-all hover:scale-105 active:scale-95 ${
-          isOpen ? "scale-90 opacity-0 pointer-events-none" : ""
+        className={`px-4 py-2.5 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer ${
+          isOpen
+            ? "bg-gray-900 text-white rounded-t-xl rounded-b-none border border-b-0 border-gray-200"
+            : "bg-valora-primary text-white rounded-xl hover:bg-valora-secondary"
         }`}
       >
-        <Bot className="h-6 w-6" />
+        <span className="flex items-center gap-3 text-sm sm:text-lg font-semibold leading-snug">
+          <Sparkles className="h-5 w-5 shrink-0" />
+          Encuentra tu Costo de Capital usando el Beta específico de tu sector
+        </span>
+        {isOpen ? (
+          <X className="h-5 w-5 shrink-0 opacity-80 hover:opacity-100" />
+        ) : (
+          <ArrowRight className="h-5 w-5 shrink-0" />
+        )}
       </button>
-
       {/* Ventana del Chatbot */}
       <div
-        className={`fixed bottom-8 right-8 z-110 flex w-[calc(100vw-3rem)] max-w-105 flex-col overflow-hidden rounded-[24px] border border-gray-200 bg-gray-50 shadow-2xl transition-all duration-300 h-[min(650px,calc(100vh-3rem))] ${
+        className={`absolute top-full left-0 right-0 z-10 flex w-full flex-col overflow-hidden rounded-b-4xl border border-t-0 border-gray-200 bg-gray-50 shadow-2xl transition-all duration-300 h-[min(650px,calc(100vh-140px))] origin-top ${
           isOpen
-            ? "translate-y-0 opacity-100"
-            : "pointer-events-none translate-y-4 opacity-0"
+            ? "scale-y-100 opacity-100"
+            : "pointer-events-none scale-y-0 opacity-0"
         }`}
       >
         {/* Header tipo Píldora Flotante */}
-        <div className="relative flex w-full items-start justify-between px-4 pt-4 pb-2 z-10">
+        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
           {/* Píldora izquierda */}
-          <section className="flex flex-row gap-1">
-            <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-sm border border-gray-100">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-valora-primary text-white">
-                <Bot className="h-3.5 w-3.5" />
-              </div>
-              <span className="text-[13px] font-bold text-gray-800">
-                Betito WACC
-              </span>
-              <span className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]"></span>
+          <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-sm border border-gray-100">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-valora-primary text-white">
+              <Bot className="h-3.5 w-3.5" />
             </div>
-            <button
-              onClick={clearHistory}
-              className="my-auto flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-green-600 transition-colors hover:bg-gray-200/80 shadow-sm border"
-              title="Reiniciar conversación"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
-          </section>
+            <span className="text-[13px] font-bold text-gray-800">
+              Betito WACC
+            </span>
+            <span className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]"></span>
+          </div>
           <button
-            onClick={() => setIsOpen(false)}
-            className="my-auto flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-red-600 transition-colors hover:bg-valora-primary/20 shadow-sm border"
+            onClick={clearHistory}
+            className="my-auto flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-green-600 transition-colors hover:bg-gray-200/80 shadow-sm border"
+            title="Reiniciar conversación"
           >
-            <X className="h-4 w-4" />
+            <RotateCcw className="w-4 h-4" />
           </button>
         </div>
 
         {/* Área de Mensajes */}
-        <div className="chat-scroll flex-1 overflow-y-auto px-4 pb-2 pt-2">
+        <div
+          ref={chatContainerRef}
+          className="chat-scroll flex-1 overflow-y-auto px-4 pb-2 pt-2"
+        >
           {isEmpty ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm border border-gray-200 rotate-3">
@@ -414,7 +408,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                       addSimple(s, "user");
                       callChatbotAPI(s);
                     }}
-                    className="group flex w-full cursor-pointer items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-left text-[13.5px] font-medium text-gray-700 shadow-sm transition-all hover:border-valora-primary/50 hover:shadow-md"
+                    className="group flex w-full cursor-pointer items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-left text-xs sm:text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-valora-primary/50 hover:shadow-md"
                   >
                     {s}
                   </button>
@@ -435,7 +429,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                       {isUser ? (
                         // Burbuja de Usuario
                         <div className="flex max-w-[85%] flex-col items-end">
-                          <div className="rounded-4xl rounded-br-sm bg-[#0066FF] px-4 py-2.5 text-[14px] text-white shadow-sm">
+                          <div className="rounded-4xl rounded-br-sm bg-[#0066FF] px-4 py-2.5 text-xs sm:text-sm text-white shadow-sm">
                             <p className="whitespace-pre-wrap leading-relaxed">
                               {item.msg.text}
                             </p>
@@ -450,9 +444,9 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                           <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-valora-primary text-white shadow-sm">
                             <Bot className="h-3.5 w-3.5" />
                           </div>
-                          <div className="flex flex-col items-start w-full overflow-hidden">
-                            <div className="rounded-4xl rounded-tl-sm border border-gray-100 bg-white px-4 py-2.5 text-[14px] text-gray-800 shadow-sm max-w-full">
-                              <p className="whitespace-pre-wrap leading-relaxed wrap-break-word break-all">
+                          <div className="flex flex-col items-start w-full overflow-hidden text-left">
+                            <div className="rounded-4xl rounded-tl-sm border border-gray-100 bg-white px-4 py-2.5 text-xs sm:text-sm text-gray-800 shadow-sm max-w-full">
+                              <p className=" leading-relaxed wrap-break-word break-all">
                                 {item.msg.text}
                               </p>
                             </div>
@@ -478,7 +472,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                       </div>
                       <div className="flex w-full flex-col items-start">
                         <div className="w-full rounded-2xl rounded-tl-sm border border-gray-100 bg-white p-4 shadow-sm flex flex-col gap-3">
-                          <p className="text-[13.5px] text-gray-700 leading-relaxed">
+                          <p className="text-left text-xs sm:text-sm text-gray-700 leading-relaxed">
                             Hemos procesado los datos y encontrado{" "}
                             <strong className="text-valora-primary">
                               {item.yahooData.valid_companies.length} empresas
@@ -515,7 +509,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                           <BetaUpdateCard
                             response={item.betaData.response}
                             newBeta={item.betaData.newBeta}
-                            onUpdate={updateBetaValue}
+                            onUpdate={applyDirectBeta}
                           />
                         </div>
                         <span className="mt-1 ml-1 text-[10px] text-gray-400 font-medium">
@@ -550,7 +544,6 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                   </div>
                 </div>
               )}
-              <div ref={bottomRef} />
             </div>
           )}
         </div>
@@ -591,11 +584,45 @@ export const Chatbot: React.FC<ChatbotProps> = ({
             </button>
           </form>
         </div>
+
+        {/* Footer: Formulario de Beta y WACC */}
+        <div className="px-5 py-4 bg-white flex items-end gap-3 shrink-0 border-t border-slate-400">
+          <div className="flex flex-col gap-1.5 w-2/5">
+            <label className="text-[11px] sm:text-sm font-bold text-slate-400 uppercase tracking-wide text-left">
+              BETA DESAPALANCADO:
+            </label>
+            <input
+              type="number"
+              placeholder="0.00"
+              step="0.0001"
+              value={betaInput}
+              className="w-22 text-base px-3 py-2 font-semibold text-slate-800 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-white border border-gray-300 rounded-lg"
+              onKeyDown={(e) => handleNumberKeyDown(e, false)}
+              onChange={(e) => {
+                handleNumberValidation(
+                  e,
+                  { maxDecimals: 4, max: 3, min: 0 },
+                  (validEvent) => {
+                    setBetaInput(validEvent.target.value);
+                  }
+                );
+              }}
+            />
+          </div>
+          <button
+            type="button"
+            disabled={!betaInput || loading}
+            onClick={() => onCalculateWacc(betaInput)}
+            className="m-auto flex-1 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-95 cursor-pointer uppercase tracking-wide h-12 sm:h-10"
+          >
+            Cálcula y compara tu WACC
+          </button>
+        </div>
       </div>
       {/* --- MODAL --- */}
       {modalData && (
         <div className="fixed inset-0 z-120 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-all animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-2xl w-[90dvw] max-w-2xl h-[90dvh] sm:max-h-[85dvh] overflow-hidden flex flex-col animate-in zoom-in-95">
+          <div className="bg-white rounded-xl shadow-2xl w-[90dvw] max-w-2xl h-[80dvh] sm:max-h-[85dvh] overflow-hidden flex flex-col animate-in zoom-in-95 justify-between">
             <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100 bg-gray-50/50">
               <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
                 <Bot className="w-5 h-5 text-valora-primary" />
@@ -609,7 +636,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
               </button>
             </div>
 
-            <div className="p-5 overflow-y-auto">
+            <div className="h-full p-3 sm:p-5 overflow-y-auto">
               <YahooResults
                 data={modalData}
                 isWaccCalculated={isWaccCalculated || false}
@@ -623,7 +650,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
           </div>
         </div>
       )}
-    </>
+    </section>
   );
 };
 

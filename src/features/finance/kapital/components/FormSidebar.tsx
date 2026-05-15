@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { FormField } from "../../components/FormField";
 import { FormSection } from "../../components/FormSection";
-import { Bot } from "lucide-react";
 
 interface FormSidebarProps {
   formData: any;
@@ -107,7 +106,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 translations={industryTranslations}
                 disabled={hasSensibilizaciones || isWaccCalculated}
                 layout="horizontal"
-                inputClassName="col-span-19"
+                inputClassName="col-span-18"
                 required
               />
               <FormField
@@ -130,7 +129,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 onChange={handleCustomInputChange}
                 options={instruments}
                 layout="horizontal"
-                inputClassName="col-span-19"
+                inputClassName="col-span-18"
                 required
               />
               <FormField
@@ -216,7 +215,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
             <section className="flex gap-2 flex-col">
               {/* Costo de deuda con selector de moneda */}
               <FormField
-                label="Costo de deuda"
+                label="Costo de deuda | Empresa"
                 name="kd"
                 type="number"
                 min={0}
@@ -228,7 +227,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 suffix="%"
                 layout="horizontal"
                 showClearButton={false}
-                maxDecimals={0}
+                maxDecimals={2}
                 inputClassName="col-span-12"
                 prefixSelect={{
                   name: "currency",
@@ -267,40 +266,6 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
               />
             </section>
           </FormSection>
-
-          {/* Section 4: Financial Data */}
-          {isWaccCalculated && (
-            <FormSection
-              title="Sensibiliza tu beta"
-              step={4}
-              tooltip="Use el chatbot de análisis financiero para obtener estos datos automáticamente."
-            >
-              <div className="flex gap-2 flex-col">
-                <FormField
-                  label="Beta Desapalancado"
-                  name="beta_unlevered"
-                  type="number"
-                  min={0}
-                  max={3}
-                  maxDecimals={4}
-                  step="any"
-                  value={formData.beta_unlevered}
-                  onChange={handleCustomInputChange}
-                  placeholder="Ej: 0.9"
-                  suffix={
-                    <>
-                      <Bot className="w-4 h-4 text-valora-primary" />
-                      <span className="font-bold text-valora-primary">IA</span>
-                    </>
-                  }
-                  layout="horizontal"
-                  inputClassName="col-span-11"
-                  disabled={!isWaccCalculated}
-                  showClearButton={false}
-                />
-              </div>
-            </FormSection>
-          )}
         </div>
 
         {/* Footer - Submit Button */}

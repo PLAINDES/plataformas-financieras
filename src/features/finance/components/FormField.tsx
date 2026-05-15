@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { FormData } from "@/shared/types/ValoraTypes";
+import {
+  handleNumberValidation,
+  handleNumberKeyDown,
+} from "@/shared/utils/inputValidators";
 
 export interface FormFieldProps {
   label: string;
@@ -111,35 +115,20 @@ export const FormField: React.FC<FormFieldProps> = ({
 
   // Intercepta el cambio para bloquear números fuera de rango en tiempo real
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (type === "number" && e.target.value !== "") {
-      const valString = e.target.value;
-
-      // 1. Bloquear si es solo enteros y escriben un punto/coma
-      if (integerOnly && (valString.includes(".") || valString.includes(","))) {
-        return;
-      }
-
-      // 2. Limitar decimales
-      if (maxDecimals !== undefined && valString.includes(".")) {
-        const decimals = valString.split(".")[1];
-        if (decimals && decimals.length > maxDecimals) return;
-      }
-
-      // 3. Limitar valor maximo y minimo
-      const numVal = Number(valString);
-      if (max !== undefined && numVal > max) return;
-      if (min !== undefined && numVal < min) return;
+    if (type === "number") {
+      handleNumberValidation(
+        e,
+        { integerOnly, maxDecimals, max, min },
+        onChange // onChange original como callback
+      );
+    } else {
+      onChange(e);
     }
-    onChange(e);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const blockedKeys = ["e", "E", "+", "-"];
-    if (integerOnly) {
-      blockedKeys.push(".", ","); // Bloquea el punto si es entero
-    }
-    if (type === "number" && blockedKeys.includes(e.key)) {
-      e.preventDefault();
+    if (type === "number") {
+      handleNumberKeyDown(e, integerOnly);
     }
   };
 
@@ -158,7 +147,7 @@ export const FormField: React.FC<FormFieldProps> = ({
           className={
             layout === "vertical"
               ? "text-sm text-gray-600"
-              : "max-[540px]:text-[13px] text-sm text-gray-600 col-span-9"
+              : "max-[540px]:text-[13px] text-sm text-gray-600 col-span-10"
           }
         >
           {label}

@@ -11,6 +11,7 @@ interface NavbarProps {
   user: User | null;
   onLogout: () => void;
   onToggleForm: () => void;
+  onLoginClick: () => void;
   isFormOpen: boolean;
   hasResults: boolean;
   selected: "result" | "sensitivity" | "";
@@ -27,6 +28,7 @@ export const NavBar: React.FC<NavbarProps> = ({
   onLogout,
   onToggleForm,
   isFormOpen,
+  onLoginClick,
   hasResults,
   selected,
   logoHref = "/kapital",
@@ -129,14 +131,23 @@ export const NavBar: React.FC<NavbarProps> = ({
             Curso de capacitación
             <ChevronRight className="w-4 h-4 my-auto" />
           </a>
-          <UserMenu user={user} onLogout={onLogout}>
+          {user ? (
+            <UserMenu user={user} onLogout={onLogout}>
+              <a
+                href={projectsHref}
+                className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Mis proyectos
+              </a>
+            </UserMenu>
+          ) : (
             <a
-              href={projectsHref}
-              className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              className="flex items-center justify-center px-4 py-2 text-sm font-semibold text-valora-primary bg-white border border-valora-primary rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
+              onClick={onLoginClick}
             >
-              Mis proyectos
+              Iniciar sesión
             </a>
-          </UserMenu>
+          )}
         </>
       }
     />

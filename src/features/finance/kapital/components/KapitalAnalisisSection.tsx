@@ -10,7 +10,7 @@ import type {
 import { Book } from "./Book";
 
 const BoaIndicator = ({ value }: { value: number | string }) => (
-  <div className="w-1/4 flex justify-center items-center h-full m-auto px-4">
+  <div className="w-1/4 flex justify-center items-center h-full m-auto px-3">
     <div className="flex items-baseline gap-4">
       <div className="flex items-baseline text-[#0088cc]">
         <span className="text-4xl lg:text-6xl font-serif">β</span>
@@ -41,6 +41,7 @@ export interface KapitalAnalisisSectionProps {
   sensibilizaciones: SensibilizacionEntry[];
   onOpenReport?: () => void;
   localCurrency?: string;
+  chatbotComponent?: React.ReactNode;
 }
 
 export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
@@ -53,6 +54,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
   sensibilizaciones,
   onOpenReport,
   localCurrency,
+  chatbotComponent,
 }) => {
   const [selectedSensIdx, setSelectedSensIdx] = useState(0);
 
@@ -64,13 +66,13 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
     resultCurrency === "usd" ? results.empresa_dolares : results.empresa_soles;
 
   const secureDEmpresaOrig =
-    empresaOriginalBase?.D_empresa ||
-    results.empresa_dolares?.D_empresa ||
+    empresaOriginalBase?.d_empresa ||
+    results.empresa_dolares?.d_empresa ||
     "0%";
 
   const empresaOriginal = {
     ...empresaOriginalBase,
-    D_empresa: secureDEmpresaOrig,
+    d_empresa: secureDEmpresaOrig,
   } as MarketResults;
 
   // 2. DATOS SENSIBILIZADOS
@@ -89,26 +91,51 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
     : empresaOriginalBase;
 
   const secureDEmpresaSens =
-    empresaSensBase?.D_empresa ||
-    selectedSens?.empresa_dolares?.D_empresa ||
-    results.empresa_dolares?.D_empresa ||
+    empresaSensBase?.d_empresa ||
+    selectedSens?.empresa_dolares?.d_empresa ||
+    results.empresa_dolares?.d_empresa ||
     "0%";
 
   const empresaSens = empresaSensBase
     ? {
         ...empresaSensBase,
-        D_empresa: secureDEmpresaSens,
+        d_empresa: secureDEmpresaSens,
       }
     : undefined;
 
   return (
     <>
       <header className="flex flex-col xl:flex-row mt-2 lg:mt-0 justify-between items-center w-full gap-6">
-        <div className="xl:w-1/3 text-center xl:text-left">
+        <div className="relative xl:w-1/3 text-center xl:text-left">
           <h1 className="text-2xl font-bold text-gray-900 mb-1">
             Resultados generales
           </h1>
           <p className="text-gray-600">Comparación de resultados</p>
+          {showComparison && chatbotComponent && (
+            <div className="xl:absolute flex justify-center xl:justify-end w-full">
+              <section className="flex flex-col items-center justify-center rounded-[24px] max-w-105 w-full xl:w-fit overflow-visible mx-auto">
+                <div
+                  onClick={onOpenReport}
+                  className="w-fit h-fit cursor-pointer"
+                >
+                  <Book
+                    href="/images/portada-kapital-less.webp"
+                    width={110}
+                    height={150}
+                    interactive={true}
+                  />
+                </div>
+                <div className="flex flex-col justify-center gap-2 flex-1">
+                  <button
+                    onClick={onOpenReport}
+                    className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer "
+                  >
+                    Reporte de Costo de Capital
+                  </button>
+                </div>
+              </section>
+            </div>
+          )}
         </div>
 
         {/* Centro: Switch de Vistas */}
@@ -148,28 +175,36 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
             </span>
           )}
         </div>
-
-        {/* Lado Derecho: Banner de Reporte */}
-        <div className="xl:w-1/3 flex justify-center xl:justify-end w-full">
-          <section className="flex flex-col items-center justify-center rounded-[24px] max-w-105 w-full xl:w-fit overflow-visible mx-auto">
-            <div onClick={onOpenReport} className="w-fit h-fit cursor-pointer">
-              <Book
-                href="/images/portada-kapital-less.webp"
-                width={110}
-                height={150}
-                interactive={true}
-              />
-            </div>
-            <div className="flex flex-col justify-center gap-2 flex-1">
-              <button
+        {/* Derecha: Chatbot */}
+        {showComparison && chatbotComponent ? (
+          <div className="flex flex-row items-center gap-2 relative">
+            {chatbotComponent}
+          </div>
+        ) : (
+          <div className="xl:w-1/3 flex justify-center xl:justify-end w-full">
+            <section className="flex flex-col items-center justify-center rounded-[24px] max-w-105 w-full xl:w-full overflow-visible mx-auto">
+              <div
                 onClick={onOpenReport}
-                className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer "
+                className="w-fit h-fit cursor-pointer"
               >
-                Reporte de Costo de Capital
-              </button>
-            </div>
-          </section>
-        </div>
+                <Book
+                  href="/images/portada-kapital-less.webp"
+                  width={110}
+                  height={150}
+                  interactive={true}
+                />
+              </div>
+              <div className="flex flex-col justify-center gap-2 flex-1">
+                <button
+                  onClick={onOpenReport}
+                  className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer "
+                >
+                  Reporte de Costo de Capital
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
       </header>
 
       <main className="flex flex-col justify-center min-h-0 flex-1 w-full mt-6">
@@ -295,7 +330,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
             {showCompanyCard && empresaSens && (
               <FinancieraCard
                 title="Tu Empresa"
-                data={empresaOriginal}
+                data={empresaSens}
                 isEmpresa={true}
                 resultCurrency={resultCurrency}
                 onResultCurrencyChange={onResultCurrencyChange}

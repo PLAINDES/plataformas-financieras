@@ -8,7 +8,7 @@ export interface MarketResults {
   ke: number | string;
   koa: number | string;
   "kd(1-t)": string | number;
-  D_empresa: string | number;
+  d_empresa: string | number;
 }
 
 interface FinancieraCardProps {
@@ -29,20 +29,20 @@ const formatterx100p = (value: number | string): string => {
 
 const formatSmartPercentage = (value?: string | number): string => {
   if (value === undefined || value === null || value === "") {
-    return "0,00%";
+    return "0.00%";
   }
 
   // Si ya es un texto del backend (ej: "8,32%"), lo devolvemos tal cual
   if (typeof value === "string") {
-    return value;
+    return value.replace(",", ".");
   }
 
   // Si es un número decimal puro (ej: 0.0832), lo formateamos a texto
   if (typeof value === "number" && !isNaN(value)) {
-    return `${(value * 100).toFixed(2).replace(".", ",")}%`;
+    return `${(value * 100).toFixed(2)}%`;
   }
 
-  return "0,00%";
+  return "0.00%";
 };
 
 export const FinancieraCard: React.FC<FinancieraCardProps> = ({
@@ -76,21 +76,26 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
                 {title}
               </h2>
 
-              {isEmpresa &&
-                onResultCurrencyChange &&
-                resultCurrency &&
-                localCurrency !== "USD" && (
-                  <select
-                    className="px-2 py-1 w-1/4 h-fit text-xs font-medium border border-gray-300 rounded focus:ring-2 focus:ring-valora-primary outline-none cursor-pointer bg-white my-auto"
-                    value={resultCurrency}
-                    onChange={(e) =>
-                      onResultCurrencyChange(e.target.value as "pen" | "usd")
-                    }
-                  >
+              {isEmpresa && onResultCurrencyChange && resultCurrency && (
+                <select
+                  className={`px-2 py-1 w-1/4 h-fit text-xs font-medium border border-gray-300 rounded focus:ring-2 focus:ring-valora-primary outline-none my-auto transition-colors ${
+                    localCurrency === "USD"
+                      ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                      : "bg-white cursor-pointer"
+                  }`}
+                  value={resultCurrency}
+                  onChange={(e) =>
+                    onResultCurrencyChange(e.target.value as "pen" | "usd")
+                  }
+                  disabled={localCurrency === "USD"}
+                >
+                  {/* Solo muestra la moneda local si no es USD */}
+                  {localCurrency !== "USD" && (
                     <option value="pen">{localCurrency}</option>
-                    <option value="usd">USD</option>
-                  </select>
-                )}
+                  )}
+                  <option value="usd">USD</option>
+                </select>
+              )}
             </div>
 
             {/* Layout de CPPC centrado y Kd a la derecha */}
@@ -123,7 +128,7 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
               kd_1_minus_t={formatSmartPercentage(data["kd(1-t)"])}
               ke={formatterx100p(data.ke)}
               compact={compact}
-              D_empresa={formatSmartPercentage(data.D_empresa)}
+              d_empresa={formatSmartPercentage(data.d_empresa)}
             />
           </div>
         </div>
