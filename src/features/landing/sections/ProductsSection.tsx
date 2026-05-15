@@ -108,18 +108,6 @@ export function ProductsSection({
     setTitleData((prev) => ({ ...prev, value: content?.title || "Productos" }));
   }, [content]);
 
-  const customStyles = {
-    gradientText: {
-      background: "-webkit-linear-gradient(45deg, #181C32, #f70067)",
-      WebkitBackgroundClip: "text",
-      WebkitTextFillColor: "transparent",
-    },
-    navPillActive: {
-      backgroundColor: "#2FA4FF",
-      color: "white",
-    },
-  };
-
   const activeProducts = productosData[activeTab].items;
 
   const getItemsPerPage = () => {
@@ -166,7 +154,7 @@ export function ProductsSection({
   return (
     <section id="productos" className="w-full bg-gray-50 overflow-hidden">
       <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-16 lg:py-20 z-10">
-        <div className="text-left mb-8">
+        <div className="text-center sm:text-left mb-8">
           <EditableText
             content={titleData}
             onSave={onSave}
@@ -175,7 +163,7 @@ export function ProductsSection({
           />
 
           <ul
-            className="flex flex-wrap list-none justify-start gap-3"
+            className="flex flex-wrap list-none justify-center sm:justify-start gap-3"
             role="tablist"
           >
             {(["kapital", "valora"] as const).map((tab) => (
@@ -183,8 +171,11 @@ export function ProductsSection({
                 <Button
                   onClick={() => setActiveTab(tab)}
                   variant="ghost"
-                  className="px-5 py-2.5 rounded-md font-semibold text-sm shadow-sm text-gray-500 capitalize"
-                  style={activeTab === tab ? customStyles.navPillActive : {}}
+                  className={`px-5 py-2.5 rounded-md font-semibold text-sm shadow-sm capitalize transition-colors cursor-pointer ${
+                    activeTab === tab
+                      ? "bg-valora-primary text-white hover:bg-valora-primary hover:text-white"
+                      : "text-gray-500 bg-transparent hover:bg-gray-200"
+                  }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </Button>
@@ -277,9 +268,10 @@ export function ProductsSection({
         </div>
 
         <div className="text-center mt-12">
+          {/* Antes color: bg-[#2FA4FF] */}
           <a
             href="#kt_body"
-            className="inline-flex items-center justify-center px-8 py-3.5 bg-[#2FA4FF] text-white font-bold rounded-full shadow-lg shadow-blue-500/20 transition-all duration-300 hover:bg-blue-700 hover:shadow-blue-500/40 hover:-translate-y-1 group"
+            className="inline-flex items-center justify-center px-8 py-3.5 bg-valora-primary text-white font-bold rounded-full shadow-lg shadow-blue-500/20 transition-all duration-300 hover:bg-valora-secondary hover:shadow-blue-500/40 hover:-translate-y-0.5 group"
           >
             Ver catálogo completo
             <ChevronRight

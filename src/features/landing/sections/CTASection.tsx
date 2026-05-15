@@ -126,7 +126,7 @@ export function CTASection({ content, isAdmin, onSave }: CTASectionProps) {
                     type="button"
                     variant="link"
                     onClick={handleWhatsAppClick}
-                    className="text-[#2FA4FF] hover:text-[#2691e6]  text-xs font-semibold underline underline-offset-4 decoration-2 h-auto p-0 gap-1"
+                    className="text-[#2FA4FF] hover:text-[#2691e6]  text-xs font-semibold underline underline-offset-4 decoration-2 h-auto p-0 gap-1 cursor-pointer"
                   >
                     <ExternalLink className="w-3 h-3" />
                     Link WhatsApp
