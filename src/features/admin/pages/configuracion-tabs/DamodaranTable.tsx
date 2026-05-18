@@ -18,7 +18,7 @@ export const DamodaranTable = ({
         .map((item) => String(item.fecha ?? "").trim())
         .filter((year) => /^\d{4}$/.test(year))
     )
-  ).sort((a, b) => Number(a) + Number(b));
+  ).sort((a, b) => Number(b) - Number(a));
 
   return (
     <SimpleTable
@@ -34,10 +34,20 @@ export const DamodaranTable = ({
           ),
         },
         {
-          header: "D/(D+E)",
-          accessorKey: "d_sobre_def",
+          header: "N° Firms",
+          accessorKey: "number_of_firms",
+          cell: (item) => <span>{item.number_of_firms}</span>,
+        },
+        {
+          header: "Beta",
+          accessorKey: "beta",
+          cell: (item) => <span>{formatPercentageValue(item.beta)}</span>, // Puedes quitar formatPercentage si Beta no se muestra con %
+        },
+        {
+          header: "Cost of Equity",
+          accessorKey: "cost_of_equity",
           cell: (item) => (
-            <span>{formatPercentageValue(item.d_sobre_def)}</span>
+            <span>{formatPercentageValue(item.cost_of_equity)}</span>
           ),
         },
         {
@@ -46,27 +56,43 @@ export const DamodaranTable = ({
           cell: (item) => <span>{formatPercentageValue(item.e_sobre_de)}</span>,
         },
         {
-          header: "Tax Rate",
-          accessorKey: "tax_rate",
-          cell: (item) => <span>{formatPercentageValue(item.tax_rate)}</span>,
-        },
-        {
-          header: "Beta",
-          accessorKey: "beta",
-          cell: (item) => <span>{formatPercentageValue(item.beta)}</span>,
-        },
-        {
-          header: "Std Dev in Stock",
+          header: "Std Dev Stock",
           accessorKey: "std_dev_stock",
           cell: (item) => (
             <span>{formatPercentageValue(item.std_dev_stock)}</span>
           ),
         },
         {
-          header: "Spread Debt",
-          accessorKey: "spread_debt",
+          header: "Cost of Debt",
+          accessorKey: "cost_of_debt",
           cell: (item) => (
-            <span>{formatPercentageValue(item.spread_debt)}</span>
+            <span>{formatPercentageValue(item.cost_of_debt)}</span>
+          ),
+        },
+        {
+          header: "Tax Rate",
+          accessorKey: "tax_rate",
+          cell: (item) => <span>{formatPercentageValue(item.tax_rate)}</span>,
+        },
+        {
+          header: "After-tax Debt",
+          accessorKey: "after_tax_cost_of_debt",
+          cell: (item) => (
+            <span>{formatPercentageValue(item.after_tax_cost_of_debt)}</span>
+          ),
+        },
+        {
+          header: "D/(D+E)",
+          accessorKey: "d_sobre_def",
+          cell: (item) => (
+            <span>{formatPercentageValue(item.d_sobre_def)}</span>
+          ),
+        },
+        {
+          header: "Cost Capital",
+          accessorKey: "cost_of_capital",
+          cell: (item) => (
+            <span>{formatPercentageValue(item.cost_of_capital)}</span>
           ),
         },
       ]}

@@ -6,9 +6,9 @@ export const FormSection: React.FC<{
   toggle?: boolean;
   onToggle?: () => void;
 }> = ({ title, number, subtitle, children, toggle, onToggle }) => (
-  <div className="mb-4 bg-white rounded-xl border border-gray-100 shadow-sm ">
+  <div className="mb-4 bg-white rounded-xl border border-gray-100 shadow-sm">
     {/* Header Section */}
-    <div className="px-4 py-3 bg-gray-50/50 border-b border-gray-100">
+    <div className="px-4 py-3 bg-gray-50/50 border-b border-gray-100 cursor-pointer">
       <div className="flex items-center gap-3">
         {/* Badge circular */}
         <span className="shrink-0 flex items-center justify-center w-7 h-7 bg-blue-600 text-white rounded-full text-xs font-bold shadow-sm">

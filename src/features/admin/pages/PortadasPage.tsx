@@ -176,7 +176,7 @@ const PortadasPage: React.FC = () => {
                       <div className="text-gray-400 text-sm">Sin imagen</div>
                     )}
                   </div>
-                  <div className="p-4 border-t border-gray-100 flex flex-col justify-between gap-3 flex-grow">
+                  <div className="p-4 border-t border-gray-100 flex flex-col justify-between gap-3 grow">
                     <div>
                       <div
                         className="text-sm font-bold text-gray-900 line-clamp-1"

@@ -18,9 +18,22 @@ import { EmbiTable } from "./configuracion-tabs/EmbiTable";
 import { PrimaTable } from "./configuracion-tabs/PrimaTable";
 import { IrTable } from "./configuracion-tabs/IrTable";
 import { DamodaranTable } from "./configuracion-tabs/DamodaranTable";
+import { TaxTable } from "./configuracion-tabs/TaxTable";
 import { DevaluacionTable } from "./configuracion-tabs/DevaluacionTable";
+import { RiesgoTable } from "./configuracion-tabs/RiesgoTable";
 
-// ─── INITIAL MOCK DATA ────────────────────────────────────────────────────────
+// Metodo para excel
+import {
+  cleanExcelDate,
+  extractRowDate,
+  checkIsTrimestralFromExcel,
+  parseDamodaranNuevoFormato,
+  parseDevaluacionSheet,
+  parseRiesgoCrediticio,
+  parseTaxSheet,
+} from "../utils/excel-parsers";
+
+// INITIAL MOCK DATA
 // Kept for fallback or reference, but state will initialize empty to prefer API data
 const MOCK_RF: BaseFinancialItem[] = []; // Used as fallback generic type
 const MOCK_PRIMA: BaseFinancialItem[] = [];
@@ -73,6 +86,8 @@ export const ConfiguracionPage = () => {
   const [devaluacionData, setDevaluacionData] =
     useState<BaseFinancialItem[]>(MOCK_DEVALUACION);
   const [embiData, setEmbiData] = useState<BaseFinancialItem[]>(MOCK_EMBI);
+  const [riesgoData, setRiesgoData] = useState<any[]>([]);
+  const [taxData, setTaxData] = useState<any[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -88,8 +103,8 @@ export const ConfiguracionPage = () => {
 
       const extractData = (name: string) => {
         const items = complements
-          .filter((c) => c.nombre === name)
-          .flatMap((c) =>
+          .filter((c: any) => c.nombre === name)
+          .flatMap((c: any) =>
             (Array.isArray(c.data) ? c.data : []).map((item: any) => ({
               ...item,
               _complementId: c.id, // Track origin for future updates
@@ -130,6 +145,8 @@ export const ConfiguracionPage = () => {
       setIrData(extractData("ir"));
       setDamodaranData(extractData("damodaran"));
       setDevaluacionData(extractData("devaluacion"));
+      setRiesgoData(extractData("riesgo"));
+      setTaxData(extractData("tax"));
     } catch (error) {
       console.error("Failed to load configuration data", error);
     } finally {
@@ -211,71 +228,9 @@ export const ConfiguracionPage = () => {
     fileInputRef.current?.click();
   };
 
-  const cleanExcelDate = (val: any, fallback: any) => {
-    let cleanFecha = val || fallback;
-    if (typeof cleanFecha === "number" && cleanFecha > 20000) {
-      const dateObj = new Date(Math.round((cleanFecha - 25569) * 86400 * 1000));
-      // Adjust for timezone offset to prevent date shifting
-      const userTimezoneOffset = dateObj.getTimezoneOffset() * 60000;
-      const adjustedDate = new Date(dateObj.getTime() + userTimezoneOffset);
-      cleanFecha = adjustedDate.toLocaleDateString("en-US");
-    } else if (cleanFecha instanceof Date) {
-      cleanFecha = cleanFecha.toLocaleDateString("en-US");
-    }
-    return cleanFecha;
-  };
-
-  const extractRowDate = (row: any, fallbackDate: string) => {
-    let fechaRow =
-      row.fecha || row.trimestre || row.Quarter || row.year || fallbackDate;
-    // Si no encontramos fecha por nombre explícito, usamos el valor de la primera columna
-    if (!row.fecha && !row.trimestre && !row.Quarter && !row.year) {
-      const keys = Object.keys(row);
-      if (keys.length > 0) {
-        fechaRow = row[keys[0]];
-      }
-    }
-    return fechaRow;
-  };
-
-  const checkIsTrimestralFromExcel = (wb: any, sheets: string[]): boolean => {
-    if (sheets.length > 1) {
-      // With multiple sheets, assume annual as per user description of multi-sheet annual files.
-      return false;
-    }
-
-    // For a single sheet, check content to decide.
-    if (sheets.length === 1) {
-      try {
-        const firstSheetData = utils.sheet_to_json(wb.Sheets[sheets[0]]);
-        if (firstSheetData.length > 0) {
-          const firstRow: any = firstSheetData[0];
-          const fechaVal = extractRowDate(firstRow, "");
-          const cleanStr = String(cleanExcelDate(fechaVal, ""));
-
-          // If it looks like a year, it's annual.
-          if (/^\d{4}$/.test(cleanStr.trim())) {
-            return false;
-          }
-
-          // If it includes separators, it's likely quarterly/monthly dates.
-          if (cleanStr.includes("/") || cleanStr.includes("-")) {
-            return true;
-          }
-        }
-      } catch (error) {
-        console.error("Error checking Excel format:", error);
-        // Fallback to default if content check fails
-      }
-    }
-
-    // Default for single sheet if content is not decisive, or for empty/invalid files.
-    return sheets.length === 1;
-  };
-
   const mapRow = (row: any, defaultFecha: string) => {
     const baseItem = {
-      fecha: cleanExcelDate(row.fecha, defaultFecha),
+      fecha: cleanExcelDate(row.fecha || row.Fecha, defaultFecha),
     };
 
     let mappedItem: any = {};
@@ -372,121 +327,6 @@ export const ConfiguracionPage = () => {
     };
   };
 
-  const parseDevaluacionSheet = (ws: any, sheetName: string) => {
-    const rawData = utils.sheet_to_json<any[]>(ws, { header: 1 });
-    let headerRowIndex = -1;
-    let year = sheetName;
-
-    // Buscar la fila que tiene "Periodo", "Argentina", etc.
-    for (let i = 0; i < Math.min(20, rawData.length); i++) {
-      const row = rawData[i];
-      if (!row || !Array.isArray(row)) continue;
-
-      const rowStr = row.map((c) => String(c).toLowerCase()).join(" ");
-      if (
-        rowStr.includes("argentina") ||
-        rowStr.includes("periodo") ||
-        rowStr.includes("brazil")
-      ) {
-        headerRowIndex = i;
-        // Buscar el año en filas anteriores si existe
-        for (let j = 0; j < i; j++) {
-          const prevRow = rawData[j];
-          if (prevRow && prevRow.length > 0) {
-            const possibleYear = String(prevRow[0] || prevRow[1] || "").trim();
-            if (/^\d{4}$/.test(possibleYear)) {
-              year = possibleYear;
-            }
-          }
-        }
-        break;
-      }
-    }
-
-    if (headerRowIndex === -1) {
-      // Retornar vacío si no se encuentra en esta hoja
-      return [];
-    }
-
-    const headers = rawData[headerRowIndex].map((h: any) =>
-      String(h || "").trim()
-    );
-    const dataRows = rawData.slice(headerRowIndex + 1);
-    const result = [];
-
-    for (const row of dataRows) {
-      if (
-        !row ||
-        row.length === 0 ||
-        row[0] === undefined ||
-        row[0] === null ||
-        String(row[0]).trim() === ""
-      ) {
-        continue;
-      }
-
-      // Evitar la fila que contiene el índice de los países (1, 2, 3, 4...)
-      if (
-        String(row[0]).trim() === "1" ||
-        String(row[1]).trim() === "1" ||
-        String(row[1]).trim() === "2"
-      ) {
-        continue;
-      }
-
-      const periodo = String(row[0]); // Este es el periodo (0.2466, etc)
-
-      // Armamos la fila con la misma estructura que EMBI/Damodaran, con los países como columnas
-      const item: any = {
-        fecha: year, // El año va aquí como 'fecha' principal
-        periodo: periodo, // Renombramos el periodo a 'periodo' para no chocar con 'fecha'
-      };
-
-      for (let i = 1; i < headers.length; i++) {
-        let country = headers[i];
-        if (
-          !country ||
-          country.startsWith("__EMPTY") ||
-          /^\d+$/.test(country)
-        ) {
-          continue;
-        }
-
-        if (country.toLowerCase().includes("united states"))
-          country = "United States";
-        if (
-          country.toLowerCase().includes("mexico") ||
-          country.toLowerCase().includes("méxico")
-        )
-          country = "Mexico";
-        if (
-          country.toLowerCase().includes("peru") ||
-          country.toLowerCase().includes("perú")
-        )
-          country = "Peru";
-        if (
-          country.toLowerCase().includes("brazil") ||
-          country.toLowerCase().includes("brasil")
-        )
-          country = "Brazil";
-
-        const val = row[i];
-        if (val !== undefined && val !== null && val !== "") {
-          const numVal = Number(val);
-          if (!isNaN(numVal)) {
-            item[country] = numVal;
-          } else {
-            item[country] = val;
-          }
-        } else {
-          item[country] = "";
-        }
-      }
-      result.push(item);
-    }
-    return result;
-  };
-
   const processExcel = async (
     e: React.ChangeEvent<HTMLInputElement>,
     activeTab: string
@@ -504,19 +344,40 @@ export const ConfiguracionPage = () => {
 
         const isTrimestral = checkIsTrimestralFromExcel(wb, sheets);
 
-        if (activeFrequency === "trimestral" && !isTrimestral) {
+        if (
+          activeFrequency === "trimestral" &&
+          !isTrimestral &&
+          activeTab !== "devaluacion"
+        ) {
           throw new Error(
             "El formato del archivo no coincide con la frecuencia seleccionada. Se esperaba un formato trimestral."
           );
         }
 
-        if (activeFrequency === "anual" && isTrimestral && activeTab !== "ir") {
+        if (
+          activeFrequency === "anual" &&
+          isTrimestral &&
+          activeTab !== "ir" &&
+          activeTab !== "devaluacion"
+        ) {
           throw new Error(
             "El formato del archivo no coincide con la frecuencia seleccionada. Se esperaba un formato anual."
           );
         }
 
-        if (isTrimestral && activeTab !== "ir") {
+        if (activeTab === "devaluacion") {
+          sheets.forEach((sheetName) => {
+            const ws = wb.Sheets[sheetName];
+            const sheetData = parseDevaluacionSheet(ws, sheetName);
+            parsedData = [...parsedData, ...sheetData];
+          });
+
+          if (parsedData.length === 0) {
+            throw new Error(
+              "El archivo está vacío o no tiene datos válidos de Devaluación."
+            );
+          }
+        } else if (isTrimestral && activeTab !== "ir") {
           // 2a. Trimestral: 1 sola hoja, tabla única con columnas de fecha/trimestre
           const sheetName = sheets[0];
           const ws = wb.Sheets[sheetName];
@@ -600,6 +461,46 @@ export const ConfiguracionPage = () => {
                 "El archivo está vacío o no tiene datos válidos de Devaluación."
               );
             }
+          } else if (activeTab === "riesgo") {
+            const sheetName =
+              sheets.find((s) =>
+                s.toLowerCase().includes("industry averages")
+              ) || sheets[0];
+            const ws = wb.Sheets[sheetName];
+            parsedData = parseRiesgoCrediticio(ws);
+
+            if (parsedData.length === 0) {
+              throw new Error(
+                "No se encontraron datos válidos en la tabla de Standard Deviation."
+              );
+            }
+          } else if (activeTab === "tax") {
+            const sheetName =
+              sheets.find((s) =>
+                s.toLowerCase().includes("industry averages")
+              ) || sheets[0];
+            const ws = wb.Sheets[sheetName];
+            parsedData = parseTaxSheet(ws);
+
+            if (parsedData.length === 0) {
+              throw new Error(
+                "No se encontraron datos en las celdas D11 y F13."
+              );
+            }
+          } else if (activeTab === "damodaran") {
+            // Buscar la hoja "Industry Averages" o usar la primera por defecto
+            const sheetName =
+              sheets.find((s) =>
+                s.toLowerCase().includes("industry averages")
+              ) || sheets[0];
+            const ws = wb.Sheets[sheetName];
+            parsedData = parseDamodaranNuevoFormato(ws);
+
+            if (parsedData.length === 0) {
+              throw new Error(
+                "No se encontraron datos válidos o se detuvo la lectura antes de tiempo."
+              );
+            }
           } else if (activeTab === "ir") {
             // IR's special format is handled here, assuming one sheet
             const sheetName = sheets[0];
@@ -655,7 +556,6 @@ export const ConfiguracionPage = () => {
             sheets.forEach((sheetName) => {
               const ws = wb.Sheets[sheetName];
               const data = utils.sheet_to_json(ws);
-              console.log(data);
               const mapped = data.map((row: any) => mapRow(row, sheetName));
               let normalizedMapped = mapped;
               if (activeTab === "damodaran") {
@@ -670,8 +570,6 @@ export const ConfiguracionPage = () => {
             });
           }
         }
-        console.log(parsedData);
-        console.log("ES TRIMESTRAL " + isTrimestral);
         parsedData = parsedData.sort((a, b) => {
           a = new Date(a.fecha).getTime();
           b = new Date(b.fecha).getTime();
@@ -839,6 +737,8 @@ export const ConfiguracionPage = () => {
               {renderTabButton("prima", "Prima de Mercado")}
               {renderTabButton("ir", "IR (Impuestos/Inflación)")}
               {renderTabButton("damodaran", "Damodaran Industries")}
+              {renderTabButton("tax", "Tax Rates")}
+              {renderTabButton("riesgo", "Riesgo Crediticio")}
               {renderTabButton("devaluacion", "Devaluación")}
             </>
           )}
@@ -883,6 +783,22 @@ export const ConfiguracionPage = () => {
               data={damodaranData}
               isLoading={isLoading}
               onDelete={createDeleteHandler(setDamodaranData)}
+            />
+          )}
+
+          {activeTab === "tax" && activeFrequency === "anual" && (
+            <TaxTable
+              data={taxData}
+              isLoading={isLoading}
+              onDelete={createDeleteHandler(setTaxData)}
+            />
+          )}
+
+          {activeTab === "riesgo" && activeFrequency === "anual" && (
+            <RiesgoTable
+              data={riesgoData}
+              isLoading={isLoading}
+              onDelete={createDeleteHandler(setRiesgoData)}
             />
           )}
 

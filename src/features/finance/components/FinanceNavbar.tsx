@@ -5,6 +5,7 @@ export interface NavTab {
   label: string;
   icon: React.ReactNode;
   isInHeader?: boolean;
+  disabled?: boolean;
 }
 
 interface FinanceNavbarProps {
@@ -27,7 +28,7 @@ export const FinanceNavbar: React.FC<FinanceNavbarProps> = ({
   actions,
 }) => {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm z-100">
       <div className="flex items-center justify-between h-16 px-4 lg:px-6">
         <div className="flex items-center gap-2">
           <a href={logo.href} className="flex items-center">
@@ -36,7 +37,7 @@ export const FinanceNavbar: React.FC<FinanceNavbarProps> = ({
 
           <button
             onClick={onToggleForm}
-            className={`p-3 rounded-lg transition-all ${isFormOpen ? "bg-blue-50 text-blue-600" : "text-gray-400 hover:bg-gray-50"}`}
+            className={`cursor-pointer p-3 rounded-lg transition-all ${isFormOpen ? "bg-blue-50 text-blue-600" : "text-gray-400 hover:bg-gray-50"}`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -78,14 +79,20 @@ export const FinanceNavbar: React.FC<FinanceNavbarProps> = ({
                 key={tab.id}
                 onClick={() => onNavigate(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  selectedTabId === tab.id
-                    ? "bg-blue-50 text-blue-600"
-                    : "text-gray-700 hover:bg-gray-50"
+                  tab.disabled
+                    ? "text-gray-400 cursor-not-allowed opacity-70"
+                    : selectedTabId === tab.id
+                      ? "bg-blue-50 text-blue-600 cursor-pointer"
+                      : "text-gray-700 hover:bg-gray-50 cursor-pointer"
                 }`}
               >
                 <span
                   className={
-                    selectedTabId === tab.id ? "text-blue-600" : "text-gray-400"
+                    tab.disabled
+                      ? "text-gray-400"
+                      : selectedTabId === tab.id
+                        ? "text-blue-600"
+                        : "text-gray-400"
                   }
                 >
                   {tab.icon}

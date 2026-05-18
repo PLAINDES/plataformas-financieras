@@ -60,6 +60,7 @@ export interface MasterTemplate {
   onedrive_folder: string | null;
   onedrive_item_id: string | null;
   onedrive_filename: string | null;
+  original_filename: string | null;
   onedrive_path: string | null;
   created_by_user_id: number | null;
   created_at: string;

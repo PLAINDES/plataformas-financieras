@@ -1,66 +1,88 @@
+import { Info } from "lucide-react";
+
 type FormSectionProps = {
   step: number;
   title: string;
   children: React.ReactNode;
   toggle?: boolean;
   onToggle?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+  tooltip?: string;
 };
 
 export const FormSection: React.FC<FormSectionProps> = ({
   step,
   title,
   children,
-  toggle,
-  onToggle,
-}) => (
-  <div
-    className="rounded-lg"
-    style={{ boxShadow: "0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)" }}
-  >
-    <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 p-3.5">
-      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
-        {step}
-      </span>
-      <h3 className="text-sm font-bold uppercase text-gray-800">{title}</h3>
-      {/* Toggle Switch */}
-      {toggle !== undefined && (
-        <button
-          onClick={onToggle}
-          className="focus:outline-none transition-transform active:scale-90"
-          type="button"
-          aria-label="Alternar sección"
+  isCollapsed,
+  onToggleCollapse,
+  tooltip,
+}) => {
+  const isVisible = !isCollapsed;
+  return (
+    <div className="rounded-lg w-full">
+      <div className="flex items-center gap-2 border-b border-gray-50 bg-gray-50 px-3.5 py-2">
+        <span className="inline-flex h-5 w-5 text-xs shrink-0 items-center justify-center rounded-full bg-valora-primary text-center font-bold leading-none text-white">
+          {step}
+        </span>
+
+        <h3
+          className="text-[10px] sm:text-xs font-bold uppercase text-gray-800 flex-1 truncate"
+          onClick={() => onToggleCollapse && onToggleCollapse()}
         >
-          {toggle ? (
+          {title}
+        </h3>
+
+        {/* Agrupamos los controles a la derecha */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {onToggleCollapse && (
             <svg
-              className="w-8 h-8 text-blue-600"
-              fill="currentColor"
+              onClick={onToggleCollapse}
+              className={`w-5 h-5 text-gray-400 cursor-pointer ${isCollapsed ? "rotate-180" : "rotate-0"}`}
+              fill="none"
               viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              <path d="M16 7H8C5.243 7 3 9.243 3 12s2.243 5 8 5h8c2.757 0 5-2.243 5-5s-2.243-5-5-5zM16 14a2 2 0 110-4 2 2 0 010 4z" />
-            </svg>
-          ) : (
-            <svg
-              className="w-8 h-8 text-gray-300"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M8 7h8c2.757 0 5 2.243 5 5s-2.243 5-5 5H8c-2.757 0-5-2.243-5-5s2.243-5 5-5zm0 7a2 2 0 100-4 2 2 0 000 4z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           )}
-        </button>
-      )}
+
+          {tooltip && (
+            <div className="relative flex items-center justify-center">
+              <Info
+                className="w-4 h-4 text-gray-400 cursor-help"
+                onMouseEnter={(e) => {
+                  const tip = e.currentTarget.nextElementSibling as HTMLElement;
+                  tip.style.opacity = "1";
+                }}
+                onMouseLeave={(e) => {
+                  const tip = e.currentTarget.nextElementSibling as HTMLElement;
+                  tip.style.opacity = "0";
+                }}
+              />
+              <div className="absolute bottom-full mb-2 right-0 w-48 py-2.5 px-3 bg-gray-100 text-black text-[11px] rounded-md shadow-lg opacity-0 transition-opacity duration-200 z-50 pointer-events-none">
+                <p className="text-blue-800 leading-relaxed">
+                  <strong>Sugerencia: </strong>
+                  {tooltip}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div
+        className={`flex flex-col pl-2 gap-3 transition-all duration-300 ease-in-out overflow-visible
+          ${isVisible ? "max-h-250 opacity-100 pt-2" : "max-h-0 opacity-0 py-0"}`}
+      >
+        {children}
+      </div>
     </div>
-    <div
-      className={`flex flex-col gap-5 p-5 pt-0 
-        ${
-          toggle !== undefined
-            ? toggle
-              ? "max-h-500 opacity-100 py-4"
-              : "max-h-0 opacity-0 py-0 overflow-hidden"
-            : "py-4"
-        }`}
-    >
-      {children}
-    </div>
-  </div>
-);
+  );
+};

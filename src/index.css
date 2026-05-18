@@ -5,27 +5,24 @@
    ============================================ */
 :root {
   /* Primary Colors */
-  --kt-primary: #009ef7;
+  --kt-primary: #155dfc;
   --kt-primary-inverse: #ffffff;
-  --bs-primary: #009ef7;
-  
+  --bs-primary: #155dfc;
+
   /* Secondary Colors */
-  --bs-secondary: #7B1FA2;
-  
+  --bs-secondary: #7b1fa2;
+
   /* Grays */
-  --bs-gray-700: #5E6278;
-  --bs-gray: #90A4AE;
-  --bs-dark: #181C32;
+  --bs-gray-700: #5e6278;
+  --bs-gray: #90a4ae;
+  --bs-dark: #181c32;
   --bs-black: #000000;
-  --kt-text-gray-400: #B5B5C3;
-  
+  --kt-text-gray-400: #b5b5c3;
+
   /* Background Colors */
-  --bs-white: #FFFFFF;
-  --bs-light: #F5F8FA;
+  --bs-white: #ffffff;
+  --bs-light: #f5f8fa;
 }
-
-
-
 
 @media (min-width: 992px) {
   .header {
@@ -81,15 +78,12 @@
   background-color: rgba(0, 158, 247, 0.08);
 }
 
-
-
 /* ============================================
    LANDING SECTIONS
    ============================================ */
 
-
 .bs-section-2 {
-  background-color: #FAFAFA;
+  background-color: #fafafa;
   padding-top: 2rem;
   padding-bottom: 2rem;
 }
@@ -100,7 +94,7 @@
 
 .bs-section-3 {
   padding-bottom: 5rem;
-  background-color: #FFFFFF;
+  background-color: #ffffff;
 }
 
 /* Section Headers */
@@ -160,7 +154,7 @@
 
 .bs-card-1 .card-body .bs-card-image {
   height: 180px;
-  background-color: #E1F5FE;
+  background-color: #e1f5fe;
   margin-bottom: 1.9rem;
   border-radius: 15px;
   text-align: center;
@@ -187,7 +181,7 @@
 
 .bs-card-1 .card-body .bs-card-label span {
   max-width: 100%;
-  background-color: #ECEFF1;
+  background-color: #eceff1;
   padding: 0.3rem 0.7rem;
   font-weight: 300;
   border-radius: 5px;
@@ -218,7 +212,7 @@
   overflow-y: auto;
   height: 180px;
   font-size: 1.3rem;
-  color: #90A4AE;
+  color: #90a4ae;
   font-weight: 100;
   line-height: 1.8rem;
   margin-bottom: 1.2rem;
@@ -232,11 +226,11 @@
 
 .bs-card-1 .card-footer .btn {
   background-color: transparent;
-  color: #90A4AE;
+  color: #90a4ae;
 }
 
 .bs-card-1 .card-footer .btn i {
-  color: #90A4AE;
+  color: #90a4ae;
 }
 
 .bs-card-1:hover {
@@ -248,7 +242,7 @@
 }
 
 .bs-card-1:hover .bs-card-image {
-  background-color: #C5CAE9;
+  background-color: #c5cae9;
 }
 
 /* ============================================
@@ -264,11 +258,10 @@
 
 .bs-card-2 .bs-card-image {
   padding: 25px;
-  background-color: #E0F7FA;
+  background-color: #e0f7fa;
   width: 90px;
   border-radius: 15px;
   text-align: center;
-  
 }
 
 .bs-card-2 .bs-card-image i {
@@ -297,7 +290,7 @@
 
 .bs-card-2 .bs-card-text {
   font-size: 1.4rem;
-  color: #90A4AE;
+  color: #90a4ae;
   font-weight: 100;
   line-height: 1.8rem;
 }
@@ -308,18 +301,17 @@
 
 .bs-card-2 .card-footer button {
   background-color: transparent;
-  color: #90A4AE;
+  color: #90a4ae;
 }
 
 .bs-card-2 .card-footer button i {
-  color: #90A4AE;
+  color: #90a4ae;
 }
 
 .bs-card-2:hover {
   box-shadow: 0 0.5rem 1.5rem 0.5rem rgba(0, 0, 0, 0.075);
   transform: translateY(-5px);
 }
-
 
 .bs-card-2:hover button i {
   color: var(--kt-primary-inverse);
@@ -362,12 +354,12 @@
 }
 
 .bs-card-4 .card-caption {
-  color: #90A4AE;
+  color: #90a4ae;
   margin-bottom: 0.5rem;
 }
 
 .bs-card-4 .card-label {
-  background-color: #ECEFF1;
+  background-color: #eceff1;
   font-size: 1rem;
   border-radius: 10px;
   padding: 0.5rem 0.75rem;
@@ -617,16 +609,16 @@
 }
 
 .bs-accordion-1 .accordion-title div {
-  background-color: #FFFDE7;
+  background-color: #fffde7;
   display: inline;
   padding: 0.5rem;
-  color: #607D8B;
+  color: #607d8b;
 }
 
 .bs-accordion-1 .accordion-item {
   margin-bottom: 1.5rem;
   background-color: transparent;
-  border: 1px solid #7E8299;
+  border: 1px solid #7e8299;
   border-radius: 10px;
 }
 
@@ -674,20 +666,20 @@
    ============================================ */
 .bs-modal-1 .bs-modal-text {
   font-size: 1.2rem;
-  color: #5E6278;
+  color: #5e6278;
   font-weight: 400;
   line-height: 2rem;
   margin-bottom: 2rem;
   opacity: 0.8;
 }
 
-/* ============================================
-   FOOTER
-   ============================================ */
+/*
+============================================
+FOOTER
+============================================ */
+/* Antes #0E185F */
 .bs-landing-footer {
-  background-color: #0E185F;
-  color: white;
-  max-height: none; /* Cambiado de 300px a none */
+  max-height: none;
 }
 
 /* Solo aplicar max-height en desktop */
@@ -764,11 +756,9 @@ table.dataTable.cell-border {
   text-decoration: none;
 }
 
-
-
 .btn-secondary {
   background-color: #e4e6ef;
-  color: #181C32;
+  color: #181c32;
 }
 
 .btn-sm {
@@ -797,7 +787,7 @@ table.dataTable.cell-border {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #181C32;
+  color: #181c32;
 }
 
 /* ============================================
@@ -833,28 +823,25 @@ table.dataTable.cell-border {
   .hidden-desktop {
     display: none !important;
   }
-  
- 
 }
 
 @media only screen and (max-width: 992px) {
   .hidden-mobile {
     display: none !important;
-    
   }
-  
+
   .landing-header {
     padding: 20px !important;
   }
-  
+
   .header .active {
     border: 0 !important;
   }
-  
+
   .bs-panel-2 {
     padding: 2rem 1rem;
   }
-  
+
   .bs-content-1 .bs-content-title {
     font-size: 3rem;
   }
@@ -878,6 +865,6 @@ table.dataTable.cell-border {
   margin: 0 -1rem;
 }
 
-.logo-default{
+.logo-default {
   max-height: 50px;
 }

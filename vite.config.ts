@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => {
       host: true,
       proxy: {
         "/api": {
-          target: env.VITE_API_URL || "http://localhost:8000",
+          target: env.VITE_PROXY_TARGET || "http://host.docker.internal:8000",
           changeOrigin: true,
         },
       },

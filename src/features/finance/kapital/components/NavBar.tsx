@@ -5,20 +5,23 @@ import { FinanceNavbar } from "@/features/finance/components/FinanceNavbar";
 import type { NavTab } from "@/features/finance/components/FinanceNavbar";
 import { UserMenu } from "@/shared/components/common/UserMenu";
 import type { User } from "@/shared/types/user.types";
+import { ChevronRight } from "lucide-react";
 
 interface NavbarProps {
   user: User | null;
   onLogout: () => void;
   onToggleForm: () => void;
+  onLoginClick: () => void;
   isFormOpen: boolean;
   hasResults: boolean;
-  selected: "result" | "analysis" | "methodology" | "";
+  selected: "result" | "sensitivity" | "";
   logoHref?: string;
   logoSrc?: string;
   logoAlt?: string;
   projectsHref?: string;
-  onNavigate?: (view: "result" | "analysis" | "methodology") => void;
+  onNavigate?: (view: "result" | "sensitivity") => void;
   onOpenReport?: () => void;
+  hasSensibilizaciones?: boolean;
 }
 
 export const NavBar: React.FC<NavbarProps> = ({
@@ -26,14 +29,15 @@ export const NavBar: React.FC<NavbarProps> = ({
   onLogout,
   onToggleForm,
   isFormOpen,
+  onLoginClick,
   hasResults,
   selected,
   logoHref = "/kapital",
-  logoSrc = "/public/images/logo-kapital-small.png",
+  logoSrc = "/images/logo-kapital-small.png",
   logoAlt = "Kapital Logo",
   projectsHref = "/usuario/proyectos",
   onNavigate,
-  onOpenReport,
+  hasSensibilizaciones = false,
 }) => {
   const tabs: NavTab[] = useMemo(() => {
     if (!hasResults) return [];
@@ -59,8 +63,9 @@ export const NavBar: React.FC<NavbarProps> = ({
         ),
       },
       {
-        id: "analysis",
-        label: "Análisis",
+        id: "sensitivity",
+        label: "Sensibilidad",
+        disabled: !hasSensibilizaciones,
         icon: (
           <svg
             className="w-5 h-5"
@@ -77,7 +82,7 @@ export const NavBar: React.FC<NavbarProps> = ({
           </svg>
         ),
       },
-      {
+      /*{
         id: "methodology",
         label: "Metodología",
         icon: (
@@ -99,9 +104,9 @@ export const NavBar: React.FC<NavbarProps> = ({
           </svg>
         ),
         isInHeader: true,
-      },
+      },*/
     ];
-  }, [hasResults]);
+  }, [hasResults, hasSensibilizaciones]);
 
   return (
     <FinanceNavbar
@@ -112,28 +117,35 @@ export const NavBar: React.FC<NavbarProps> = ({
       }}
       tabs={tabs}
       selectedTabId={selected}
-      onNavigate={(id) => onNavigate?.(id as any)}
+      onNavigate={(id) => {
+        if (id === "sensitivity" && !hasSensibilizaciones) return;
+        onNavigate?.(id as any);
+      }}
       isFormOpen={isFormOpen}
       onToggleForm={onToggleForm}
       actions={
         <>
-          {hasResults && (
-            <button
-              onClick={onOpenReport}
-              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm border border-purple-600 text-purple-600 hover:bg-purple-50"
-            >
-              Reportes
-            </button>
-          )}
-
-          <UserMenu user={user} onLogout={onLogout}>
+          <a className="flex flex-row gap-1 px-3 py-2 bg-valora-primary text-white rounded-lg text-xs md:text-sm font-semibold hover:bg-valora-secondary cursor-pointer">
+            Curso de capacitación
+            <ChevronRight className="w-4 h-4 my-auto" />
+          </a>
+          {user ? (
+            <UserMenu user={user} onLogout={onLogout}>
+              <a
+                href={projectsHref}
+                className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Mis proyectos
+              </a>
+            </UserMenu>
+          ) : (
             <a
-              href={projectsHref}
-              className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              className="flex items-center justify-center px-4 py-2 text-sm font-semibold text-valora-primary bg-white border border-valora-primary rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
+              onClick={onLoginClick}
             >
-              Mis proyectos
+              Iniciar sesión
             </a>
-          </UserMenu>
+          )}
         </>
       }
     />

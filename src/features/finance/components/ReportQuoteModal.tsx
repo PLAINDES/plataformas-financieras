@@ -22,7 +22,7 @@ export const ReportQuoteModal: React.FC<ReportQuoteModalProps> = ({
   onSubmit,
 }) => (
   <div
-    className={`fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 transition-opacity duration-300 ${isOpen ? "opacity-100" : "pointer-events-none opacity-0"}`}
+    className={`fixed inset-0 z-150 flex items-start justify-center bg-black/40 p-4 transition-opacity duration-300 ${isOpen ? "opacity-100" : "pointer-events-none opacity-0"}`}
   >
     <div
       className={`w-full max-w-lg rounded-xl bg-white shadow-xl transition-transform duration-300 ${isOpen ? "translate-y-0 scale-100" : "translate-y-3 scale-95"}`}

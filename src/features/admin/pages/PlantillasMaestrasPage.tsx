@@ -17,12 +17,29 @@ import type {
   MasterTemplateUpdate,
 } from "@/shared/types";
 
+import {
+  Plus,
+  Search,
+  Loader2,
+  FileSpreadsheet,
+  X,
+  Pencil,
+  Eye,
+  Download,
+  Trash2,
+  CheckCircle2,
+  Circle,
+} from "lucide-react";
+
 // === FORM STATE ===============================================================
 interface FormState {
   nombre: string;
   description: string;
   is_active: boolean;
   is_default: boolean;
+  onedrive_item_id?: string | null;
+  onedrive_filename?: string | null;
+  original_filename?: string | null;
 }
 
 const EMPTY_FORM: FormState = {
@@ -30,9 +47,22 @@ const EMPTY_FORM: FormState = {
   description: "",
   is_active: true,
   is_default: false,
+  onedrive_item_id: null,
+  onedrive_filename: null,
 };
 
-// === MAIN PAGE ================================================================
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleString("es-PE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+// === MAIN PAGE ===========================
 export const PlantillasMaestrasPage = () => {
   const { getToken } = useAuthContext();
 
@@ -50,22 +80,11 @@ export const PlantillasMaestrasPage = () => {
   const [extractingAfterCreate, setExtractingAfterCreate] = useState(false);
   const excelInputRef = useRef<HTMLInputElement>(null);
 
-  // Upload state
-  const [uploadingId, setUploadingId] = useState<number | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const uploadTargetId = useRef<number | null>(null);
-
   // Delete confirm
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
-
-  // Re-upload state
-  const [reUploadingId, setReUploadingId] = useState<number | null>(null);
   const [settingDefaultId, setSettingDefaultId] = useState<number | null>(null);
-  const reUploadInputRef = useRef<HTMLInputElement>(null);
-  const reUploadTargetId = useRef<number | null>(null);
 
-  // Shared codes modal (view all and view new)
   const [codesModalOpen, setCodesModalOpen] = useState(false);
   const [codesModalMode, setCodesModalMode] = useState<CodesModalMode>("all");
   const [codesModalTemplateId, setCodesModalTemplateId] = useState<
@@ -77,7 +96,7 @@ export const PlantillasMaestrasPage = () => {
     useState<CodesModalComparison | null>(null);
   const [codesModalErrors, setCodesModalErrors] = useState<string[]>([]);
 
-  // == Toast helpers =======================================================
+  // == Toast helpers ==================
   const addToast = useCallback(
     (message: string, type: "success" | "error" | "info" | "warn" = "info") => {
       const id = Date.now().toString();
@@ -92,7 +111,7 @@ export const PlantillasMaestrasPage = () => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  // == Load =================================================================
+  // == Load ====================
   const loadTemplates = async () => {
     try {
       setLoading(true);
@@ -114,7 +133,7 @@ export const PlantillasMaestrasPage = () => {
     loadTemplates();
   }, [searchTerm]);
 
-  // == Dialog helpers =======================================================
+  // == Dialog helpers ==================
   const openCreate = () => {
     setEditingId(null);
     setForm({ ...EMPTY_FORM, is_default: templates.length === 0 });
@@ -128,7 +147,10 @@ export const PlantillasMaestrasPage = () => {
       description: t.description ?? "",
       is_active: t.is_active,
       is_default: t.is_default,
+      onedrive_item_id: t.onedrive_item_id,
+      onedrive_filename: t.onedrive_filename,
     });
+    setExcelFile(null);
     setDialogOpen(true);
   };
 
@@ -139,7 +161,7 @@ export const PlantillasMaestrasPage = () => {
     setExcelFile(null);
   };
 
-  // == Save (create / update) ================================================
+  // == Save (create / update) ===================
   const handleSave = async () => {
     if (!form.nombre.trim()) {
       addToast("El nombre es obligatorio.", "error");
@@ -147,85 +169,96 @@ export const PlantillasMaestrasPage = () => {
     }
     setSaving(true);
     try {
-      let plantilla: MasterTemplate | null = null;
-      const shouldCreateAndUpload = editingId === null && !!excelFile;
+      let templateId = editingId;
+      const token = getToken() ?? undefined;
 
       if (editingId === null) {
-        // CREATE
         const payload: MasterTemplateCreate = {
           nombre: form.nombre.trim(),
           description: form.description.trim() || undefined,
           is_active: form.is_active,
           is_default: form.is_default,
         };
-        plantilla = await MainService.createMasterTemplate(
+        const plantilla = await MainService.createMasterTemplate(
           payload,
-          getToken() ?? undefined
+          token
         );
+        templateId = plantilla.id;
         addToast("Plantilla creada exitosamente.", "success");
       } else {
-        // UPDATE
         const payload: MasterTemplateUpdate = {
           nombre: form.nombre.trim(),
           description: form.description.trim() || undefined,
           is_active: form.is_active,
           is_default: form.is_default,
         };
-        plantilla = await MainService.updateMasterTemplate(
-          editingId,
-          payload,
-          getToken() ?? undefined
-        );
+        await MainService.updateMasterTemplate(editingId, payload, token);
         addToast("Plantilla actualizada exitosamente.", "success");
       }
 
       // Si hay archivo Excel, subirlo
-      if (excelFile && plantilla) {
+      if (excelFile && templateId) {
+        setExtractingAfterCreate(true);
+        closeDialog();
+
         try {
-          if (shouldCreateAndUpload) {
-            closeDialog();
-            setExtractingAfterCreate(true);
+          if (editingId !== null && form.onedrive_item_id) {
+            const data = await MainService.reUploadMasterTemplateFile(
+              templateId,
+              excelFile,
+              token
+            );
+            setCodesModalMode("new");
+            setCodesModalComparison(data.comparison || null);
+            setCodesModalErrors(data.errors || []);
+            setCodesModalTemplateId(templateId);
+            setCodesModalTemplateName(form.nombre.trim());
+            setCodesModalOpen(true);
+
+            if (
+              data.comparison.total_new_codes > 0 ||
+              data.comparison.total_new_images > 0
+            ) {
+              addToast(
+                `${data.comparison.total_new_codes} nuevos códigos y ${data.comparison.total_new_images} nuevas imágenes encontrados`,
+                "success"
+              );
+            } else {
+              addToast("No se encontraron cambios nuevos", "info");
+            }
+          } else {
+            await MainService.uploadMasterTemplateFile(
+              templateId,
+              excelFile,
+              token
+            );
+            await Promise.all([
+              MainService.getMasterTemplateCodes(templateId),
+              MainService.getMasterTemplateChartImages(templateId),
+            ]);
+
+            setCodesModalMode("all");
+            setCodesModalTemplateId(templateId);
+            setCodesModalTemplateName(form.nombre.trim());
+            setCodesModalComparison(null);
+            setCodesModalErrors([]);
+            setCodesModalOpen(true);
+
+            addToast(
+              `Archivo "${excelFile.name}" subido a OneDrive correctamente.`,
+              "success"
+            );
           }
-
-          const token = getToken() ?? undefined;
-          await MainService.uploadMasterTemplateFile(
-            plantilla.id,
-            excelFile,
-            token
-          );
-
-          // Esperar que endpoints de códigos e imágenes estén listos
-          await Promise.all([
-            MainService.getMasterTemplateCodes(plantilla.id),
-            MainService.getMasterTemplateChartImages(plantilla.id),
-          ]);
-
-          // Abrir automáticamente modal de códigos/imágenes
-          setCodesModalMode("all");
-          setCodesModalTemplateId(plantilla.id);
-          setCodesModalTemplateName(plantilla.nombre);
-          setCodesModalComparison(null);
-          setCodesModalErrors([]);
-          setCodesModalOpen(true);
-
-          addToast(
-            `Archivo "${excelFile.name}" subido a OneDrive correctamente.`,
-            "success"
-          );
         } catch (uploadErr: any) {
           console.error("Error subiendo archivo:", uploadErr);
           addToast(
-            "Plantilla guardada, pero hubo error al subir el Excel. Intenta nuevamente desde la lista.",
-            "warn"
+            "Plantilla guardada, pero hubo error al subir el Excel.",
+            "error"
           );
         } finally {
-          if (shouldCreateAndUpload) {
-            setExtractingAfterCreate(false);
-          }
+          setExtractingAfterCreate(false);
         }
-      }
-
-      if (!shouldCreateAndUpload) {
+      } else {
         closeDialog();
       }
       loadTemplates();
@@ -233,47 +266,6 @@ export const PlantillasMaestrasPage = () => {
       addToast(e.message || "Error al guardar.", "error");
     } finally {
       setSaving(false);
-    }
-  };
-
-  // == Upload file ===========================================================
-  const triggerUpload = (id: number) => {
-    uploadTargetId.current = id;
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || uploadTargetId.current === null) return;
-
-    const id = uploadTargetId.current;
-    const templateName =
-      templates.find((t) => t.id === id)?.nombre || "Plantilla";
-    setUploadingId(id);
-
-    try {
-      const token = getToken() ?? undefined;
-      await MainService.uploadMasterTemplateFile(id, file, token);
-
-      // Mostrar modal de códigos automáticamente
-      setCodesModalMode("all");
-      setCodesModalTemplateId(id);
-      setCodesModalTemplateName(templateName);
-      setCodesModalComparison(null);
-      setCodesModalErrors([]);
-      setCodesModalOpen(true);
-
-      loadTemplates();
-      addToast(
-        `Archivo "${file.name}" subido correctamente. Mostrando códigos y gráficos…`,
-        "success"
-      );
-    } catch (e: any) {
-      addToast(e.message || "Error al subir el archivo.", "error");
-    } finally {
-      setUploadingId(null);
-      uploadTargetId.current = null;
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -307,7 +299,7 @@ export const PlantillasMaestrasPage = () => {
         const objectUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = objectUrl;
-        link.download = t.onedrive_filename || `plantilla_${t.id}.xlsx`;
+        link.download = t.original_filename || `plantilla_${t.id}.xlsx`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -316,73 +308,6 @@ export const PlantillasMaestrasPage = () => {
         addToast(error.message || "Error al descargar archivo.", "error");
       }
     })();
-  };
-
-  // == Re-Upload Excel =======================================================
-  const triggerReUpload = (templateId: number, templateName: string) => {
-    reUploadTargetId.current = templateId;
-    setCodesModalTemplateId(templateId);
-    setCodesModalTemplateName(templateName);
-    reUploadInputRef.current?.click();
-  };
-
-  const handleReUploadChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file || !reUploadTargetId.current) return;
-
-    try {
-      setReUploadingId(reUploadTargetId.current);
-      setCodesModalErrors([]);
-
-      const token = getToken();
-      const data = await MainService.reUploadMasterTemplateFile(
-        reUploadTargetId.current,
-        file,
-        token || undefined
-      );
-
-      // Show comparison modal
-      setCodesModalMode("new");
-      setCodesModalComparison(data.comparison || null);
-      setCodesModalErrors(data.errors || []);
-      setCodesModalOpen(true);
-
-      // Show toast
-      if (
-        data.comparison.total_new_codes > 0 ||
-        data.comparison.total_new_images > 0
-      ) {
-        addToast(
-          `${data.comparison.total_new_codes} nuevos códigos y ${data.comparison.total_new_images} nuevas imágenes encontrados`,
-          "success"
-        );
-      } else {
-        addToast("No se encontraron cambios nuevos", "info");
-      }
-
-      // Reload templates
-      await loadTemplates();
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Error desconocido";
-      addToast(errorMsg, "error");
-    } finally {
-      setReUploadingId(null);
-      if (reUploadInputRef.current) {
-        reUploadInputRef.current.value = "";
-      }
-    }
-  };
-
-  const handleReUpload = (id: number) => {
-    const template = templates.find((t) => t.id === id);
-    if (!template) return;
-    if (!template.onedrive_item_id) {
-      addToast("Esta plantilla no tiene archivo actual", "warn");
-      return;
-    }
-    triggerReUpload(id, template.nombre);
   };
 
   // == View Codes =============================================================
@@ -449,20 +374,7 @@ export const PlantillasMaestrasPage = () => {
           onClick={openCreate}
           className="inline-flex items-center gap-2 px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
+          <Plus className="h-4 w-4" />
           Nueva Plantilla
         </button>
       </header>
@@ -471,39 +383,23 @@ export const PlantillasMaestrasPage = () => {
         <ToastStack toasts={toasts} onDismiss={dismissToast} />
 
         {/* Search */}
-        <div className="mb-6">
+        <div className="mb-6 relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-gray-400" />
+          </div>
           <input
             type="text"
             placeholder="Buscar por nombre..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
         {/* Table */}
         {loading ? (
           <div className="flex items-center justify-center py-20 text-gray-500">
-            <svg
-              className="animate-spin h-6 w-6 mr-2"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v8H4z"
-              />
-            </svg>
+            <Loader2 className="animate-spin h-6 w-6 mr-2" />
             Cargando plantillas…
           </div>
         ) : templates.length === 0 ? (
@@ -519,12 +415,12 @@ export const PlantillasMaestrasPage = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ID
+                    #
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nombre
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Predeterminada
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -538,11 +434,12 @@ export const PlantillasMaestrasPage = () => {
                   </th>
                 </tr>
               </thead>
+              {/* Lista de Plantillas maestras */}
               <tbody className="bg-white divide-y divide-gray-200">
-                {templates.map((t) => (
+                {templates.map((t, index) => (
                   <tr key={t.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {t.id}
+                      {index + 1}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="font-medium text-gray-900">
@@ -554,22 +451,36 @@ export const PlantillasMaestrasPage = () => {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {t.is_default ? (
-                        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                          Predeterminada
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-400">No</span>
-                      )}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                      <button
+                        onClick={() => handleSetDefault(t.id)}
+                        disabled={t.is_default || settingDefaultId === t.id}
+                        title={
+                          t.is_default
+                            ? "Ya es la plantilla predeterminada"
+                            : "Hacer predeterminada"
+                        }
+                        className="group inline-flex items-center justify-center transition-colors disabled:opacity-100"
+                      >
+                        {settingDefaultId === t.id ? (
+                          <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+                        ) : t.is_default ? (
+                          <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                        ) : (
+                          <Circle className="w-6 h-6 text-gray-300 group-hover:text-emerald-400" />
+                        )}
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {t.onedrive_filename ? (
                         <span
-                          className="text-xs text-blue-600 font-medium truncate max-w-40 block"
+                          className="flex items-center gap-1.5 text-xs text-blue-600 font-medium truncate max-w-48"
                           title={t.onedrive_filename}
                         >
-                          📄 {t.onedrive_filename}
+                          <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">
+                            {t.original_filename || t.onedrive_filename}
+                          </span>
                         </span>
                       ) : (
                         <span className="text-xs text-gray-400">
@@ -577,228 +488,40 @@ export const PlantillasMaestrasPage = () => {
                         </span>
                       )}
                     </td>
+                    {/* Creado */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(t.created_at).toLocaleDateString("es-PE")}
+                      {formatDate(t.created_at)}
                     </td>
+                    {/* Acciones */}
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end gap-2">
                         <button
-                          onClick={() => handleSetDefault(t.id)}
-                          disabled={t.is_default || settingDefaultId === t.id}
-                          title={
-                            t.is_default
-                              ? "Ya es predeterminada"
-                              : "Establecer como predeterminada"
-                          }
-                          className="text-emerald-600 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 p-1.5 rounded-md transition-colors disabled:opacity-50"
-                        >
-                          {settingDefaultId === t.id ? (
-                            <svg
-                              className="animate-spin w-4 h-4"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8v8H4z"
-                              />
-                            </svg>
-                          ) : (
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          )}
-                        </button>
-
-                        <button
-                          onClick={() => openEdit(t)}
-                          title="Editar"
-                          className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-md transition-colors"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-7-9l7 7"
-                            />
-                          </svg>
-                        </button>
-
-                        <button
-                          onClick={() => triggerUpload(t.id)}
-                          disabled={
-                            uploadingId === t.id || !!t.onedrive_item_id
-                          }
-                          title={
-                            t.onedrive_item_id
-                              ? "Ya tiene archivo subido"
-                              : "Subir archivo Excel"
-                          }
-                          className="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 p-1.5 rounded-md transition-colors disabled:opacity-50"
-                        >
-                          {uploadingId === t.id ? (
-                            <svg
-                              className="animate-spin w-4 h-4"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8v8H4z"
-                              />
-                            </svg>
-                          ) : (
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                              />
-                            </svg>
-                          )}
-                        </button>
-
-                        <button
-                          onClick={() => handleReUpload(t.id)}
-                          disabled={
-                            reUploadingId === t.id || !t.onedrive_item_id
-                          }
-                          title={
-                            t.onedrive_item_id
-                              ? "Re-subir archivo actualizado"
-                              : "Sin archivo actual"
-                          }
-                          className="text-purple-600 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 p-1.5 rounded-md transition-colors disabled:opacity-50"
-                        >
-                          {reUploadingId === t.id ? (
-                            <svg
-                              className="animate-spin w-4 h-4"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8v8H4z"
-                              />
-                            </svg>
-                          ) : (
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
-                              />
-                            </svg>
-                          )}
-                        </button>
-
-                        <button
                           onClick={() => handleViewCodes(t.id, t.nombre)}
-                          title="Ver códigos extraídos"
+                          title="Ver códigos y gráficos"
                           className="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 p-1.5 rounded-md transition-colors"
                         >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                          </svg>
+                          <Eye className="w-4 h-4" />
                         </button>
 
                         <button
                           onClick={() => handleDownload(t)}
                           title={
                             t.onedrive_item_id
-                              ? "Descargar desde OneDrive"
+                              ? "Descargar de OneDrive"
                               : "Sin archivo en OneDrive"
                           }
                           disabled={!t.onedrive_item_id}
-                          className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-md transition-colors disabled:opacity-30"
+                          className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-md transition-colors disabled:opacity-30 disabled:hover:bg-indigo-50"
                         >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                            />
-                          </svg>
+                          <Download className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          onClick={() => openEdit(t)}
+                          title="Editar plantilla"
+                          className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-md transition-colors"
+                        >
+                          <Pencil className="w-4 h-4" />
                         </button>
 
                         <button
@@ -806,19 +529,7 @@ export const PlantillasMaestrasPage = () => {
                           title="Eliminar"
                           className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-1.5 rounded-md transition-colors"
                         >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -828,24 +539,6 @@ export const PlantillasMaestrasPage = () => {
             </table>
           </div>
         )}
-
-        {/* Hidden file input for upload */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".xlsx,.xls"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-
-        {/* Hidden file input for re-upload */}
-        <input
-          ref={reUploadInputRef}
-          type="file"
-          accept=".xlsx,.xls"
-          className="hidden"
-          onChange={handleReUploadChange}
-        />
 
         {/* == Create / Edit Dialog =========================================== */}
         {dialogOpen && (
@@ -859,22 +552,9 @@ export const PlantillasMaestrasPage = () => {
                 </h2>
                 <button
                   onClick={closeDialog}
-                  className="rounded-md p-1 text-gray-400 hover:text-gray-600"
+                  className="rounded-md p-1 text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <X className="h-5 w-5" />
                 </button>
               </div>
 
@@ -929,13 +609,42 @@ export const PlantillasMaestrasPage = () => {
                   </label>
                 </div>
 
-                {/* Archivo Excel (solo al crear) */}
-                {editingId === null && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Excel (opcional)
-                    </label>
+                {/* Archivo Excel */}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Excel (opcional)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {form.onedrive_filename && !excelFile && (
+                      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                        <div className="flex items-center gap-2 truncate">
+                          <FileSpreadsheet className="w-4 h-4 text-blue-600 shrink-0" />
+                          <span className="truncate font-medium">
+                            {form.original_filename || form.onedrive_filename}
+                          </span>
+                        </div>
+                        <span className="text-[10px] uppercase font-bold text-gray-400 shrink-0 ml-2">
+                          Archivo actual
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => excelInputRef.current?.click()}
+                        className="flex-1 flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-blue-300 bg-blue-50 px-3 py-2.5 text-xs text-blue-600 hover:bg-blue-100 transition-colors font-medium"
+                      >
+                        {excelFile ? (
+                          <>
+                            <FileSpreadsheet className="w-4 h-4" />
+                            {excelFile.name}
+                          </>
+                        ) : form.onedrive_filename ? (
+                          "Reemplazar archivo Excel"
+                        ) : (
+                          "Selecciona archivo Excel"
+                        )}
+                      </button>
                       <input
                         ref={excelInputRef}
                         type="file"
@@ -945,43 +654,21 @@ export const PlantillasMaestrasPage = () => {
                         }
                         className="hidden"
                       />
-                      <button
-                        onClick={() => excelInputRef.current?.click()}
-                        className="flex-1 rounded-lg border-2 border-dashed border-blue-300 bg-blue-50 px-3 py-2 text-xs text-blue-600 hover:bg-blue-100 transition-colors text-center font-medium"
-                      >
-                        {excelFile
-                          ? `📄 ${excelFile.name}`
-                          : "Selecciona archivo Excel"}
-                      </button>
                       {excelFile && (
                         <button
                           onClick={() => setExcelFile(null)}
-                          className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
-                          title="Limpiar"
+                          className="p-2 text-red-500 hover:bg-red-50 rounded transition-colors border border-transparent hover:border-red-200"
+                          title="Deshacer selección"
                         >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
+                          <X className="h-4 w-4" />
                         </button>
                       )}
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Se subirá automáticamente a OneDrive al guardar la
-                      plantilla
-                    </p>
                   </div>
-                )}
+                  <p className="text-xs text-gray-400 mt-1">
+                    Se subirá automáticamente a OneDrive al guardar la plantilla
+                  </p>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
@@ -1043,29 +730,15 @@ export const PlantillasMaestrasPage = () => {
         {extractingAfterCreate && (
           <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60">
             <div className="bg-white rounded-xl shadow-2xl px-8 py-6 flex items-center gap-4 max-w-md mx-4">
-              <svg
-                className="animate-spin h-6 w-6 text-blue-600"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8H4z"
-                />
-              </svg>
-              <p className="text-sm font-medium text-gray-700">
-                extrayendo codigos y graficos, espere un momento...
-              </p>
+              <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+              <div>
+                <h4 className="text-sm font-bold text-gray-900">
+                  Procesando archivo
+                </h4>
+                <p className="text-xs font-medium text-gray-500 mt-0.5">
+                  Extrayendo códigos y gráficos, espere por favor...
+                </p>
+              </div>
             </div>
           </div>
         )}

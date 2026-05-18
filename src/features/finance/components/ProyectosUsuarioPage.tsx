@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { MainPageFooter } from "./MainPageFooter";
-import Chatbot from "./Chatbot";
-import { useAuth } from "@/features/auth/hooks/useAuth";
 import { NavBar } from "../kapital/components/NavBar";
 import { Proyectos } from "./Proyectos";
-
+import { LoginModal } from "@/features/auth/components/LoginModal";
+import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 
 interface ProyectosUsuarioPageProps {
   heroTitle?: string;
@@ -19,15 +18,19 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
   brandHref = "Kapital",
 }) => {
   const [isDesktopFormOpen, setIsDesktopFormOpen] = useState<boolean>(true);
-  const [isReportSidebarOpen, setIsReportSidebarOpen] = useState<boolean>(false);
-  const { user } = useAuth();
+  const [isReportSidebarOpen, setIsReportSidebarOpen] =
+    useState<boolean>(false);
   const handleReportSidebarOpen = (): void => {
     setIsReportSidebarOpen(true);
     if (isDesktopFormOpen) setIsDesktopFormOpen(false);
   };
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  const handleLogout = (): void => {};
+  const { user, login, logout } = useAuthContext();
 
+  const handleLogout = async () => {
+    await logout();
+  };
   void heroTitle;
   void isReportSidebarOpen;
 
@@ -37,18 +40,34 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
 
   return (
     <div className="flex flex-col w-full h-screen">
-      <NavBar user={user} onLogout={handleLogout} onToggleForm={() => setIsDesktopFormOpen((prev) => !prev)}
-        isFormOpen={isDesktopFormOpen} onOpenReport={handleReportSidebarOpen} hasResults={false} selected={""}/>
-      <div className="">
-        <div className="flex flex-1 flex-col-3 items-center justify-center py-20 px-6 bg-[#f3f6f9] overflow-y-auto">
+      <NavBar
+        user={user}
+        onLogout={handleLogout}
+        onToggleForm={() => setIsDesktopFormOpen((prev) => !prev)}
+        isFormOpen={isDesktopFormOpen}
+        onOpenReport={handleReportSidebarOpen}
+        hasResults={false}
+        onLoginClick={() => setIsLoginModalOpen(true)}
+        selected={""}
+      />
+      <div className="h-full flex flex-col p-2">
+        <div className="flex flex-1 flex-col-3 justify-center py-20 px-6 bg-[#f3f6f9] overflow-y-auto">
           <Proyectos userId={user?.id} />
         </div>
         <div>
           <MainPageFooter brandName={brandName} brandHref={brandHref} />
         </div>
       </div>
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLogin={login}
+        onSwitchToRegister={() => {
+          setIsLoginModalOpen(false);
+        }}
+      />
 
-      <Chatbot geminiApiKey="" />
+      {/*<Chatbot isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} />*/}
     </div>
   );
 };

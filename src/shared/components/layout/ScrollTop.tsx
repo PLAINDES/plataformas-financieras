@@ -30,13 +30,12 @@ export function ScrollTop() {
       id="kt_scrolltop"
       onClick={scrollToTop}
       className={`
-        fixed bottom-8 right-8 z-1000
+        fixed max-[540px]:bottom-6 bottom-26 right-4 z-60
         flex items-center justify-center
-        w-12 h-12 rounded-lg cursor-pointer
+        w-12 h-12 rounded-full cursor-pointer shadow-lg
         bg-blue-600 text-white
-        transition-all duration-300 ease-in-out
-        hover:bg-blue-700 hover:scale-110
-        ${isVisible ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"}
+        hover:bg-blue-700
+        ${isVisible ? "opacity-100 " : "opacity-0 pointer-events-none"}
       `}
     >
       <span className="flex items-center justify-center">

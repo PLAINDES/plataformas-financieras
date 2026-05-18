@@ -47,12 +47,12 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
   if (!content) return null;
   console.log("content", content);
   return (
-    <footer className="mb-0 relative">
+    <footer className="mb-0 relative pt-4">
       {/* Botón flotante editar — solo admin, esquina superior derecha del footer */}
       {isAdmin && (
         <button
           onClick={() => setEditModalOpen(true)}
-          className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] font-medium backdrop-blur-sm border border-white/15 transition-all shadow-sm"
+          className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-slate-400/30 text-black text-[11px] font-medium backdrop-blur-sm border border-white/15 transition-all shadow-sm cursor-pointer"
           title="Editar footer"
         >
           <Pencil size={11} />
@@ -73,7 +73,7 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
                 />
               </div>
               <div>
-                <h3 className="text-gray-300 text-sm font-medium mb-3 leading-relaxed">
+                <h3 className="text-black text-sm font-medium mb-3 leading-relaxed">
                   Suscríbete para recibir actualizaciones
                 </h3>
                 <form onSubmit={handleSubscription} className="formSuscription">
@@ -89,7 +89,7 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
                     />
                     <button
                       type="submit"
-                      className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors whitespace-nowrap font-medium"
+                      className="px-4 py-1.5 text-sm bg-valora-primary text-white rounded hover:bg-valora-secondary transition-colors whitespace-nowrap font-medium cursor-pointer"
                     >
                       Enviar
                     </button>
@@ -103,7 +103,7 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 {(content.sections ?? []).map((section, si) => (
                   <div key={si}>
-                    <h4 className="text-white font-semibold mb-3 text-sm uppercase tracking-wider">
+                    <h4 className="text-slate-700 font-semibold mb-3 text-sm uppercase tracking-wider">
                       {section.title}
                     </h4>
                     <ul className="space-y-2">
@@ -111,7 +111,7 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
                         <li key={li}>
                           <a
                             href={link.url}
-                            className="text-gray-300 hover:text-white text-sm transition-colors inline-block"
+                            className="text-slate-500 hover:text-slate-800 text-sm transition-colors inline-block"
                           >
                             {link.label}
                           </a>

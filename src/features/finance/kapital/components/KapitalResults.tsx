@@ -1,36 +1,14 @@
 // features/finance/kapital/components/KapitalResults.tsx
 
-import { useState } from "react";
 import { KapitalResultadosSection } from "./KapitalResultadosSection";
 import { KapitalAnalisisSection } from "./KapitalAnalisisSection";
-import { KapitalMetodologiaSection } from "./MethodologyView";
 import { LoadingOverlay } from "@/shared/components/common/LoadingOverlay";
-
-interface FormData {
-  typeId: boolean;
-  // ... otros campos
-}
-
-interface MarketResults {
-  cppc: number;
-  kd: number;
-  ke: number;
-  koa: number;
-}
-
-interface Results {
-  cppc: number;
-  kd: number;
-  ke: number;
-  koa: number;
-  emergent: MarketResults;
-  developed: MarketResults;
-}
+import type { Results, SensibilizacionEntry } from "../KapitalPage";
 
 export interface KapitalResultsProps {
-  section: "result" | "analysis" | "methodology";
+  section: "result" | "sensitivity";
   results: Results | null;
-  formData: FormData;
+  showCompanyCard: boolean;
   resultCurrency: "pen" | "usd";
   onResultCurrencyChange: (currency: "pen" | "usd") => void;
   analysisDC: string;
@@ -42,6 +20,13 @@ export interface KapitalResultsProps {
   onAnalysisSubmit: (e: React.FormEvent) => void;
   loading: boolean;
   methodologyCategories: MethodologyCategory[];
+  showComparison: boolean;
+  onToggleComparison: (show: boolean) => void;
+  sensibilizaciones: SensibilizacionEntry[];
+  onOpenReport?: () => void;
+  onSensibilizaClick: () => void;
+  localCurrency?: string;
+  chatbotComponent?: React.ReactNode;
 }
 
 interface MethodologyItem {
@@ -57,7 +42,7 @@ interface MethodologyCategory {
 export const KapitalResults: React.FC<KapitalResultsProps> = ({
   section,
   results,
-  formData,
+  showCompanyCard,
   resultCurrency,
   onResultCurrencyChange,
   analysisDC,
@@ -68,14 +53,14 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
   onAnalysisCurrencyChange,
   onAnalysisSubmit,
   loading,
-  //methodologyCategories,
+  showComparison,
+  onToggleComparison,
+  sensibilizaciones,
+  onSensibilizaClick,
+  onOpenReport,
+  localCurrency,
+  chatbotComponent,
 }) => {
-  const [isCategoriaOpen, setIsCategoriaOpen] = useState(false);
-  const [isModuloOpen, setIsModuloOpen] = useState(false);
-  const [selectedMetodologiaItem, setSelectedMetodologiaItem] = useState<
-    "curso" | "mercado"
-  >("curso");
-
   if (loading) {
     return <LoadingOverlay />;
   }
@@ -85,22 +70,25 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
   }
 
   return (
-    <div className="flex-12 flex flex-col w-full h-full lg:pb-10 py-10 lg:pt-10 bg-[#f3f6f9] min-h-dvh">
-      <div className="flex-1 w-full px-4 sm:px-8">
+    <div className="flex-12 flex flex-row w-full h-full p-6 lg:p-8 bg-[#f3f6f9]">
+      <div className="flex-1 w-full mx-2">
         <div className="mx-auto flex w-full max-w-300 flex-col gap-6">
           {section === "result" && (
             <KapitalResultadosSection
               results={results}
-              formData={formData}
+              showCompanyCard={showCompanyCard}
               resultCurrency={resultCurrency}
               onResultCurrencyChange={onResultCurrencyChange}
+              onSensibilizaClick={onSensibilizaClick}
+              onOpenReport={onOpenReport}
+              localCurrency={localCurrency}
+              chatbotComponent={chatbotComponent}
             />
           )}
-
-          {section === "analysis" && (
+          {section === "sensitivity" && (
             <KapitalAnalisisSection
               results={results}
-              formData={formData}
+              showCompanyCard={showCompanyCard}
               resultCurrency={resultCurrency}
               onResultCurrencyChange={onResultCurrencyChange}
               analysisDC={analysisDC}
@@ -111,18 +99,12 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
               onAnalysisCurrencyChange={onAnalysisCurrencyChange}
               onAnalysisSubmit={onAnalysisSubmit}
               loading={loading}
-            />
-          )}
-
-          {section === "methodology" && (
-            <KapitalMetodologiaSection
-              selectedMetodologiaItem={selectedMetodologiaItem}
-              isCategoriaOpen={isCategoriaOpen}
-              isModuloOpen={isModuloOpen}
-              onToggleCategoria={() => setIsCategoriaOpen((open) => !open)}
-              onToggleModulo={() => setIsModuloOpen((open) => !open)}
-              onSelectCurso={() => setSelectedMetodologiaItem("curso")}
-              onSelectMercado={() => setSelectedMetodologiaItem("mercado")}
+              showComparison={showComparison}
+              onToggleComparison={onToggleComparison}
+              sensibilizaciones={sensibilizaciones}
+              onOpenReport={onOpenReport}
+              localCurrency={localCurrency}
+              chatbotComponent={chatbotComponent}
             />
           )}
         </div>

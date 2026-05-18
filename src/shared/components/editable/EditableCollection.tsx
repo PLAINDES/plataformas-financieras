@@ -1,10 +1,11 @@
 // src/components/editable/EditableCollection.tsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type {
   CollectionItem,
   EditableCollectionData,
 } from "../../types/editable.types";
+import { Ellipsis, Pencil, Trash } from "lucide-react";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 
 interface EditableCollectionProps<T extends CollectionItem> {
@@ -49,8 +50,48 @@ export function EditableCollection<T extends CollectionItem>({
   const [items, setItems] = useState<T[]>(data.items);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  // NUEVO: Track si el item siendo editado es nuevo (no guardado aún)
   const [isNewItem, setIsNewItem] = useState(false);
+
+  // --- LÓGICA DE DRAG-TO-SCROLL ---
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    isDragging.current = true;
+    scrollRef.current.style.cursor = "grabbing";
+    scrollRef.current.style.userSelect = "none"; // Evita seleccionar texto al arrastrar
+    startX.current = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current = scrollRef.current.scrollLeft;
+  };
+
+  const handleMouseLeave = () => {
+    isDragging.current = false;
+    if (scrollRef.current) {
+      scrollRef.current.style.cursor = "grab";
+      scrollRef.current.style.userSelect = "auto";
+    }
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    if (scrollRef.current) {
+      scrollRef.current.style.cursor = "grab";
+      scrollRef.current.style.userSelect = "auto";
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5; // Multiplicador de velocidad de arrastre
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+  };
+
+  // --------------
 
   const { isAdmin } = useAuthContext();
   useEffect(() => {
@@ -91,7 +132,7 @@ export function EditableCollection<T extends CollectionItem>({
     setIsNewItem(false); // Ya no es nuevo después de guardar
   };
 
-  // NUEVO: Manejar cancelación
+  // Manejar cancelación
   const handleCancelEdit = (id: string) => {
     if (isNewItem) {
       // Si es un item nuevo que no se guardó, eliminarlo
@@ -154,7 +195,14 @@ export function EditableCollection<T extends CollectionItem>({
   // Modo no-admin: solo renderizar items
   if (!isAdmin) {
     return (
-      <div className={className}>
+      <div
+        ref={scrollRef}
+        className={`${className} cursor-grab active:cursor-grabbing`}
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+      >
         {items.map((item, index) =>
           renderItem(item, index, {
             isEditing: false,
@@ -174,22 +222,19 @@ export function EditableCollection<T extends CollectionItem>({
 
   // Modo admin: renderizar con controles
   return (
-    <div className={className} style={{ position: "relative" }}>
+    <div
+      ref={scrollRef}
+      className={`${className} cursor-grab active:cursor-grabbing`}
+      style={{ position: "relative" }}
+      onMouseDown={handleMouseDown}
+      onMouseLeave={handleMouseLeave}
+      onMouseUp={handleMouseUp}
+      onMouseMove={handleMouseMove}
+    >
       {/* Items */}
       {items.length === 0 ? (
-        <div
-          style={{
-            padding: "3rem 1rem",
-            textAlign: "center",
-            color: "#9ca3af",
-            border: "2px dashed #d1d5db",
-            borderRadius: "12px",
-            backgroundColor: "#f9fafb",
-          }}
-        >
-          <p style={{ margin: "0 0 1rem", fontSize: "0.875rem" }}>
-            {emptyMessage}
-          </p>
+        <div className="text-center py-12 px-4 border-dashed border-2 rounded-lg text-gray-400">
+          <p className="mb-4 text-sm">{emptyMessage}</p>
           <button
             onClick={handleAdd}
             disabled={isSaving}
@@ -321,7 +366,7 @@ export function AdminControls({
     border border-gray-200 bg-white 
     text-gray-600 shadow-sm 
     transition-all duration-300 ease-out
-    hover:-translate-y-1 hover:shadow-md hover:border-gray-400
+    hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400
     cursor-pointer
   `;
 
@@ -393,20 +438,7 @@ export function AdminControls({
           className={`${buttonBaseClass} hover:text-blue-600 hover:border-blue-400`}
           title="Editar"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
-            <path d="m15 5 4 4" />
-          </svg>
+          <Pencil className="size-4" />
         </button>
 
         {/* Botón Eliminar (Hover Rojo) */}
@@ -418,21 +450,7 @@ export function AdminControls({
           className={`${buttonBaseClass} hover:text-red-600 hover:border-red-400`}
           title="Eliminar"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M3 6h18" />
-            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-          </svg>
+          <Trash className="size-4" />
         </button>
       </div>
 
@@ -443,32 +461,15 @@ export function AdminControls({
           setIsOpen(!isOpen);
         }}
         className={`
-            relative z-20 flex items-center justify-center 
-            w-8 h-8 rounded-full 
-            bg-white border shadow-sm transition-all duration-200
-            ${isOpen ? "border-gray-400 bg-gray-50" : "border-gray-200 hover:border-gray-400 hover:-translate-y-1 hover:shadow-md"}
+            relative z-20 flex items-center justify-center w-8 h-8 rounded-full bg-white border shadow-sm transition-all duration-200 cursor-pointer
+            ${isOpen ? "border-gray-400 bg-gray-50" : "border-gray-200 hover:border-gray-400 hover:shadow-md"}
         `}
       >
         {isOpen ? (
           <span className="text-gray-500 font-bold text-xs">✕</span>
         ) : (
           // Icono de 3 puntos (Menú)
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-gray-600"
-          >
-            <circle cx="12" cy="12" r="1" />
-            <circle cx="19" cy="12" r="1" />
-            <circle cx="5" cy="12" r="1" />
-          </svg>
+          <Ellipsis className="size-6" />
         )}
       </button>
     </div>

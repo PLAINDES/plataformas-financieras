@@ -25,6 +25,7 @@ const ValoraPage: React.FC = () => {
     longgrowth: "",
     capitalcost: "",
     revenuegrowth: "",
+    beta_unlevered_industry: "",
   });
   const [fileUploaded, setFileUploaded] = useState(false);
   const [isDesktopFormOpen, setIsDesktopFormOpen] = useState(true);
@@ -97,6 +98,7 @@ const ValoraPage: React.FC = () => {
       brandName="Kapital"
       brandHref="/kapital"
       heroTitle="Bienvenido a Valora"
+      btnText="Valora"
       onOpenForm={() => setIsDesktopFormOpen((prev) => !prev)}
     />
   );
@@ -337,7 +339,7 @@ const ValoraPage: React.FC = () => {
         isFormOpen={isDesktopFormOpen}
         hasResults={showResults}
         logoHref="/valora"
-        logoSrc="/public/images/logo-valora-small.png"
+        logoSrc="/images/logo-valora-small.png"
         logoAlt="Valora Logo"
         projectsHref="/usuario/proyectos"
         selected={getSelectedView()}

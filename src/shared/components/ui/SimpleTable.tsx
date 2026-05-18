@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from "react";
+import { Pencil } from "lucide-react";
 
 interface Column<T> {
   header: string;
   accessorKey?: keyof T;
-  cell?: (item: T) => React.ReactNode;
+  cell?: (item: T, index?: number) => React.ReactNode;
 }
 
 interface SimpleTableProps<T> {
@@ -179,7 +180,7 @@ export function SimpleTable<T extends object>({
           </div>
         )}
       </div>
-      <div className="overflow-x-auto">
+      <div className="">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -257,7 +258,7 @@ export function SimpleTable<T extends object>({
                       className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
                     >
                       {col.cell
-                        ? col.cell(item)
+                        ? col.cell(item, itemIndex)
                         : (item[col.accessorKey as keyof T] as React.ReactNode)}
                     </td>
                   ))}
@@ -267,28 +268,16 @@ export function SimpleTable<T extends object>({
                         {onEdit && (
                           <button
                             onClick={() => onEdit(item)}
-                            className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-md transition-colors"
+                            className="cursor-pointer text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-md transition-colors"
                             title="Editar"
                           >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-7-9l7 7"
-                              />
-                            </svg>
+                            <Pencil className="w-4 h-4" />
                           </button>
                         )}
                         {onDelete && (
                           <button
                             onClick={() => onDelete(item)}
-                            className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-1.5 rounded-md transition-colors"
+                            className="cursor-pointer text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-1.5 rounded-md transition-colors"
                             title="Eliminar"
                           >
                             <svg
