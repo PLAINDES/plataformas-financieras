@@ -21,6 +21,7 @@ interface NavbarProps {
   projectsHref?: string;
   onNavigate?: (view: "result" | "sensitivity") => void;
   onOpenReport?: () => void;
+  hasSensibilizaciones?: boolean;
 }
 
 export const NavBar: React.FC<NavbarProps> = ({
@@ -36,6 +37,7 @@ export const NavBar: React.FC<NavbarProps> = ({
   logoAlt = "Kapital Logo",
   projectsHref = "/usuario/proyectos",
   onNavigate,
+  hasSensibilizaciones = false,
 }) => {
   const tabs: NavTab[] = useMemo(() => {
     if (!hasResults) return [];
@@ -63,6 +65,7 @@ export const NavBar: React.FC<NavbarProps> = ({
       {
         id: "sensitivity",
         label: "Sensibilidad",
+        disabled: !hasSensibilizaciones,
         icon: (
           <svg
             className="w-5 h-5"
@@ -103,7 +106,7 @@ export const NavBar: React.FC<NavbarProps> = ({
         isInHeader: true,
       },*/
     ];
-  }, [hasResults]);
+  }, [hasResults, hasSensibilizaciones]);
 
   return (
     <FinanceNavbar
@@ -114,19 +117,14 @@ export const NavBar: React.FC<NavbarProps> = ({
       }}
       tabs={tabs}
       selectedTabId={selected}
-      onNavigate={(id) => onNavigate?.(id as any)}
+      onNavigate={(id) => {
+        if (id === "sensitivity" && !hasSensibilizaciones) return;
+        onNavigate?.(id as any);
+      }}
       isFormOpen={isFormOpen}
       onToggleForm={onToggleForm}
       actions={
         <>
-          {/*hasResults && (
-            <button
-              onClick={onOpenReport}
-              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm border border-purple-600 text-purple-600 hover:bg-purple-50 cursor-pointer"
-            >
-              Reportes
-            </button>
-          )*/}
           <a className="flex flex-row gap-1 px-3 py-2 bg-valora-primary text-white rounded-lg text-xs md:text-sm font-semibold hover:bg-valora-secondary cursor-pointer">
             Curso de capacitación
             <ChevronRight className="w-4 h-4 my-auto" />

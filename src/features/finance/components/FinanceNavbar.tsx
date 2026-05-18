@@ -5,6 +5,7 @@ export interface NavTab {
   label: string;
   icon: React.ReactNode;
   isInHeader?: boolean;
+  disabled?: boolean;
 }
 
 interface FinanceNavbarProps {
@@ -77,15 +78,21 @@ export const FinanceNavbar: React.FC<FinanceNavbarProps> = ({
               <button
                 key={tab.id}
                 onClick={() => onNavigate(tab.id)}
-                className={`cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  selectedTabId === tab.id
-                    ? "bg-blue-50 text-blue-600"
-                    : "text-gray-700 hover:bg-gray-50"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  tab.disabled
+                    ? "text-gray-400 cursor-not-allowed opacity-70"
+                    : selectedTabId === tab.id
+                      ? "bg-blue-50 text-blue-600 cursor-pointer"
+                      : "text-gray-700 hover:bg-gray-50 cursor-pointer"
                 }`}
               >
                 <span
                   className={
-                    selectedTabId === tab.id ? "text-blue-600" : "text-gray-400"
+                    tab.disabled
+                      ? "text-gray-400"
+                      : selectedTabId === tab.id
+                        ? "text-blue-600"
+                        : "text-gray-400"
                   }
                 >
                   {tab.icon}

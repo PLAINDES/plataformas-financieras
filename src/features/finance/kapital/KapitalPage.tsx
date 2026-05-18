@@ -896,6 +896,7 @@ const KapitalPage: React.FC = () => {
         selected={getSelectedView()}
         onNavigate={handleResultsSectionChange}
         onOpenReport={handleReportSidebarOpen}
+        hasSensibilizaciones={sensibilizaciones.length > 0}
       />
 
       <LoginModal

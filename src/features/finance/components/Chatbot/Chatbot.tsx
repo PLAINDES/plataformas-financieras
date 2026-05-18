@@ -33,24 +33,50 @@ interface ConvItem {
   time: string;
 }
 
-const sharedState = {
-  items: [
-    {
+interface SharedStateType {
+  items: ConvItem[];
+  history: { role: string; parts: { text: string }[] }[];
+  input: string;
+  betaInput: string;
+  modalData: YahooFinanceData | null;
+  loading: boolean;
+}
+
+const initialItems: ConvItem[] = [
+  {
+    id: uid(),
+    type: "simple",
+    msg: {
       id: uid(),
-      type: "simple" as const,
-      msg: {
-        id: uid(),
-        text: WELCOME_TEXT,
-        sender: "ai" as const,
-        time: now(),
-      },
+      text: WELCOME_TEXT,
+      sender: "ai",
       time: now(),
     },
-  ] as ConvItem[],
-  history: [] as { role: string; parts: { text: string }[] }[],
+    time: now(),
+  },
+];
+
+const sharedState: SharedStateType = {
+  items: initialItems,
+  history: [],
   input: "",
   betaInput: "",
-  modalData: null as YahooFinanceData | null,
+  modalData: null,
+  loading: false,
+};
+
+type Listener = () => void;
+let listeners: Listener[] = [];
+const notify = () => listeners.forEach((l) => l());
+
+const setSharedState = <K extends keyof SharedStateType>(
+  key: K,
+  val: SharedStateType[K] | ((prev: SharedStateType[K]) => SharedStateType[K])
+) => {
+  // Ejecuta la funcion si es un callback, o asigna el valor directo
+  sharedState[key] =
+    typeof val === "function" ? (val as Function)(sharedState[key]) : val;
+  notify();
 };
 
 export const Chatbot: React.FC<ChatbotProps> = ({
@@ -60,73 +86,29 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   setIsOpen,
   onCalculateWacc,
 }) => {
-  const [items, setItemsState] = useState<ConvItem[]>(sharedState.items);
-  const [history, setHistoryState] = useState(sharedState.history);
+  const [, setTick] = useState(0);
 
-  const [input, setInputState] = useState(sharedState.input);
-  const [betaInput, setBetaInputState] = useState(sharedState.betaInput);
-  const [modalData, setModalDataState] = useState<YahooFinanceData | null>(
-    sharedState.modalData
-  );
+  useEffect(() => {
+    const listener = () => setTick((t) => t + 1);
+    listeners.push(listener);
+    return () => {
+      listeners = listeners.filter((l) => l !== listener);
+    };
+  }, []);
 
-  const [loading, setLoading] = useState(false);
+  // Lee las variables directamente del estado global
+  const { items, history, input, betaInput, modalData, loading } = sharedState;
+
+  // 3. Redefinimos los setters para que actualicen el store global
+  const setInput = (val: any) => setSharedState("input", val);
+  const setBetaInput = (val: any) => setSharedState("betaInput", val);
+  const setModalData = (val: any) => setSharedState("modalData", val);
+  const setHistory = (val: any) => setSharedState("history", val);
+  const setLoading = (val: any) => setSharedState("loading", val);
+  const setItems = (val: any) => setSharedState("items", val);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-
-  const setItems = useCallback(
-    (val: ConvItem[] | ((prev: ConvItem[]) => ConvItem[])) => {
-      setItemsState((prev: ConvItem[]) => {
-        const next = typeof val === "function" ? val(prev) : val;
-        sharedState.items = next;
-        return next;
-      });
-    },
-    []
-  );
-
-  const setHistory = useCallback((val: any) => {
-    setHistoryState((prev: { role: string; parts: { text: string }[] }[]) => {
-      const next = typeof val === "function" ? val(prev) : val;
-      sharedState.history = next;
-      return next;
-    });
-  }, []);
-
-  const setInput = useCallback((val: string | ((prev: string) => string)) => {
-    setInputState((prev: string) => {
-      const next = typeof val === "function" ? val(prev) : val;
-      sharedState.input = next;
-      return next;
-    });
-  }, []);
-
-  const setBetaInput = useCallback(
-    (val: string | ((prev: string) => string)) => {
-      setBetaInputState((prev: string) => {
-        const next = typeof val === "function" ? val(prev) : val;
-        sharedState.betaInput = next;
-        return next;
-      });
-    },
-    []
-  );
-
-  const setModalData = useCallback(
-    (
-      val:
-        | YahooFinanceData
-        | null
-        | ((prev: YahooFinanceData | null) => YahooFinanceData | null)
-    ) => {
-      setModalDataState((prev: YahooFinanceData | null) => {
-        const next = typeof val === "function" ? val(prev) : val;
-        sharedState.modalData = next;
-        return next;
-      });
-    },
-    []
-  );
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -149,7 +131,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   }, [isOpen]);
 
   const pushItem = useCallback((item: ConvItem) => {
-    setItems((prev) => [...prev, item]);
+    setSharedState("items", (prev: ConvItem[]) => [...prev, item]);
   }, []);
 
   const addSimple = useCallback(
@@ -263,12 +245,11 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   }, [input, loading, addSimple, callChatbotAPI]);
 
   const handleRemoveTicker = useCallback((tickerToRemove: string) => {
-    // Actualiza el historial
-    setItems((prevItems) =>
-      prevItems.map((item) => {
+    setItems((prevItems: ConvItem[]) =>
+      prevItems.map((item: ConvItem) => {
         if (item.type === "yahoo" && item.yahooData) {
           const updatedCompanies = item.yahooData.valid_companies.filter(
-            (c) => c.ticker !== tickerToRemove
+            (c: CompanyData) => c.ticker !== tickerToRemove
           );
           return {
             ...item,
@@ -281,14 +262,12 @@ export const Chatbot: React.FC<ChatbotProps> = ({
         return item;
       })
     );
-
-    // Actualiza el modalData que está actualmente abierto en pantalla
-    setModalData((prev) => {
+    setModalData((prev: YahooFinanceData | null) => {
       if (!prev) return prev;
       return {
         ...prev,
         valid_companies: prev.valid_companies.filter(
-          (c) => c.ticker !== tickerToRemove
+          (c: CompanyData) => c.ticker !== tickerToRemove
         ),
       };
     });
@@ -417,7 +396,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
             </div>
           ) : (
             <div className="space-y-5 pb-4">
-              {items.map((item) => {
+              {items.map((item: ConvItem) => {
                 // 1. Mensajes Simples
                 if (item.type === "simple" && item.msg) {
                   const isUser = item.msg.sender === "user";
