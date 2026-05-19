@@ -559,6 +559,10 @@ const KapitalPage: React.FC = () => {
     toastTimeoutsRef.current.set(id, timeoutId);
   };
 
+  useEffect(() => {
+    setIsChatbotOpen(false);
+  }, [resultsSection]);
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -691,6 +695,7 @@ const KapitalPage: React.FC = () => {
         // Navigate a sensitivity cuando se manda el beta desapalancado para sensibilización
         setResultsSection("sensitivity");
         setShowComparison(false);
+        setIsChatbotOpen(false);
         addToast(
           "success",
           `Sensibilización calculada con β=${betaUnlevered} (cálculo #${persistedCalculation.id}).`
@@ -790,7 +795,7 @@ const KapitalPage: React.FC = () => {
     };
   }, [isFormOpen]);
 
-  const hasReachedMaxSens = sensibilizaciones.length >= 2;
+  const hasReachedMaxSens = sensibilizaciones.length >= 3;
 
   const chatbotComponent =
     shouldShowChatbot && !hasReachedMaxSens ? (
