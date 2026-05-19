@@ -11,6 +11,7 @@ import { MainService } from "@/shared/services/main.service";
 import {
   generateAndUploadReportPdf,
   previewReportPdf,
+  replaceCodesWithValues,
 } from "../utils/pdfGenerator";
 import { TemplateCodesSideBar } from "./TemplateCodesSideBar";
 import type { Report, TemplateCodeBasic, Cover } from "@/shared/types";
@@ -162,34 +163,6 @@ export const ReporteKapitalEditor: React.FC = () => {
       .catch(() => setCurrentTemplateCodes([]))
       .finally(() => setCodesLoading(false));
   }, []);
-
-  const replaceCodesWithValues = (
-    htmlContent: string,
-    codes: TemplateCodeBasic[]
-  ) => {
-    let finalHtml = htmlContent;
-
-    // Recorremos todos los códigos disponibles en la plantilla
-    codes.forEach((codeObj) => {
-      // Si el HTML contiene el código exacto (ej. $$KIJUG$$)
-      if (finalHtml.includes(codeObj.code)) {
-        let displayValue = codeObj.value ?? "N/D";
-
-        // Si el valor es un número, lo formateamos a 2 decimales
-        if (displayValue !== "N/D" && !isNaN(Number(displayValue))) {
-          displayValue = Number(displayValue).toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          });
-        }
-
-        // Reemplazamos TODAS las ocurrencias del código en el HTML
-        finalHtml = finalHtml.split(codeObj.code).join(displayValue);
-      }
-    });
-
-    return finalHtml;
-  };
 
   useEffect(() => {
     if (!id) {
@@ -734,7 +707,6 @@ export const ReporteKapitalEditor: React.FC = () => {
             </div>
           </div>
 
-          {/* ── Sidebar ── */}
           <TemplateCodesSideBar
             templateCodes={templateCodes}
             codesLoading={codesLoading}
