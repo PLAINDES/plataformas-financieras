@@ -182,8 +182,15 @@ export const MainService = {
       localStorage.getItem("accessToken") ||
       "";
 
+    const rawBaseUrl = import.meta.env.VITE_API_URL || "";
+    const baseUrl = rawBaseUrl.endsWith("/")
+      ? rawBaseUrl.slice(0, -1)
+      : rawBaseUrl;
+
+    const timestamp = new Date().getTime();
+
     const response = await fetch(
-      `/api/v1/main/reports/${reportId}/generate?calculation_id=${calculationId}&is_preview=${isPreview}`,
+      `${baseUrl}/api/v1/main/reports/${reportId}/generate?calculation_id=${calculationId}&is_preview=${isPreview}&_t=${timestamp}`,
       {
         method: "GET",
         headers: {
