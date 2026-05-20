@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-
+import { useState, useRef, useEffect } from "react";
+import { MainService } from "@/shared/services/main.service";
 import { ReportCheckbox } from "./ReportCheckbox";
 import { ReportProductCard } from "./ReportProductCard";
 import { ReportQuoteModal } from "./ReportQuoteModal";
@@ -22,7 +22,6 @@ export type ReportSidebarProps = {
 export const ReportSidebar: React.FC<ReportSidebarProps> = ({
   isOpen,
   onClose,
-  reportProducts,
   selectedReportProductId,
   onSelectReportProduct,
   onOpenReportViewer,
@@ -31,6 +30,8 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
   const [quoteEmail, setQuoteEmail] = useState("");
   const [quotePhone, setQuotePhone] = useState("");
   const [quoteMessage, setQuoteMessage] = useState("");
+  const [apiReports, setApiReports] = useState<any[]>([]);
+  //const [isLoading, setIsLoading] = useState(false);
 
   // Refs para controlar el drag-to-scroll sin provocar re-renders
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -38,6 +39,34 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
   const startX = useRef(0);
   const scrollLeft = useRef(0);
   const hasDragged = useRef(false); // Diferencia entre clic normal y arrastre
+
+  // --- FETCH DE REPORTES ---
+  useEffect(() => {
+    if (isOpen) {
+      const fetchReports = async () => {
+        //setIsLoading(true);
+        try {
+          // Traemos los reportes activos del tipo kapital
+          const data = await MainService.getReports({
+            type: "kapital",
+            activo: true,
+          });
+          setApiReports(data);
+
+          // Auto-seleccionar el primer reporte si no hay ninguno seleccionado
+          if (data.length > 0 && !selectedReportProductId) {
+            onSelectReportProduct(data[0].id.toString());
+          }
+        } catch (error) {
+          console.error("Error al obtener los reportes", error);
+        } /*finally {
+          setIsLoading(false);
+        }*/
+      };
+
+      fetchReports();
+    }
+  }, [isOpen, selectedReportProductId, onSelectReportProduct]);
 
   const handleQuoteSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -115,7 +144,7 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
                   onMouseMove={handleMouseMove}
                   className="flex gap-4 my-6 lg:justify-start justify-start overflow-x-auto cursor-grab active:cursor-grabbing select-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] w-full"
                 >
-                  {reportProducts.map((product) => (
+                  {apiReports.map((product) => (
                     <div
                       key={product.id}
                       className="shrink-0"
@@ -127,8 +156,10 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
                       }}
                     >
                       <ReportProductCard
-                        title={product.title}
-                        iconClassName={product.iconClassName}
+                        //title={product.title}
+                        //iconClassName={product.iconClassName}
+                        title={product.nombre}
+                        iconClassName="fa-solid fa-laptop text-2xl text-gray-400"
                         selected={selectedReportProductId === product.id}
                         onSelect={() => {
                           if (!hasDragged.current) {

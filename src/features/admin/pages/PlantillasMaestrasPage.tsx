@@ -620,7 +620,7 @@ export const PlantillasMaestrasPage = () => {
                       <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
                         <div className="flex items-center gap-2 truncate">
                           <FileSpreadsheet className="w-4 h-4 text-blue-600 shrink-0" />
-                          <span className="truncate font-medium">
+                          <span className="truncate font-medium text-wrap">
                             {form.original_filename || form.onedrive_filename}
                           </span>
                         </div>
