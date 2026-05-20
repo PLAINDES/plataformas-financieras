@@ -18,6 +18,7 @@ import PortadaEditPage from "./features/admin/pages/PortadaEditPage";
 import { ConfiguracionPage } from "./features/admin/pages/ConfiguracionPage";
 import ProyectosUsuarioPage from "./features/finance/components/ProyectosUsuarioPage";
 import { ReporteKapitalEditor } from "./features/admin/components/ReporteKapitalEditor";
+import { KapitalSettingsPage } from "./features/admin/pages/KapitalSettingsPage";
 
 const COMPANY = {
   id: 1,
@@ -93,6 +94,7 @@ function App() {
         <Route path="master/plantillas" element={<PlantillasMaestrasPage />} />
         <Route path="reportes" element={<ReportesKapitalPage />} />
         <Route path="reportes/nuevo" element={<ReporteKapitalEditor />} />
+        <Route path="kapital" element={<KapitalSettingsPage />} />
         <Route path="portadas" element={<PortadasPage />} />
         <Route path="portadas/nuevo" element={<PortadaCreatePage />} />
         <Route path="portadas/:id/editar" element={<PortadaEditPage />} />

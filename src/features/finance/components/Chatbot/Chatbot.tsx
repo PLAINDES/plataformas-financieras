@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { MainService } from "@/shared/services/main.service";
+import Markdown from "react-markdown";
 import {
   type CompanyData,
   type YahooFinanceData,
@@ -22,7 +23,7 @@ const now = (): string =>
 const uid = (): string => Math.random().toString(36).slice(2, 9);
 
 const WELCOME_TEXT =
-  "¡Hola! Soy Betito, tu asistente especializado en análisis de BETA para WACC.\n\nPuedo ayudarte a:\n• Analizar tu beta actual basado en los datos del formulario\n• Recomendar 10-20 empresas comparables del sector\n• Calcular un nuevo beta optimizado\n• Actualizar automáticamente tu formulario\n\n¿Quieres que analice tus datos actuales?";
+  "¡Hola! Soy **Betito**, tu asistente especializado en análisis de BETA para WACC.\n\nPuedo ayudarte a:\n- Analizar tu beta actual basado en los datos del formulario\n- Recomendar 10-20 empresas comparables del sector\n- Calcular un nuevo beta optimizado\n- Actualizar automáticamente tu formulario\n\n¿Quieres que analice tus datos actuales?";
 
 interface ConvItem {
   id: string;
@@ -77,6 +78,45 @@ const setSharedState = <K extends keyof SharedStateType>(
   sharedState[key] =
     typeof val === "function" ? (val as Function)(sharedState[key]) : val;
   notify();
+};
+
+// Constantes para el límite de mensajes
+const RATE_LIMIT_KEY = "betito_rate_limit";
+const LIMIT_TIME_MS = 3 * 60 * 1000;
+const MAX_MESSAGES = 5;
+
+// Verifica el límite de mensajes en localStorage
+const checkRateLimit = (): boolean => {
+  if (typeof window === "undefined") return true;
+
+  try {
+    const stored = localStorage.getItem(RATE_LIMIT_KEY);
+    const now = Date.now();
+
+    if (stored) {
+      const { count, timestamp } = JSON.parse(stored);
+      // Verifica si seguimos en la ventana de 3 minutos
+      if (now - timestamp < LIMIT_TIME_MS) {
+        if (count >= MAX_MESSAGES) {
+          return false; // Límite alcanzado
+        } else {
+          localStorage.setItem(
+            RATE_LIMIT_KEY,
+            JSON.stringify({ count: count + 1, timestamp })
+          );
+          return true;
+        }
+      }
+    }
+    // Reinicia el contador si el tiempo expiró o no existe
+    localStorage.setItem(
+      RATE_LIMIT_KEY,
+      JSON.stringify({ count: 1, timestamp: now })
+    );
+    return true;
+  } catch (e) {
+    return true;
+  }
 };
 
 export const Chatbot: React.FC<ChatbotProps> = ({
@@ -209,6 +249,11 @@ export const Chatbot: React.FC<ChatbotProps> = ({
         };
 
         const data = await MainService.sendChatMessage(payloadToVerify);
+        // mock data to test
+        /*const data: any = {
+          text: "He encontrado las siguientes empresas comparables para tu sector:",
+          tickers: ["AAPL", "MSFT", "GOOGL"],
+        };*/
 
         // 1. Mostrar la respuesta de texto de la IA (limpia de tags técnicos)
         if (data.text) {
@@ -239,6 +284,16 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   const sendMessage = useCallback(() => {
     const msg = input.trim();
     if (!msg || loading) return;
+
+    if (!checkRateLimit()) {
+      addSimple(
+        "Has alcanzado el límite de 10 mensajes cada 3 minutos. Por favor, espera un momento para continuar.",
+        "ai"
+      );
+      setInput("");
+      return;
+    }
+
     addSimple(msg, "user");
     setInput("");
     callChatbotAPI(msg);
@@ -382,8 +437,17 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                 {SUGGESTIONS.map((s) => (
                   <button
                     key={s}
+                    type="button"
                     onClick={() => {
                       if (loading) return;
+                      if (!checkRateLimit()) {
+                        addSimple(
+                          "Has alcanzado el límite de 10 mensajes cada 3 minutos. Por favor, espera un momento para continuar.",
+                          "ai"
+                        );
+                        return;
+                      }
+
                       addSimple(s, "user");
                       callChatbotAPI(s);
                     }}
@@ -425,9 +489,36 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                           </div>
                           <div className="flex flex-col items-start w-full overflow-hidden text-left">
                             <div className="rounded-4xl rounded-tl-sm border border-gray-100 bg-white px-4 py-2.5 text-xs sm:text-sm text-gray-800 shadow-sm max-w-full">
-                              <p className=" leading-relaxed wrap-break-word break-all">
+                              <Markdown
+                                components={{
+                                  h3: ({ node, ...props }: any) => (
+                                    <h3
+                                      className="font-bold text-valora-primary mb-1 uppercase tracking-wide text-xs sm:text-sm"
+                                      {...props}
+                                    />
+                                  ),
+                                  strong: ({ node, ...props }: any) => (
+                                    <strong
+                                      className="font-bold text-gray-900"
+                                      {...props}
+                                    />
+                                  ),
+                                  p: ({ node, ...props }: any) => (
+                                    <p className="mb-2 last:mb-0" {...props} />
+                                  ),
+                                  ul: ({ node, ...props }: any) => (
+                                    <ul
+                                      className="list-disc pl-5 mb-2 space-y-1"
+                                      {...props}
+                                    />
+                                  ),
+                                  li: ({ node, ...props }: any) => (
+                                    <li className="text-gray-800" {...props} />
+                                  ),
+                                }}
+                              >
                                 {item.msg.text}
-                              </p>
+                              </Markdown>
                             </div>
                             <span className="mt-1 ml-1 text-[10px] text-gray-400 font-medium">
                               {item.msg.time}
@@ -591,7 +682,10 @@ export const Chatbot: React.FC<ChatbotProps> = ({
           <button
             type="button"
             disabled={!betaInput || loading}
-            onClick={() => onCalculateWacc(betaInput)}
+            onClick={() => {
+              onCalculateWacc(betaInput);
+              setIsOpen(false);
+            }}
             className="m-auto flex-1 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-95 cursor-pointer uppercase tracking-wide h-12 sm:h-10"
           >
             Cálcula y compara tu WACC

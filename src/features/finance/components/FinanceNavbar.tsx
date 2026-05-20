@@ -28,7 +28,7 @@ export const FinanceNavbar: React.FC<FinanceNavbarProps> = ({
   actions,
 }) => {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm z-100">
+    <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 shadow-sm z-100">
       <div className="flex items-center justify-between h-16 px-4 lg:px-6">
         <div className="flex items-center gap-2">
           <a href={logo.href} className="flex items-center">

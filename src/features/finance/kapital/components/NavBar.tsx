@@ -140,7 +140,7 @@ export const NavBar: React.FC<NavbarProps> = ({
             </UserMenu>
           ) : (
             <a
-              className="flex items-center justify-center px-4 py-2 text-sm font-semibold text-valora-primary bg-white border border-valora-primary rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
+              className="flex items-center justify-center px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold max-sm:w-fit max-sm:text-center text-valora-primary bg-white border border-valora-primary rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
               onClick={onLoginClick}
             >
               Iniciar sesión
