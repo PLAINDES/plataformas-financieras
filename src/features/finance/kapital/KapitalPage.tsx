@@ -39,6 +39,7 @@ import {
   getYearAndQuarter,
 } from "./services/kapital.utils";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
+import { ReportViewer } from "./components/ReportViewer";
 
 export interface FormData {
   date: string;
@@ -128,7 +129,7 @@ const KapitalPage: React.FC = () => {
   const [isReportViewerOpen, setIsReportViewerOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  const [selectedReportProductId, setSelectedReportProductId] = useState("1");
+  const [selectedReportProductId, setSelectedReportProductId] = useState("");
   const [results, setResults] = useState<Results | null>(null);
   const [showCompanyCard, setShowCompanyCard] = useState(false);
   const [resultCurrency, setResultCurrency] = useState<"pen" | "usd">("pen");
@@ -166,6 +167,9 @@ const KapitalPage: React.FC = () => {
 
   const toastTimeoutsRef = useRef<Map<string, number>>(new Map());
   const lastEditedFieldRef = useRef<"debt" | "capital" | null>(null);
+
+  // Maximo de sensibilizaciones permitidas, traído desde la configuración de Kapital en el backend
+  const [maxSensibilizaciones, setMaxSensibilizaciones] = useState<number>(3);
 
   const { user, login, logout } = useAuthContext();
 
@@ -795,10 +799,17 @@ const KapitalPage: React.FC = () => {
     };
   }, [isFormOpen]);
 
-  const hasReachedMaxSens = sensibilizaciones.length >= 3;
+  // Cargar configuración global de Kapital
+  useEffect(() => {
+    MainService.getKapitalSettings().then((settings) => {
+      if (settings && settings.max_sensibilizaciones !== undefined) {
+        setMaxSensibilizaciones(settings.max_sensibilizaciones);
+      }
+    });
+  }, []);
 
   const chatbotComponent =
-    shouldShowChatbot && !hasReachedMaxSens ? (
+    shouldShowChatbot && sensibilizaciones.length < maxSensibilizaciones ? (
       <Chatbot
         formData={formData}
         isWaccCalculated={isWaccCalculated}
@@ -811,42 +822,12 @@ const KapitalPage: React.FC = () => {
   const mainContent = showResults ? (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       {isReportViewerOpen ? (
-        <section className="flex justify-center w-full px-4 pb-10 sm:px-8 lg:pt-6">
-          <div className="w-full max-w-7xl rounded-lg border border-gray-200 bg-white shadow">
-            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-              <h4 className="text-sm font-semibold text-gray-800">
-                {selectedReportProductId === "1"
-                  ? "REPORTE BÁSICO"
-                  : selectedReportProductId === "2"
-                    ? "REPORTE DETALLADO"
-                    : "REPORTE COMPLETO"}
-              </h4>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsReportViewerOpen(false)}
-                  className="rounded border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600"
-                >
-                  Salir
-                </button>
-                <a
-                  href="/files/Reporte-Detallado.pdf"
-                  download
-                  className="rounded bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
-                >
-                  Descargar
-                </a>
-              </div>
-            </div>
-            <div className="h-[70vh] w-full">
-              <iframe
-                title="Reporte de capital"
-                src="/files/Reporte-Detallado.pdf"
-                className="h-full w-full"
-              />
-            </div>
-          </div>
-        </section>
+        <ReportViewer
+          isOpen={isReportViewerOpen}
+          onClose={() => setIsReportViewerOpen(false)}
+          reportProductId={selectedReportProductId}
+          calculationId={currentCalculation?.id}
+        />
       ) : (
         <KapitalResults
           section={resultsSection}

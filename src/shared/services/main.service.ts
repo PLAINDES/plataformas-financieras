@@ -172,6 +172,33 @@ export const MainService = {
     return api.post<void>(`main/reports/${id}/upload`, formData);
   },
 
+  generateReportPdf: async (
+    reportId: string | number,
+    calculationId: string | number,
+    isPreview: boolean = true
+  ): Promise<Blob> => {
+    const token =
+      localStorage.getItem("token") ||
+      localStorage.getItem("accessToken") ||
+      "";
+
+    const response = await fetch(
+      `/api/v1/main/reports/${reportId}/generate?calculation_id=${calculationId}&is_preview=${isPreview}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Error en la peticion al generar el PDF");
+    }
+
+    return await response.blob();
+  },
+
   getCovers: async (): Promise<Cover[]> => {
     return api.get<Cover[]>("main/covers");
   },
@@ -367,5 +394,30 @@ export const MainService = {
 
   analyzeCompanies: async (tickers: string[]): Promise<any> => {
     return api.post<any>("chatbot/analyze-companies", { tickers });
+  },
+
+  // ==================== KAPITAL CONFIGURATIONS ====================
+
+  getKapitalSettings: async (): Promise<{
+    max_sensibilizaciones: number;
+    [key: string]: any;
+  }> => {
+    try {
+      const response = await api.get<{
+        max_sensibilizaciones: number;
+        [key: string]: any;
+      }>("main/settings/kapital");
+
+      return response;
+    } catch (error) {
+      console.error("Error obteniendo configuración de Kapital:", error);
+      return { max_sensibilizaciones: 3 };
+    }
+  },
+
+  updateKapitalSetting: async (key: string, value: any): Promise<any> => {
+    return api.patch(`main/settings/kapital`, {
+      settings: { [key]: value },
+    });
   },
 };
