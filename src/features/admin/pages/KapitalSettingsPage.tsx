@@ -3,8 +3,6 @@ import { MainService } from "@/shared/services/main.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-// Importamos el Toast y sus tipos (ajusta la ruta según tu estructura)
 import { ToastStack } from "@/shared/components/common/ToastStack";
 import type { ToastType } from "@/shared/types/toast.types";
 

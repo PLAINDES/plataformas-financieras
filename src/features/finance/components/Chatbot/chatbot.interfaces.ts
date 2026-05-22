@@ -41,10 +41,16 @@ export interface FinancialData {
   beta_unlevered?: number;
 }
 
+export interface CompanyModalActions {
+  onApplyCompany: (company: CompanyData) => void;
+  onRemoveTicker: (ticker: string) => void;
+}
+
 export interface ChatbotProps {
   formData?: any;
   isWaccCalculated?: boolean;
   isOpen: boolean;
   setIsOpen: (val: boolean) => void;
   onCalculateWacc: (beta: string) => void;
+  onOpenModal: (data: YahooFinanceData, actions: CompanyModalActions) => void;
 }

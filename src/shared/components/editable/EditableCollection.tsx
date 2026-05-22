@@ -91,6 +91,24 @@ export function EditableCollection<T extends CollectionItem>({
     scrollRef.current.scrollLeft = scrollLeft.current - walk;
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!scrollRef.current) return;
+    isDragging.current = true;
+    startX.current = e.touches[0].pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current = scrollRef.current.scrollLeft;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current || !scrollRef.current) return;
+    const x = e.touches[0].pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5;
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+  };
+
+  const handleTouchEnd = () => {
+    isDragging.current = false;
+  };
+
   // --------------
 
   const { isAdmin } = useAuthContext();
@@ -202,6 +220,9 @@ export function EditableCollection<T extends CollectionItem>({
         onMouseLeave={handleMouseLeave}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {items.map((item, index) =>
           renderItem(item, index, {
@@ -230,6 +251,9 @@ export function EditableCollection<T extends CollectionItem>({
       onMouseLeave={handleMouseLeave}
       onMouseUp={handleMouseUp}
       onMouseMove={handleMouseMove}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Items */}
       {items.length === 0 ? (
@@ -238,16 +262,7 @@ export function EditableCollection<T extends CollectionItem>({
           <button
             onClick={handleAdd}
             disabled={isSaving}
-            style={{
-              padding: "8px 20px",
-              border: "none",
-              background: "#3b82f6",
-              color: "white",
-              borderRadius: "6px",
-              fontSize: "0.875rem",
-              cursor: "pointer",
-              fontWeight: "500",
-            }}
+            className="py-2 px-5 bg-valora-primary hover:bg-valora-secondary text-white rounded-md text-sm font-medium transition-colors cursor-pointer"
           >
             + {addButtonText}
           </button>
@@ -279,17 +294,7 @@ export function EditableCollection<T extends CollectionItem>({
               <button
                 onClick={handleAdd}
                 disabled={isSaving}
-                style={{
-                  padding: "8px 20px",
-                  border: "2px dashed #3b82f6",
-                  background: "white",
-                  color: "#3b82f6",
-                  borderRadius: "8px",
-                  fontSize: "0.875rem",
-                  cursor: "pointer",
-                  fontWeight: "500",
-                  transition: "all 0.2s",
-                }}
+                className="py-2 px-5 border-dashed border-2 border-valora-primary bg-white text-valora-primary rounded-md text-sm font-medium transition-colors cursor-pointer"
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = "#eff6ff";
                 }}

@@ -24,9 +24,10 @@ export interface KapitalResultsProps {
   onToggleComparison: (show: boolean) => void;
   sensibilizaciones: SensibilizacionEntry[];
   onOpenReport?: () => void;
-  onSensibilizaClick: () => void;
   localCurrency?: string;
   chatbotComponent?: React.ReactNode;
+  shouldShowChatbot: boolean;
+  onToggleForm: () => void;
 }
 
 interface MethodologyItem {
@@ -56,10 +57,10 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
   showComparison,
   onToggleComparison,
   sensibilizaciones,
-  onSensibilizaClick,
   onOpenReport,
   localCurrency,
-  chatbotComponent,
+  shouldShowChatbot,
+  onToggleForm,
 }) => {
   if (loading) {
     return <LoadingOverlay />;
@@ -79,10 +80,10 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
               showCompanyCard={showCompanyCard}
               resultCurrency={resultCurrency}
               onResultCurrencyChange={onResultCurrencyChange}
-              onSensibilizaClick={onSensibilizaClick}
               onOpenReport={onOpenReport}
               localCurrency={localCurrency}
-              chatbotComponent={chatbotComponent}
+              shouldShowChatbot={shouldShowChatbot}
+              onToggleForm={onToggleForm}
             />
           )}
           {section === "sensitivity" && (
@@ -104,7 +105,8 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
               sensibilizaciones={sensibilizaciones}
               onOpenReport={onOpenReport}
               localCurrency={localCurrency}
-              chatbotComponent={chatbotComponent}
+              shouldShowChatbot={shouldShowChatbot}
+              onToggleForm={onToggleForm}
             />
           )}
         </div>

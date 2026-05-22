@@ -1,9 +1,12 @@
+import { useEffect } from "react";
 import React, { useState } from "react";
 import { MainPageFooter } from "./MainPageFooter";
 import { NavBar } from "../kapital/components/NavBar";
 import { Proyectos } from "./Proyectos";
 import { LoginModal } from "@/features/auth/components/LoginModal";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
+import { useToast } from "@/shared/components/common/ToastProvider";
+import { useNavigate } from "react-router-dom";
 
 interface ProyectosUsuarioPageProps {
   heroTitle?: string;
@@ -17,6 +20,24 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
   brandName = "Kapital",
   brandHref = "Kapital",
 }) => {
+  const navigate = useNavigate();
+  const { user, login, logout } = useAuthContext();
+  const { addToast } = useToast();
+
+  useEffect(() => {
+    if (!user) {
+      addToast(
+        "Por favor, inicia sesión para acceder a tus proyectos.",
+        "warn"
+      );
+      navigate("/kapital");
+    }
+  }, [user, addToast, navigate]);
+
+  if (!user) {
+    return null;
+  }
+
   const [isDesktopFormOpen, setIsDesktopFormOpen] = useState<boolean>(true);
   const [isReportSidebarOpen, setIsReportSidebarOpen] =
     useState<boolean>(false);
@@ -26,17 +47,11 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
   };
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  const { user, login, logout } = useAuthContext();
-
   const handleLogout = async () => {
     await logout();
   };
   void heroTitle;
   void isReportSidebarOpen;
-
-  if (!user) {
-    return <div>Please log in to access this page.</div>;
-  }
 
   return (
     <div className="flex flex-col w-full h-screen">
@@ -66,8 +81,6 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
           setIsLoginModalOpen(false);
         }}
       />
-
-      {/*<Chatbot isOpen={isChatbotOpen} setIsOpen={setIsChatbotOpen} />*/}
     </div>
   );
 };

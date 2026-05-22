@@ -1,7 +1,6 @@
-// src/features/landing/layout/LandingFooter.tsx
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, ArrowRight } from "lucide-react";
 import { EditableText } from "@/shared/components/editable/EditableText";
 import { FooterEditModal } from "./FooterEditModal";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
@@ -45,104 +44,95 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
   };
 
   if (!content) return null;
-  console.log("content", content);
+
   return (
-    <footer className="mb-0 relative pt-4">
-      {/* Botón flotante editar — solo admin, esquina superior derecha del footer */}
+    <footer className="relative bg-slate-50 text-slate-600 border-t border-slate-200">
+      {/* Botón flotante editar — solo admin */}
       {isAdmin && (
         <button
           onClick={() => setEditModalOpen(true)}
-          className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-slate-400/30 text-black text-[11px] font-medium backdrop-blur-sm border border-white/15 transition-all shadow-sm cursor-pointer"
+          className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white text-xs font-semibold transition-all shadow-sm cursor-pointer"
           title="Editar footer"
         >
-          <Pencil size={11} />
-          Editar footer
+          <Pencil size={12} strokeWidth={2.5} />
+          Editar Menús
         </button>
       )}
 
-      <div className="bs-landing-footer pt-8 pb-4">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12">
-            {/* Izquierda: Logo & Suscripción */}
-            <div className="lg:col-span-4">
-              <div className="mb-4">
-                <img
-                  alt="Logo"
-                  src="/images/logo.png"
-                  className="h-10 object-contain"
-                />
-              </div>
-              <div>
-                <h3 className="text-black text-sm font-medium mb-3 leading-relaxed">
-                  Suscríbete para recibir actualizaciones
-                </h3>
-                <form onSubmit={handleSubscription} className="formSuscription">
-                  <div className="flex gap-2">
-                    <input
-                      type="email"
-                      name="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="flex-1 px-3 py-1.5 text-sm rounded border border-gray-600 bg-white/5 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                      placeholder="tu@email.com"
-                      required
-                    />
-                    <button
-                      type="submit"
-                      className="px-4 py-1.5 text-sm bg-valora-primary text-white rounded hover:bg-valora-secondary transition-colors whitespace-nowrap font-medium cursor-pointer"
-                    >
-                      Enviar
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-            {/* Derecha: Secciones del CMS — solo lectura */}
-            <div className="lg:col-span-8">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                {(content.sections ?? []).map((section, si) => (
-                  <div key={si}>
-                    <h4 className="text-slate-700 font-semibold mb-3 text-sm uppercase tracking-wider">
-                      {section.title}
-                    </h4>
-                    <ul className="space-y-2">
-                      {(section.links ?? []).map((link, li) => (
-                        <li key={li}>
-                          <a
-                            href={link.url}
-                            className="text-slate-500 hover:text-slate-800 text-sm transition-colors inline-block"
-                          >
-                            {link.label}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="container mx-auto px-4 mt-6 mb-3">
-          <div className="border-t border-white/10" />
-        </div>
-
-        <div className="container mx-auto px-4">
-          <div className="flex justify-center items-center">
-            <EditableText
-              content={{
-                id: "footer_copyright",
-                type: "text",
-                section: "footer",
-                value: content.copyright,
-              }}
-              onSave={handleSaveCopyright}
-              as="p"
-              className="text-gray-400 text-xs text-center"
+      <div className="container mx-auto px-6 pt-16 pb-8">
+        {/* Contenedor Principal */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
+          {/* Columna Izquierda: Logo y Suscripción */}
+          <div className="lg:col-span-5 flex flex-col items-start pr-0 lg:pr-12">
+            <img
+              alt="Logo"
+              src="/images/logo.png"
+              className="h-16 mb-6 object-contain"
             />
+            <p className="text-sm leading-relaxed mb-8 max-w-sm text-slate-500 font-bold">
+              Suscríbete para recibir actualizaciones.
+            </p>
+
+            {/* Newsletter Estilo "Píldora" (Minimalista) */}
+            <form
+              onSubmit={handleSubscription}
+              className="w-full max-w-md relative"
+            >
+              <input
+                type="email"
+                name="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tu@email.com"
+                required
+                className="w-full bg-white border border-slate-400 shadow-sm rounded-full pl-5 pr-12 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+              />
+              <button
+                type="submit"
+                className="absolute right-1.5 top-1.5 bottom-1.5 w-9 h-9 flex items-center justify-center bg-valora-primary hover:bg-valora-secondary text-white rounded-full transition-colors cursor-pointer"
+                title="Suscribirse"
+              >
+                <ArrowRight size={16} strokeWidth={2.5} />
+              </button>
+            </form>
           </div>
+
+          {/* Columnas Derecha: Secciones del CMS (Grid interno) */}
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-8 pt-2">
+            {(content.sections ?? []).map((section, si) => (
+              <div key={si}>
+                <h4 className="text-slate-900 font-medium mb-5 text-sm sm:text-base">
+                  {section.title}
+                </h4>
+                <ul className="space-y-3">
+                  {(section.links ?? []).map((link, li) => (
+                    <li key={li}>
+                      <a
+                        href={link.url}
+                        className="text-xs sm:text-sm text-slate-500 hover:text-blue-600 transition-colors inline-block"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex justify-center items-center">
+          <EditableText
+            content={{
+              id: "footer_copyright",
+              type: "text",
+              section: "footer",
+              value: content.copyright,
+            }}
+            onSave={handleSaveCopyright}
+            as="p"
+            className="text-slate-400 text-xs text-center"
+          />
         </div>
       </div>
 

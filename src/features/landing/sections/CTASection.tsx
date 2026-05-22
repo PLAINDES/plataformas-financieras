@@ -43,7 +43,7 @@ export function CTASection({ content, isAdmin, onSave }: CTASectionProps) {
             {!isAdmin && (
               <Button
                 onClick={handleWhatsAppClick}
-                className="btn btn-lg btn-primary bg-[#2FA4FF] hover:bg-sky-600 text-white flex items-center justify-center gap-2"
+                className="btn btn-lg btn-primary bg-valora-primary hover:bg-valora-secondary text-white flex items-center justify-center gap-2"
                 style={{
                   minHeight: "48px",
                   padding: "12px 18px",
@@ -126,7 +126,7 @@ export function CTASection({ content, isAdmin, onSave }: CTASectionProps) {
                     type="button"
                     variant="link"
                     onClick={handleWhatsAppClick}
-                    className="text-[#2FA4FF] hover:text-[#2691e6]  text-xs font-semibold underline underline-offset-4 decoration-2 h-auto p-0 gap-1 cursor-pointer"
+                    className="text-valora-primary hover:text-valora-secondary  text-xs font-semibold underline underline-offset-4 decoration-2 h-auto p-0 gap-1 cursor-pointer"
                   >
                     <ExternalLink className="w-3 h-3" />
                     Link WhatsApp

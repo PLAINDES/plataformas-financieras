@@ -119,6 +119,33 @@ export function ProductsSection({
 
   const [itemsPerPage, setItemsPerPage] = useState(getItemsPerPage());
 
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const minSwipeDistance = 50;
+
+    if (distance > minSwipeDistance) {
+      nextPage(); // Deslizó a la izquierda
+    } else if (distance < -minSwipeDistance) {
+      prevPage(); // Deslizó a la derecha
+    }
+
+    // Resetear valores
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
   useEffect(() => {
     const handleResize = () => setItemsPerPage(getItemsPerPage());
     window.addEventListener("resize", handleResize);
@@ -184,7 +211,12 @@ export function ProductsSection({
           </ul>
         </div>
 
-        <div className="relative">
+        <div
+          className="relative"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           {totalPages > 1 && (
             <>
               <Button
@@ -293,7 +325,7 @@ interface ProductCardProps {
 
 function ProductCard({ product, isSingleCard, helpers }: ProductCardProps) {
   return (
-    <div className="flex flex-col p-8 bs-card-2 h-full relative">
+    <div className="flex flex-col p-8 bs-card-2 h-full relative max-md:text-center">
       {helpers.onEdit && (
         <AdminControls
           onEdit={helpers.onEdit}
@@ -307,10 +339,10 @@ function ProductCard({ product, isSingleCard, helpers }: ProductCardProps) {
       )}
 
       <div
-        className={`flex items-center justify-center mb-4 rounded-xl bg-[#E0F7FA] ${isSingleCard ? "mx-auto h-30 w-37.5" : "h-20 w-20"}`}
+        className={`flex items-center justify-center mb-4 rounded-xl bg-valora-primary/10 ${isSingleCard ? "mx-auto h-30 w-37.5" : "h-20 w-20"}`}
       >
         <Laptop
-          className={`text-sky-500 ${isSingleCard ? "w-10 h-10" : "w-6 h-6"}`}
+          className={`text-valora-primary ${isSingleCard ? "w-10 h-10" : "w-6 h-6"}`}
         />
       </div>
 
@@ -337,7 +369,7 @@ function ProductCard({ product, isSingleCard, helpers }: ProductCardProps) {
               window.open((product as any).url, "_blank");
             }
           }}
-          className="w-full py-2.5 px-4 border-2 border-[#2FA4FF] text-[#2FA4FF] font-semibold rounded-lg hover:bg-[#2FA4FF] hover:text-white group h-auto"
+          className="w-full py-2.5 px-4 border-2 border-valora-primary text-valora-primary font-semibold rounded-lg hover:bg-valora-primary hover:text-white group h-auto"
         >
           Adquirir {product.typeName || ""}
           <ChevronRight
@@ -347,7 +379,7 @@ function ProductCard({ product, isSingleCard, helpers }: ProductCardProps) {
         </Button>
 
         <div className="text-center">
-          <span className="text-lg font-bold text-[#2FA4FF]">
+          <span className="text-lg font-bold text-valora-primary">
             {product.price === 0 ? "Gratis" : `S/ ${product.price}.00`}
           </span>
         </div>

@@ -1,5 +1,5 @@
-import React from "react";
 import "./AdminLayout.css";
+import { Link } from "react-router-dom";
 // Example Dashboard Component
 const DashboardPage: React.FC = () => {
   return (
@@ -15,12 +15,12 @@ const DashboardPage: React.FC = () => {
             {/* Breadcrumb */}
             <ul className="mt-1 flex items-center space-x-2 text-sm font-semibold">
               <li className="text-gray-500">
-                <a
-                  href="/admin"
+                <Link
+                  to="/admin"
                   className="transition-colors hover:text-primary"
                 >
                   Home
-                </a>
+                </Link>
               </li>
               <li>
                 <span className="mx-2 inline-block h-0.5 w-1.5 rounded-full bg-gray-400" />

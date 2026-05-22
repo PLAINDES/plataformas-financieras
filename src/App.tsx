@@ -19,6 +19,7 @@ import { ConfiguracionPage } from "./features/admin/pages/ConfiguracionPage";
 import ProyectosUsuarioPage from "./features/finance/components/ProyectosUsuarioPage";
 import { ReporteKapitalEditor } from "./features/admin/components/ReporteKapitalEditor";
 import { KapitalSettingsPage } from "./features/admin/pages/KapitalSettingsPage";
+import { ToastProvider } from "./shared/components/common/ToastProvider";
 
 const COMPANY = {
   id: 1,
@@ -51,57 +52,65 @@ function App() {
   }
 
   return (
-    <Routes>
-      {/* Rutas públicas */}
-      <Route element={<PublicLayout />}>
+    <ToastProvider>
+      <Routes>
+        {/* Rutas públicas */}
+        <Route element={<PublicLayout />}>
+          <Route
+            path="/"
+            element={
+              <LandingPage
+                isAdmin={user?.role === "admin"}
+                company={COMPANY}
+                user={user}
+                onLogout={logout}
+                onLogin={login}
+                onRegister={register}
+              />
+            }
+          />
+        </Route>
+
+        {/* Rutas internas */}
+        <Route element={<InternalLayout />}>
+          <Route path="/kapital" element={<KapitalPage />} />
+          <Route path="/kapital/:code" element={<KapitalPage />} />
+          <Route path="/valora" element={<ValoraPage />} />
+          <Route
+            path="usuario/proyectos"
+            element={<ProyectosUsuarioPage onOpenForm={() => {}} />}
+          />
+        </Route>
+
         <Route
-          path="/"
+          path="/admin"
           element={
-            <LandingPage
-              isAdmin={user?.role === "admin"}
-              company={COMPANY}
-              user={user}
-              onLogout={logout}
-              onLogin={login}
-              onRegister={register}
-            />
+            <ProtectedRoute requireAdmin={true}>
+              <MainLayout>
+                <Outlet />
+              </MainLayout>
+            </ProtectedRoute>
           }
-        />
-      </Route>
-
-      {/* Rutas internas */}
-      <Route element={<InternalLayout />}>
-        <Route path="/kapital" element={<KapitalPage />} />
-        <Route path="/kapital/:code" element={<KapitalPage />} />
-        <Route path="/valora" element={<ValoraPage />} />
-        <Route
-          path="usuario/proyectos"
-          element={<ProyectosUsuarioPage onOpenForm={() => {}} />}
-        />
-      </Route>
-
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute requireAdmin={true}>
-            <MainLayout>
-              <Outlet />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="master/plantillas" element={<PlantillasMaestrasPage />} />
-        <Route path="reportes" element={<ReportesKapitalPage />} />
-        <Route path="reportes/nuevo" element={<ReporteKapitalEditor />} />
-        <Route path="kapital" element={<KapitalSettingsPage />} />
-        <Route path="portadas" element={<PortadasPage />} />
-        <Route path="portadas/nuevo" element={<PortadaCreatePage />} />
-        <Route path="portadas/:id/editar" element={<PortadaEditPage />} />
-        <Route path="reportes/:id/editar" element={<ReporteKapitalEditor />} />
-        <Route path="configuraciones" element={<ConfiguracionPage />} />
-      </Route>
-    </Routes>
+        >
+          <Route index element={<DashboardPage />} />
+          <Route
+            path="master/plantillas"
+            element={<PlantillasMaestrasPage />}
+          />
+          <Route path="reportes" element={<ReportesKapitalPage />} />
+          <Route path="reportes/nuevo" element={<ReporteKapitalEditor />} />
+          <Route path="kapital" element={<KapitalSettingsPage />} />
+          <Route path="portadas" element={<PortadasPage />} />
+          <Route path="portadas/nuevo" element={<PortadaCreatePage />} />
+          <Route path="portadas/:id/editar" element={<PortadaEditPage />} />
+          <Route
+            path="reportes/:id/editar"
+            element={<ReporteKapitalEditor />}
+          />
+          <Route path="configuraciones" element={<ConfiguracionPage />} />
+        </Route>
+      </Routes>
+    </ToastProvider>
   );
 }
 
