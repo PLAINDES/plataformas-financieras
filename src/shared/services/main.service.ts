@@ -12,6 +12,7 @@ import type {
   MasterTemplate,
   MasterTemplateCreate,
   MasterTemplateUpdate,
+  PaginatedResponse,
 } from "../types";
 
 const getAuthToken = (token?: string): string | undefined => {
@@ -102,9 +103,24 @@ export const MainService = {
   ============ CALCULATIONS =============
   */
 
-  getCalculations: async (userId?: number): Promise<Calculation[]> => {
-    const params = userId !== undefined ? `?user_id=${userId}` : "";
-    return api.get<Calculation[]>(`main/calculations${params}`);
+  getCalculations: async (params: {
+    userId?: number;
+    page?: number;
+    limit?: number;
+    search?: string;
+    type?: string;
+  }): Promise<PaginatedResponse<Calculation>> => {
+    const queryParams = new URLSearchParams();
+    if (params.userId) queryParams.append("user_id", String(params.userId));
+    if (params.page) queryParams.append("page", String(params.page));
+    if (params.limit) queryParams.append("limit", String(params.limit));
+    if (params.search) queryParams.append("search", params.search);
+    if (params.type) queryParams.append("type", params.type);
+
+    const queryString = queryParams.toString();
+    const finalUrl = `main/calculations${queryString ? `?${queryString}` : ""}`;
+
+    return api.get<PaginatedResponse<Calculation>>(finalUrl);
   },
 
   getCalculation: async (id: number): Promise<Calculation> => {

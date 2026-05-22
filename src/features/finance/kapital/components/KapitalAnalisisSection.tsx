@@ -7,6 +7,7 @@ import type {
   Results,
   SensibilizacionEntry,
 } from "../KapitalPage";
+import { formatToPeruTime } from "../services/kapital.utils";
 import { Book } from "./Book";
 
 const BoaIndicator = ({ value }: { value: number | string }) => (
@@ -265,7 +266,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                       <option key={idx} value={idx}>
                         (Boa = {s.boa?.toFixed(2)})
                         {s.created_at
-                          ? ` — ${new Date(s.created_at).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}`
+                          ? ` — ${formatToPeruTime(s.created_at)}`
                           : ""}
                       </option>
                     ))}
