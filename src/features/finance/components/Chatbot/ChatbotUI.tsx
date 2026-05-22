@@ -2,25 +2,20 @@ import React from "react";
 import { type CompanyData, type YahooFinanceData } from "./chatbot.interfaces";
 import { useState, useEffect } from "react";
 import { ConfirmationModal } from "@/shared/components/common/ConfirmationModal";
-import { MousePointerClick, Trash2 } from "lucide-react";
-
-export const TypingDots: React.FC = () => (
-  <div className="flex items-center gap-2 mt-2 px-1">
-    <div className="flex gap-1">
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className="w-1.5 h-1.5 rounded-full bg-sky-400"
-          style={{ animation: `typingBounce 1.4s ${i * 0.2}s infinite` }}
-        />
-      ))}
-    </div>
-    <span className="text-xs text-slate-400">
-      Analizando datos financieros...
-    </span>
-  </div>
-);
-
+import {
+  ArrowRight,
+  MousePointerClick,
+  RotateCcw,
+  Sparkles,
+  Trash2,
+  Bot,
+  X,
+  ArrowUp,
+} from "lucide-react";
+import {
+  handleNumberValidation,
+  handleNumberKeyDown,
+} from "@/shared/utils/inputValidators";
 interface CompanyCardProps {
   company: CompanyData;
   onApply: (company: CompanyData) => void;
@@ -109,6 +104,7 @@ export const BetaUpdateCard: React.FC<BetaUpdateCardProps> = ({
         </p>
       </div>
       <button
+        type="button"
         onClick={() => onUpdate(newBeta)}
         className="shrink-0 text-xs font-semibold text-white bg-linear-to-r from-sky-400 to-blue-600 px-4 py-2 rounded-lg transition-all hover:-translate-y-0.5 hover:shadow-lg"
       >
@@ -116,6 +112,198 @@ export const BetaUpdateCard: React.FC<BetaUpdateCardProps> = ({
       </button>
     </div>
   </div>
+);
+
+export const ChatbotHeader = ({ onClear }: { onClear: () => void }) => (
+  <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
+    <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-sm border border-gray-100">
+      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-valora-primary text-white">
+        <Bot className="h-3.5 w-3.5" />
+      </div>
+      <span className="text-[13px] font-bold text-gray-800">Betito WACC</span>
+      <span className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]"></span>
+    </div>
+    <button
+      type="button"
+      onClick={onClear}
+      className="my-auto flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-green-600 transition-colors hover:bg-gray-200/80 shadow-sm border"
+      title="Reiniciar conversación"
+    >
+      <RotateCcw className="w-4 h-4" />
+    </button>
+  </div>
+);
+
+export const ChatEmptyState = ({
+  suggestions,
+  onSuggestionClick,
+}: {
+  suggestions: string[];
+  onSuggestionClick: (s: string) => void;
+}) => (
+  <div className="flex h-full flex-col items-center justify-center text-center">
+    <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm border border-gray-200">
+      <Bot className="h-8 w-8 text-valora-primary" />
+    </div>
+    <h3 className="text-[15px] font-bold text-gray-800">Hola, soy Betito</h3>
+    <p className="mx-6 mt-2 mb-6 text-sm text-gray-500 leading-relaxed">
+      Tu asistente experto en cálculo WACC y análisis sectorial. ¿En qué puedo
+      ayudarte?
+    </p>
+    <div className="flex w-full flex-col gap-2.5">
+      {suggestions.map((s) => (
+        <button
+          key={s}
+          type="button"
+          onClick={() => onSuggestionClick(s)}
+          className="group flex w-full cursor-pointer items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-left text-xs font-medium text-gray-700 shadow-sm transition-all hover:border-valora-primary/50 hover:shadow-md"
+        >
+          {s}
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
+export const ChatTypingIndicator = () => (
+  <div className="flex max-w-[85%] gap-2.5 animate-in fade-in">
+    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-800 text-white shadow-sm">
+      <Bot className="h-3.5 w-3.5" />
+    </div>
+    <div className="flex items-center gap-1.5 rounded-4xl rounded-tl-sm border border-gray-100 bg-white px-4 py-3.5 shadow-sm">
+      <span
+        className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400"
+        style={{ animationDelay: "0ms" }}
+      />
+      <span
+        className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400"
+        style={{ animationDelay: "150ms" }}
+      />
+      <span
+        className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400"
+        style={{ animationDelay: "300ms" }}
+      />
+    </div>
+  </div>
+);
+
+// --- INPUT AREA ---
+export const ChatInputArea = ({
+  input,
+  setInput,
+  onSend,
+  inputRef,
+  loading,
+  sendMessage,
+}: {
+  input: string;
+  setInput: (v: string) => void;
+  onSend: () => void;
+  inputRef: any;
+  loading: boolean;
+  sendMessage: () => void;
+}) => (
+  <div className="px-4 py-2">
+    <div className="flex items-end gap-2 rounded-full border border-gray-400 bg-white p-1.5 pr-2 shadow-sm transition-all focus-within:border-valora-primary/80 focus-within:shadow-md">
+      <textarea
+        ref={inputRef}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            onSend();
+          }
+        }}
+        placeholder="Escribe un mensaje..."
+        rows={1}
+        className="chat-scroll ml-2 flex-1 resize-none bg-transparent px-1 py-2.5 text-xs text-gray-800 outline-none placeholder:text-gray-400 mb-0.5 max-h-25"
+      />
+      <button
+        type="button"
+        onClick={sendMessage}
+        disabled={!input.trim() || loading}
+        className="mb-0.5 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-gray-200 text-gray-500 transition-all hover:bg-gray-300 active:scale-95 disabled:opacity-50 disabled:hover:bg-gray-200 not-disabled:bg-valora-primary not-disabled:text-white not-disabled:hover:bg-valora-primary/90"
+      >
+        <ArrowUp className="h-4 w-4" />
+      </button>
+    </div>
+  </div>
+);
+
+// --- FOOTER FORM ---
+export const ChatFooterForm = ({
+  betaInput,
+  setBetaInput,
+  onCalculate,
+  loading,
+}: {
+  betaInput: string;
+  setBetaInput: (v: string) => void;
+  onCalculate: () => void;
+  loading: boolean;
+}) => (
+  <div className="px-3 py-2 bg-white flex items-end gap-3 shrink-0 border-t border-slate-300">
+    <div className="flex flex-col gap-1.5 w-2/5">
+      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide text-left">
+        BETA DESAPALANCADO:
+      </label>
+      <input
+        type="number"
+        placeholder="0.00"
+        step="0.0001"
+        value={betaInput}
+        className="w-22 text-base px-3 py-2 font-semibold text-slate-800 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-white border border-gray-300 rounded-lg"
+        onKeyDown={(e) => handleNumberKeyDown(e, false)}
+        onChange={(e) => {
+          handleNumberValidation(
+            e,
+            { maxDecimals: 4, max: 3, min: 0 },
+            (validEvent) => {
+              setBetaInput(validEvent.target.value);
+            }
+          );
+        }}
+      />
+    </div>
+    <button
+      type="button"
+      disabled={!betaInput || loading}
+      onClick={onCalculate}
+      className="m-auto flex-1 rounded-lg bg-blue-600 p-3 text-[11px] font-bold text-white shadow-sm transition-all hover:bg-blue-700 cursor-pointer h-fit"
+    >
+      Calcula y compara tu WACC
+    </button>
+  </div>
+);
+
+export const ChatbotToggler = ({
+  isOpen,
+  onClick,
+}: {
+  isOpen?: boolean;
+  onClick?: () => void;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-label={isOpen ? "Cerrar chat" : "Abrir chat"}
+    className={`px-4 py-2.5 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer ${
+      isOpen
+        ? "bg-gray-900 text-white rounded-t-xl rounded-b-none border border-b-0 border-gray-200"
+        : "bg-valora-primary text-white rounded-xl hover:bg-valora-secondary"
+    }`}
+  >
+    <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
+      <Sparkles className="h-5 w-5 shrink-0" />
+      Encuentra el Beta específico de tu sector
+    </span>
+    {isOpen ? (
+      <X className="h-5 w-5 shrink-0 opacity-80 hover:opacity-100" />
+    ) : (
+      <ArrowRight className="h-5 w-5 shrink-0" />
+    )}
+  </button>
 );
 
 interface YahooResultsProps {
@@ -211,6 +399,7 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
                   <td className="px-2 py-1.5 sm:px-4 sm:py-3 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <button
+                        type="button"
                         onClick={() => onApply(company)}
                         disabled={!isWaccCalculated}
                         title={
@@ -228,6 +417,7 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
                         Insertar
                       </button>
                       <button
+                        type="button"
                         onClick={() => setTickerToDelete(company.ticker)}
                         title="Eliminar de la lista"
                         className="p-1.5 rounded-md bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-colors cursor-pointer border border-red-100"
@@ -254,6 +444,7 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
             </span>
           </div>
           <button
+            type="button"
             onClick={() => {
               onApply({
                 ticker: "PROMEDIO",

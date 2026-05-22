@@ -32,7 +32,6 @@ export interface UseKapitalCalculationProps {
     setIsFormOpen: (val: boolean) => void;
     setResultsSection: (val: "result" | "sensitivity") => void;
     setShowComparison: (val: boolean) => void;
-    setIsChatbotOpen: (val: boolean) => void;
   };
 }
 
@@ -160,7 +159,6 @@ export function useKapitalCalculation({
         // Navigate a sensitivity cuando se manda el beta desapalancado para sensibilización
         ui.setResultsSection("sensitivity");
         ui.setShowComparison(false);
-        ui.setIsChatbotOpen(false);
         addToast(
           "success",
           `Sensibilización calculada con β=${betaUnlevered} (cálculo #${persistedCalculation.id}).`

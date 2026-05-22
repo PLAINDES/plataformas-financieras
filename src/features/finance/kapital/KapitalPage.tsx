@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { NavBar } from "./components/NavBar";
 import { NavigationTabs } from "./components/NavigationTabs";
 import { FormSidebar } from "./components/FormSidebar";
@@ -17,6 +17,12 @@ import { LoginModal } from "@/features/auth/components/LoginModal";
 
 import { useKapitalCalculation } from "./hooks/useKapitalCalculation";
 import { useKapitalForm } from "./hooks/useKapitalForm";
+import {
+  type CompanyData,
+  type YahooFinanceData,
+  type CompanyModalActions,
+} from "../components/Chatbot/chatbot.interfaces";
+import { Bot, X } from "lucide-react";
 
 import {
   INSTRUMENTS,
@@ -32,6 +38,7 @@ import {
 
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 import { ReportViewer } from "./components/ReportViewer";
+import { YahooResults } from "../components/Chatbot/ChatbotUI";
 
 export interface FormData {
   date: string;
@@ -90,7 +97,7 @@ const KapitalPage: React.FC = () => {
 
   // Estadps de UI
   const [isFormOpen, setIsFormOpen] = useState(true);
-  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  //const [isChatbotOpen, setIsChatbotOpen] = useState(true);
 
   const [resultsSection, setResultsSection] = useState<
     "result" | "sensitivity"
@@ -109,6 +116,11 @@ const KapitalPage: React.FC = () => {
   const [toasts, setToasts] = useState<
     Array<{ id: string; type: ToastType; message: string }>
   >([]);
+
+  const [modalData, setModalData] = useState<YahooFinanceData | null>(null);
+  const [modalActions, setModalActions] = useState<CompanyModalActions | null>(
+    null
+  );
 
   // Guarda el ID de la sesión que el servidor pre-calentó
   const [prewarmedSessionId, setPrewarmedSessionId] = useState<string | null>(
@@ -194,9 +206,9 @@ const KapitalPage: React.FC = () => {
     toastTimeoutsRef.current.set(id, timeoutId);
   };
 
-  useEffect(() => {
+  /*useEffect(() => {
     setIsChatbotOpen(false);
-  }, [resultsSection]);
+  }, [resultsSection]);*/
 
   const handleResultsSectionChange = (
     nextSection: "result" | "sensitivity"
@@ -218,20 +230,31 @@ const KapitalPage: React.FC = () => {
     if (isFormOpen) setIsFormOpen(false);
   };
 
-  const handleOpenSensibilizacion = () => {
-    if (isChatbotOpen) {
-      setIsChatbotOpen(false);
-      //setIsFormOpen(false);
-    } else {
-      //setIsFormOpen(true);
-      setIsChatbotOpen(true);
-    }
-  };
-
   const handleReportViewerOpen = () => {
     setIsReportViewerOpen(true);
     setIsReportSidebarOpen(false);
   };
+
+  const handleCloseModal = useCallback(() => {
+    setModalData(null);
+    setModalActions(null);
+  }, []);
+
+  const handleRemoveTicker = useCallback(
+    (ticker: string) => {
+      modalActions?.onRemoveTicker(ticker);
+      setModalData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          valid_companies: prev.valid_companies.filter(
+            (company) => company.ticker !== ticker
+          ),
+        };
+      });
+    },
+    [modalActions]
+  );
 
   const handleLogout = async () => {
     await logout();
@@ -261,6 +284,28 @@ const KapitalPage: React.FC = () => {
 
   const form = useKapitalForm();
 
+  const applyCompanyToForm = useCallback(
+    (company: CompanyData) => {
+      if (company.beta_unlevered == null) return;
+
+      const formattedBeta = Number(company.beta_unlevered).toFixed(4);
+      form.setFormData((prev) => ({
+        ...prev,
+        beta_unlevered: formattedBeta,
+      }));
+    },
+    [form.setFormData]
+  );
+
+  const handleApplyCompany = useCallback(
+    (company: CompanyData) => {
+      modalActions?.onApplyCompany(company);
+      applyCompanyToForm(company);
+      handleCloseModal();
+    },
+    [applyCompanyToForm, handleCloseModal, modalActions]
+  );
+
   const calc = useKapitalCalculation({
     formData: form.formData,
     setFormData: form.setFormData,
@@ -273,7 +318,6 @@ const KapitalPage: React.FC = () => {
       setIsFormOpen,
       setResultsSection,
       setShowComparison,
-      setIsChatbotOpen,
     },
   });
 
@@ -314,7 +358,10 @@ const KapitalPage: React.FC = () => {
 
   const isProyectosRoute = location.pathname.includes("/proyectos");
   const shouldShowChatbot =
-    !isReportViewerOpen && calc.isWaccCalculated && !isProyectosRoute;
+    !isReportViewerOpen &&
+    calc.isWaccCalculated &&
+    !isProyectosRoute &&
+    calc.sensibilizaciones.length < maxSensibilizaciones;
 
   // La etiqueta de la moneda local siempre depende del país guardado
   const activeSavedCurrency = form.formData.country
@@ -327,9 +374,13 @@ const KapitalPage: React.FC = () => {
       <Chatbot
         formData={form.formData}
         isWaccCalculated={calc.isWaccCalculated}
-        isOpen={isChatbotOpen}
-        setIsOpen={setIsChatbotOpen}
+        isOpen={true}
+        setIsOpen={() => {}}
         onCalculateWacc={(beta: string) => calc.handleSubmit(undefined, beta)}
+        onOpenModal={(data, actions) => {
+          setModalData(data);
+          setModalActions(actions);
+        }}
       />
     ) : null;
 
@@ -362,9 +413,9 @@ const KapitalPage: React.FC = () => {
           onToggleComparison={setShowComparison}
           sensibilizaciones={calc.sensibilizaciones}
           onOpenReport={handleReportSidebarOpen}
-          onSensibilizaClick={handleOpenSensibilizacion}
           localCurrency={activeSavedCurrency}
-          chatbotComponent={chatbotComponent}
+          shouldShowChatbot={shouldShowChatbot}
+          onToggleForm={() => setIsFormOpen((prev) => !prev)}
         />
       )}
 
@@ -441,6 +492,7 @@ const KapitalPage: React.FC = () => {
             countries={COUNTRIES}
             countriesTranslations={COUNTRIES_TRANSLATIONS}
             countryLocalCurrencies={COUNTRY_LOCAL_CURRENCIES}
+            chatbotComponent={chatbotComponent}
           />
         </div>
       </aside>
@@ -454,20 +506,34 @@ const KapitalPage: React.FC = () => {
         onOpenReportViewer={handleReportViewerOpen}
       />
 
-      {/*shouldShowChatbot && (
-        <Chatbot
-          formData={formData}
-          isWaccCalculated={isWaccCalculated}
-          isOpen={isChatbotOpen}
-          setIsOpen={(val: boolean) => {
-            setIsChatbotOpen(val);
-            if (val && !isFormOpen) {
-              setIsFormOpen(true);
-            }
-          }}
-          onCalculateWacc={(beta: string) => handleSubmit(undefined, beta)}
-        />
-      )*/}
+      {modalData && (
+        <div className="fixed inset-0 z-120 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-all animate-in fade-in">
+          <div className="bg-white rounded-xl shadow-2xl w-[90dvw] max-w-2xl h-[80dvh] sm:max-h-[85dvh] overflow-hidden flex flex-col animate-in zoom-in-95 justify-between">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100 bg-gray-50/50">
+              <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+                <Bot className="w-5 h-5 text-valora-primary" />
+                Empresas Comparables
+              </h3>
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="h-full p-3 sm:p-5 overflow-y-auto">
+              <YahooResults
+                data={modalData}
+                isWaccCalculated={calc.isWaccCalculated || false}
+                onApply={handleApplyCompany}
+                onRemove={handleRemoveTicker}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <ToastStack toasts={toasts} onDismiss={removeToast} />
       {calc.isLoading && <LoadingOverlay />}
