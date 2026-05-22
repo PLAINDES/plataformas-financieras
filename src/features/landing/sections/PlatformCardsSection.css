@@ -224,14 +224,14 @@
   font-size: 0.875rem;
   font-weight: 500;
   border: none;
-  background: #e4f8ff;
-  color: #009ef7;
+  background: color-mix(in srgb, var(--color-valora-primary) 10%, transparent);
+  color: var(--color-valora-primary);
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 .card-btn:hover {
-  background: #009ef7;
+  background: var(--color-valora-secondary);
   color: #ffffff;
 }
 

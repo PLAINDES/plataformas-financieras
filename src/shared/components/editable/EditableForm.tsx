@@ -235,8 +235,8 @@ export function EditableForm({
         >
           <button
             onClick={() => setIsEditing(true)}
-            className={`flex gap-1 text-white cursor-pointer font-semibold bg-valora-primary hover:bg-valora-secondary transition-colors
-              ${mobileMode ? "px-2 py-1 text-[11px]" : "px-3 py-1.5 text-xs"} rounded-md hover:bg-blue-600`}
+            className={`flex gap-1 text-white cursor-pointer font-semibold bg-black/60 hover:bg-black/80 transition-colors
+              ${mobileMode ? "px-2 py-1 text-[11px]" : "px-3 py-1.5 text-xs"} rounded-md hover:bg-black/80`}
             title="Editar configuración del formulario"
           >
             <Settings className="size-4" />{" "}
