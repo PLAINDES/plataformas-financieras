@@ -1,5 +1,8 @@
+import { useMemo } from "react";
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
 import { formatPercentageValue } from "@/lib/formatPercentageValue";
+import { useClientPagination } from "@/features/admin/hooks/useClientPagination";
+import { COUNTRIES } from "@/shared/constants/kapital";
 
 interface IrTableProps {
   data: any[];
@@ -8,10 +11,39 @@ interface IrTableProps {
 }
 
 export const IrTable = ({ data, isLoading, onDelete }: IrTableProps) => {
+  // Filtra los datos
+  const filteredByCountryData = useMemo(() => {
+    // Normaliza el arreglo de constantes (minúsculas y sin tildes)
+    const allowedCountries = COUNTRIES.map((c) =>
+      c
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+    );
+
+    return data.filter((item) => {
+      // Normalizamos el valor proveniente de la base de datos
+      const pais = String(item.pais || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+      return allowedCountries.includes(pais);
+    });
+  }, [data]);
+
+  const { paginatedData, tableProps } = useClientPagination(
+    filteredByCountryData
+  );
+
   const getIrColumns = () => {
     const baseCols: any[] = [{ header: "País", accessorKey: "pais" }];
     const years = new Set<string>();
-    data.forEach((item: any) => {
+
+    // Sigue usando 'data' para generar las columnas,
+    // Esto garantiza que si una página no contiene un país con datos
+    // en un año específico, la columna de ese año no desaparezca de la tabla.
+    filteredByCountryData.forEach((item: any) => {
       Object.keys(item).forEach((k) => {
         if (!isNaN(Number(k)) && k.length === 4) {
           years.add(k);
@@ -39,9 +71,10 @@ export const IrTable = ({ data, isLoading, onDelete }: IrTableProps) => {
   return (
     <SimpleTable
       isLoading={isLoading}
-      data={data}
+      data={paginatedData}
       columns={getIrColumns()}
       onDelete={onDelete}
+      {...tableProps}
     />
   );
 };

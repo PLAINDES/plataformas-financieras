@@ -1,5 +1,6 @@
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
 import { formatPercentageValue } from "@/lib/formatPercentageValue";
+import { useClientPagination } from "@/features/admin/hooks/useClientPagination";
 
 interface PrimaTableProps {
   data: any[];
@@ -8,10 +9,12 @@ interface PrimaTableProps {
 }
 
 export const PrimaTable = ({ data, isLoading, onDelete }: PrimaTableProps) => {
+  const { paginatedData, tableProps } = useClientPagination(data);
   return (
     <SimpleTable
       isLoading={isLoading}
-      data={data}
+      data={paginatedData}
+      {...tableProps}
       columns={[
         {
           header: "Año",

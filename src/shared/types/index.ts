@@ -214,3 +214,11 @@ export interface ReportUpdate {
   portada_id?: number | null;
   contentEditor?: string | null;
 }
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}

@@ -5,6 +5,25 @@ import {
   type FormData,
 } from "../KapitalPage";
 
+export const formatToPeruTime = (isoString: string | undefined): string => {
+  if (!isoString) return "-";
+
+  // 1. Si el string no tiene 'Z' ni offset, le agregamos 'Z'
+  const hasOffset = /Z|[+-]\d{2}:?\d{2}$/.test(isoString);
+  const dateObj = new Date(hasOffset ? isoString : `${isoString}Z`);
+
+  return new Intl.DateTimeFormat("es-PE", {
+    timeZone: "America/Lima",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(dateObj);
+};
+
 export const toOptionalNumber = (value: unknown): number | undefined => {
   if (value === null || value === undefined || value === "") {
     return undefined;

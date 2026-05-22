@@ -1,17 +1,18 @@
 // features/finance/kapital/components/KapitalResultadosSection.tsx
 import { FinancieraCard } from "./FinancieraCard";
 import type { Results } from "../KapitalPage";
-import { Book } from "./Book";
+import { ArrowRight, Sparkles } from "lucide-react";
 
 export interface KapitalResultadosSectionProps {
   results: Results;
   showCompanyCard: boolean;
   resultCurrency: "pen" | "usd";
   onResultCurrencyChange: (currency: "pen" | "usd") => void;
-  onSensibilizaClick: () => void;
   onOpenReport?: () => void;
   localCurrency?: string;
   chatbotComponent?: React.ReactNode;
+  shouldShowChatbot: boolean;
+  onToggleForm: () => void;
 }
 
 export const KapitalResultadosSection: React.FC<
@@ -21,9 +22,9 @@ export const KapitalResultadosSection: React.FC<
   showCompanyCard,
   resultCurrency,
   onResultCurrencyChange,
-  onOpenReport,
   localCurrency,
-  chatbotComponent,
+  shouldShowChatbot,
+  onToggleForm,
 }) => {
   // 1. Armamos el arreglo de tarjetas. Siempre incluimos los mercados.
   const cards = [
@@ -76,7 +77,7 @@ export const KapitalResultadosSection: React.FC<
           </h1>
           <p className="text-gray-600">Comparación de resultados</p>
         </div>
-        <div className="xl:w-1/3 flex justify-center xl:justify-end w-full">
+        {/*<div className="xl:w-1/3 flex justify-center xl:justify-end w-full">
           <section className="flex flex-col items-center justify-center rounded-[24px] max-w-105 w-full xl:w-fit overflow-visible mx-auto">
             <div onClick={onOpenReport} className="w-fit h-fit cursor-pointer">
               <Book
@@ -95,11 +96,21 @@ export const KapitalResultadosSection: React.FC<
               </button>
             </div>
           </section>
-        </div>
-        {chatbotComponent && (
-          <div className="flex flex-row items-center gap-2 relative">
-            {chatbotComponent}
-          </div>
+        </div>*/}
+        {shouldShowChatbot && (
+          <button
+            type="button"
+            onClick={onToggleForm}
+            className="px-4 py-2.5 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100"
+          >
+            <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
+              <Sparkles className="h-5 w-5 shrink-0" />
+              Encuentra tu Costo de Capital usando el Beta específico de tu
+              sector
+            </span>
+
+            <ArrowRight className="h-5 w-5 shrink-0" />
+          </button>
         )}
       </header>
       <section

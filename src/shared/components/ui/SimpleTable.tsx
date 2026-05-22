@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Pencil } from "lucide-react";
 
 interface Column<T> {
@@ -14,8 +14,17 @@ interface SimpleTableProps<T> {
   onEdit?: (item: T) => void;
   onCreate?: () => void;
   isLoading?: boolean;
+  totalItems?: number;
+  totalPages?: number;
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  onRowClick?: (item: T) => void;
+
   yearFilterOptions?: Array<string | number>;
-  yearFilterField?: keyof T | string;
+  selectedYear?: string;
+  onYearChange?: (year: string) => void;
 }
 
 export function SimpleTable<T extends object>({
@@ -26,146 +35,85 @@ export function SimpleTable<T extends object>({
   onCreate,
   isLoading,
   yearFilterOptions,
-  yearFilterField = "fecha",
+  onYearChange,
+  selectedYear,
+  onRowClick,
+  totalItems = 0,
+  totalPages = 1,
+  currentPage = 1,
+  onPageChange,
+  searchQuery = "",
+  onSearchChange,
 }: SimpleTableProps<T>) {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedYear, setSelectedYear] = useState<string>("ALL");
-  const PAGE_SIZE = 15;
+  const [pageInputValue, setPageInputValue] = useState(String(currentPage));
 
-  const availableYears = useMemo(
-    () => (yearFilterOptions ?? []).map((y) => String(y)),
-    [yearFilterOptions]
-  );
+  // Sincronizar el input si la página cambia externamente (ej. botones Anterior/Siguiente)
+  React.useEffect(() => {
+    setPageInputValue(String(currentPage));
+  }, [currentPage]);
 
-  const effectiveSelectedYear =
-    selectedYear === "ALL" || availableYears.includes(selectedYear)
-      ? selectedYear
-      : "ALL";
-
-  const getYearFromValue = (value: unknown): string | null => {
-    if (value === undefined || value === null) return null;
-
-    if (typeof value === "number") {
-      const asString = String(Math.trunc(value));
-      return /^\d{4}$/.test(asString) ? asString : null;
+  const handlePageJump = () => {
+    if (!onPageChange) return;
+    const pageNumber = parseInt(pageInputValue, 10);
+    if (!isNaN(pageNumber) && pageNumber >= 1 && pageNumber <= totalPages) {
+      onPageChange(pageNumber);
+    } else {
+      // Si pone un número inválido, regresamos el input al valor de la página actual
+      setPageInputValue(String(currentPage));
     }
-
-    const raw = String(value).trim();
-    if (!raw) return null;
-
-    const yearMatch = raw.match(/\b(19|20)\d{2}\b/);
-    if (yearMatch) return yearMatch[0];
-
-    const asDate = new Date(raw);
-    if (!Number.isNaN(asDate.getTime())) {
-      return String(asDate.getFullYear());
-    }
-
-    return null;
-  };
-
-  const yearFilteredData = useMemo(() => {
-    if (!yearFilterOptions || yearFilterOptions.length === 0) {
-      return data;
-    }
-
-    if (effectiveSelectedYear === "ALL") {
-      return data;
-    }
-
-    return data.filter((item) => {
-      const fieldValue = item[yearFilterField as keyof T];
-      const year = getYearFromValue(fieldValue);
-      return year === effectiveSelectedYear;
-    });
-  }, [data, effectiveSelectedYear, yearFilterField, yearFilterOptions]);
-
-  const filteredData = useMemo(() => {
-    if (!searchQuery) return yearFilteredData;
-    const lowercasedQuery = searchQuery.toLowerCase();
-    return yearFilteredData.filter((item) =>
-      Object.values(item).some((value) =>
-        String(value).toLowerCase().includes(lowercasedQuery)
-      )
-    );
-  }, [yearFilteredData, searchQuery]);
-
-  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
-
-  // Ajuste de la página actual si queda fuera de rango tras un filtrado o cambio en los datos
-  const safePage = totalPages > 0 ? Math.min(currentPage, totalPages) : 1;
-  if (safePage !== currentPage) {
-    setCurrentPage(safePage);
-  }
-
-  const paginatedData = filteredData.slice(
-    (safePage - 1) * PAGE_SIZE,
-    safePage * PAGE_SIZE
-  );
-
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  };
-
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const selectYear = (year: string) => {
-    setSelectedYear(year);
-    setCurrentPage(1);
+    onSearchChange?.(e.target.value);
   };
 
   return (
     <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
-      <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row gap-3 sm:items-start">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={handleSearchChange}
-          placeholder="Buscar..."
-          className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-        />
+      <header className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row gap-3 sm:items-start">
+        {onSearchChange && (
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            placeholder="Buscar por código..."
+            className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          />
+        )}
         {onCreate && (
           <div className="ml-auto">
             <button
               type="button"
               onClick={onCreate}
-              className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
             >
               Crear
             </button>
           </div>
         )}
-        {yearFilterOptions && yearFilterOptions.length > 0 && (
+        {yearFilterOptions && yearFilterOptions.length > 0 && onYearChange && (
           <div className="w-full h-full flex items-center justify-end">
             <div className="flex flex-wrap items-center gap-2">
               <button
                 key="ALL"
                 type="button"
-                onClick={() => selectYear("ALL")}
+                onClick={() => onYearChange("ALL")}
                 className={`px-3 py-1.5 rounded-md border text-sm transition-colors ${
-                  effectiveSelectedYear === "ALL"
+                  selectedYear === "ALL" || !selectedYear
                     ? "bg-blue-600 text-white border-blue-600"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                 }`}
               >
                 Todos
               </button>
-              {yearFilterOptions.map((year) => {
-                const yearAsString = String(year);
-                const isSelected = effectiveSelectedYear === yearAsString;
+              {yearFilterOptions.map((rawYear) => {
+                const yearAsString = String(rawYear);
+                const isSelected = selectedYear === yearAsString;
+
                 return (
                   <button
                     key={yearAsString}
                     type="button"
-                    onClick={() => selectYear(yearAsString)}
+                    onClick={() => onYearChange(yearAsString)}
                     className={`px-3 py-1.5 rounded-md border text-sm transition-colors ${
                       isSelected
                         ? "bg-blue-600 text-white border-blue-600"
@@ -179,8 +127,9 @@ export function SimpleTable<T extends object>({
             </div>
           </div>
         )}
-      </div>
-      <div className="">
+      </header>
+
+      <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -235,7 +184,7 @@ export function SimpleTable<T extends object>({
                   </div>
                 </td>
               </tr>
-            ) : filteredData.length === 0 ? (
+            ) : data.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length + (onDelete || onEdit ? 1 : 0)}
@@ -247,10 +196,11 @@ export function SimpleTable<T extends object>({
                 </td>
               </tr>
             ) : (
-              paginatedData.map((item, itemIndex) => (
+              data.map((item, itemIndex) => (
                 <tr
                   key={`${String((item as any).id ?? "no-id")}-${String((item as any).fecha ?? "no-fecha")}-${itemIndex}`}
-                  className="hover:bg-gray-50 transition-colors"
+                  onClick={() => onRowClick?.(item)}
+                  className="cursor-pointer hover:bg-gray-100 transition-colors"
                 >
                   {columns.map((col, colIndex) => (
                     <td
@@ -304,35 +254,50 @@ export function SimpleTable<T extends object>({
           </tbody>
         </table>
       </div>
-      {totalPages > 1 && !isLoading && (
-        <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200 bg-white">
-          <div className="text-sm text-gray-700">
-            Mostrando{" "}
-            <span className="font-medium">
-              {Math.min((safePage - 1) * PAGE_SIZE + 1, filteredData.length)}
-            </span>{" "}
-            a{" "}
-            <span className="font-medium">
-              {Math.min(safePage * PAGE_SIZE, filteredData.length)}
-            </span>{" "}
-            de <span className="font-medium">{filteredData.length}</span>{" "}
-            resultados
+      {totalPages > 1 && onPageChange && !isLoading && (
+        <div className="px-6 py-3 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 bg-white gap-4">
+          <div className="text-sm text-gray-700 whitespace-nowrap">
+            Mostrando resultados de un total de{" "}
+            <span className="font-medium">{totalItems}</span>
           </div>
-          <div className="flex-1 flex justify-end gap-2">
-            <button
-              onClick={handlePrevPage}
-              disabled={safePage === 1}
-              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              Anterior
-            </button>
-            <button
-              onClick={handleNextPage}
-              disabled={safePage === totalPages}
-              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              Siguiente
-            </button>
+          <div className="flex flex-1 items-center justify-end gap-4 w-full sm:w-auto">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-700">Ir a la página:</span>
+              <input
+                type="number"
+                min={1}
+                max={totalPages}
+                value={pageInputValue}
+                onChange={(e) => setPageInputValue(e.target.value)}
+                onBlur={handlePageJump}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handlePageJump();
+                  }
+                }}
+                className="w-16 px-2 py-1 text-sm text-center border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                title="Escribe un número y presiona Enter"
+              />
+              <span className="text-sm text-gray-700">de {totalPages}</span>
+            </div>
+
+            {/* Botones Anterior / Siguiente */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="cursor-pointer relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="cursor-pointer relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
         </div>
       )}

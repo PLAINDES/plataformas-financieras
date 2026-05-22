@@ -130,7 +130,7 @@ export function LandingHeader({
                       e.preventDefault();
                       handleMenuClick(item.title);
                     }}
-                    className={`px-5 py-2 rounded-full text-[16px] tracking-tight transition-all duration-300 ${isActive ? "text-[#009ef7]" : "text-gray-600 hover:text-[#009ef7]"}`}
+                    className={`px-5 py-2 rounded-full text-[16px] tracking-tight transition-all duration-300 ${isActive ? "text-valora-primary" : "text-gray-600 hover:text-valora-primary"}`}
                   >
                     {item.title}
                   </a>
@@ -143,7 +143,7 @@ export function LandingHeader({
           <div className="flex items-center justify-end gap-3 lg:col-span-3">
             <a
               href="#contacto"
-              className="hidden xl:block text-[11px] text-gray-400 hover:text-[#009ef7] transition-colors uppercase tracking-widest"
+              className="hidden xl:block text-[11px] text-gray-400 hover:text-valora-primary transition-colors uppercase tracking-widest"
             >
               Soporte
             </a>
@@ -153,7 +153,7 @@ export function LandingHeader({
             ) : (
               <Button
                 onClick={openLogin}
-                className="h-9 lg:h-10 px-6 rounded-lg bg-[#009ef7] text-white text-xs hover:bg-[#0086d1] active:scale-95 shadow-sm"
+                className="h-9 lg:h-10 px-6 rounded-lg bg-valora-primary text-white text-xs hover:bg-valora-secondary active:scale-95 shadow-sm"
               >
                 Iniciar Sesión
               </Button>
@@ -165,7 +165,7 @@ export function LandingHeader({
         {isAdmin && (
           <button
             onClick={() => setEditModalOpen(true)}
-            className="absolute top-5 right-20 xl:right-60 2xl:right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-white text-[11px] font-medium backdrop-blur-sm transition-all shadow-sm"
+            className="absolute cursor-pointer top-5 right-20 xl:right-60 2xl:right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-white text-[11px] font-medium backdrop-blur-sm transition-all shadow-sm"
             title="Editar menú"
           >
             <Pencil size={11} />

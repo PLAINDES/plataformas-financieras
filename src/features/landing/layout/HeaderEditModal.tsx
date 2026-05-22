@@ -207,10 +207,20 @@ export function HeaderEditModal({
         </Button>
 
         <div className="flex justify-end gap-2 pt-1 border-t border-border">
-          <Button variant="outline" size="sm" onClick={onClose}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClose}
+            className="hover:bg-gray-200 cursor-pointer"
+          >
             Cancelar
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={saving}>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={saving}
+            className="bg-valora-primary hover:bg-valora-secondary text-white"
+          >
             {saving ? "Guardando..." : "Guardar cambios"}
           </Button>
         </div>

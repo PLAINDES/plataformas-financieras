@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom"; // Opcional si usas React Router
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { UserMenu } from "@/shared/components/common/UserMenu";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 import { CoverIcon } from "@/shared/components/icons/CoverIcon";
@@ -83,23 +83,23 @@ const Sidebar: React.FC<SidebarProps> = ({
         id="kt_app_sidebar"
         className={`fixed left-0 top-0 z-50 flex flex-col bg-[#1e1e2d] transition-all duration-300 h-screen
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-          ${isMinimized ? "w-[75px]" : "w-[250px]"}
+          ${isMinimized ? "w-18.75" : "w-62.5"}
         `}
       >
         {/* Logo Section */}
         <div className="py-6  relative text-center border-b px-0 border-gray-600 border-dashed">
-          <a href="/admin" className="">
+          <Link to="/admin" className="">
             <h3
               className={`font-bold text-white transition-all duration-300 ${isMinimized ? "text-sm" : "text-md"}`}
             >
               {isMinimized ? "ADM" : "ADMINISTRADOR"}
             </h3>
-          </a>
+          </Link>
           {/* Toggle Button - Desktop Only */}
           <button
             onClick={onToggleMinimize}
             className={
-              "absolute -right-[15px]  top-1/2 hidden h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-110 lg:flex"
+              "absolute -right-3.75  top-1/2 hidden h-7.5 w-7.5 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-110 lg:flex"
             }
             aria-label="Toggle sidebar"
           >
@@ -121,9 +121,9 @@ const Sidebar: React.FC<SidebarProps> = ({
           {/* Menu Items */}
           <nav className="space-y-1">
             {menuItems.map((item, index) => (
-              <a
+              <Link
                 key={index}
-                href={item.href}
+                to={item.href}
                 onClick={(e) => {
                   if (item.onClick) {
                     e.preventDefault();
@@ -143,7 +143,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               >
                 {/* Icon */}
                 <span
-                  className={`flex-shrink-0 flex justify-center ${isMinimized ? "" : "mr-3"}`}
+                  className={`shrink-0 flex justify-center ${isMinimized ? "" : "mr-3"}`}
                 >
                   <span className="inline-block h-4 w-4">{item.icon}</span>
                 </span>
@@ -157,7 +157,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 {isActive(item.href) && !isMinimized && (
                   <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#3699FF]" />
                 )}
-              </a>
+              </Link>
             ))}
           </nav>
         </div>

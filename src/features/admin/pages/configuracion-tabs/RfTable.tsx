@@ -1,5 +1,6 @@
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
 import { formatPercentageValue } from "@/lib/formatPercentageValue";
+import { useClientPagination } from "@/features/admin/hooks/useClientPagination";
 
 interface RfTableProps {
   data: any[];
@@ -8,10 +9,12 @@ interface RfTableProps {
 }
 
 export const RfTable = ({ data, isLoading, onDelete }: RfTableProps) => {
+  const { paginatedData, tableProps } = useClientPagination(data);
   return (
     <SimpleTable
       isLoading={isLoading}
-      data={data}
+      data={paginatedData}
+      {...tableProps}
       columns={[
         { header: "Fecha / Madurez", accessorKey: "fecha" },
         {

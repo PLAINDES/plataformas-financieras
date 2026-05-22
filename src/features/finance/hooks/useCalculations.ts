@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { MainService } from "@/shared/services/main.service";
 import type { Calculation } from "@/shared/types";
 
-
-
 interface UseCalculationsReturn {
   calculations: Calculation[];
   loading: boolean;
@@ -21,10 +19,12 @@ export const useCalculations = (userId?: number): UseCalculationsReturn => {
     setLoading(true);
     setError(null);
     try {
-      const data = await MainService.getCalculations(userId);
-      setCalculations(data);
+      const response = await MainService.getCalculations({ userId });
+      setCalculations(response.items);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar los cálculos");
+      setError(
+        err instanceof Error ? err.message : "Error al cargar los cálculos"
+      );
     } finally {
       setLoading(false);
     }

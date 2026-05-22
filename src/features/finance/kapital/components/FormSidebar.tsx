@@ -20,6 +20,7 @@ interface FormSidebarProps {
   bonosTranslations: Record<string, string>;
   countriesTranslations: Record<string, string>;
   countryLocalCurrencies: Record<string, string>;
+  chatbotComponent?: React.ReactNode;
 }
 
 export const FormSidebar: React.FC<FormSidebarProps> = ({
@@ -38,6 +39,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
   bonosTranslations,
   countriesTranslations,
   countryLocalCurrencies,
+  chatbotComponent,
 }) => {
   const [collapsed, setCollapsed] = useState({
     step1: false,
@@ -266,6 +268,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
               />
             </section>
           </FormSection>
+          {chatbotComponent}
         </div>
 
         {/* Footer - Submit Button */}
