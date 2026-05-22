@@ -1,8 +1,11 @@
-import React, { useMemo, useState } from "react";
-import { useCalculations } from "../hooks/useCalculations";
+import React, { useState, useEffect } from "react";
 import type { Calculation } from "@/shared/types";
-import { Search, Plus, FolderKanban, Trash2, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Plus, FolderKanban, Trash2, Eye } from "lucide-react";
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
+import { useNavigate } from "react-router-dom";
+import { MainService } from "@/shared/services/main.service";
+import { formatToPeruTime } from "../kapital/services/kapital.utils";
 
 interface Column<T> {
   header: string;
@@ -19,11 +22,59 @@ const PAGE_SIZE = 10;
 type Tab = "valora" | "kapital";
 
 export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
-  const { calculations, error, remove } = useCalculations(userId);
+  const navigate = useNavigate();
+
+  // Estados de datos controlados por el Backend
+  const [data, setData] = useState<Calculation[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Estados de control de la vista
   const [search, setSearch] = useState<string>("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState<number>(1);
   const [tab, setTab] = useState<Tab>("valora");
   const [pendingDelete, setPendingDelete] = useState<Calculation | null>(null);
+
+  // Debounce para la búsqueda
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1); // Resetear a la página 1 al buscar
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  const loadCalculations = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await MainService.getCalculations({
+        userId,
+        page,
+        limit: PAGE_SIZE,
+        search: debouncedSearch,
+        type: tab,
+      });
+
+      setData(response.items);
+      setTotalItems(response.total);
+      setTotalPages(response.pages);
+    } catch (err) {
+      console.error(err);
+      setError("Error al cargar los proyectos.");
+      setData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCalculations();
+  }, [page, debouncedSearch, tab, userId]);
 
   const hasSensibilizacion = (c: Calculation): boolean => {
     if (!c.data || !c.data.sensibilizacion) return false;
@@ -34,16 +85,19 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
 
   const accionesCell = (c: Calculation): React.ReactNode => (
     <div className="flex items-center justify-center gap-1">
-      <a
-        href={`/${c.type}/${c.code}`}
+      <Link
+        to={`/${c.type}/${c.code}`}
         className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-colors"
         title="Ver proyecto"
       >
         <Eye size={15} strokeWidth={2} />
-      </a>
+      </Link>
       <button
         type="button"
-        onClick={() => setPendingDelete(c)}
+        onClick={(e) => {
+          e.stopPropagation(); // Evitar navegación al abrir modal de borrar
+          setPendingDelete(c);
+        }}
         className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 transition-colors"
         title="Eliminar proyecto"
       >
@@ -73,7 +127,7 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
       header: "Fecha de Creación",
       cell: (c) => (
         <span className="text-gray-500 tabular-nums text-sm">
-          {new Date(c.created_at).toLocaleString("es-PE")}
+          {formatToPeruTime(c.created_at)}
         </span>
       ),
     },
@@ -128,35 +182,6 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
     return columns;
   };
 
-  const filteredAndSorted = useMemo(() => {
-    const q = search.toLowerCase();
-
-    return calculations
-      .filter((c) => {
-        const matchesTab = c.type === tab;
-        const matchesSearch =
-          c.type.includes(q) ||
-          String(c.id).includes(q) ||
-          JSON.stringify(c.data ?? {})
-            .toLowerCase()
-            .includes(q);
-        return matchesTab && matchesSearch;
-      })
-      .sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-  }, [calculations, tab, search]);
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredAndSorted.length / PAGE_SIZE)
-  );
-  const paginated = filteredAndSorted.slice(
-    (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE
-  );
-
   const handleTabChange = (next: Tab): void => {
     setTab(next);
     setPage(1);
@@ -165,8 +190,14 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
 
   const confirmDelete = async (): Promise<void> => {
     if (!pendingDelete) return;
-    await remove(pendingDelete.id);
-    setPendingDelete(null);
+    try {
+      await MainService.deleteCalculation(pendingDelete.id);
+      setPendingDelete(null);
+
+      loadCalculations();
+    } catch (e) {
+      alert("Error al eliminar el proyecto");
+    }
   };
 
   return (
@@ -216,7 +247,7 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
       <div className="w-full max-w-5xl">
         <div className="flex flex-row max-[540px]:flex-col items-center justify-between mb-7 gap-4">
           <div className="flex items-center gap-3 max-[540px]:justify-center">
-            <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center shadow-md shadow-blue-200 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-valora-primary flex items-center justify-center shadow-md shadow-blue-200 shrink-0">
               <FolderKanban size={20} color="white" strokeWidth={2} />
             </div>
             <div className="max-[540px]:text-center max-[540px]:w-2/3">
@@ -228,13 +259,14 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
               </p>
             </div>
           </div>
-          <button
+          <Link
+            to={`/${tab}`}
             type="button"
-            className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-md shadow-blue-200 transition-all duration-150 hover:-translate-y-px"
+            className="cursor-pointer inline-flex items-center gap-2 bg-valora-primary hover:bg-valora-secondary active:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-md shadow-blue-200 transition-all duration-150 hover:-translate-y-px"
           >
             <Plus size={16} strokeWidth={2.5} />
             Nuevo
-          </button>
+          </Link>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-200/60 overflow-hidden">
@@ -246,7 +278,7 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
                     key={t}
                     type="button"
                     onClick={() => handleTabChange(t)}
-                    className={`px-5 py-2.5 text-sm font-semibold capitalize rounded-t-xl transition-all duration-150 border-b-2 ${
+                    className={`cursor-pointer px-5 py-2.5 text-sm font-semibold capitalize rounded-t-xl transition-all duration-150 border-b-2 ${
                       tab === t
                         ? "text-blue-600 border-blue-500 bg-blue-50/60"
                         : "text-gray-400 border-transparent hover:text-gray-600 hover:bg-gray-50"
@@ -255,24 +287,6 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
                     {t}
                   </button>
                 ))}
-              </div>
-
-              <div className="relative max-w-xs w-full mb-3">
-                <Search
-                  size={15}
-                  strokeWidth={2}
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
-                  placeholder="Buscar proyecto"
-                  className="w-full pl-9 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition-all duration-150"
-                />
               </div>
             </div>
           </div>
@@ -283,34 +297,19 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
             </div>
           ) : (
             <SimpleTable<Calculation>
-              data={paginated}
+              // Datos del backend
+              data={data}
               columns={getActiveColumns()}
+              isLoading={isLoading}
+              onRowClick={(c) => navigate(`/${c.type}/${c.code}`)}
+              totalItems={totalItems}
+              totalPages={totalPages}
+              currentPage={page}
+              onPageChange={setPage}
+              searchQuery={search}
+              onSearchChange={setSearch}
             />
           )}
-
-          <div className="px-6 py-3.5 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xs text-gray-400">
-              {filteredAndSorted.length} proyecto
-              {filteredAndSorted.length !== 1 ? "s" : ""} encontrado
-              {filteredAndSorted.length !== 1 ? "s" : ""}
-            </span>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setPage(n)}
-                  className={`w-7 h-7 rounded-lg text-xs font-semibold transition-colors ${
-                    n === page
-                      ? "bg-blue-500 text-white shadow-sm"
-                      : "text-gray-400 hover:bg-gray-100"
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </>

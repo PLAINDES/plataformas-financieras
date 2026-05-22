@@ -1,4 +1,5 @@
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
+import { useClientPagination } from "@/features/admin/hooks/useClientPagination";
 
 interface DevaluacionTableProps {
   data: any[];
@@ -19,10 +20,12 @@ export const DevaluacionTable = ({
   isLoading,
   onDelete,
 }: DevaluacionTableProps) => {
+  const { paginatedData, tableProps } = useClientPagination(data);
   return (
     <SimpleTable
       isLoading={isLoading}
-      data={data}
+      data={paginatedData}
+      {...tableProps}
       columns={[
         {
           header: "Periodo",
@@ -72,10 +75,6 @@ export const DevaluacionTable = ({
         },
       ]}
       onDelete={onDelete}
-      yearFilterOptions={Array.from(
-        new Set(data.map((item) => String(item.fecha)))
-      ).sort((a, b) => b.localeCompare(a))}
-      yearFilterField="fecha"
     />
   );
 };

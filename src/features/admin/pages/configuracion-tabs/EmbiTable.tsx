@@ -1,4 +1,5 @@
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
+import { useClientPagination } from "@/features/admin/hooks/useClientPagination";
 
 interface EmbiTableProps {
   data: any[];
@@ -7,10 +8,13 @@ interface EmbiTableProps {
 }
 
 export const EmbiTable = ({ data, isLoading, onDelete }: EmbiTableProps) => {
+  const { paginatedData, tableProps } = useClientPagination(data);
+
   return (
     <SimpleTable
       isLoading={isLoading}
-      data={data}
+      data={paginatedData}
+      {...tableProps}
       columns={[
         { header: "Fecha", accessorKey: "fecha" },
         {

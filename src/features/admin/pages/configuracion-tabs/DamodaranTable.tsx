@@ -1,5 +1,6 @@
 import { SimpleTable } from "@/shared/components/ui/SimpleTable";
 import { formatPercentageValue } from "@/lib/formatPercentageValue";
+import { useClientPagination } from "@/features/admin/hooks/useClientPagination";
 
 interface DamodaranTableProps {
   data: any[];
@@ -12,19 +13,13 @@ export const DamodaranTable = ({
   isLoading,
   onDelete,
 }: DamodaranTableProps) => {
-  const yearFilterOptions = Array.from(
-    new Set(
-      data
-        .map((item) => String(item.fecha ?? "").trim())
-        .filter((year) => /^\d{4}$/.test(year))
-    )
-  ).sort((a, b) => Number(b) - Number(a));
+  const { paginatedData, tableProps } = useClientPagination(data, 15);
 
   return (
     <SimpleTable
       isLoading={isLoading}
-      data={data}
-      yearFilterOptions={yearFilterOptions}
+      data={paginatedData}
+      {...tableProps}
       columns={[
         {
           header: "Industria",
