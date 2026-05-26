@@ -1,5 +1,5 @@
 .platform-section {
-  padding: 3rem 0;
+  padding: 3.5rem 0;
   display: flex;
   align-items: center;
   width: 100%;
@@ -137,7 +137,7 @@
 }
 
 .video-card.editing {
-  border: 2px solid #2fa4ff;
+  border: 2px solid var(--color-valora-primary);
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
   height: 100%;
   overflow-y: auto;
@@ -145,7 +145,7 @@
 
 @media (max-width: 991.98px) {
   .video-card.active {
-    border: 2px solid #0d6efd;
+    border: 2px solid var(--color-valora-primary);
     box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
     transform: scale(1.02);
   }
@@ -247,8 +247,8 @@
 
 @media (min-width: 992px) {
   .carrousel-desktop-cards .cards-container {
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
+    overflow-x: auto;
+    overflow-y: hidden;
     scroll-snap-type: x mandatory;
     display: block;
     width: 100%; /* Prevent blowing out parent width */
@@ -352,7 +352,7 @@
   }
 
   .video-card.active {
-    border: 1px solid #2fa4ff;
+    border: 1px solid var(--color-valora-primary);
     box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
   }
 
@@ -370,8 +370,8 @@
 
   .cards-container-wrapper {
     /* Quitamos comportamientos heredados */
-    flex: 1 !important;
-    min-width: 0 !important;
+    flex: 1;
+    min-width: 0;
     position: relative;
     order: 1;
     overflow: hidden; /* Ensure no horizontal overflow */

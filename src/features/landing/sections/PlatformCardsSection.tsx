@@ -23,6 +23,7 @@ interface PlatformCardItem extends CollectionItem {
   hoverVideoUrl?: string;
   ctaUrl?: string;
   libraryUrl?: string;
+  isImplemented?: boolean;
 }
 
 interface PlatformCardsSectionProps {
@@ -39,6 +40,7 @@ interface PlatformCardsSectionProps {
       hoverVideoUrl?: string;
       ctaUrl?: string;
       libraryUrl?: string;
+      isImplemented?: boolean;
     }>;
   };
   onSave?: (content: EditableContent) => Promise<void>;
@@ -229,12 +231,12 @@ export function PlatformCardsSection({
 
   return (
     <section className="platform-section">
-      <div className="platform-container">
-        <div className="platform-content">
+      <div className="w-full mx-auto px-3">
+        <div className="flex flex-col justify-center items-center gap-8 w-full">
           <div
             className={`cards-container-wrapper ${cardsData.items.length > 2 ? "carrousel-desktop-cards" : ""}`}
           >
-            <div className="cards-container" ref={cardsContainerRef}>
+            <div className="cards-container p-3" ref={cardsContainerRef}>
               <EditableCollection
                 data={cardsData}
                 onSave={handleSaveCards}
@@ -331,6 +333,14 @@ function PlatformCard({
       />
     );
   }
+  const isAvailable = card.isImplemented ?? true;
+  const handleDisabledClick = (e: React.MouseEvent) => {
+    if (!isAvailable) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  };
 
   return (
     <div
@@ -351,10 +361,21 @@ function PlatformCard({
         />
       )}
 
+      {!isAvailable && (
+        <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-gray-500 text-white text-xs font-bold rounded-full uppercase">
+          Próximamente
+        </div>
+      )}
+
       <div className="card-image-wrapper">
         <div className="card-img-container">
-          {card.ctaUrl ? (
-            <a href={card.ctaUrl} target="_blank" rel="noopener noreferrer">
+          {card.ctaUrl && isAvailable ? (
+            <a
+              href={card.ctaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
               <img src={card.imageUrl} alt={card.name} />
             </a>
           ) : (
@@ -376,22 +397,22 @@ function PlatformCard({
         {card.ctaUrl ? (
           <>
             <a
-              href={card.ctaUrl}
+              href={isAvailable ? card.ctaUrl : "#"}
               target="_blank"
               rel="noopener noreferrer"
               className="card-btn"
-              onClick={(e) => e.stopPropagation()}
+              onClick={handleDisabledClick}
             >
               <span>Curso de Capacitación</span>
               <ChevronRight size={16} />
             </a>
             {card.libraryUrl && (
               <a
-                href={card.libraryUrl}
+                href={isAvailable ? card.libraryUrl : "#"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="card-btn"
-                onClick={(e) => e.stopPropagation()}
+                onClick={handleDisabledClick}
               >
                 <span>Biblioteca</span>
                 <BookOpen size={16} />
@@ -429,7 +450,7 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
   };
 
   return (
-    <div className="video-card editing p-4 min-w-75 max-w-87.5">
+    <div className="video-card editing p-4 w-full">
       <h6 className="mb-4 text-sm font-semibold">Editando Card</h6>
 
       <div className="grid gap-3">
@@ -458,7 +479,23 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
             />
           </div>
         ))}
-
+        <div className="flex items-center gap-2 py-2">
+          <input
+            type="checkbox"
+            id="isImplemented"
+            checked={!!formData.isImplemented}
+            onChange={(e) =>
+              setFormData({ ...formData, isImplemented: e.target.checked })
+            }
+            className="w-4 h-4 text-valora-secondary border-gray-300 rounded focus:ring-valora-primary"
+          />
+          <label
+            htmlFor="isImplemented"
+            className="text-sm font-medium text-gray-700"
+          >
+            Implementado
+          </label>
+        </div>
         <div>
           <label className="block text-xs mb-1 font-medium">Descripción</label>
           <textarea
@@ -470,7 +507,6 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
             className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm resize-y"
           />
         </div>
-
         {(["imageUrl", "videoUrl", "ctaUrl", "libraryUrl"] as const).map(
           (field) => (
             <div key={field}>
@@ -509,7 +545,7 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
         <Button
           size="sm"
           onClick={handleSubmit}
-          className="flex-1 text-xs bg-[#2FA4FF] hover:bg-[#00FFDD] text-white border-none"
+          className="flex-1 text-xs bg-valora-primary hover:bg-valora-secondary text-white border-none"
         >
           Guardar
         </Button>
