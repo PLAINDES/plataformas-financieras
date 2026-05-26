@@ -244,32 +244,38 @@ export function EditableCollection<T extends CollectionItem>({
   // Modo admin: renderizar con controles
   return (
     <div
-      ref={scrollRef}
-      className={`${className} cursor-grab active:cursor-grabbing`}
-      style={{ position: "relative" }}
-      onMouseDown={handleMouseDown}
-      onMouseLeave={handleMouseLeave}
-      onMouseUp={handleMouseUp}
-      onMouseMove={handleMouseMove}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      style={{
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        gap: "1rem",
+      }}
     >
-      {/* Items */}
-      {items.length === 0 ? (
-        <div className="text-center py-12 px-4 border-dashed border-2 rounded-lg text-gray-400">
-          <p className="mb-4 text-sm">{emptyMessage}</p>
-          <button
-            onClick={handleAdd}
-            disabled={isSaving}
-            className="py-2 px-5 bg-valora-primary hover:bg-valora-secondary text-white rounded-md text-sm font-medium transition-colors cursor-pointer"
-          >
-            + {addButtonText}
-          </button>
-        </div>
-      ) : (
-        <>
-          {items.map((item, index) => (
+      {/* Contenedor deslizante de items */}
+      <div
+        ref={scrollRef}
+        className={`${className} cursor-grab active:cursor-grabbing`}
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {items.length === 0 ? (
+          <div className="text-center py-12 px-4 border-dashed border-2 rounded-lg text-gray-400">
+            <p className="mb-4 text-sm">{emptyMessage}</p>
+            <button
+              onClick={handleAdd}
+              disabled={isSaving}
+              className="py-2 px-5 bg-valora-primary hover:bg-valora-secondary text-white rounded-md text-sm font-medium transition-colors cursor-pointer"
+            >
+              + {addButtonText}
+            </button>
+          </div>
+        ) : (
+          items.map((item, index) => (
             <React.Fragment key={item.id}>
               {renderItem(item, index, {
                 isEditing: editingId === item.id,
@@ -286,27 +292,27 @@ export function EditableCollection<T extends CollectionItem>({
                 canMoveDown: allowReorder && index < items.length - 1,
               })}
             </React.Fragment>
-          ))}
+          ))
+        )}
+      </div>
 
-          {/* Botón Agregar */}
-          {(!maxItems || items.length < maxItems) && (
-            <div style={{ marginTop: "1rem", textAlign: "center" }}>
-              <button
-                onClick={handleAdd}
-                disabled={isSaving}
-                className="py-2 px-5 border-dashed border-2 border-valora-primary bg-white text-valora-primary rounded-md text-sm font-medium transition-colors cursor-pointer"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#eff6ff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "white";
-                }}
-              >
-                + {addButtonText}
-              </button>
-            </div>
-          )}
-        </>
+      {/* Botón Agregar fuera del contenedor de scroll */}
+      {items.length > 0 && (!maxItems || items.length < maxItems) && (
+        <div className="text-center mt-6">
+          <button
+            onClick={handleAdd}
+            disabled={isSaving}
+            className="py-2 px-5 border-dashed border-2 border-valora-primary bg-white text-valora-primary rounded-md text-sm font-medium transition-colors cursor-pointer"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#eff6ff";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "white";
+            }}
+          >
+            + {addButtonText}
+          </button>
+        </div>
       )}
 
       {/* Indicador de guardado */}
@@ -387,9 +393,27 @@ export function AdminControls({
       // y las opciones se expandan "hacia atrás" (arriba o izquierda).
       className={`
         flex gap-2 items-center
-        ${isVertical ? "flex-col-reverse" : "flex-row-reverse"}
+        ${isVertical ? "flex-col" : "flex-row-reverse"}
       `}
     >
+      {/* --- Botón Principal (Trigger) --- */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        className={`
+            relative z-20 flex items-center justify-center w-8 h-8 rounded-full bg-white border shadow-sm transition-all duration-200 cursor-pointer
+            ${isOpen ? "border-gray-400 bg-gray-50" : "border-gray-200 hover:border-gray-400 hover:shadow-md"}
+        `}
+      >
+        {isOpen ? (
+          <span className="text-gray-500 font-bold text-xs">✕</span>
+        ) : (
+          // Icono de 3 puntos (Menú)
+          <Ellipsis className="size-6" />
+        )}
+      </button>
       {/* --- Menú Desplegado (Las Opciones) --- */}
       <div
         className={`
@@ -399,7 +423,7 @@ export function AdminControls({
             isOpen
               ? "opacity-100 scale-100 translate-0"
               : // CAMBIO 2: La animación de ocultar depende de la dirección
-                `opacity-0 scale-90 pointer-events-none ${isVertical ? "translate-y-4" : "translate-x-4"}`
+                `opacity-0 scale-90 pointer-events-none ${isVertical ? "-translate-y-4" : "translate-x-4"}`
           }
         `}
       >
@@ -458,25 +482,6 @@ export function AdminControls({
           <Trash className="size-4" />
         </button>
       </div>
-
-      {/* --- Botón Principal (Trigger) --- */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsOpen(!isOpen);
-        }}
-        className={`
-            relative z-20 flex items-center justify-center w-8 h-8 rounded-full bg-white border shadow-sm transition-all duration-200 cursor-pointer
-            ${isOpen ? "border-gray-400 bg-gray-50" : "border-gray-200 hover:border-gray-400 hover:shadow-md"}
-        `}
-      >
-        {isOpen ? (
-          <span className="text-gray-500 font-bold text-xs">✕</span>
-        ) : (
-          // Icono de 3 puntos (Menú)
-          <Ellipsis className="size-6" />
-        )}
-      </button>
     </div>
   );
 }
