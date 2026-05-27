@@ -1,8 +1,5 @@
-/*
-
-*/
-
-import { utils } from "xlsx";
+import { read, utils } from "xlsx";
+import { type RiskFreeRateItem, type DynamicCountryItem } from "@/shared/types";
 
 export const cleanExcelDate = (val: any, fallback: any) => {
   let raw = val || fallback;
@@ -470,4 +467,364 @@ export const parseTaxSheet = (ws: any) => {
       tax_rate: parseNum(cellF13),
     },
   ];
+};
+
+export const mapRow = (row: any, defaultFecha: string, activeTab: string) => {
+  const baseItem = {
+    fecha: cleanExcelDate(row.fecha || row.Fecha, defaultFecha),
+  };
+
+  let mappedItem: any = {};
+
+  const { ...restProps } = row;
+  if (activeTab === "damodaran") {
+    const industryFromEmpty =
+      row.__EMPTY ?? row.__EMPTY_1 ?? row["Industry Name"];
+    if (!restProps.industria && !restProps.industry && industryFromEmpty) {
+      restProps.industria = String(industryFromEmpty).trim();
+    }
+  }
+  mappedItem = { ...baseItem, ...restProps };
+
+  // Clean empty values (undefined, null, or empty string)
+  const cleanedItem = Object.fromEntries(
+    Object.entries(mappedItem).filter(
+      ([k, v]) =>
+        v !== undefined && v !== null && v !== "" && !k.startsWith("__EMPTY")
+    )
+  );
+
+  if (activeTab !== "damodaran") {
+    return cleanedItem;
+  }
+
+  const normalizeKey = (key: string) =>
+    key
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+
+  const toNumberOrUndefined = (val: any) => {
+    const n = Number(val);
+    return Number.isFinite(n) ? n : undefined;
+  };
+
+  const getByAliases = (aliases: string[]) => {
+    const normalizedAliases = aliases.map(normalizeKey);
+    const foundEntry = Object.entries(cleanedItem).find(([k]) =>
+      normalizedAliases.includes(normalizeKey(k))
+    );
+    return foundEntry?.[1];
+  };
+  // Si vienen columnas como 2026, 2026_1, 2026_2... respetamos ese orden.
+  const orderedYearValues = Object.entries(cleanedItem)
+    .filter(([k]) => /^\d{4}(?:_\d+)?$/.test(k))
+    .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }))
+    .map(([, v]) => v);
+  const dSobreDef = toNumberOrUndefined(
+    getByAliases(["d_sobre_def", "d/(d+e)", "debt_to_capital"]) ??
+      orderedYearValues[0]
+  );
+  const eSobreDe = toNumberOrUndefined(
+    getByAliases(["e_sobre_de", "e/(d+e)", "equity_to_capital"]) ??
+      orderedYearValues[1]
+  );
+  const taxRate = toNumberOrUndefined(
+    getByAliases(["tax_rate", "tax rate", "impuesto"]) ?? orderedYearValues[2]
+  );
+  const beta = toNumberOrUndefined(
+    getByAliases(["beta", "levered_beta"]) ?? orderedYearValues[3]
+  );
+  const stdDevStock = toNumberOrUndefined(
+    getByAliases(["std_dev_stock", "std dev in stock", "std_dev"]) ??
+      orderedYearValues[4]
+  );
+  const spreadDebt = toNumberOrUndefined(
+    getByAliases(["spread_debt", "spread debt", "debt_spread"]) ??
+      orderedYearValues[5]
+  );
+  const industria = String(
+    getByAliases([
+      "industria",
+      "industry",
+      "sector",
+      "industry_name",
+      "industry name",
+    ]) ?? ""
+  ).trim();
+
+  // Devolvemos solo los atributos canónicos de Damodaran (sin claves 2026, 2026_1, ...).
+  return {
+    fecha: cleanedItem.fecha,
+    industria,
+    d_sobre_def: dSobreDef,
+    e_sobre_de: eSobreDe,
+    tax_rate: taxRate,
+    beta,
+    std_dev_stock: stdDevStock,
+    spread_debt: spreadDebt,
+  };
+};
+
+export const parseFinancialExcel = (
+  file: File,
+  activeTab: string,
+  activeFrequency: string
+): Promise<any[]> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = read(bstr, { type: "binary" });
+        let parsedData: any[] = [];
+        const sheets = wb.SheetNames;
+
+        const isTrimestral = checkIsTrimestralFromExcel(wb, sheets);
+
+        if (
+          activeFrequency === "trimestral" &&
+          !isTrimestral &&
+          activeTab !== "devaluacion"
+        ) {
+          throw new Error(
+            "El formato del archivo no coincide con la frecuencia seleccionada. Se esperaba un formato trimestral."
+          );
+        }
+
+        if (
+          activeFrequency === "anual" &&
+          isTrimestral &&
+          activeTab !== "ir" &&
+          activeTab !== "devaluacion"
+        ) {
+          throw new Error(
+            "El formato del archivo no coincide con la frecuencia seleccionada. Se esperaba un formato anual."
+          );
+        }
+
+        if (activeTab === "devaluacion") {
+          sheets.forEach((sheetName) => {
+            const ws = wb.Sheets[sheetName];
+            const sheetData = parseDevaluacionSheet(ws, sheetName);
+            parsedData = [...parsedData, ...sheetData];
+          });
+
+          if (parsedData.length === 0) {
+            throw new Error(
+              "El archivo está vacío o no tiene datos válidos de Devaluación."
+            );
+          }
+        } else if (isTrimestral && activeTab !== "ir") {
+          // 2a. Trimestral: 1 sola hoja, tabla única con columnas de fecha/trimestre
+          const sheetName = sheets[0];
+          const ws = wb.Sheets[sheetName];
+          const data = utils.sheet_to_json(ws);
+          if (data.length === 0) {
+            throw new Error("El archivo está vacío o no tiene datos válidos.");
+          }
+          parsedData = data.map((row: any) => {
+            const fechaRow = extractRowDate(row, sheetName);
+            const mapped = mapRow(row, fechaRow, activeTab);
+
+            if (activeTab === "rf") {
+              const keys = Object.keys(mapped).filter(
+                (k) => k !== "fecha" && k !== "id" && k !== "_complementId"
+              );
+              // Verificar si existen claves numéricas típicas de RF
+              // O verificar si TIENE columnas que NO son países y SI son números como strings '0.08', '1.00'
+              // La estrategia simple: si no tiene ninguna columna tipo "0.08", "1.00", etc, probablemente no es RF
+              const knownRfKeys = [
+                "0.08",
+                "0.17",
+                "0.25",
+                "0.50",
+                "1.00",
+                "2.00",
+                "3.00",
+                "5.00",
+                "7.00",
+                "10.00",
+                "20.00",
+                "30.00",
+              ];
+              const matches = keys.some((k) => knownRfKeys.includes(k));
+              if (!matches && keys.length > 0) {
+                // Si tiene otras claves pero ninguna coincide con RF
+                throw new Error(
+                  "El archivo no parece ser una Tasa Libre de Riesgo (faltan columnas de plazos como 0.08, 1.00, etc)."
+                );
+              }
+              return mapped as RiskFreeRateItem;
+            }
+            if (activeTab === "embi") {
+              // Verificar que NO tenga claves de RF
+              const keys = Object.keys(mapped).filter(
+                (k) => k !== "fecha" && k !== "id" && k !== "_complementId"
+              );
+              const knownRfKeys = ["0.08", "1.00", "10.00", "30.00"];
+              const hasRfKeys = keys.some((k) => knownRfKeys.includes(k));
+              if (hasRfKeys) {
+                throw new Error(
+                  "El archivo parece ser de Tasa RF, no corresponde a EMBI (Países)."
+                );
+              }
+              return mapped as DynamicCountryItem;
+            }
+
+            return mapped;
+          });
+        } else {
+          // ANUAL
+          if (["rf", "embi"].includes(activeTab) && sheets.length > 1) {
+            throw new Error(
+              `Para ${activeTab.toUpperCase()}, solo se admite el formato anual de una sola hoja.`
+            );
+          }
+
+          // For annual format, there are two cases:
+          // 1. Special case for IR: One sheet with years as columns.
+          // 2. Standard annual: Multiple sheets, where each sheet is a year.
+          // 3. Fallback for other tabs: One sheet with a date/year column.
+
+          if (activeTab === "devaluacion") {
+            sheets.forEach((sheetName) => {
+              const ws = wb.Sheets[sheetName];
+              const sheetData = parseDevaluacionSheet(ws, sheetName);
+              parsedData = [...parsedData, ...sheetData];
+            });
+
+            if (parsedData.length === 0) {
+              throw new Error(
+                "El archivo está vacío o no tiene datos válidos de Devaluación."
+              );
+            }
+          } else if (activeTab === "riesgo") {
+            const sheetName =
+              sheets.find((s) =>
+                s.toLowerCase().includes("industry averages")
+              ) || sheets[0];
+            const ws = wb.Sheets[sheetName];
+            parsedData = parseRiesgoCrediticio(ws);
+
+            if (parsedData.length === 0) {
+              throw new Error(
+                "No se encontraron datos válidos en la tabla de Standard Deviation."
+              );
+            }
+          } else if (activeTab === "tax") {
+            const sheetName =
+              sheets.find((s) =>
+                s.toLowerCase().includes("industry averages")
+              ) || sheets[0];
+            const ws = wb.Sheets[sheetName];
+            parsedData = parseTaxSheet(ws);
+
+            if (parsedData.length === 0) {
+              throw new Error(
+                "No se encontraron datos en las celdas D11 y F13."
+              );
+            }
+          } else if (activeTab === "damodaran") {
+            // Buscar la hoja "Industry Averages" o usar la primera por defecto
+            const sheetName =
+              sheets.find((s) =>
+                s.toLowerCase().includes("industry averages")
+              ) || sheets[0];
+            const ws = wb.Sheets[sheetName];
+            parsedData = parseDamodaranNuevoFormato(ws);
+
+            if (parsedData.length === 0) {
+              throw new Error(
+                "No se encontraron datos válidos o se detuvo la lectura antes de tiempo."
+              );
+            }
+          } else if (activeTab === "ir") {
+            // IR's special format is handled here, assuming one sheet
+            const sheetName = sheets[0];
+            const ws = wb.Sheets[sheetName];
+            const data = utils.sheet_to_json(ws);
+
+            if (data.length === 0) {
+              throw new Error(
+                "El archivo está vacío o no tiene datos válidos."
+              );
+            }
+
+            data.forEach((row: any) => {
+              const keys = Object.keys(row);
+              const paisKey =
+                keys.find(
+                  (k) =>
+                    k.toLowerCase().includes("país") ||
+                    k.toLowerCase().includes("pais") ||
+                    k.toLowerCase().includes("country") ||
+                    k.toLowerCase().includes("region")
+                ) || keys[0];
+
+              const paisName = row[paisKey];
+              if (!paisName) return; // Skip rows without a country identifier
+
+              keys.forEach((k) => {
+                const yearStr = String(k).trim();
+                if (
+                  k !== paisKey &&
+                  !isNaN(Number(yearStr)) &&
+                  yearStr.length === 4
+                ) {
+                  parsedData.push({
+                    pais: String(paisName),
+                    fecha: yearStr,
+                    valor: Number(row[k]) || 0,
+                  });
+                }
+              });
+            });
+          } else if (sheets.length === 1) {
+            // Anual con 1 sola hoja: buscar la fecha/año en las columnas (ej. primera columna)
+            const sheetName = sheets[0];
+            const ws = wb.Sheets[sheetName];
+            const data = utils.sheet_to_json(ws);
+            parsedData = data.map((row: any) => {
+              const fechaRow = extractRowDate(row, sheetName);
+              return mapRow(row, fechaRow, activeTab);
+            });
+          } else {
+            // 2b. Anual: Multiples hojas, el nombre de la hoja es el año
+            sheets.forEach((sheetName) => {
+              const ws = wb.Sheets[sheetName];
+              const data = utils.sheet_to_json(ws);
+              const mapped = data.map((row: any) =>
+                mapRow(row, sheetName, activeTab)
+              );
+              let normalizedMapped = mapped;
+              if (activeTab === "damodaran") {
+                normalizedMapped = mapped.filter(
+                  (item: any) =>
+                    typeof item.d_sobre_def === "number" &&
+                    typeof item.e_sobre_de === "number" &&
+                    typeof item.tax_rate === "number"
+                );
+              }
+              parsedData = [...parsedData, ...normalizedMapped];
+            });
+          }
+        }
+        parsedData = parsedData.sort((a, b) => {
+          a = new Date(a.fecha).getTime();
+          b = new Date(b.fecha).getTime();
+          return b - a;
+        });
+
+        resolve(parsedData);
+      } catch (error: any) {
+        reject(error.message || "Error al procesar el archivo Excel.");
+      }
+    };
+    reader.onerror = () => reject(new Error("Error al leer el archivo."));
+    reader.readAsBinaryString(file);
+  });
 };

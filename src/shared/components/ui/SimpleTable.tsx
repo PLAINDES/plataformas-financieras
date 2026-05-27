@@ -68,7 +68,7 @@ export function SimpleTable<T extends object>({
   };
 
   return (
-    <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
+    <div className="bg-white shadow-sm rounded-lg border border-gray-200 flex flex-col">
       <header className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row gap-3 sm:items-start">
         {onSearchChange && (
           <input
@@ -129,7 +129,7 @@ export function SimpleTable<T extends object>({
         )}
       </header>
 
-      <div className="overflow-x-auto">
+      <div className="w-full overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -256,13 +256,15 @@ export function SimpleTable<T extends object>({
       </div>
       {totalPages > 1 && onPageChange && !isLoading && (
         <div className="px-6 py-3 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 bg-white gap-4">
-          <div className="text-sm text-gray-700 whitespace-nowrap">
+          <div className="text-xs sm:text-sm text-gray-700 whitespace-nowrap">
             Mostrando resultados de un total de{" "}
             <span className="font-medium">{totalItems}</span>
           </div>
-          <div className="flex flex-1 items-center justify-end gap-4 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row flex-1 items-center justify-end gap-4 w-full sm:w-auto">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">Ir a la página:</span>
+              <span className="text-xs sm:text-sm text-gray-700 mx-auto">
+                Ir a la página:
+              </span>
               <input
                 type="number"
                 min={1}
@@ -286,14 +288,14 @@ export function SimpleTable<T extends object>({
               <button
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="cursor-pointer relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className="cursor-pointer relative inline-flex items-center px-4 py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
                 Anterior
               </button>
               <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="cursor-pointer relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className="cursor-pointer relative inline-flex items-center px-4 py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
                 Siguiente
               </button>
