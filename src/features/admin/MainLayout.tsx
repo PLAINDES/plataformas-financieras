@@ -14,7 +14,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#e9edf1]">
+    <div className="flex h-dvh overflow-hidden bg-[#e9edf1]">
       {/* Sidebar */}
       <Sidebar
         isMinimized={isSidebarMinimized}
@@ -23,12 +23,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
       {/* Main Content Area */}
       <div
-        className={`flex flex-1 flex-col transition-all duration-300 ${
-          isSidebarMinimized ? "lg:ml-[75px]" : "lg:ml-[250px]"
+        className={`flex h-dvh min-h-0 overflow-hidden flex-1 flex-col transition-all duration-300 ${
+          isSidebarMinimized ? "lg:ml-18.75" : "lg:ml-62.5"
         }`}
       >
         {/* Content */}
-        <main className="flex-1 pb-20">{children}</main>
+        <main className="flex-1 overflow-y-auto min-h-0">{children}</main>
 
         {/* Footer */}
         <Footer />

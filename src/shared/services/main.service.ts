@@ -232,7 +232,7 @@ export const MainService = {
     offset?: number;
     search?: string;
     token?: string;
-  }): Promise<MasterTemplate[]> => {
+  }): Promise<PaginatedResponse<MasterTemplate>> => {
     const params = new URLSearchParams();
     if (options?.limit !== undefined)
       params.append("limit", options.limit.toString());
@@ -243,7 +243,7 @@ export const MainService = {
     const url = queryString
       ? `main/master-templates?${queryString}`
       : "main/master-templates";
-    return api.get<MasterTemplate[]>(url, {
+    return api.get<PaginatedResponse<MasterTemplate>>(url, {
       token: getAuthToken(options?.token),
     });
   },

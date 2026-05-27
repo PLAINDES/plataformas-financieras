@@ -67,7 +67,7 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
             <img
               alt="Logo"
               src="/images/logo.png"
-              className="h-16 mb-6 object-contain"
+              className="h-16 md:h-24 mb-6 object-contain"
             />
             <p className="text-sm leading-relaxed mb-8 max-w-sm text-slate-500 font-bold">
               Suscríbete para recibir actualizaciones.

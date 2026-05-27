@@ -84,6 +84,14 @@ export interface MasterTemplateUpdate {
   hojas_config?: Record<string, any>;
 }
 
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
 // ==================== TEMPLATE CODE TYPES ================================
 export interface TemplateCode {
   id: number;

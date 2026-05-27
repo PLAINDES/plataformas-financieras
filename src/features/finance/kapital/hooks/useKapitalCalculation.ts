@@ -242,17 +242,6 @@ export function useKapitalCalculation({
       } catch (error) {
         console.error("No se encontró el cálculo en la URL", error);
       }
-      // Iniciamos el pre-warm en segundo plano
-      MainService.prewarmSession()
-        .then((data) => {
-          if (data && data.session_id) {
-            // Si el pre-warm fue exitoso, guardamos el ID para que arranque el Heartbeat
-            setPrewarmedSessionId(data.session_id);
-          }
-        })
-        .catch((e) => {
-          console.warn("Pre-warm background failed", e);
-        });
     }
   };
 

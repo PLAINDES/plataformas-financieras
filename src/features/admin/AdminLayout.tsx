@@ -262,18 +262,7 @@ const Footer: FC = () => {
   };
 
   return (
-    <footer
-      style={{
-        background: "white",
-        borderTop: "1px solid #f0f3f8",
-        padding: "16px 24px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        flexWrap: "wrap",
-        gap: 12,
-      }}
-    >
+    <footer className="bg-white border-t-gray-200 py-4 px-6 flex items-center justify-between  flex-wrap gap-3">
       <span style={{ fontSize: 13, color: "#9eaec5" }}>
         <span style={{ fontWeight: 700, color: "#b5bfd0" }}>{year}©</span>{" "}
         <a
@@ -290,29 +279,6 @@ const Footer: FC = () => {
           Proideas
         </a>
       </span>
-      {/* <div style={{ display: "flex", gap: 4 }}>
-        {(["About", "Support", "Purchase"] as const).map((l) => (
-          <a
-            key={l}
-            href="/admin"
-            style={{
-              padding: "4px 12px", fontSize: 13, fontWeight: 600,
-              color: "#9eaec5", textDecoration: "none", borderRadius: 6,
-              transition: "all .2s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "#3699FF";
-              e.currentTarget.style.background = "#f0f7ff";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "#9eaec5";
-              e.currentTarget.style.background = "transparent";
-            }}
-          >
-            {l}
-          </a>
-        ))}
-      </div> */}
     </footer>
   );
 };
@@ -1145,27 +1111,8 @@ const DashboardPage: FC = () => (
       </div>
 
       {/* Main card */}
-      <div
-        style={{
-          background: "white",
-          borderRadius: 20,
-          boxShadow: "0 2px 20px rgba(0,0,0,0.06)",
-          overflow: "hidden",
-          border: "1px solid #f0f3f8",
-        }}
-      >
-        <div
-          style={{
-            padding: "36px 40px 40px",
-            background: "linear-gradient(135deg, #f8faff 0%, #fff 100%)",
-            minHeight: 280,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
+      <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+        <div className="py-9 px-10 bg-linear-gradient(135deg, #f8faff 0%, #fff 100%) flex flex-col items-center justify-center text-center">
           <div
             style={{
               display: "inline-flex",

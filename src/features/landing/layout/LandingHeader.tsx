@@ -208,7 +208,7 @@ export function LandingHeader({
                       e.preventDefault();
                       handleMenuClick(item.title);
                     }}
-                    className={`px-4 py-3 rounded-md text-sm transition-all ${isActive ? "bg-[#009ef7]/10 text-[#009ef7]" : "text-gray-700 hover:bg-gray-50 hover:text-[#009ef7]"}`}
+                    className={`px-4 py-3 rounded-md text-sm transition-all ${isActive ? "bg-valora-primary/10 text-valora-primary" : "text-gray-700 hover:bg-gray-50 hover:text-valora-secondary"}`}
                   >
                     {item.title}
                   </a>
