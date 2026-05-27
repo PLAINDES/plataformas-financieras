@@ -73,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          className="fixed inset-0 z-40 h-dvh bg-black/20 bg-opacity-50 lg:hidden"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
@@ -81,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar */}
       <div
         id="kt_app_sidebar"
-        className={`fixed left-0 top-0 z-50 flex flex-col bg-[#1e1e2d] transition-all duration-300 h-screen
+        className={`fixed left-0 top-0 z-50 flex h-dvh flex-col overflow-hidden bg-slate-900 transition-all duration-300
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
           ${isMinimized ? "w-18.75" : "w-62.5"}
         `}
@@ -108,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Menu Section */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 hover:scrollbar-thumb-gray-500">
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-600 hover:scrollbar-thumb-gray-500">
           {/* Menu Heading */}
           <div className="mb-2 px-3 pt-5">
             {!isMinimized && (

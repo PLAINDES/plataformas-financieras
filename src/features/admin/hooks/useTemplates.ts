@@ -50,6 +50,11 @@ export const useTemplates = () => {
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const limit = 10;
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -95,13 +100,26 @@ export const useTemplates = () => {
   const loadTemplates = async () => {
     try {
       setLoading(true);
+      const offset = (currentPage - 1) * limit;
       const data = await MainService.getMasterTemplates({
-        limit: 10,
-        offset: 0,
-        search: searchTerm || undefined,
+        limit,
+        offset,
+        search: appliedSearch || undefined,
         token: getToken() ?? undefined,
       });
-      setTemplates(data);
+      const items = Array.isArray(data)
+        ? data
+        : Array.isArray((data as any)?.items)
+          ? (data as any).items
+          : [];
+      const total = Array.isArray(data)
+        ? data.length
+        : Number((data as any)?.total ?? items.length);
+      const pages = Array.isArray(data) ? 1 : Number((data as any)?.pages ?? 1);
+
+      setTemplates(items);
+      setTotalItems(total);
+      setTotalPages(pages || 1);
     } catch (e: any) {
       addToast(e.message || "Error al cargar plantillas", "error");
     } finally {
@@ -111,6 +129,20 @@ export const useTemplates = () => {
 
   useEffect(() => {
     loadTemplates();
+  }, [currentPage, appliedSearch]);
+
+  useEffect(() => {
+    const trimmed = searchTerm.trim();
+    const timeoutId = window.setTimeout(() => {
+      setCurrentPage(1);
+      setAppliedSearch(trimmed);
+    }, 300);
+
+    if (!trimmed) {
+      setCurrentPage(1);
+    }
+
+    return () => window.clearTimeout(timeoutId);
   }, [searchTerm]);
 
   // == Dialog helpers ==================
@@ -338,6 +370,10 @@ export const useTemplates = () => {
   return {
     templates,
     loading,
+    totalItems,
+    totalPages,
+    currentPage,
+    setCurrentPage,
     toasts,
     searchTerm,
     setSearchTerm,

@@ -95,7 +95,7 @@ export const KapitalSettingsPage = () => {
   };
 
   if (error) {
-    return <div className="p-6 text-sm text-red-500">{error}</div>;
+    return <div className="p-4 text-sm text-red-500">{error}</div>;
   }
 
   return (
@@ -113,7 +113,7 @@ export const KapitalSettingsPage = () => {
 
       <div className="p-6">
         <div className="max-w-xl rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
-          <h2 className="text-[11px] font-bold tracking-widest text-blue-600 uppercase mb-6 border-b border-slate-100 pb-3">
+          <h2 className="text-[11px] font-bold tracking-widest text-blue-600 uppercase mb-4 border-b border-slate-100">
             Límites de Usuario
           </h2>
 
@@ -165,7 +165,7 @@ export const KapitalSettingsPage = () => {
               </div>
             </div>
 
-            <div className="mt-4 flex justify-end">
+            <div className="flex justify-end">
               <Button
                 onClick={handleSave}
                 disabled={saving || loading}

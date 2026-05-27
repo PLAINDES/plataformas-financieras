@@ -306,7 +306,12 @@ export function FooterEditModal({
           <Button variant="outline" size="sm" onClick={onClose}>
             Cancelar
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={saving}>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={saving}
+            className="bg-valora-primary hover:bg-valora-secondary"
+          >
             {saving ? "Guardando..." : "Guardar cambios"}
           </Button>
         </div>

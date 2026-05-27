@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { CodesModal } from "@/shared/components/common/CodesModal";
 import { ToastStack } from "@/shared/components/common/ToastStack";
 import { ConfirmationModal } from "@/shared/components/common/ConfirmationModal";
@@ -34,6 +35,10 @@ export const PlantillasMaestrasPage = () => {
     // Variables de estado principal
     templates,
     loading,
+    totalItems,
+    totalPages,
+    currentPage,
+    setCurrentPage,
     toasts,
     searchTerm,
     setSearchTerm,
@@ -83,21 +88,36 @@ export const PlantillasMaestrasPage = () => {
     handleDelete,
   } = useTemplates();
 
+  const [pageInputValue, setPageInputValue] = useState(String(currentPage));
+
+  useEffect(() => {
+    setPageInputValue(String(currentPage));
+  }, [currentPage]);
+
+  const handlePageJump = () => {
+    const pageNumber = parseInt(pageInputValue, 10);
+    if (!isNaN(pageNumber) && pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    } else {
+      setPageInputValue(String(currentPage));
+    }
+  };
+
   // === RENDER ===============================================================
   return (
     <>
       <header className="border-b border-slate-200 bg-white px-4 py-3 md:px-6 flex justify-between">
         <div>
-          <h1 className="text-xs font-bold tracking-widest text-slate-800 uppercase">
+          <h1 className="text-[11px] sm:text-xs font-bold tracking-widest text-slate-800 uppercase">
             Configuración Financiera
           </h1>
-          <h3 className="text-sm font-medium text-gray-500">
-            Gestión de indicadores macroeconómicos y parámetros del sistema.
+          <h3 className="text-xs sm:text-sm font-medium text-gray-500">
+            Gestión de plantillas maestras para análisis financiero
           </h3>
         </div>
         <button
           onClick={openCreate}
-          className="inline-flex items-center gap-2 px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
         >
           <Plus className="h-4 w-4" />
           Nueva Plantilla
@@ -135,26 +155,26 @@ export const PlantillasMaestrasPage = () => {
             </p>
           </div>
         ) : (
-          <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
+          <div className="bg-white shadow-sm rounded-lg overflow-x-auto border border-gray-200 w-full">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     #
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nombre
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Predeterminada
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Archivo OneDrive
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Creado
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -163,10 +183,10 @@ export const PlantillasMaestrasPage = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {templates.map((t, index) => (
                   <tr key={t.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                       {index + 1}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                       <div className="font-medium text-gray-900">
                         {t.nombre}
                       </div>
@@ -176,7 +196,7 @@ export const PlantillasMaestrasPage = () => {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-center">
                       <button
                         onClick={() => handleSetDefault(t.id)}
                         disabled={t.is_default || settingDefaultId === t.id}
@@ -196,7 +216,7 @@ export const PlantillasMaestrasPage = () => {
                         )}
                       </button>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                       {t.onedrive_filename ? (
                         <span
                           className="flex items-center gap-1.5 text-xs text-blue-600 font-medium truncate max-w-48"
@@ -214,11 +234,11 @@ export const PlantillasMaestrasPage = () => {
                       )}
                     </td>
                     {/* Creado */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                       {formatDate(t.created_at)}
                     </td>
                     {/* Acciones */}
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => handleViewCodes(t.id, t.nombre)}
@@ -262,6 +282,68 @@ export const PlantillasMaestrasPage = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+            <div className="text-xs sm:text-sm text-gray-600">
+              Mostrando{" "}
+              <span className="font-semibold text-gray-900">
+                {templates.length}
+              </span>{" "}
+              de{" "}
+              <span className="font-semibold text-gray-900">{totalItems}</span>{" "}
+              plantillas
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm text-gray-600">
+                  Ir a la página:
+                </span>
+                <input
+                  type="number"
+                  min={1}
+                  max={totalPages}
+                  value={pageInputValue}
+                  onChange={(e) => setPageInputValue(e.target.value)}
+                  onBlur={handlePageJump}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handlePageJump();
+                    }
+                  }}
+                  className="w-16 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-center text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  title="Escribe un número de página y presiona Enter"
+                />
+                <span className="text-xs sm:text-sm text-gray-600">
+                  de{" "}
+                  <span className="font-semibold text-gray-900">
+                    {totalPages}
+                  </span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Anterior
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Siguiente
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
