@@ -36,12 +36,19 @@ export default function TeamSection({
   onSave,
   onSaveCollection,
 }: TeamSectionProps) {
-  const [openSection, setOpenSection] = useState<string | null>(null);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    authors: false,
+    development: false,
+    collaborators: false,
+  });
   const { isAdmin: _isAdmin } = useAuthContext();
   void _isAdmin;
 
   const toggleSection = (section: string) => {
-    setOpenSection(openSection === section ? null : section);
+    setOpenSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
   };
 
   const handleSaveAuthors = async (
@@ -243,10 +250,9 @@ export default function TeamSection({
                       fill="currentColor"
                       className="text-gray-500"
                       style={{
-                        transform:
-                          openSection === "authors"
-                            ? "rotate(180deg)"
-                            : "rotate(0deg)",
+                        transform: openSections["authors"]
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
                         transition: "transform 0.3s ease",
                       }}
                     >
@@ -257,7 +263,7 @@ export default function TeamSection({
               </div>
             </button>
 
-            {openSection === "authors" && (
+            {openSections["authors"] && (
               <div className="mt-4 animate-fade-in">
                 <EditableCollection
                   data={{
@@ -298,10 +304,9 @@ export default function TeamSection({
                       fill="currentColor"
                       className="text-gray-500"
                       style={{
-                        transform:
-                          openSection === "development"
-                            ? "rotate(180deg)"
-                            : "rotate(0deg)",
+                        transform: openSections["development"]
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
                         transition: "transform 0.3s ease",
                       }}
                     >
@@ -312,7 +317,7 @@ export default function TeamSection({
               </div>
             </button>
 
-            {openSection === "development" && (
+            {openSections["development"] && (
               <div className="mt-4 animate-fade-in">
                 <div className="bg-white border-0 shadow-sm rounded-lg">
                   <div className="p-2">
@@ -362,10 +367,9 @@ export default function TeamSection({
                       fill="currentColor"
                       className="text-gray-500"
                       style={{
-                        transform:
-                          openSection === "collaborators"
-                            ? "rotate(180deg)"
-                            : "rotate(0deg)",
+                        transform: openSections["collaborators"]
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
                         transition: "transform 0.3s ease",
                       }}
                     >
@@ -376,7 +380,7 @@ export default function TeamSection({
               </div>
             </button>
 
-            {openSection === "collaborators" && (
+            {openSections["collaborators"] && (
               <div className="mt-4 animate-fade-in">
                 <EditableCollection
                   data={{
