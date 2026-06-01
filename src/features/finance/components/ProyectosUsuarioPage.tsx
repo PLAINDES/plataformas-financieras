@@ -65,8 +65,8 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
         onLoginClick={() => setIsLoginModalOpen(true)}
         selected={""}
       />
-      <div className="h-full flex flex-col p-2">
-        <div className="flex flex-1 flex-col-3 justify-center py-20 px-6 bg-[#f3f6f9] overflow-y-auto">
+      <div className="flex-1 flex flex-col">
+        <div className="flex flex-1 flex-col-3 justify-center py-20 px-3 md:px-6 bg-[#f3f6f9] overflow-y-auto">
           <Proyectos userId={user?.id} />
         </div>
         <div>

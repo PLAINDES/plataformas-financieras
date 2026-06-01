@@ -12,9 +12,9 @@ export const MainPageFooter: React.FC<MainPageFooterProps> = ({
   return (
     <footer className="py-2 bg-[#e8fff3] border-t border-green-100 ">
       <section className="container mx-auto px-4 py-5 w-full">
-        <main className="flex flex-row items-center justify-evenly gap-x-2 md:gap-x-16">
+        <main className="flex flex-col sm:flex-row items-center justify-evenly gap-8 sm:gap-2 md:gap-x-16">
           <a
-            className="border border-gray-300 relative size-18 md:w-24 md:h-24 self-end bg-linear-to-br from-slate-300 to-slate-200 rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+            className="border border-gray-300 relative size-18 md:w-24 md:h-24 self-end bg-linear-to-br from-slate-300 max-sm:mx-auto to-slate-200 rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-shadow cursor-pointer"
             href={brandHref}
           >
             <img

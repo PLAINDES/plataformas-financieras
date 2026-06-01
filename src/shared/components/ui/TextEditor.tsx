@@ -16,6 +16,7 @@ import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import { useState, useCallback, useRef } from "react";
 import { Separator } from "@/components/ui/separator";
+import { FontSize, FontFamilyExtension } from "./ConfigTextEditor";
 
 interface ToolbarButtonProps {
   onClick: () => void;
@@ -85,7 +86,7 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
     disabled={disabled}
     onClick={onClick}
     className={[
-      "flex h-7 min-w-[28px] items-center justify-center rounded px-1.5 text-xs font-medium transition-all",
+      "flex h-7 min-w-7 items-center justify-center rounded px-1.5 text-xs font-medium transition-all",
       active
         ? "bg-blue-100 text-blue-700 shadow-inner"
         : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
@@ -138,7 +139,8 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
         type="color"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="absolute left-0 top-0 h-0 w-0 opacity-0"
+        className="absolute left-0 top-0 h-full w-full opacity-0"
+        style={{ pointerEvents: "all" }}
       />
     </div>
   );
@@ -153,6 +155,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   initialContent = DEFAULT_CONTENT,
   onChange,
 }) => {
+  const [, setUpdateState] = useState({});
+
   const [fontSize, setFontSize] = useState("13");
   const [fontFamily, setFontFamily] = useState("sans-serif");
   const [textColor, setTextColor] = useState("#f7c400");
@@ -163,6 +167,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       StarterKit,
       Underline,
       TextStyle,
+      FontSize,
+      FontFamilyExtension,
       Color,
       Highlight.configure({ multicolor: true }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
@@ -178,6 +184,25 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     content: initialContent,
     onUpdate({ editor }) {
       onChange?.(editor.getHTML());
+    },
+    onTransaction({ editor }) {
+      // Fuerza a React a evaluar isActive() en los botones
+      setUpdateState({});
+
+      // Sincroniza los valores de los selects/color pickers con el texto seleccionado
+      const attrs = editor.getAttributes("textStyle");
+      if (attrs.fontSize) {
+        // Extrae el número quitando "pt" o "px"
+        const size = attrs.fontSize.replace(/[^0-9.]/g, "");
+        setFontSize(size);
+      }
+      if (attrs.fontFamily) setFontFamily(attrs.fontFamily);
+
+      const currentTextColor = editor.getAttributes("textStyle").color;
+      if (currentTextColor) setTextColor(currentTextColor);
+
+      const currentHighlight = editor.getAttributes("highlight").color;
+      if (currentHighlight) setHighlightColor(currentHighlight);
     },
     editorProps: {
       attributes: {
@@ -252,8 +277,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   if (!editor) return null;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 bg-slate-50">
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="sticky top-0 z-20 border-b border-slate-200 bg-slate-50 shadow-sm">
         <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5">
           <ToolbarButton
             onClick={() => editor.chain().focus().undo().run()}
@@ -514,7 +539,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         </BubbleMenu>
       )}
 
-      <EditorContent editor={editor} />
+      <div className="rounded-b-xl overflow-hidden">
+        <EditorContent editor={editor} />
+      </div>
 
       <style>{`
         .ProseMirror h2 {

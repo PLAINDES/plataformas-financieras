@@ -56,7 +56,7 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
 }) => {
   return (
     <article
-      className={`max-w-100 mx-auto bg-white shadow-md shadow-slate-300 flex flex-col w-full ${
+      className={`min-w-75 max-w-90 mx-auto bg-white shadow-md shadow-slate-300 flex flex-col w-full ${
         compact ? "rounded-2xl h-full" : "rounded-4xl h-full"
       } `}
     >
