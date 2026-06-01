@@ -87,7 +87,7 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
     <div className="flex items-center justify-center gap-1">
       <Link
         to={`/${c.type}/${c.code}`}
-        className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-colors"
+        className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-200 hover:text-blue-700 transition-colors"
         title="Ver proyecto"
       >
         <Eye size={15} strokeWidth={2} />
@@ -98,7 +98,7 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
           e.stopPropagation(); // Evitar navegación al abrir modal de borrar
           setPendingDelete(c);
         }}
-        className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 transition-colors"
+        className="cursor-pointer size-8 inline-flex items-center justify-center rounded-lg text-red-400 hover:bg-red-200 hover:text-red-600 transition-colors"
         title="Eliminar proyecto"
       >
         <Trash2 size={15} strokeWidth={2} />
