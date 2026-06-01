@@ -32,7 +32,6 @@ interface SharedStateType {
   items: ConvItem[];
   history: { role: string; parts: { text: string }[] }[];
   input: string;
-  betaInput: string;
   loading: boolean;
 }
 
@@ -54,7 +53,6 @@ const sharedState: SharedStateType = {
   items: initialItems,
   history: [],
   input: "",
-  betaInput: "",
   loading: false,
 };
 
@@ -77,9 +75,9 @@ const SUGGESTIONS = ["Analiza mi beta actual", "Sugiere empresas comparables"];
 export const Chatbot: React.FC<ChatbotProps> = ({
   formData: externalFormData,
   isOpen,
-  setIsOpen,
-  onCalculateWacc,
   onOpenModal,
+  betaInput,
+  setBetaInput,
 }) => {
   const [, setTick] = useState(0);
 
@@ -92,11 +90,10 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   }, []);
 
   // Lee las variables directamente del estado global
-  const { items, history, input, betaInput, loading } = sharedState;
+  const { items, history, input, loading } = sharedState;
 
   // 3. Redefinimos los setters para que actualicen el store global
   const setInput = (val: any) => setSharedState("input", val);
-  const setBetaInput = (val: any) => setSharedState("betaInput", val);
   const setHistory = (val: any) => setSharedState("history", val);
   const setLoading = (val: any) => setSharedState("loading", val);
   const setItems = (val: any) => setSharedState("items", val);
@@ -321,7 +318,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 
       {/* Ventana del Chatbot */}
       <div
-        className={`absolute top-full left-0 right-0 z-10 flex w-full flex-col overflow-hidden rounded-b-4xl border border-slate-100 transition-all duration-300 h-[min(650px,calc(100vh-140px))] origin-top ${
+        className={`absolute top-full left-0 right-0 z-10 flex w-full flex-col overflow-hidden rounded-b-4xl border border-slate-100 transition-all duration-300 h-[min(550px,calc(100vh-140px))] origin-top ${
           isOpen
             ? "scale-y-100 opacity-100"
             : "pointer-events-none scale-y-0 opacity-0"
@@ -332,7 +329,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
         {/* Área de Mensajes */}
         <div
           ref={chatContainerRef}
-          className="chat-scroll flex-1 overflow-y-auto px-4 pb-2 pt-2"
+          className="chat-scroll flex-1 overflow-y-auto px-4"
         >
           {isEmpty ? (
             <ChatEmptyState
@@ -500,15 +497,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
         />
 
         {/* Footer: Formulario de Beta y WACC */}
-        <ChatFooterForm
-          betaInput={betaInput}
-          setBetaInput={setBetaInput}
-          onCalculate={() => {
-            onCalculateWacc(betaInput);
-            setIsOpen(false);
-          }}
-          loading={loading}
-        />
+        <ChatFooterForm betaInput={betaInput} setBetaInput={setBetaInput} />
       </div>
     </section>
   );

@@ -86,7 +86,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
             isCollapsed={collapsed.step1}
             onToggleCollapse={() => toggleCollapse("step1")}
           >
-            <div className="flex gap-2 flex-col">
+            <div className="flex gap-1 flex-col">
               <FormField
                 label="Fecha"
                 name="date"
@@ -157,7 +157,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
             isCollapsed={collapsed.step2}
             onToggleCollapse={() => toggleCollapse("step2")}
           >
-            <section className="flex gap-2 flex-col">
+            <section className="flex gap-1 flex-col">
               <FormField
                 label="País"
                 name="country"
@@ -214,7 +214,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
               } as any)
             }
           >
-            <section className="flex gap-2 flex-col">
+            <section className="flex gap-1 flex-col">
               {/* Costo de deuda con selector de moneda */}
               <FormField
                 label="Costo de deuda | Empresa"
@@ -273,9 +273,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
 
         {/* Footer - Submit Button */}
         <div
-          className={`sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 transition-all duration-300 ${
-            isWaccCalculated ? "max-[540px]:w-4/5" : "w-full"
-          }`}
+          className={`sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 transition-all duration-300 w-full`}
         >
           <button
             type="submit"

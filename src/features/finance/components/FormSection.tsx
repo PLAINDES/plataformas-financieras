@@ -22,8 +22,8 @@ export const FormSection: React.FC<FormSectionProps> = ({
   const isVisible = !isCollapsed;
   return (
     <div className="rounded-lg w-full">
-      <div className="flex items-center gap-2 border-b border-gray-50 bg-gray-50 px-3.5 py-2">
-        <span className="inline-flex h-5 w-5 text-xs shrink-0 items-center justify-center rounded-full bg-valora-primary text-center font-bold leading-none text-white">
+      <div className="flex items-center gap-2 border-b border-gray-50 bg-gray-50 p-2">
+        <span className="inline-flex size-4.5 sm:h-5 sm:w-5 text-[11px] sm:text-xs shrink-0 items-center justify-center rounded-full bg-valora-primary text-center font-bold leading-none text-white pb-[0.75px]">
           {step}
         </span>
 
