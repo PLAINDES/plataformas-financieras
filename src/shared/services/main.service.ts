@@ -142,6 +142,16 @@ export const MainService = {
     return api.put<Calculation>(`main/calculations/${id}`, data);
   },
 
+  refreshCalculation: async (
+    id: number,
+    prewarmedSessionId?: string | null
+  ): Promise<Calculation> => {
+    const payload = prewarmedSessionId
+      ? { prewarmed_session_id: prewarmedSessionId }
+      : {};
+    return api.post<Calculation>(`main/calculations/${id}/refresh`, payload);
+  },
+
   deleteCalculation: async (id: number): Promise<void> => {
     return api.delete<void>(`main/calculations/${id}`);
   },
@@ -198,15 +208,15 @@ export const MainService = {
       localStorage.getItem("accessToken") ||
       "";
 
-    const rawBaseUrl = import.meta.env.VITE_API_URL || "";
-    const baseUrl = rawBaseUrl.endsWith("/")
-      ? rawBaseUrl.slice(0, -1)
-      : rawBaseUrl;
+    const rawApiUrl = import.meta.env.DEV
+      ? window.location.origin
+      : import.meta.env.VITE_API_URL || "";
+    const baseUrl = `${rawApiUrl.replace(/\/api\/v1\/?$/, "").replace(/\/$/, "")}/api/v1`;
 
     const timestamp = new Date().getTime();
 
     const response = await fetch(
-      `${baseUrl}/api/v1/main/reports/${reportId}/generate?calculation_id=${calculationId}&is_preview=${isPreview}&_t=${timestamp}`,
+      `${baseUrl}/main/reports/${reportId}/generate?calculation_id=${calculationId}&is_preview=${isPreview}&_t=${timestamp}`,
       {
         method: "GET",
         headers: {
@@ -216,7 +226,12 @@ export const MainService = {
     );
 
     if (!response.ok) {
-      throw new Error("Error en la peticion al generar el PDF");
+      const detail = await response.text().catch(() => "");
+      throw new Error(
+        detail
+          ? `Error al generar el PDF: ${detail}`
+          : `Error al generar el PDF (${response.status})`
+      );
     }
 
     return await response.blob();

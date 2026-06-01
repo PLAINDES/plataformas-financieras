@@ -2,6 +2,7 @@
 import { FinancieraCard } from "./FinancieraCard";
 import type { Results } from "../KapitalPage";
 import { ArrowRight, Sparkles } from "lucide-react";
+//import { Book } from "./Book";
 
 export interface KapitalResultadosSectionProps {
   results: Results;
@@ -25,6 +26,7 @@ export const KapitalResultadosSection: React.FC<
   localCurrency,
   shouldShowChatbot,
   onToggleForm,
+  //onOpenReport,
 }) => {
   // 1. Armamos el arreglo de tarjetas. Siempre incluimos los mercados.
   const cards = [

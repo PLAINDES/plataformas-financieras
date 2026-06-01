@@ -52,6 +52,7 @@ export function useKapitalCalculation({
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isWaccCalculated, setIsWaccCalculated] = useState(false);
+  const [isSessionFresh, setIsSessionFresh] = useState(false);
 
   const [showCompanyCard, setShowCompanyCard] = useState<boolean>(false);
   const [resultCurrency, setResultCurrency] = useState<"pen" | "usd">("pen");
@@ -170,6 +171,8 @@ export function useKapitalCalculation({
           `Resultados generados y guardados (cálculo #${persistedCalculation.id}).`
         );
       }
+
+      setIsSessionFresh(true); // El excel ya se actualizado con los datos del form
     } catch (error) {
       console.error("Error in Kapital calculation", error);
       addToast("error", "No se pudo guardar el cálculo. Intenta nuevamente.");
@@ -238,6 +241,7 @@ export function useKapitalCalculation({
           setIsWaccCalculated(true);
           ui.setShowResults(true);
           ui.setIsFormOpen(false);
+          setIsSessionFresh(false); // El front tiene datos pero el excel aún no se ha refrescado
         }
       } catch (error) {
         console.error("No se encontró el cálculo en la URL", error);
@@ -269,5 +273,7 @@ export function useKapitalCalculation({
     showCompanyCard,
     resultCurrency,
     setResultCurrency,
+    isSessionFresh,
+    setIsSessionFresh,
   };
 }

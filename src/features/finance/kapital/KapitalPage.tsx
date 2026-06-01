@@ -392,6 +392,9 @@ const KapitalPage: React.FC = () => {
           onClose={() => setIsReportViewerOpen(false)}
           reportProductId={selectedReportProductId}
           calculationId={calc.currentCalculation?.id}
+          isSessionFresh={calc.isSessionFresh}
+          setIsSessionFresh={calc.setIsSessionFresh}
+          prewarmedSessionId={prewarmedSessionId}
         />
       ) : (
         <KapitalResults
