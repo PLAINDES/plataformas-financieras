@@ -50,7 +50,7 @@ export interface ChatbotProps {
   formData?: any;
   isWaccCalculated?: boolean;
   isOpen: boolean;
-  setIsOpen: (val: boolean) => void;
-  onCalculateWacc: (beta: string) => void;
   onOpenModal: (data: YahooFinanceData, actions: CompanyModalActions) => void;
+  betaInput: string;
+  setBetaInput: (val: string) => void;
 }

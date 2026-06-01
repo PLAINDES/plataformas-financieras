@@ -115,7 +115,7 @@ export const BetaUpdateCard: React.FC<BetaUpdateCardProps> = ({
 );
 
 export const ChatbotHeader = ({ onClear }: { onClear: () => void }) => (
-  <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
+  <div className="px-4 py-2 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
     <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-sm border border-gray-100">
       <div className="flex h-6 w-6 items-center justify-center rounded-full bg-valora-primary text-white">
         <Bot className="h-3.5 w-3.5" />
@@ -141,7 +141,7 @@ export const ChatEmptyState = ({
   suggestions: string[];
   onSuggestionClick: (s: string) => void;
 }) => (
-  <div className="flex h-full flex-col items-center justify-center text-center">
+  <div className="flex h-80 flex-col items-center justify-center text-center">
     <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm border border-gray-200">
       <Bot className="h-8 w-8 text-valora-primary" />
     </div>
@@ -235,17 +235,13 @@ export const ChatInputArea = ({
 export const ChatFooterForm = ({
   betaInput,
   setBetaInput,
-  onCalculate,
-  loading,
 }: {
   betaInput: string;
   setBetaInput: (v: string) => void;
-  onCalculate: () => void;
-  loading: boolean;
 }) => (
-  <div className="px-3 py-2 bg-white flex items-end gap-3 shrink-0 border-t border-slate-300">
-    <div className="flex flex-col gap-1.5 w-2/5">
-      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide text-left">
+  <div className="px-4 py-2 bg-white flex items-end gap-3 shrink-0 border-t border-slate-300">
+    <div className="flex flex-row gap-1.5 w-full">
+      <label className="text-xs font-bold text-slate-400 uppercase tracking-wide text-left my-auto">
         BETA DESAPALANCADO:
       </label>
       <input
@@ -253,7 +249,7 @@ export const ChatFooterForm = ({
         placeholder="0.00"
         step="0.0001"
         value={betaInput}
-        className="w-22 text-base px-3 py-2 font-semibold text-slate-800 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-white border border-gray-300 rounded-lg"
+        className="w-22 text-base px-3 py-1 font-semibold text-slate-800 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-white border border-slate-400 rounded-lg"
         onKeyDown={(e) => handleNumberKeyDown(e, false)}
         onChange={(e) => {
           handleNumberValidation(
@@ -266,14 +262,6 @@ export const ChatFooterForm = ({
         }}
       />
     </div>
-    <button
-      type="button"
-      disabled={!betaInput || loading}
-      onClick={onCalculate}
-      className="m-auto flex-1 rounded-lg bg-blue-600 p-3 text-[11px] font-bold text-white shadow-sm transition-all hover:bg-blue-700 cursor-pointer h-fit"
-    >
-      Calcula y compara tu WACC
-    </button>
   </div>
 );
 

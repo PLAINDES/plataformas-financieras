@@ -113,6 +113,7 @@ const KapitalPage: React.FC = () => {
   const [analysisDC, setAnalysisDC] = useState("");
   const [analysisKd, setAnalysisKd] = useState("");
   const [analysisCurrency, setAnalysisCurrency] = useState("Dólares");
+  const [betaInput, setBetaInput] = useState("");
   const [toasts, setToasts] = useState<
     Array<{ id: string; type: ToastType; message: string }>
   >([]);
@@ -375,12 +376,12 @@ const KapitalPage: React.FC = () => {
         formData={form.formData}
         isWaccCalculated={calc.isWaccCalculated}
         isOpen={true}
-        setIsOpen={() => {}}
-        onCalculateWacc={(beta: string) => calc.handleSubmit(undefined, beta)}
         onOpenModal={(data, actions) => {
           setModalData(data);
           setModalActions(actions);
         }}
+        betaInput={betaInput}
+        setBetaInput={setBetaInput}
       />
     ) : null;
 
@@ -392,6 +393,9 @@ const KapitalPage: React.FC = () => {
           onClose={() => setIsReportViewerOpen(false)}
           reportProductId={selectedReportProductId}
           calculationId={calc.currentCalculation?.id}
+          isSessionFresh={calc.isSessionFresh}
+          setIsSessionFresh={calc.setIsSessionFresh}
+          prewarmedSessionId={prewarmedSessionId}
         />
       ) : (
         <KapitalResults
@@ -479,7 +483,7 @@ const KapitalPage: React.FC = () => {
           <FormSidebar
             formData={form.formData}
             onInputChange={form.handleInputChange}
-            onSubmit={calc.handleSubmit}
+            onSubmit={(e) => calc.handleSubmit(e, betaInput)}
             loading={calc.isLoading}
             isWaccCalculated={calc.isWaccCalculated}
             dates={form.dynamicDates.length > 0 ? form.dynamicDates : []}

@@ -155,133 +155,138 @@ export const PlantillasMaestrasPage = () => {
             </p>
           </div>
         ) : (
-          <div className="bg-white shadow-sm rounded-lg overflow-x-auto border border-gray-200 w-full">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    #
-                  </th>
-                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nombre
-                  </th>
-                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Predeterminada
-                  </th>
-                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Archivo OneDrive
-                  </th>
-                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Creado
-                  </th>
-                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              {/* Lista de Plantillas maestras */}
-              <tbody className="bg-white divide-y divide-gray-200">
-                {templates.map((t, index) => (
-                  <tr key={t.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900">
-                      {index + 1}
-                    </td>
-                    <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900">
-                      <div className="font-medium text-gray-900">
-                        {t.nombre}
-                      </div>
-                      {t.description && (
-                        <div className="text-xs text-gray-400 truncate max-w-xs">
-                          {t.description}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-center">
-                      <button
-                        onClick={() => handleSetDefault(t.id)}
-                        disabled={t.is_default || settingDefaultId === t.id}
-                        title={
-                          t.is_default
-                            ? "Ya es la plantilla predeterminada"
-                            : "Hacer predeterminada"
-                        }
-                        className="group inline-flex items-center justify-center transition-colors disabled:opacity-100"
-                      >
-                        {settingDefaultId === t.id ? (
-                          <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
-                        ) : t.is_default ? (
-                          <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                        ) : (
-                          <Circle className="w-6 h-6 text-gray-300 group-hover:text-emerald-400" />
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900">
-                      {t.onedrive_filename ? (
-                        <span
-                          className="flex items-center gap-1.5 text-xs text-blue-600 font-medium truncate max-w-48"
-                          title={t.onedrive_filename}
-                        >
-                          <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
-                          <span className="truncate">
-                            {t.original_filename || t.onedrive_filename}
-                          </span>
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-400">
-                          Sin archivo
-                        </span>
-                      )}
-                    </td>
-                    {/* Creado */}
-                    <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900">
-                      {formatDate(t.created_at)}
-                    </td>
-                    {/* Acciones */}
-                    <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => handleViewCodes(t.id, t.nombre)}
-                          title="Ver códigos y gráficos"
-                          className="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 p-1.5 rounded-md transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-
-                        <button
-                          onClick={() => handleDownload(t)}
-                          title={
-                            t.onedrive_item_id
-                              ? "Descargar de OneDrive"
-                              : "Sin archivo en OneDrive"
-                          }
-                          disabled={!t.onedrive_item_id}
-                          className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-md transition-colors disabled:opacity-30 disabled:hover:bg-indigo-50"
-                        >
-                          <Download className="w-4 h-4" />
-                        </button>
-
-                        <button
-                          onClick={() => openEdit(t)}
-                          title="Editar plantilla"
-                          className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-md transition-colors"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-
-                        <button
-                          onClick={() => setDeleteConfirmId(t.id)}
-                          title="Eliminar"
-                          className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-1.5 rounded-md transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
+          <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      #
+                    </th>
+                    <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Nombre
+                    </th>
+                    <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Predeterminada
+                    </th>
+                    <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Archivo OneDrive
+                    </th>
+                    <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Creado
+                    </th>
+                    <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Acciones
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                {/* Lista de Plantillas maestras */}
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {templates.map((t, index) => (
+                    <tr
+                      key={t.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900">
+                        {index + 1}
+                      </td>
+                      <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900">
+                        <div className="font-medium text-gray-900">
+                          {t.nombre}
+                        </div>
+                        {t.description && (
+                          <div className="text-xs text-gray-400 truncate max-w-40">
+                            {t.description}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-center">
+                        <button
+                          onClick={() => handleSetDefault(t.id)}
+                          disabled={t.is_default || settingDefaultId === t.id}
+                          title={
+                            t.is_default
+                              ? "Ya es la plantilla predeterminada"
+                              : "Hacer predeterminada"
+                          }
+                          className="group inline-flex items-center justify-center transition-colors disabled:opacity-100"
+                        >
+                          {settingDefaultId === t.id ? (
+                            <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+                          ) : t.is_default ? (
+                            <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                          ) : (
+                            <Circle className="w-6 h-6 text-gray-300 group-hover:text-emerald-400" />
+                          )}
+                        </button>
+                      </td>
+                      <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900">
+                        {t.onedrive_filename ? (
+                          <span
+                            className="flex items-center gap-1.5 text-xs text-blue-600 font-medium truncate max-w-48"
+                            title={t.onedrive_filename}
+                          >
+                            <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">
+                              {t.original_filename || t.onedrive_filename}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">
+                            Sin archivo
+                          </span>
+                        )}
+                      </td>
+                      {/* Creado */}
+                      <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900">
+                        {formatDate(t.created_at)}
+                      </td>
+                      {/* Acciones */}
+                      <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => handleViewCodes(t.id, t.nombre)}
+                            title="Ver códigos y gráficos"
+                            className="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 p-1.5 rounded-md transition-colors"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={() => handleDownload(t)}
+                            title={
+                              t.onedrive_item_id
+                                ? "Descargar de OneDrive"
+                                : "Sin archivo en OneDrive"
+                            }
+                            disabled={!t.onedrive_item_id}
+                            className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-md transition-colors disabled:opacity-30 disabled:hover:bg-indigo-50"
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={() => openEdit(t)}
+                            title="Editar plantilla"
+                            className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-md transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={() => setDeleteConfirmId(t.id)}
+                            title="Eliminar"
+                            className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-1.5 rounded-md transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

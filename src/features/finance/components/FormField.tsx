@@ -164,7 +164,7 @@ export const FormField: React.FC<FormFieldProps> = ({
           <div ref={containerRef} className="relative">
             <button
               type="button"
-              className={`w-full rounded border border-gray-300 px-2 py-1.5 pr-16 text-left text-sm focus:border-valora-primary ${
+              className={`w-full rounded border border-gray-300 px-2 py-1.25 pr-16 text-left text-sm focus:border-valora-primary ${
                 disabled
                   ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                   : "cursor-pointer"
@@ -215,7 +215,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                 <div className="border-b border-gray-100 p-2">
                   <input
                     type="text"
-                    className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:border-valora-primary"
+                    className="w-full rounded border border-gray-300 px-2 py-1.25 text-sm focus:border-valora-primary"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     autoComplete="off"
@@ -224,7 +224,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                 </div>
                 <div className="max-h-52 overflow-auto">
                   {filteredOptions.length === 0 ? (
-                    <div className="px-2 py-1.5 text-gray-500">
+                    <div className="px-2 py-1.25 text-gray-500">
                       Sin resultados
                     </div>
                   ) : (
@@ -234,7 +234,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                         <button
                           key={option}
                           type="button"
-                          className="w-full px-2 py-1.5 text-left hover:bg-sky-50"
+                          className="w-full px-2 py-1.25 text-left hover:bg-sky-50"
                           onMouseDown={(event) => event.preventDefault()}
                           onClick={() => handleSelect(option)}
                         >
@@ -259,7 +259,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                   name={prefixSelect.name}
                   value={prefixSelect.value}
                   onChange={onChange}
-                  className={`px-0.5 py-1.5 text-sm border-r border-gray-300 outline-none focus:outline-none text-wrap ${
+                  className={`px-0.5 py-1.25 text-sm border-r border-gray-300 outline-none focus:outline-none text-wrap ${
                     disabled
                       ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                       : "bg-gray-50 cursor-pointer hover:bg-gray-100"
@@ -279,7 +279,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                   min={min}
                   max={max}
                   step={step}
-                  className={`w-full flex-1 px-2 py-1.5 text-[13px] sm:text-sm outline-none focus:outline-none bg-transparent
+                  className={`w-full flex-1 px-2 py-1.25 text-[13px] sm:text-sm outline-none focus:outline-none bg-transparent
                     ${readOnly || disabled ? "bg-gray-200 text-gray-500 cursor-not-allowed" : ""} 
                     ${type === "number" ? "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" : ""}
                   `}
@@ -304,7 +304,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                 )}
               </div>
               {suffix && (
-                <span className="text-sm text-gray-600 px-2 py-1.5 bg-slate-100/80 border-l border-gray-300 whitespace-nowrap flex items-center justify-center gap-1">
+                <span className="text-sm text-gray-600 px-2 py-1.25 bg-slate-100/80 border-l border-gray-300 whitespace-nowrap flex items-center justify-center gap-1">
                   {suffix}
                 </span>
               )}

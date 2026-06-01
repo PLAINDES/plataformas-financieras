@@ -191,29 +191,31 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
             {/* COLUMNA DERECHA: Filas Actual y Sensibilización */}
             <div className="flex flex-col gap-6 w-full">
               {/* FILA 1: DATOS ORIGINALES BASE */}
-              <div className="flex flex-col md:flex-row items-center justify-center xl:justify-start gap-4 w-full">
+              <div className="flex flex-col xl:flex-row items-center justify-center mt-4 xl:mt-0 xl:justify-start gap-4 w-full">
                 <BoaIndicator
                   value={results.boa ? results.boa.toFixed(2) : "0.00"}
                 />
-                <FinancieraCard
-                  title="Mercado Emergente"
-                  data={emergentOriginal}
-                  isEmpresa={false}
-                  resultCurrency={resultCurrency}
-                  onResultCurrencyChange={onResultCurrencyChange}
-                  compact={true}
-                />
-                {showCompanyCard && empresaOriginal && (
+                <section className="flex flex-col md:flex-row items-center justify-center w-fit xl:justify-start gap-4 ">
                   <FinancieraCard
-                    title="Tu Empresa"
-                    data={empresaOriginal}
-                    isEmpresa={true}
+                    title="Mercado Emergente"
+                    data={emergentOriginal}
+                    isEmpresa={false}
                     resultCurrency={resultCurrency}
                     onResultCurrencyChange={onResultCurrencyChange}
                     compact={true}
-                    localCurrency={localCurrency}
                   />
-                )}
+                  {showCompanyCard && empresaOriginal && (
+                    <FinancieraCard
+                      title="Tu Empresa"
+                      data={empresaOriginal}
+                      isEmpresa={true}
+                      resultCurrency={resultCurrency}
+                      onResultCurrencyChange={onResultCurrencyChange}
+                      compact={true}
+                      localCurrency={localCurrency}
+                    />
+                  )}
+                </section>
               </div>
 
               {/* SELECTOR DE SENSIBILIZACIÓN */}
@@ -241,31 +243,33 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
 
               {/* FILA 2: DATOS SENSIBILIZADOS */}
               {sensibilizaciones.length > 0 ? (
-                <div className="flex flex-col md:flex-row items-center justify-center xl:justify-start gap-4 w-full">
+                <div className="flex flex-col xl:flex-row items-center justify-center xl:justify-start gap-4 w-full">
                   <BoaIndicator
                     value={
                       selectedSens?.boa ? selectedSens.boa.toFixed(2) : "0.00"
                     }
                   />
-                  <FinancieraCard
-                    title="Mercado Emergente"
-                    data={emergentSens}
-                    isEmpresa={false}
-                    resultCurrency={resultCurrency}
-                    onResultCurrencyChange={onResultCurrencyChange}
-                    compact={true}
-                  />
-                  {showCompanyCard && empresaSens && (
+                  <section className="flex flex-col md:flex-row items-center justify-center w-fit xl:justify-start gap-4 ">
                     <FinancieraCard
-                      title="Tu Empresa"
-                      data={empresaSens}
-                      isEmpresa={true}
+                      title="Mercado Emergente"
+                      data={emergentSens}
+                      isEmpresa={false}
                       resultCurrency={resultCurrency}
                       onResultCurrencyChange={onResultCurrencyChange}
                       compact={true}
-                      localCurrency={localCurrency}
                     />
-                  )}
+                    {showCompanyCard && empresaSens && (
+                      <FinancieraCard
+                        title="Tu Empresa"
+                        data={empresaSens}
+                        isEmpresa={true}
+                        resultCurrency={resultCurrency}
+                        onResultCurrencyChange={onResultCurrencyChange}
+                        compact={true}
+                        localCurrency={localCurrency}
+                      />
+                    )}
+                  </section>
                 </div>
               ) : (
                 <div className="w-full text-center text-gray-500 py-8">
@@ -276,7 +280,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
             </div>
           </div>
         ) : (
-          <section className="flex flex-col md:flex-row justify-center items-center w-full gap-4 mx-auto h-full">
+          <section className="flex flex-col flex-wrap md:flex-row justify-center items-center w-full gap-4 mx-auto h-full">
             <FinancieraCard
               title="Mercado Desarrollado"
               data={developedData}

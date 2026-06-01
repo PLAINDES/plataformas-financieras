@@ -154,139 +154,143 @@ export const TemplateCodesSideBar: React.FC<TemplateCodesSideBarProps> = ({
   );
 
   return (
-    <aside className="w-full lg:w-72 xl:w-80 shrink-0">
-      <p className="mb-3 text-[14px] font-bold tracking-widest text-slate-700 uppercase">
-        Estructura de Tablas y Gráficos
-      </p>
-      <div className="flex flex-col gap-3">
-        {/* Campos */}
-        <CollapsiblePanel title="Campos" defaultOpen>
-          <div className="px-2 pb-2">
-            <Input
-              value={fieldsQuery}
-              onChange={(e) => setFieldsQuery(e.target.value)}
-              placeholder="Buscar por código o nombre..."
-              className="h-10 text-sm"
-            />
-          </div>
-          {codesLoading ? (
-            <div className="flex items-center justify-center p-6 text-sm text-slate-400">
-              Cargando...
+    <aside className="w-full shrink-0 lg:w-72 xl:w-80 lg:sticky lg:top-4 lg:self-start">
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm lg:max-h-[calc(100vh-2rem)] lg:overflow-hidden">
+        <div className="border-b border-slate-100 px-4 py-3">
+          <p className="text-[14px] font-bold tracking-widest text-slate-700 uppercase">
+            Estructura de Tablas y Gráficos
+          </p>
+        </div>
+        <div className="flex flex-col gap-3 p-3 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
+          {/* Campos */}
+          <CollapsiblePanel title="Campos" defaultOpen>
+            <div className="px-2 pb-2">
+              <Input
+                value={fieldsQuery}
+                onChange={(e) => setFieldsQuery(e.target.value)}
+                placeholder="Buscar por código o nombre..."
+                className="h-10 text-sm"
+              />
             </div>
-          ) : filteredFields.length > 0 ? (
-            <div className="space-y-1">
-              {fieldsVisible.map((tc) => (
-                <FieldItem
-                  key={tc.id + tc.code}
-                  field={tc}
-                  onCodeClick={onAddCode}
-                />
-              ))}
-              {filteredFields.length > PAGE_SIZE && (
-                <div className="mt-2 flex items-center justify-between px-1">
-                  <button
-                    type="button"
-                    onClick={() => setFieldsPage((p) => Math.max(0, p - 1))}
-                    disabled={fieldsPage === 0}
-                    className="text-xs text-slate-500 disabled:opacity-40"
-                  >
-                    Anterior
-                  </button>
-                  <div className="text-xs text-slate-400">
-                    {fieldsPage + 1} /{" "}
-                    {Math.ceil(filteredFields.length / PAGE_SIZE)}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFieldsPage((p) =>
-                        Math.min(
-                          Math.ceil(filteredFields.length / PAGE_SIZE) - 1,
-                          p + 1
+            {codesLoading ? (
+              <div className="flex items-center justify-center p-6 text-sm text-slate-400">
+                Cargando...
+              </div>
+            ) : filteredFields.length > 0 ? (
+              <div className="space-y-1">
+                {fieldsVisible.map((tc) => (
+                  <FieldItem
+                    key={tc.id + tc.code}
+                    field={tc}
+                    onCodeClick={onAddCode}
+                  />
+                ))}
+                {filteredFields.length > PAGE_SIZE && (
+                  <div className="mt-2 flex items-center justify-between px-1">
+                    <button
+                      type="button"
+                      onClick={() => setFieldsPage((p) => Math.max(0, p - 1))}
+                      disabled={fieldsPage === 0}
+                      className="text-xs text-slate-500 disabled:opacity-40"
+                    >
+                      Anterior
+                    </button>
+                    <div className="text-xs text-slate-400">
+                      {fieldsPage + 1} /{" "}
+                      {Math.ceil(filteredFields.length / PAGE_SIZE)}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFieldsPage((p) =>
+                          Math.min(
+                            Math.ceil(filteredFields.length / PAGE_SIZE) - 1,
+                            p + 1
+                          )
                         )
-                      )
-                    }
-                    disabled={
-                      (fieldsPage + 1) * PAGE_SIZE >= filteredFields.length
-                    }
-                    className="text-xs text-slate-500 disabled:opacity-40"
-                  >
-                    Siguiente
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <p className="px-3 py-4 text-center text-[10px] text-slate-400">
-              Sin campos en la plantilla.
-            </p>
-          )}
-        </CollapsiblePanel>
+                      }
+                      disabled={
+                        (fieldsPage + 1) * PAGE_SIZE >= filteredFields.length
+                      }
+                      className="text-xs text-slate-500 disabled:opacity-40"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="px-3 py-4 text-center text-[10px] text-slate-400">
+                Sin campos en la plantilla.
+              </p>
+            )}
+          </CollapsiblePanel>
 
-        {/* Tablas / Gráficos */}
-        <CollapsiblePanel title="Tablas / Gráficos" defaultOpen={false}>
-          <div className="px-2 pb-2">
-            <Input
-              value={chartsQuery}
-              onChange={(e) => setChartsQuery(e.target.value)}
-              placeholder="Buscar gráficos o tablas..."
-              className="h-10 text-sm"
-            />
-          </div>
-          {codesLoading ? (
-            <div className="flex items-center justify-center p-6 text-sm text-slate-400">
-              Cargando...
+          {/* Tablas / Gráficos */}
+          <CollapsiblePanel title="Tablas / Gráficos" defaultOpen={false}>
+            <div className="px-2 pb-2">
+              <Input
+                value={chartsQuery}
+                onChange={(e) => setChartsQuery(e.target.value)}
+                placeholder="Buscar gráficos o tablas..."
+                className="h-10 text-sm"
+              />
             </div>
-          ) : filteredCharts.length > 0 ? (
-            <div className="space-y-1">
-              {chartsVisible.map((tc) => (
-                <FieldItem
-                  key={tc.id + tc.code}
-                  field={tc}
-                  largeImage
-                  onCodeClick={onAddCode}
-                />
-              ))}
-              {filteredCharts.length > PAGE_SIZE && (
-                <div className="mt-2 flex items-center justify-between px-1">
-                  <button
-                    type="button"
-                    onClick={() => setChartsPage((p) => Math.max(0, p - 1))}
-                    disabled={chartsPage === 0}
-                    className="text-xs text-slate-500 disabled:opacity-40"
-                  >
-                    Anterior
-                  </button>
-                  <div className="text-xs text-slate-400">
-                    {chartsPage + 1} /{" "}
-                    {Math.ceil(filteredCharts.length / PAGE_SIZE)}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setChartsPage((p) =>
-                        Math.min(
-                          Math.ceil(filteredCharts.length / PAGE_SIZE) - 1,
-                          p + 1
+            {codesLoading ? (
+              <div className="flex items-center justify-center p-6 text-sm text-slate-400">
+                Cargando...
+              </div>
+            ) : filteredCharts.length > 0 ? (
+              <div className="space-y-1">
+                {chartsVisible.map((tc) => (
+                  <FieldItem
+                    key={tc.id + tc.code}
+                    field={tc}
+                    largeImage
+                    onCodeClick={onAddCode}
+                  />
+                ))}
+                {filteredCharts.length > PAGE_SIZE && (
+                  <div className="mt-2 flex items-center justify-between px-1">
+                    <button
+                      type="button"
+                      onClick={() => setChartsPage((p) => Math.max(0, p - 1))}
+                      disabled={chartsPage === 0}
+                      className="text-xs text-slate-500 disabled:opacity-40"
+                    >
+                      Anterior
+                    </button>
+                    <div className="text-xs text-slate-400">
+                      {chartsPage + 1} /{" "}
+                      {Math.ceil(filteredCharts.length / PAGE_SIZE)}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setChartsPage((p) =>
+                          Math.min(
+                            Math.ceil(filteredCharts.length / PAGE_SIZE) - 1,
+                            p + 1
+                          )
                         )
-                      )
-                    }
-                    disabled={
-                      (chartsPage + 1) * PAGE_SIZE >= filteredCharts.length
-                    }
-                    className="text-xs text-slate-500 disabled:opacity-40"
-                  >
-                    Siguiente
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <p className="px-3 py-4 text-center text-[10px] text-slate-400">
-              Sin elementos configurados.
-            </p>
-          )}
-        </CollapsiblePanel>
+                      }
+                      disabled={
+                        (chartsPage + 1) * PAGE_SIZE >= filteredCharts.length
+                      }
+                      className="text-xs text-slate-500 disabled:opacity-40"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="px-3 py-4 text-center text-[10px] text-slate-400">
+                Sin elementos configurados.
+              </p>
+            )}
+          </CollapsiblePanel>
+        </div>
       </div>
     </aside>
   );

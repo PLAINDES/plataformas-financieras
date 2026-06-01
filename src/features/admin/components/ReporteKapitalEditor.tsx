@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronUp, ChevronDown, BarChart2, Home } from "lucide-react";
 import Breadcrumbs from "@/shared/components/Breadcrumbs";
@@ -7,14 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import RichTextEditor from "@/shared/components/ui/TextEditor";
-import { MainService } from "@/shared/services/main.service";
-import {
-  generateAndUploadReportPdf,
-  previewReportPdf,
-  replaceCodesWithValues,
-} from "../utils/pdfGenerator";
+
 import { TemplateCodesSideBar } from "./TemplateCodesSideBar";
-import type { Report, TemplateCodeBasic, Cover } from "@/shared/types";
 import {
   Select,
   SelectContent,
@@ -22,84 +16,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface ReportFormData {
-  nombre: string;
-  activo: boolean;
-  precio: number;
-  moneda: string;
-  sectorEmpresa: string;
-  bonoAjustado: string;
-  contenido: string;
-  contentEditor: string;
-  linkPago: string;
-  portadaId: number | null;
-  type: "valora" | "kapital";
-}
-
-const INITIAL_FORM: ReportFormData = {
-  nombre: "",
-  activo: true,
-  precio: 0,
-  moneda: "",
-  sectorEmpresa: "",
-  bonoAjustado: "",
-  contenido: "",
-  contentEditor: "",
-  linkPago: "",
-  portadaId: null,
-  type: "kapital",
-};
+import { useReportEditor } from "../hooks/useReportEditor";
 
 const DEFAULT_CONTENT = "";
-
-function reportToForm(report: Report): ReportFormData {
-  return {
-    nombre: report.nombre,
-    activo: report.activo,
-    precio: report.precio ?? 0,
-    moneda: report.moneda,
-    sectorEmpresa: report.sector_empresa ?? "",
-    bonoAjustado: report.bono_ajustado ?? "",
-    contenido: report.contenido ?? "",
-    contentEditor: (report as any).contentEditor ?? "",
-    linkPago: report.link_pago ?? "",
-    portadaId: report.portada?.id ?? null,
-    type: report.type ?? "kapital",
-  };
-}
 
 export const ReporteKapitalEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const isEdit = Boolean(id);
 
-  const [editorKey, setEditorKey] = useState(0);
-  const [editorContent, setEditorContent] = useState<string>("");
-  const [contentReady, setContentReady] = useState(false);
+  const {
+    isEdit,
+    form,
+    covers,
+    loading,
+    saving,
+    error,
+    editorKey,
+    editorContent,
+    contentReady,
+    templateCodes,
+    codesLoading,
+    selectedCoverUrl,
+    handleChange,
+    handleAddCode,
+    handleSave,
+    handlePreview,
+    setEditorContent,
+  } = useReportEditor(id);
 
-  const [form, setForm] = useState<ReportFormData>(INITIAL_FORM);
-  const [report, setReport] = useState<Report | null>(null);
-  const [covers, setCovers] = useState<Cover[]>([]);
-  const [loading, setLoading] = useState(isEdit);
   const [info, setInfo] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-
-  const [currentTemplateCodes, setCurrentTemplateCodes] = useState<
-    TemplateCodeBasic[] | null
-  >(null);
-  const [codesLoading, setCodesLoading] = useState(false);
-
-  const templateCodes =
-    report?.template?.template_codes ?? currentTemplateCodes ?? [];
-
-  const portadaUrl = report?.portada?.portada?.url;
-  const selectedCover = form.portadaId
-    ? covers.find((c) => c.id === form.portadaId)
-    : undefined;
-  const selectedCoverUrl = selectedCover?.portada?.url ?? portadaUrl ?? null;
 
   const breadcrumbItems = [
     {
@@ -114,198 +60,10 @@ export const ReporteKapitalEditor: React.FC = () => {
     { label: isEdit ? form.nombre || "Editar reporte" : "Nuevo reporte" },
   ];
 
-  // Load covers list
-  useEffect(() => {
-    MainService.getCovers().then(setCovers);
-  }, []);
-
-  // Load current master template codes (fallback when report has no template)
-  useEffect(() => {
-    setCodesLoading(true);
-    MainService.getCurrentMasterTemplateCodes()
-      .then((res) => {
-        const codes: TemplateCodeBasic[] = [];
-        const grouped = res?.extracted_codes || {};
-        ["kapital", "valora"].forEach((t) => {
-          const list = grouped[t] || [];
-          for (const item of list) {
-            if (!item) continue;
-
-            if (typeof item === "string") {
-              codes.push({
-                id: -1,
-                nombre: item,
-                code: item,
-                type: t as "kapital" | "valora",
-                value: null,
-                hoja: null,
-              });
-            } else if (item.code) {
-              const nombre =
-                item.nombre ?? item.original_name ?? item.filename ?? item.code;
-
-              const entry: any = {
-                id: item.id ?? -1,
-                nombre,
-                code: item.code,
-                type: t as "kapital" | "valora",
-                hoja: item.hoja ?? null,
-                value: item.value ?? null,
-              };
-              if (item.template_code_image_url)
-                entry.template_code_image_url = item.template_code_image_url;
-              codes.push(entry);
-            }
-          }
-        });
-        setCurrentTemplateCodes(codes);
-      })
-      .catch(() => setCurrentTemplateCodes([]))
-      .finally(() => setCodesLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (!id) {
-      setContentReady(true);
-      return;
-    }
-
-    setLoading(true);
-
-    MainService.getReport(Number(id))
-      .then(async (r) => {
-        setReport(r);
-        setForm(reportToForm(r));
-
-        if (r.file) {
-          try {
-            const html = await MainService.getReportContent(Number(id));
-            setEditorContent(html || DEFAULT_CONTENT);
-          } catch {
-            setEditorContent(DEFAULT_CONTENT);
-          }
-        } else {
-          // if backend already has editor content persisted on the report row, use it
-          setEditorContent((r as any).contentEditor ?? DEFAULT_CONTENT);
-        }
-
-        setEditorKey((k) => k + 1);
-        setContentReady(true);
-      })
-      .catch(() => setError("No se pudo cargar el reporte."))
-      .finally(() => setLoading(false));
-  }, [id]);
-
-  const handleChange = <K extends keyof ReportFormData>(
-    key: K,
-    value: ReportFormData[K]
-  ): void => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleAddCode = (codeObj: TemplateCodeBasic): void => {
-    let displayValue = "N/D";
-    if (codeObj.value !== undefined && codeObj.value !== null) {
-      displayValue = !isNaN(Number(codeObj.value))
-        ? Number(codeObj.value).toFixed(2)
-        : String(codeObj.value);
-    }
-
-    const hoverText = `${codeObj.nombre}: ${displayValue}`;
-
-    // Span visual para el editor. Será removido por replaceCodesWithValues al generar el PDF.
-    const codeHtml = `<span class="editor-code-tag" title="${hoverText}" style="background-color: #f1f5f9; color: #3b82f6; padding: 2px 6px; border-radius: 4px; border: 1px solid #bfdbfe; font-family: monospace; font-size: 11px; cursor: help;">${codeObj.code}</span>`;
-
-    setEditorContent((prevContent) => {
-      const trimmed = prevContent.trim();
-      const lastTagMatch = trimmed.match(/(<\/[a-zA-Z0-9]+>)$/i);
-
-      if (lastTagMatch && lastTagMatch.index !== undefined) {
-        return (
-          trimmed.substring(0, lastTagMatch.index) +
-          codeHtml +
-          trimmed.substring(lastTagMatch.index)
-        );
-      }
-      return prevContent + codeHtml;
-    });
-    setEditorKey((k) => k + 1);
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-
-    try {
-      let reportId = id ? Number(id) : undefined;
-
-      const reportPayload = {
-        nombre: form.nombre,
-        precio: form.precio,
-        moneda: form.moneda,
-        sector_empresa: form.sectorEmpresa,
-        bono_ajustado: form.bonoAjustado,
-        contenido: form.contenido,
-        contentEditor: editorContent,
-        link_pago: form.linkPago,
-        activo: form.activo,
-        portada_id: form.portadaId,
-        type: form.type,
-      };
-
-      if (!reportId) {
-        // create new report first
-        const created = await MainService.createReport(reportPayload);
-        reportId = created.id;
-      } else {
-        await MainService.updateReport(Number(reportId), reportPayload);
-      }
-
-      if (reportId) {
-        const finalHtmlForPdf = replaceCodesWithValues(
-          editorContent,
-          templateCodes
-        );
-        await generateAndUploadReportPdf(
-          reportId,
-          finalHtmlForPdf,
-          editorContent
-        );
-      }
-
-      navigate("/admin/reportes");
-    } catch (err: any) {
-      console.error("Error en handleSave:", err);
-      try {
-        if (err && err.message) console.error("message:", err.message);
-        if (err && err.stack) console.error("stack:", err.stack);
-        // attempt to stringify if it's a plain object
-        if (typeof err === "object")
-          console.error("error object:", JSON.stringify(err));
-      } catch (e) {
-        // ignore stringify errors
-      }
-      alert(
-        "Error al guardar el reporte. Revisa la consola para más detalles."
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handlePreview = async () => {
-    setSaving(true);
-    try {
-      const finalHtmlForPdf = replaceCodesWithValues(
-        editorContent,
-        templateCodes
-      );
-      await previewReportPdf(finalHtmlForPdf);
-    } catch (err) {
-      console.error("Error previsualizando:", err);
-      alert("Error al generar la previsualización.");
-    } finally {
-      setSaving(false);
-    }
+  const onSaveClick = async () => {
+    const success = await handleSave();
+    if (success) navigate("/admin/reportes");
+    else alert("Error al guardar el reporte. Revisa la consola.");
   };
 
   if (loading) {
@@ -699,7 +457,7 @@ export const ReporteKapitalEditor: React.FC = () => {
               <Button
                 size="sm"
                 className="bg-blue-600 text-sm h-9 px-4 text-white hover:bg-blue-700"
-                onClick={handleSave}
+                onClick={onSaveClick}
                 disabled={saving}
               >
                 {saving ? "Guardando..." : "Guardar reporte"}
