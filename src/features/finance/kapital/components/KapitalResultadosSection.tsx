@@ -64,15 +64,9 @@ export const KapitalResultadosSection: React.FC<
     });
   }
 
-  // LÓGICA DE GRID
-  const gridContainerClass =
-    cards.length === 3
-      ? "max-w-7xl lg:grid-cols-2 xl:grid-cols-3" //xl:grid-cols-3 lg:grid-cols-2
-      : "max-w-4xl md:grid-cols-1"; //lg:grid-cols-2 md:grid-cols-1
-
   return (
     <>
-      <header className="max-lg:text-center mt-2 lg:mt-0 flex flex-col lg:flex-row justify-between items-center w-full gap-4">
+      <header className="max-lg:text-center mt-2 lg:mt-0 flex flex-col xl:flex-row justify-between items-center w-full gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">
             Resultados generales
@@ -115,9 +109,7 @@ export const KapitalResultadosSection: React.FC<
           </button>
         )}
       </header>
-      <section
-        className={`grid grid-cols-1 md:grid-cols-2 ${gridContainerClass} w-full gap-6 mx-auto justify-center`}
-      >
+      <section className="flex flex-col flex-wrap md:flex-row justify-center items-center w-full gap-4 mt-6 mx-auto h-full">
         {cards.map((card) => (
           <FinancieraCard
             key={card.id}

@@ -137,7 +137,7 @@ export function SimpleTable<T extends object>({
                 <th
                   key={index}
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-3 md:px-6 py-1.5 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
                   {col.header}
                 </th>
@@ -145,7 +145,7 @@ export function SimpleTable<T extends object>({
               {(onDelete || onEdit) && (
                 <th
                   scope="col"
-                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-3 md:px-6 py-1.5 md:py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
                   Acciones
                 </th>
@@ -157,7 +157,7 @@ export function SimpleTable<T extends object>({
               <tr>
                 <td
                   colSpan={columns.length + (onDelete || onEdit ? 1 : 0)}
-                  className="px-6 py-10 text-center text-sm text-gray-500"
+                  className="px-3 md:px-6 py-10 text-center text-sm text-gray-500"
                 >
                   <div className="flex justify-center items-center">
                     <svg
@@ -188,7 +188,7 @@ export function SimpleTable<T extends object>({
               <tr>
                 <td
                   colSpan={columns.length + (onDelete || onEdit ? 1 : 0)}
-                  className="px-6 py-10 text-center text-sm text-gray-500"
+                  className="px-3 md:px-6 py-5 md:py-10 text-center text-sm text-gray-500"
                 >
                   {searchQuery
                     ? "No se encontraron resultados para su búsqueda"
@@ -205,7 +205,7 @@ export function SimpleTable<T extends object>({
                   {columns.map((col, colIndex) => (
                     <td
                       key={colIndex}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                      className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm text-gray-900"
                     >
                       {col.cell
                         ? col.cell(item, itemIndex)
@@ -213,7 +213,7 @@ export function SimpleTable<T extends object>({
                     </td>
                   ))}
                   {(onDelete || onEdit) && (
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end gap-2">
                         {onEdit && (
                           <button
