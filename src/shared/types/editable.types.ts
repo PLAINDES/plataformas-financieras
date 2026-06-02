@@ -5,6 +5,7 @@ export interface EditableContent {
   type: "text" | "richtext" | "image" | "button";
   value: string;
   section: string;
+  data?: any;
 }
 
 export interface CollectionItem {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { EditableText } from "@/shared/components/editable/EditableText";
 import {
   EditableCollection,
@@ -10,6 +10,7 @@ import type {
   CollectionItem,
 } from "@/shared/types/editable.types";
 import { useAuthContext } from "../../auth/hooks/useAuthContext";
+import { Loader2, UploadCloud } from "lucide-react";
 
 interface TeamMember extends CollectionItem {
   name: string;
@@ -21,6 +22,8 @@ interface TeamMember extends CollectionItem {
 interface TeamSectionProps {
   content?: {
     title?: string;
+    subtitle?: string;
+    team?: string;
     authors?: TeamMember[];
     developmentTeam?: TeamMember[];
     collaborators?: TeamMember[];
@@ -29,19 +32,21 @@ interface TeamSectionProps {
   onSaveCollection?: <T extends CollectionItem>(
     collectionData: EditableCollectionData<T>
   ) => Promise<void>;
+  onUploadImage?: (file: File, oldUrl?: string) => Promise<string | undefined>;
 }
 
 export default function TeamSection({
   content,
   onSave,
   onSaveCollection,
+  onUploadImage,
 }: TeamSectionProps) {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     authors: false,
     development: false,
     collaborators: false,
   });
-  const { isAdmin: _isAdmin } = useAuthContext();
+  const { isAdmin: _isAdmin, getToken } = useAuthContext();
   void _isAdmin;
 
   const toggleSection = (section: string) => {
@@ -63,6 +68,30 @@ export default function TeamSection({
     }
   };
 
+  const handleSaveTitle = async (updatedText: EditableContent) => {
+    if (!content) return;
+
+    await onSave({
+      ...updatedText,
+      data: {
+        ...content,
+        title: updatedText.value,
+      },
+    });
+  };
+
+  const handleSaveSubtitle = async (updatedText: EditableContent) => {
+    if (!content) return;
+
+    await onSave({
+      ...updatedText,
+      data: {
+        ...content,
+        subtitle: updatedText.value,
+      },
+    });
+  };
+
   const handleSaveDevelopmentTeam = async (
     data: EditableCollectionData<TeamMember>
   ) => {
@@ -78,12 +107,34 @@ export default function TeamSection({
   const handleSaveCollaborators = async (
     data: EditableCollectionData<TeamMember>
   ) => {
+    const deletedItems = (content?.collaborators || []).filter(
+      (oldItem) => !data.items.find((newItem) => newItem.id === oldItem.id)
+    );
+
     if (onSaveCollection) {
-      await onSaveCollection({
-        ...data,
-        id: "team-collaborators",
-        section: "team",
-      });
+      try {
+        await onSaveCollection({
+          ...data,
+          id: "team-collaborators",
+          section: "team",
+        });
+
+        // Eliminar imágenes de S3 para los colaboradores borrados
+        const token = getToken() || undefined;
+        deletedItems.forEach(async (item) => {
+          if (item.image && !item.image.includes("via.placeholder.com")) {
+            try {
+              import("@/shared/services/cms.service").then(({ cmsService }) => {
+                cmsService.deleteImage(item.image!, token);
+              });
+            } catch (err) {
+              console.error("Error eliminando imagen de colaborador:", err);
+            }
+          }
+        });
+      } catch (error) {
+        console.error("Error al guardar colaboradores:", error);
+      }
     }
   };
 
@@ -127,13 +178,24 @@ export default function TeamSection({
           <EditableText
             content={{
               value: content?.title || "",
-              id: "team",
+              id: "title",
               type: "text",
               section: "team",
             }}
-            onSave={onSave}
+            onSave={handleSaveTitle}
             as="h2"
             className="text-xl md:text-3xl font-semibold text-gray-900 mb-2 md:mb-4"
+          />
+          <EditableText
+            content={{
+              value: content?.subtitle || ".",
+              id: "subtitle",
+              type: "text",
+              section: "team",
+            }}
+            onSave={handleSaveSubtitle}
+            as="h3"
+            className="text-sm md:text-lg font-normal text-gray-600"
           />
         </div>
 
@@ -224,6 +286,7 @@ export default function TeamSection({
                   key={index}
                   collaborator={collaborator}
                   helpers={helpers}
+                  onUploadImage={onUploadImage}
                 />
               )}
             />
@@ -400,6 +463,7 @@ export default function TeamSection({
                       key={index}
                       collaborator={collaborator}
                       helpers={helpers}
+                      onUploadImage={onUploadImage}
                     />
                   )}
                 />
@@ -629,11 +693,41 @@ function DevelopmentMemberCard({
 interface CollaboratorCardProps {
   collaborator: TeamMember;
   helpers: any;
+  onUploadImage?: (file: File, oldUrl?: string) => Promise<string | undefined>;
 }
 
-function CollaboratorCard({ collaborator, helpers }: CollaboratorCardProps) {
-  const [editedCollaborator, setEditedCollaborator] = useState(collaborator);
+function CollaboratorCard({
+  collaborator,
+  helpers,
+  onUploadImage,
+}: CollaboratorCardProps) {
   const { isAdmin } = useAuthContext();
+
+  const [editedCollaborator, setEditedCollaborator] = useState(collaborator);
+  const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (!helpers.isEditing) setEditedCollaborator(collaborator);
+  }, [collaborator, helpers.isEditing]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onUploadImage) return;
+
+    setIsUploading(true);
+    try {
+      const newUrl = await onUploadImage(file, editedCollaborator.image);
+      if (newUrl) {
+        setEditedCollaborator({ ...editedCollaborator, image: newUrl });
+      }
+    } catch (error) {
+      console.error("Error al subir:", error);
+      alert("Error al subir la imagen.");
+    } finally {
+      setIsUploading(false);
+      if (e.target) e.target.value = "";
+    }
+  };
 
   if (helpers.isEditing) {
     return (
@@ -684,33 +778,53 @@ function CollaboratorCard({ collaborator, helpers }: CollaboratorCardProps) {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-bold mb-1">
-              URL de Imagen
+            <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-2 ml-1">
+              Foto / Logo del Colaborador
             </label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={editedCollaborator.image || ""}
-              onChange={(e) =>
-                setEditedCollaborator({
-                  ...editedCollaborator,
-                  image: e.target.value,
-                })
-              }
-            />
-            {editedCollaborator.image && (
-              <div className="mt-2">
-                <img
-                  src={editedCollaborator.image}
-                  alt="Preview"
-                  className="max-w-25 max-h-15 object-contain"
-                  onError={(e) => {
-                    e.currentTarget.src =
-                      "https://via.placeholder.com/100x60?text=Error";
-                  }}
+
+            <div className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors relative">
+              {isUploading && (
+                <div className="absolute inset-0 bg-white/80 z-10 flex flex-col items-center justify-center rounded-lg">
+                  <Loader2 className="w-6 h-6 animate-spin text-blue-600 mb-2" />
+                  <span className="text-xs text-blue-600 font-medium">
+                    Subiendo...
+                  </span>
+                </div>
+              )}
+
+              {editedCollaborator.image &&
+              !editedCollaborator.image.includes("via.placeholder.com") ? (
+                <div className="mb-3 w-full flex justify-center">
+                  <img
+                    src={editedCollaborator.image}
+                    alt="Preview"
+                    className="max-h-16 w-auto object-contain filter drop-shadow-sm rounded-md"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        "https://via.placeholder.com/140x40?text=Error";
+                    }}
+                  />
+                </div>
+              ) : (
+                <UploadCloud className="w-8 h-8 text-slate-400 mb-2" />
+              )}
+
+              <label className="cursor-pointer">
+                <span className="bg-white px-3 py-1.5 border border-slate-300 rounded text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-colors">
+                  {editedCollaborator.image &&
+                  !editedCollaborator.image.includes("via.placeholder.com")
+                    ? "Cambiar imagen"
+                    : "Subir archivo"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  disabled={isUploading}
                 />
-              </div>
-            )}
+              </label>
+            </div>
           </div>
           <div className="flex gap-2 justify-end">
             <button
