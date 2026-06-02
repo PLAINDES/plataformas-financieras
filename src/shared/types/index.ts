@@ -25,6 +25,8 @@ export type {
   TokenResponse,
   UserCreate,
   UserUpdate,
+  UserAdminUpdate,
+  PaginatedUserResponse,
 } from "@/features/auth/types/user.types";
 
 export interface Company {
