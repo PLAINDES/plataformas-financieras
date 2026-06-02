@@ -19,6 +19,7 @@ import { ConfiguracionPage } from "./features/admin/pages/ConfiguracionPage";
 import ProyectosUsuarioPage from "./features/finance/components/ProyectosUsuarioPage";
 import { ReporteKapitalEditor } from "./features/admin/components/ReporteKapitalEditor";
 import { KapitalSettingsPage } from "./features/admin/pages/KapitalSettingsPage";
+import { UsersPage } from "./features/admin/pages/UsersPage";
 import { ToastProvider } from "./shared/components/common/ToastProvider";
 
 const COMPANY = {
@@ -107,6 +108,7 @@ function App() {
             path="reportes/:id/editar"
             element={<ReporteKapitalEditor />}
           />
+          <Route path="usuarios" element={<UsersPage />} />
           <Route path="configuraciones" element={<ConfiguracionPage />} />
         </Route>
       </Routes>
