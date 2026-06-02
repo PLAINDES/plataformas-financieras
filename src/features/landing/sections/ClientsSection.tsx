@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { ChevronUp, ChevronDown, Pencil, Trash2 } from "lucide-react";
+import {
+  ChevronUp,
+  ChevronDown,
+  Pencil,
+  Trash2,
+  UploadCloud,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditableText } from "@/shared/components/editable/EditableText";
 import { EditableCollection } from "@/shared/components/editable/EditableCollection";
@@ -30,14 +37,16 @@ interface ClientsSectionProps {
   onSaveCollection?: <T extends CollectionItem>(
     data: EditableCollectionData<T>
   ) => Promise<void>;
+  onUploadImage?: (file: File, oldUrl?: string) => Promise<string | undefined>;
 }
 
 export function ClientsSection({
   content = {},
   onSave,
   onSaveCollection,
+  onUploadImage,
 }: ClientsSectionProps) {
-  const { isAdmin } = useAuthContext();
+  const { isAdmin, getToken } = useAuthContext();
   const [selectedLogoId, setSelectedLogoId] = useState<string | null>(null);
 
   const [items, setItems] = useState<ClientLogoEditable[]>(() =>
@@ -79,11 +88,30 @@ export function ClientsSection({
   const handleSaveClients = async (
     data: EditableCollectionData<ClientLogoEditable>
   ) => {
+    // Identificamos qué logos fueron eliminados para borrarlos del CMS
+    const deletedItems = items.filter(
+      (oldItem) => !data.items.find((newItem) => newItem.id === oldItem.id)
+    );
+
     const previousItems = items;
     setItems(data.items);
+
     if (onSaveCollection) {
       try {
         await onSaveCollection({ ...data, id: "clients-logos" });
+
+        const token = getToken() || undefined;
+        deletedItems.forEach(async (item) => {
+          if (item.imageUrl && !item.imageUrl.includes("via.placeholder.com")) {
+            try {
+              import("@/shared/services/cms.service").then(({ cmsService }) => {
+                cmsService.deleteImage(item.imageUrl, token);
+              });
+            } catch (err) {
+              console.error("No se pudo eliminar la imagen de S3:", err);
+            }
+          }
+        });
       } catch (error) {
         setItems(previousItems);
         console.error("Error al guardar los logos de clientes:", error);
@@ -142,6 +170,12 @@ export function ClientsSection({
               isSelected={selectedLogoId === client.id}
               onSelect={() => setSelectedLogoId(client.id)}
               onDeselect={() => setSelectedLogoId(null)}
+              onUploadImage={async (file) => {
+                if (onUploadImage) {
+                  return await onUploadImage(file, client.imageUrl);
+                }
+                return undefined;
+              }}
             />
           )}
         />
@@ -156,6 +190,7 @@ interface ClientLogoCardProps {
   isSelected?: boolean;
   onSelect?: () => void;
   onDeselect?: () => void;
+  onUploadImage?: (file: File, oldUrl?: string) => Promise<string | undefined>;
 }
 
 function ClientLogoCard({
@@ -164,9 +199,11 @@ function ClientLogoCard({
   isSelected = false,
   onSelect,
   onDeselect,
+  onUploadImage,
 }: ClientLogoCardProps) {
-  const [editedClient, setEditedClient] = useState<ClientLogoEditable>(client);
   const { isAdmin } = useAuthContext();
+  const [editedClient, setEditedClient] = useState<ClientLogoEditable>(client);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (!helpers.isEditing) setEditedClient(client);
@@ -191,6 +228,27 @@ function ClientLogoCard({
     isSelected ? onDeselect?.() : onSelect?.();
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onUploadImage) return;
+
+    setIsUploading(true);
+    try {
+      const newUrl = await onUploadImage(file, editedClient.imageUrl);
+      if (newUrl) {
+        // Actualizamos el estado interno de la tarjeta, pero aún NO guardamos en BD
+        setEditedClient({ ...editedClient, imageUrl: newUrl });
+      }
+    } catch (error) {
+      console.error("Error al subir:", error);
+      alert("Error al subir la imagen.");
+    } finally {
+      setIsUploading(false);
+      // Limpiamos el input por si el usuario quiere volver a subir
+      if (e.target) e.target.value = "";
+    }
+  };
+
   if (helpers.isEditing) {
     return (
       <div
@@ -206,60 +264,89 @@ function ClientLogoCard({
           </div>
 
           <div className="space-y-4">
-            {[
-              {
-                label: "Nombre de la empresa",
-                field: "name",
-                placeholder: "Ej: Microsoft",
-              },
-              {
-                label: "URL del Logo",
-                field: "imageUrl",
-                placeholder: "https://ejemplo.com/logo.png",
-              },
-              {
-                label: "Texto Alternativo (SEO)",
-                field: "alt",
-                placeholder: "Descripción de la imagen",
-              },
-            ].map(({ label, field, placeholder }) => (
-              <div key={field}>
-                <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1 ml-1">
-                  {label}
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                  value={(editedClient as any)[field] || ""}
-                  onChange={(e) =>
-                    setEditedClient({
-                      ...editedClient,
-                      [field]: e.target.value,
-                    })
-                  }
-                  placeholder={placeholder}
-                />
-              </div>
-            ))}
+            {/* Input Nombre */}
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1 ml-1">
+                Nombre de la empresa
+              </label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                value={editedClient.name || ""}
+                onChange={(e) =>
+                  setEditedClient({ ...editedClient, name: e.target.value })
+                }
+                placeholder="Ej: Microsoft"
+              />
+            </div>
 
-            {editedClient.imageUrl && (
-              <div className="relative group mt-2">
-                <p className="text-[10px] text-center text-slate-400 mb-1">
-                  Vista previa
-                </p>
-                <div className="flex items-center justify-center p-4 rounded-lg border border-dashed border-slate-200 bg-slate-50/50">
-                  <img
-                    src={editedClient.imageUrl}
-                    alt="Preview"
-                    className="max-h-10 w-auto object-contain filter drop-shadow-sm"
-                    onError={(e) => {
-                      e.currentTarget.src =
-                        "https://via.placeholder.com/140x40?text=Error+al+cargar";
-                    }}
+            {/* Input Texto Alternativo */}
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1 ml-1">
+                Texto Alternativo (SEO)
+              </label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                value={editedClient.alt || ""}
+                onChange={(e) =>
+                  setEditedClient({ ...editedClient, alt: e.target.value })
+                }
+                placeholder="Descripción de la imagen"
+              />
+            </div>
+
+            {/* Sección de Subida de Imagen */}
+            <div className="mt-4">
+              <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-2 ml-1">
+                Logo de la empresa
+              </label>
+
+              <div className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors relative">
+                {isUploading && (
+                  <div className="absolute inset-0 bg-white/80 z-10 flex flex-col items-center justify-center rounded-lg">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-600 mb-2" />
+                    <span className="text-xs text-blue-600 font-medium">
+                      Subiendo...
+                    </span>
+                  </div>
+                )}
+
+                {editedClient.imageUrl &&
+                editedClient.imageUrl !==
+                  "https://via.placeholder.com/140x40?text=Logo" ? (
+                  <div className="mb-3 w-full flex justify-center">
+                    <img
+                      src={editedClient.imageUrl}
+                      alt="Preview"
+                      className="max-h-12 w-auto object-contain filter drop-shadow-sm"
+                      onError={(e) => {
+                        e.currentTarget.src =
+                          "https://via.placeholder.com/140x40?text=Error+al+cargar";
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <UploadCloud className="w-8 h-8 text-slate-400 mb-2" />
+                )}
+
+                <label className="cursor-pointer">
+                  <span className="bg-white px-3 py-1.5 border border-slate-300 rounded text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-colors">
+                    {editedClient.imageUrl !==
+                    "https://via.placeholder.com/140x40?text=Logo"
+                      ? "Cambiar logo"
+                      : "Subir archivo"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg, image/svg+xml"
+                    className="hidden"
+                    onChange={handleFileChange}
+                    disabled={isUploading}
                   />
-                </div>
+                </label>
               </div>
-            )}
+            </div>
           </div>
 
           <div className="flex gap-2 justify-end mt-6 pt-4 border-t border-slate-100">
@@ -290,7 +377,7 @@ function ClientLogoCard({
     <div
       data-client-logo
       className={`
-        relative min-w-17.5 max-w-35 flex justify-center items-center
+        relative w-24 h-12 md:w-32 md:h-16 lg:w-40 lg:h-20 flex justify-center items-center
         transition-all duration-200
         ${isAdmin ? "cursor-pointer" : ""}
         ${isSelected ? "ring-2 ring-blue-500 ring-offset-2 rounded-lg p-1" : ""}
@@ -302,7 +389,7 @@ function ClientLogoCard({
         src={client.imageUrl}
         alt={client.alt || client.name}
         className={`
-          max-h-5.5 md:max-h-7.5 lg:max-h-8.75 w-auto object-contain
+          w-full h-full object-contain
           grayscale brightness-85 opacity-40
           transition-all duration-300
           hover:grayscale-0 hover:brightness-100 hover:opacity-60 hover:scale-110

@@ -2,9 +2,9 @@
 import { HeroSection } from "./sections/HeroSection";
 import { PlatformCardsSection } from "./sections/PlatformCardsSection";
 import { ClientsSection } from "./sections/ClientsSection";
-import { BenefitsSection } from "./sections/BenefitsSection";
-import { ProductsSection } from "./sections/ProductsSection";
-import { ContactSection } from "./sections/ContactSection";
+//import { BenefitsSection } from "./sections/BenefitsSection";
+//import { ProductsSection } from "./sections/ProductsSection";
+//import { ContactSection } from "./sections/ContactSection";
 import { CTASection } from "./sections/CTASection";
 import TeamSection from "./sections/TeamSection";
 import { LandingHeader } from "./layout/LandingHeader";
@@ -15,10 +15,7 @@ import { useLandingData } from "@/features/landing/hooks/useLandingData";
 import { useLandingCMS } from "@/features/landing/hooks/useLandingCMS";
 import type { Company } from "@/shared/types";
 import type { User } from "@/shared/types/user.types";
-import type {
-  LoginCredentials,
-  RegisterData,
-} from "../auth/types/user.types";
+import type { LoginCredentials, RegisterData } from "../auth/types/user.types";
 
 const COMPANY: Company = {
   id: 1,
@@ -59,6 +56,7 @@ export function LandingPage({
     handleSaveCollection,
     handleSaveMenuItems,
     handleSaveFooter,
+    handleUploadClientLogo,
   } = useLandingCMS(data, updateContentLocally, findContent);
 
   if (loading)
@@ -103,27 +101,29 @@ export function LandingPage({
           content={getContentData("clients")}
           onSave={handleSaveContent}
           onSaveCollection={handleSaveCollection}
+          onUploadImage={handleUploadClientLogo}
         />
       </div>
 
-      <BenefitsSection
+      {/*<BenefitsSection
         content={getContentData("benefits-home")}
         onSave={handleSaveContent}
-      />
-      <ProductsSection
+      />*/}
+      {/*<ProductsSection
         content={getContentData("products")}
         onSave={handleSaveContent}
         onSaveCollection={handleSaveCollection}
-      />
+      />*/}
       <TeamSection
         content={getContentData("team")}
         onSave={handleSaveContent}
         onSaveCollection={handleSaveCollection}
+        onUploadImage={handleUploadClientLogo}
       />
-      <ContactSection
+      {/*<ContactSection
         content={getContentData("contact-home")}
         onSave={handleSaveContent}
-      />
+      />*/}
 
       <LandingFooter
         content={getContentData("main-footer")}
