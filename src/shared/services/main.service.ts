@@ -13,6 +13,10 @@ import type {
   MasterTemplateCreate,
   MasterTemplateUpdate,
   PaginatedResponse,
+  UserResponse,
+  UserCreate,
+  UserAdminUpdate,
+  PaginatedUserResponse,
 } from "../types";
 
 const getAuthToken = (token?: string): string | undefined => {
@@ -237,9 +241,6 @@ export const MainService = {
     return await response.blob();
   },
 
-  getCovers: async (): Promise<Cover[]> => {
-    return api.get<Cover[]>("main/covers");
-  },
   // ==================== MASTER TEMPLATES ====================
 
   getMasterTemplates: async (options?: {
@@ -378,47 +379,49 @@ export const MainService = {
       token: getAuthToken(token),
     });
   },
+
   getCurrentMasterTemplateCodes: async (): Promise<any> => {
     return api.get<any>(`main/reports/get-current-codes`);
   },
-  createCover: async (formData: FormData): Promise<Cover> => {
+
+  // ==================== COVERS ====================
+  getCovers: async (): Promise<Cover[]> => {
+    return api.get<Cover[]>("main/covers", {
+      token: getAuthToken(),
+    });
+  },
+
+  createCover: async (formData: FormData, token?: string): Promise<Cover> => {
     // By passing FormData to api.post (assuming it's an axios instance),
     // it will automatically set the correct headers (multipart/form-data)
-    return api.post<Cover>("main/covers", formData);
-  },
-
-  getCover: async (id: number): Promise<Cover> => {
-    return api.get<Cover>(`main/covers/${id}`);
-  },
-
-  updateCover: async (id: number, formData: FormData): Promise<Cover> => {
-    const BASE_URL = `${import.meta.env.VITE_API_URL}/api/v1/`;
-    const res = await fetch(`${BASE_URL}main/covers/${id}`, {
-      method: "PUT",
-      body: formData,
+    return api.post<Cover>("main/covers", formData, {
+      token: getAuthToken(token),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(
-        (err as { detail?: string }).detail ?? `Update failed: ${res.status}`
-      );
-    }
-    return res.json();
   },
 
-  /*
-  // Reemplaza tu updateCover actual por este:
-  updateCover: async (id: number, formData: FormData): Promise<Cover> => {
-    // api.put también maneja FormData perfectamente según tu api.ts
-    return api.put<Cover>(`main/covers/${id}`, formData);
+  getCover: async (id: number, token?: string): Promise<Cover> => {
+    return api.get<Cover>(`main/covers/${id}`, {
+      token: getAuthToken(token),
+    });
   },
-  */
+
+  updateCover: async (
+    id: number,
+    formData: FormData,
+    token?: string
+  ): Promise<Cover> => {
+    return api.put<Cover>(`main/covers/${id}`, formData, {
+      token: getAuthToken(token),
+    });
+  },
 
   /**
    * Delete a cover by id
    */
-  deleteCover: async (id: number): Promise<void> => {
-    return api.delete<void>(`main/covers/${id}`);
+  deleteCover: async (id: number, token?: string): Promise<void> => {
+    return api.delete<void>(`main/covers/${id}`, {
+      token: getAuthToken(token),
+    });
   },
 
   // ==================== CHATBOT ====================
@@ -432,6 +435,59 @@ export const MainService = {
 
   analyzeCompanies: async (tickers: string[]): Promise<any> => {
     return api.post<any>("chatbot/analyze-companies", { tickers });
+  },
+
+  // ==================== USERS ====================
+  getUsers: async (options?: {
+    limit?: number;
+    offset?: number;
+    search?: string;
+    token?: string;
+  }): Promise<PaginatedUserResponse> => {
+    const params = new URLSearchParams();
+    if (options?.limit !== undefined)
+      params.append("limit", options.limit.toString());
+    if (options?.offset !== undefined)
+      params.append("offset", options.offset.toString());
+    if (options?.search) params.append("search", options.search);
+
+    const queryString = params.toString();
+    const url = queryString ? `main/users?${queryString}` : "main/users";
+
+    return api.get<PaginatedUserResponse>(url, {
+      token: getAuthToken(options?.token),
+    });
+  },
+
+  getUser: async (id: number, token?: string): Promise<UserResponse> => {
+    return api.get<UserResponse>(`main/users/${id}`, {
+      token: getAuthToken(token),
+    });
+  },
+
+  createUser: async (
+    data: UserCreate,
+    token?: string
+  ): Promise<UserResponse> => {
+    return api.post<UserResponse>("main/users", data, {
+      token: getAuthToken(token),
+    });
+  },
+
+  updateUser: async (
+    id: number,
+    data: UserAdminUpdate,
+    token?: string
+  ): Promise<UserResponse> => {
+    return api.put<UserResponse>(`main/users/${id}`, data, {
+      token: getAuthToken(token),
+    });
+  },
+
+  deleteUser: async (id: number, token?: string): Promise<void> => {
+    return api.delete<void>(`main/users/${id}`, {
+      token: getAuthToken(token),
+    });
   },
 
   // ==================== KAPITAL CONFIGURATIONS ====================

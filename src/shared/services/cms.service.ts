@@ -27,6 +27,36 @@ export class CMSService {
       params: authorId != null ? { author_id: authorId } : undefined,
     });
   }
+
+  async uploadImage(
+    file: File,
+    token: string | undefined = undefined,
+    oldUrl: string | undefined = undefined
+  ): Promise<{ success: boolean; media: any }> {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (oldUrl) {
+      formData.append("old_url", oldUrl);
+    }
+
+    return api.post<{ success: boolean; media: any }>(
+      `${this.basePath}/contents/upload-image`,
+      formData,
+      {
+        token,
+      }
+    );
+  }
+
+  async deleteImage(
+    url: string,
+    token: string | undefined = undefined
+  ): Promise<void> {
+    return api.delete(`${this.basePath}/contents/media`, {
+      token,
+      params: { url },
+    });
+  }
 }
 
 export const cmsService = new CMSService();

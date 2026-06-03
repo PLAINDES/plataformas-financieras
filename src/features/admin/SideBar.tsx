@@ -7,7 +7,7 @@ import { ReportIcon } from "@/shared/components/icons/ReportIcon";
 import { TemplateIcon } from "@/shared/components/icons/TemplateIcon";
 import { SettingsIcon } from "@/shared/components/icons/SettingsIcon";
 import { ArrowIcon } from "@/shared/components/icons/ArrowIcon";
-import { ChartLine } from "lucide-react";
+import { ChartLine, User } from "lucide-react";
 
 interface SidebarProps {
   isMinimized?: boolean;
@@ -55,6 +55,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       title: "Kapital",
       href: "/admin/kapital",
       icon: <ChartLine />,
+    },
+    {
+      title: "Usuarios",
+      href: "/admin/usuarios",
+      icon: <User />,
     },
     {
       title: "Configuración",

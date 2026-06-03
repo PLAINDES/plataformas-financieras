@@ -106,6 +106,23 @@ export interface UserUpdate {
   avatar?: string;
 }
 
+export interface UserAdminUpdate {
+  name?: string;
+  lastname?: string;
+  email?: string;
+  role?: "admin" | "master" | "user";
+  is_active?: boolean;
+  password?: string;
+}
+
+export interface PaginatedUserResponse {
+  items: User[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
 // ==================== MAPPING FUNCTIONS ====================
 
 /**

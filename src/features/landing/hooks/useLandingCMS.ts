@@ -22,7 +22,7 @@ export function useLandingCMS(
     contentId: number,
     payload: { data: any; status?: "draft" | "published" }
   ) => {
-    const token = getToken();
+    const token = getToken() || undefined;
     if (!token) {
       console.error("No token available");
       return Promise.reject("No token");
@@ -31,7 +31,7 @@ export function useLandingCMS(
       contentId,
       payload,
       token,
-      user?.id ?? null
+      user?.id ? Number(user.id) : undefined
     );
   };
 
@@ -78,6 +78,21 @@ export function useLandingCMS(
       onLocalUpdate("main-footer", updatedFooter);
     } catch (error) {
       console.error("Error saving footer:", error);
+      throw error;
+    }
+  };
+
+  const handleUploadClientLogo = async (file: File, oldUrl?: string) => {
+    try {
+      const token = getToken() || undefined;
+      const response = await cmsService.uploadImage(file, token, oldUrl);
+
+      if (response.success && response.media?.url) {
+        return response.media.url;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error uploading client logo:", error);
       throw error;
     }
   };
@@ -172,5 +187,6 @@ export function useLandingCMS(
     handleSaveMenuItems,
     handleSaveFooter,
     handleSaveCollection,
+    handleUploadClientLogo,
   };
 }
