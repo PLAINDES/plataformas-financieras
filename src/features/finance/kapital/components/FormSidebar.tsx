@@ -11,6 +11,7 @@ interface FormSidebarProps {
   loading: boolean;
   isWaccCalculated: boolean;
   hasSensibilizaciones: boolean;
+  canSensibilizeBeta: boolean;
   dates: string[];
   sectors: string[];
   instruments: string[];
@@ -21,6 +22,8 @@ interface FormSidebarProps {
   countriesTranslations: Record<string, string>;
   countryLocalCurrencies: Record<string, string>;
   chatbotComponent?: React.ReactNode;
+  onSearchSectorBeta: () => void;
+  isSearchingBeta: boolean;
 }
 
 export const FormSidebar: React.FC<FormSidebarProps> = ({
@@ -29,7 +32,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
   onSubmit,
   loading,
   isWaccCalculated,
-  hasSensibilizaciones,
+  canSensibilizeBeta,
   dates,
   sectors,
   instruments,
@@ -39,21 +42,23 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
   bonosTranslations,
   countriesTranslations,
   countryLocalCurrencies,
-  chatbotComponent,
+  onSearchSectorBeta,
+  isSearchingBeta,
 }) => {
   const [collapsed, setCollapsed] = useState({
     step1: false,
     step2: false,
     step3: false,
+    step4: false,
   });
   const hasAutoCollapsed = useRef(false);
-  const toggleCollapse = (step: "step1" | "step2" | "step3") => {
+  const toggleCollapse = (step: "step1" | "step2" | "step3" | "step4") => {
     setCollapsed((prev) => ({ ...prev, [step]: !prev[step] }));
   };
 
   useEffect(() => {
     if (isWaccCalculated && !hasAutoCollapsed.current) {
-      setCollapsed({ step1: true, step2: true, step3: true });
+      setCollapsed({ step1: false, step2: true, step3: true, step4: false });
 
       hasAutoCollapsed.current = true;
     }
@@ -106,23 +111,39 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 onChange={handleCustomInputChange}
                 options={sectors}
                 translations={industryTranslations}
-                disabled={hasSensibilizaciones || isWaccCalculated}
+                //disabled={hasSensibilizaciones || isWaccCalculated}
                 layout="horizontal"
                 inputClassName="col-span-18"
                 required
               />
-              <FormField
-                label="Beta desapalancado"
-                name="beta_unlevered_industry"
-                type="number"
-                step="any"
-                value={formData.beta_unlevered_industry}
-                onChange={handleCustomInputChange}
-                suffix="coef."
-                layout="horizontal"
-                showClearButton={false}
-                disabled
-              />
+              <div className="relative w-full">
+                <FormField
+                  label="Beta desapalancado"
+                  name="beta_unlevered_industry"
+                  type="number"
+                  step="any"
+                  value={formData.beta_unlevered_industry}
+                  onChange={handleCustomInputChange}
+                  suffix="coef."
+                  layout="horizontal"
+                  showClearButton={false}
+                  inputClassName="col-span-9"
+                />
+                {isWaccCalculated && canSensibilizeBeta && (
+                  <div className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end">
+                    <button
+                      type="button"
+                      onClick={onSearchSectorBeta}
+                      disabled={isSearchingBeta || !formData.sector}
+                      className="text-[11px] w-25 h-10 py-0.5 px-1 rounded-sm text-wrap font-bold text-white bg-valora-primary hover:bg-valora-secondary disabled:text-gray-100 transition-colors cursor-pointer"
+                    >
+                      {isSearchingBeta
+                        ? "Buscando..."
+                        : "Busca tu beta específico"}
+                    </button>
+                  </div>
+                )}
+              </div>
               <FormField
                 label="Tasa libre de riesgo"
                 name="instrument"
@@ -181,7 +202,6 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 layout="horizontal"
                 showClearButton={false}
                 inputClassName="col-span-8"
-                disabled
               />
               <FormField
                 label="Tasa impositiva"
@@ -196,7 +216,6 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 layout="horizontal"
                 showClearButton={false}
                 inputClassName="col-span-8"
-                disabled
               />
             </section>
           </FormSection>
@@ -268,7 +287,33 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
               />
             </section>
           </FormSection>
-          {chatbotComponent}
+          {/* Section 4: Sensibilizaciones */}
+          {isWaccCalculated && canSensibilizeBeta && (
+            <FormSection
+              title="Sensibiliza tu Beta"
+              step={4}
+              isCollapsed={collapsed.step4}
+              onToggleCollapse={() => toggleCollapse("step4")}
+              toggle={formData.typeId}
+              onToggle={() => toggleCollapse("step1")}
+            >
+              <section className="flex gap-1 flex-col">
+                <FormField
+                  label="Beta desapalancado"
+                  name="beta_unlevered"
+                  type="number"
+                  step="any"
+                  value={formData.beta_unlevered || ""}
+                  onChange={handleCustomInputChange}
+                  layout="horizontal"
+                  inputClassName="col-span-6"
+                  showClearButton={true}
+                  maxDecimals={2}
+                />
+              </section>
+            </FormSection>
+          )}
+          {/* {chatbotComponent} */}
         </div>
 
         {/* Footer - Submit Button */}

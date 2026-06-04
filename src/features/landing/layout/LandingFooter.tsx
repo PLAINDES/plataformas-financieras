@@ -1,10 +1,11 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
-import { Pencil, ArrowRight } from "lucide-react";
+import { WhatsAppIcon } from "@/features/landing/sections/CTASection";
+import { Pencil } from "lucide-react";
 import { EditableText } from "@/shared/components/editable/EditableText";
 import { FooterEditModal } from "./FooterEditModal";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 import type { EditableContent } from "@/shared/types/editable.types";
+import { Button } from "@/components/ui/button";
 
 interface FooterLink {
   id: string;
@@ -25,22 +26,33 @@ interface FooterContent {
 
 interface LandingFooterProps {
   content: FooterContent;
+  ctaContent?: { whatsappNumber: string; text: string };
   onSave: (updated: FooterContent) => Promise<void>;
 }
 
-export function LandingFooter({ content, onSave }: LandingFooterProps) {
-  const [email, setEmail] = useState("");
+export function LandingFooter({
+  content,
+  ctaContent,
+  onSave,
+}: LandingFooterProps) {
+  //const [email, setEmail] = useState("");
   const [editModalOpen, setEditModalOpen] = useState(false);
   const { isAdmin } = useAuthContext();
 
-  const handleSubscription = (e: FormEvent<HTMLFormElement>) => {
+  /*const handleSubscription = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Email subscription:", email);
     setEmail("");
-  };
+  };*/
 
   const handleSaveCopyright = async (editable: EditableContent) => {
     await onSave({ ...content, copyright: editable.value as string });
+  };
+
+  const handleWhatsAppClick = () => {
+    if (ctaContent?.whatsappNumber) {
+      window.open(ctaContent.whatsappNumber, "_blank");
+    }
   };
 
   if (!content) return null;
@@ -69,11 +81,21 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
               src="/images/logo.png"
               className="h-16 md:h-24 mb-6 object-contain"
             />
-            <p className="text-sm leading-relaxed mb-8 max-w-sm text-slate-500 font-bold">
+            <p className="text-sm leading-relaxed mb-4 max-w-sm text-slate-500 font-bold">
+              ¿Tienes dudas? Escríbenos directamente.
+            </p>
+            <Button
+              onClick={handleWhatsAppClick}
+              className="bg-valora-primary hover:bg-valora-secondary text-white flex items-center justify-center gap-2 h-12 px-6 rounded-md transition-colors w-full max-w-60"
+            >
+              <WhatsAppIcon className="w-5 h-5 shrink-0" />
+              <span className="truncate font-semibold text-sm">
+                {ctaContent?.text || "Contáctanos por WhatsApp"}
+              </span>
+            </Button>
+            {/*<p className="text-sm leading-relaxed mb-8 max-w-sm text-slate-500 font-bold">
               Suscríbete para recibir actualizaciones.
             </p>
-
-            {/* Newsletter Estilo "Píldora" (Minimalista) */}
             <form
               onSubmit={handleSubscription}
               className="w-full max-w-md relative"
@@ -94,7 +116,7 @@ export function LandingFooter({ content, onSave }: LandingFooterProps) {
               >
                 <ArrowRight size={16} strokeWidth={2.5} />
               </button>
-            </form>
+            </form>*/}
           </div>
 
           {/* Columnas Derecha: Secciones del CMS (Grid interno) */}
