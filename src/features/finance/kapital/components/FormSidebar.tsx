@@ -58,7 +58,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
 
   useEffect(() => {
     if (isWaccCalculated && !hasAutoCollapsed.current) {
-      setCollapsed({ step1: false, step2: true, step3: true, step4: false });
+      setCollapsed({ step1: false, step2: false, step3: false, step4: false });
 
       hasAutoCollapsed.current = true;
     }
