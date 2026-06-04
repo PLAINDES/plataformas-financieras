@@ -17,6 +17,7 @@ import { LoginModal } from "@/features/auth/components/LoginModal";
 
 import { useKapitalCalculation } from "./hooks/useKapitalCalculation";
 import { useKapitalForm } from "./hooks/useKapitalForm";
+import { useToast } from "@/shared/components/common/ToastProvider";
 import {
   type CompanyData,
   type YahooFinanceData,
@@ -93,16 +94,17 @@ export interface SensibilizacionEntry {
 
 const KapitalPage: React.FC = () => {
   const { user, login, logout } = useAuthContext();
+  const { addToast } = useToast();
   const location = useLocation();
+
+  const sectorCache = useRef<Record<string, YahooFinanceData>>({});
+  const requestTimestamps = useRef<number[]>([]);
 
   // Estadps de UI
   const [isFormOpen, setIsFormOpen] = useState(true);
-  //const [isChatbotOpen, setIsChatbotOpen] = useState(true);
-
   const [resultsSection, setResultsSection] = useState<
     "result" | "sensitivity"
   >("result");
-
   const [showResults, setShowResults] = useState(false);
 
   const [isReportSidebarOpen, setIsReportSidebarOpen] = useState(false);
@@ -113,12 +115,15 @@ const KapitalPage: React.FC = () => {
   const [analysisDC, setAnalysisDC] = useState("");
   const [analysisKd, setAnalysisKd] = useState("");
   const [analysisCurrency, setAnalysisCurrency] = useState("Dólares");
+
   const [betaInput, setBetaInput] = useState("");
+  const [isSearchingBeta, setIsSearchingBeta] = useState(false);
+  const [modalData, setModalData] = useState<YahooFinanceData | null>(null);
+
   const [toasts, setToasts] = useState<
     Array<{ id: string; type: ToastType; message: string }>
   >([]);
 
-  const [modalData, setModalData] = useState<YahooFinanceData | null>(null);
   const [modalActions, setModalActions] = useState<CompanyModalActions | null>(
     null
   );
@@ -197,7 +202,7 @@ const KapitalPage: React.FC = () => {
     }
   };
 
-  const addToast = (type: ToastType, message: string) => {
+  /*const addToast = (type: ToastType, message: string) => {
     const id =
       typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
@@ -205,11 +210,7 @@ const KapitalPage: React.FC = () => {
     setToasts((prev) => [...prev, { id, type, message }]);
     const timeoutId = window.setTimeout(() => removeToast(id), 3500);
     toastTimeoutsRef.current.set(id, timeoutId);
-  };
-
-  /*useEffect(() => {
-    setIsChatbotOpen(false);
-  }, [resultsSection]);*/
+  };*/
 
   const handleResultsSectionChange = (
     nextSection: "result" | "sensitivity"
@@ -259,7 +260,7 @@ const KapitalPage: React.FC = () => {
 
   const handleLogout = async () => {
     await logout();
-    addToast("success", "Has cerrado sesión exitosamente.");
+    addToast("Has cerrado sesión exitosamente.", "success");
   };
 
   const getSelectedView = (): "result" | "sensitivity" | "" => {
@@ -289,7 +290,7 @@ const KapitalPage: React.FC = () => {
     (company: CompanyData) => {
       if (company.beta_unlevered == null) return;
 
-      const formattedBeta = Number(company.beta_unlevered).toFixed(4);
+      const formattedBeta = Number(company.beta_unlevered).toFixed(2);
       form.setFormData((prev) => ({
         ...prev,
         beta_unlevered: formattedBeta,
@@ -369,6 +370,104 @@ const KapitalPage: React.FC = () => {
     ? COUNTRY_LOCAL_CURRENCIES[form.formData.country] || "Moneda Local"
     : "Moneda Local";
 
+  const handleSearchSectorBeta = async () => {
+    const currentSector = form.formData.sector;
+    if (!currentSector) return;
+
+    // 1. Verificación de caché
+    if (sectorCache.current[currentSector]) {
+      setModalData(sectorCache.current[currentSector]);
+      setModalActions({
+        onApplyCompany: (company: CompanyData) => {
+          if (company.beta_unlevered != null) {
+            const formattedBeta = Number(company.beta_unlevered).toFixed(2);
+            form.handleInputChange({
+              target: { name: "beta_unlevered", value: formattedBeta },
+            } as any);
+            setModalData(null);
+          }
+        },
+        onRemoveTicker: (tickerToRemove: string) => {
+          setModalData((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              valid_companies: prev.valid_companies.filter(
+                (c) => c.ticker !== tickerToRemove
+              ),
+            };
+          });
+        },
+      });
+      return;
+    }
+    // 2. Control de límite de pedidos de beta por minuto
+    const now = Date.now();
+    // Filtra las peticiones que tienen más de 60000 ms (1 minuto) de antigüedad
+    requestTimestamps.current = requestTimestamps.current.filter(
+      (t) => now - t < 60000
+    );
+
+    if (requestTimestamps.current.length >= 3) {
+      addToast(
+        "Límite de 3 consultas por minuto alcanzado. Intente en unos segundos.",
+        "warn"
+      );
+      return;
+    }
+
+    setIsSearchingBeta(true);
+    try {
+      requestTimestamps.current.push(now);
+
+      const payload = {
+        message: "Calcula mi beta",
+        history: [],
+        form_data: form.formData,
+      };
+
+      // Envía mensaje oculto al endpoint
+      const data = await MainService.sendChatMessage(payload);
+
+      if (data.tickers && data.tickers.length > 0) {
+        const res = await MainService.analyzeCompanies(data.tickers);
+        if (res.success && res.valid_companies?.length) {
+          sectorCache.current[currentSector] = res;
+
+          setModalData(res);
+          setModalActions({
+            onApplyCompany: (company: CompanyData) => {
+              if (company.beta_unlevered != null) {
+                const formattedBeta = Number(company.beta_unlevered).toFixed(2);
+                form.handleInputChange({
+                  target: { name: "beta_unlevered", value: formattedBeta },
+                } as any);
+                setModalData(null);
+              }
+            },
+            onRemoveTicker: (tickerToRemove: string) => {
+              setModalData((prev) => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  valid_companies: prev.valid_companies.filter(
+                    (c) => c.ticker !== tickerToRemove
+                  ),
+                };
+              });
+            },
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error al buscar beta:", error);
+    } finally {
+      setIsSearchingBeta(false);
+    }
+  };
+
+  /* COMPONENTES REUTILIZABLES */
+
   const chatbotComponent =
     shouldShowChatbot &&
     calc.sensibilizaciones.length < maxSensibilizaciones ? (
@@ -384,6 +483,32 @@ const KapitalPage: React.FC = () => {
         setBetaInput={setBetaInput}
       />
     ) : null;
+
+  const yahooPanelContent = modalData ? (
+    <>
+      <div className="flex justify-between items-center px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-100 bg-gray-50/50 shrink-0">
+        <h3 className="font-bold text-gray-800 text-base sm:text-lg flex items-center gap-2">
+          <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-valora-primary" />
+          Empresas Comparables
+        </h3>
+        <button
+          type="button"
+          onClick={handleCloseModal}
+          className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"
+        >
+          <X className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+      </div>
+      <div className="flex-1 p-3 sm:p-5 overflow-y-auto">
+        <YahooResults
+          data={modalData}
+          isWaccCalculated={calc.isWaccCalculated || false}
+          onApply={handleApplyCompany}
+          onRemove={handleRemoveTicker}
+        />
+      </div>
+    </>
+  ) : null;
 
   const mainContent = showResults ? (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
@@ -477,18 +602,21 @@ const KapitalPage: React.FC = () => {
       </main>
 
       <aside
-        className={`fixed left-0 top-16 max-[540px]:z-70 z-40 h-[calc(100dvh-4rem)] max-[540px]:w-full w-90 border-r border-gray-200 bg-white shadow-sm transition-transform duration-200 ${isFormOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed left-0 top-16 max-[540px]:z-70 z-40 h-[calc(100dvh-4rem)] flex border-r border-gray-200 bg-transparent shadow-sm transition-transform duration-200 ${isFormOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <div className="h-full">
+        <div className="h-full w-full max-[540px]:w-screen sm:w-90 border-r border-gray-200 bg-white shadow-sm shrink-0">
           <FormSidebar
             formData={form.formData}
             onInputChange={form.handleInputChange}
-            onSubmit={(e) => calc.handleSubmit(e, betaInput)}
+            onSubmit={(e) => calc.handleSubmit(e, form.formData.beta_unlevered)}
             loading={calc.isLoading}
             isWaccCalculated={calc.isWaccCalculated}
             dates={form.dynamicDates.length > 0 ? form.dynamicDates : []}
             sectors={form.dynamicSectors.length > 0 ? form.dynamicSectors : []}
             hasSensibilizaciones={calc.sensibilizaciones.length > 0}
+            canSensibilizeBeta={
+              calc.sensibilizaciones.length < maxSensibilizaciones
+            }
             industryTranslations={INDUSTRY_TRANSLATIONS}
             instruments={INSTRUMENTS}
             bonos={BONOS}
@@ -497,8 +625,15 @@ const KapitalPage: React.FC = () => {
             countriesTranslations={COUNTRIES_TRANSLATIONS}
             countryLocalCurrencies={COUNTRY_LOCAL_CURRENCIES}
             chatbotComponent={chatbotComponent}
+            onSearchSectorBeta={handleSearchSectorBeta}
+            isSearchingBeta={isSearchingBeta}
           />
         </div>
+        {modalData && (
+          <div className="hidden lg:flex w-125 xl:w-162.5 h-3/5  bg-white border-r border-gray-200 shadow-[10px_0_15px_-3px_rgba(0,0,0,0.1)] flex-col shrink-0 animate-in slide-in-from-left-8 duration-300">
+            {yahooPanelContent}
+          </div>
+        )}
       </aside>
 
       <ReportSidebar
@@ -510,31 +645,11 @@ const KapitalPage: React.FC = () => {
         onOpenReportViewer={handleReportViewerOpen}
       />
 
+      {/* Modal Flotante de Empresas (SOLO MÓVIL/TABLET: < lg) */}
       {modalData && (
-        <div className="fixed inset-0 z-120 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-all animate-in fade-in">
+        <div className="fixed inset-0 z-120 flex lg:hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-all animate-in fade-in">
           <div className="bg-white rounded-xl shadow-2xl w-[90dvw] max-w-2xl h-[80dvh] sm:max-h-[85dvh] overflow-hidden flex flex-col animate-in zoom-in-95 justify-between">
-            <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100 bg-gray-50/50">
-              <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-                <Bot className="w-5 h-5 text-valora-primary" />
-                Empresas Comparables
-              </h3>
-              <button
-                type="button"
-                onClick={handleCloseModal}
-                className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="h-full p-3 sm:p-5 overflow-y-auto">
-              <YahooResults
-                data={modalData}
-                isWaccCalculated={calc.isWaccCalculated || false}
-                onApply={handleApplyCompany}
-                onRemove={handleRemoveTicker}
-              />
-            </div>
+            {yahooPanelContent}
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 // features/finance/kapital/components/KapitalAnalisisSection.tsx
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FinancieraCard } from "./FinancieraCard";
 import type {
   MarketResults,
@@ -47,6 +47,8 @@ export interface KapitalAnalisisSectionProps {
   onToggleForm: () => void;
 }
 
+type TabView = "original" | "sensibility" | "comparison";
+
 export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
   results,
   showCompanyCard,
@@ -60,6 +62,24 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
   onToggleForm,
 }) => {
   const [selectedSensIdx, setSelectedSensIdx] = useState(0);
+  const [activeTab, setActiveTab] = useState<TabView>("sensibility");
+
+  useEffect(() => {
+    if (showComparison && activeTab !== "comparison") {
+      setActiveTab("comparison");
+    } else if (!showComparison && activeTab === "comparison") {
+      setActiveTab("sensibility");
+    }
+  }, [showComparison]);
+
+  const handleTabChange = (tab: TabView) => {
+    setActiveTab(tab);
+    if (tab === "comparison") {
+      onToggleComparison(true);
+    } else {
+      onToggleComparison(false);
+    }
+  };
 
   // 1. DATOS ORIGINALES
   const developedData = results.developed;
@@ -106,24 +126,88 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
       }
     : undefined;
 
+  // Sección de vista simple (sin comparación lado a lado)
+  const renderSingleView = (
+    dataEmergent: MarketResults,
+    dataEmpresa?: MarketResults
+  ) => (
+    <section className="flex flex-col flex-wrap md:flex-row justify-center items-center w-full gap-4 mx-auto h-full">
+      <FinancieraCard
+        title="Mercado Desarrollado"
+        data={developedData}
+        isEmpresa={false}
+        resultCurrency={resultCurrency}
+        onResultCurrencyChange={onResultCurrencyChange}
+        compact={false}
+      />
+      <FinancieraCard
+        title="Mercado Emergente"
+        data={dataEmergent}
+        isEmpresa={false}
+        resultCurrency={resultCurrency}
+        onResultCurrencyChange={onResultCurrencyChange}
+        compact={false}
+      />
+      {showCompanyCard && dataEmpresa && (
+        <FinancieraCard
+          title="Tu Empresa"
+          data={dataEmpresa}
+          isEmpresa={true}
+          resultCurrency={resultCurrency}
+          onResultCurrencyChange={onResultCurrencyChange}
+          compact={false}
+          localCurrency={localCurrency}
+        />
+      )}
+    </section>
+  );
+
   return (
     <>
       <header className="flex flex-col xl:flex-row mt-2 lg:mt-0 justify-between items-center w-full gap-6">
-        <div className="relative xl:w-1/3 text-center xl:text-left">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
-            Resultados generales
-          </h1>
-          <p className="text-gray-600">Comparación de resultados</p>
-        </div>
+        {/* Izquierda: Chatbot */}
+        {shouldShowChatbot ? (
+          <button
+            type="button"
+            onClick={onToggleForm}
+            className="px-4 py-2.5 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondar max-w-100"
+          >
+            <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
+              <Sparkles className="h-5 w-5 shrink-0" />
+              Encuentra tu Costo de Capital usando el Beta específico de tu
+              Empresa
+            </span>
+
+            <ArrowRight className="h-5 w-5 shrink-0" />
+          </button>
+        ) : (
+          <div className="relative xl:w-1/3 text-center xl:text-left">
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              Resultados generales
+            </h1>
+            <p className="text-gray-600">Comparación de resultados</p>
+          </div>
+        )}
 
         {/* Centro: Switch de Vistas */}
-        <div className="flex flex-col items-center justify-center xl:w-1/3">
+        <div className="flex flex-1 flex-col items-start justify-center xl:w-1/3">
           <div className="flex gap-1 bg-slate-200/70 p-1.5 rounded-xl shadow-inner border border-slate-200">
             <button
               type="button"
-              onClick={() => onToggleComparison(false)}
-              className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 ${
-                !showComparison
+              onClick={() => handleTabChange("original")}
+              className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
+                activeTab === "original"
+                  ? "bg-white text-valora-primary shadow-sm"
+                  : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
+              } cursor-pointer`}
+            >
+              Original
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange("sensibility")}
+              className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
+                activeTab === "sensibility"
                   ? "bg-white text-valora-primary shadow-sm"
                   : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
               } cursor-pointer`}
@@ -132,10 +216,10 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => onToggleComparison(true)}
+              onClick={() => handleTabChange("comparison")}
               disabled={sensibilizaciones.length === 0}
-              className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 ${
-                showComparison
+              className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
+                activeTab === "comparison"
                   ? "bg-white text-valora-primary shadow-sm"
                   : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
               } ${
@@ -153,28 +237,10 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
             </span>
           )}
         </div>
-        {/* Derecha: Chatbot */}
-        {showComparison && shouldShowChatbot ? (
-          <button
-            type="button"
-            onClick={onToggleForm}
-            className="px-4 py-2.5 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondar max-w-100"
-          >
-            <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
-              <Sparkles className="h-5 w-5 shrink-0" />
-              Encuentra tu Costo de Capital usando el Beta específico de tu
-              sector
-            </span>
-
-            <ArrowRight className="h-5 w-5 shrink-0" />
-          </button>
-        ) : (
-          <div className="w-100"></div>
-        )}
       </header>
 
       <main className="flex flex-col justify-center min-h-0 flex-1 w-full mt-6">
-        {showComparison ? (
+        {activeTab === "comparison" ? (
           <div className="flex flex-col xl:flex-row w-full max-w-350 mx-auto gap-2 items-center">
             {/* COLUMNA IZQUIERDA: Mercado Desarrollado estático */}
             <div className="flex flex-col justify-center w-full md:w-2/5">
@@ -279,36 +345,10 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
               )}
             </div>
           </div>
+        ) : activeTab === "original" ? (
+          renderSingleView(emergentOriginal, empresaOriginal)
         ) : (
-          <section className="flex flex-col flex-wrap md:flex-row justify-center items-center w-full gap-4 mx-auto h-full">
-            <FinancieraCard
-              title="Mercado Desarrollado"
-              data={developedData}
-              isEmpresa={false}
-              resultCurrency={resultCurrency}
-              onResultCurrencyChange={onResultCurrencyChange}
-              compact={false}
-            />
-            <FinancieraCard
-              title="Mercado Emergente"
-              data={emergentSens}
-              isEmpresa={false}
-              resultCurrency={resultCurrency}
-              onResultCurrencyChange={onResultCurrencyChange}
-              compact={false}
-            />
-            {showCompanyCard && empresaSens && (
-              <FinancieraCard
-                title="Tu Empresa"
-                data={empresaSens}
-                isEmpresa={true}
-                resultCurrency={resultCurrency}
-                onResultCurrencyChange={onResultCurrencyChange}
-                compact={false}
-                localCurrency={localCurrency}
-              />
-            )}
-          </section>
+          renderSingleView(emergentSens, empresaSens)
         )}
       </main>
     </>
