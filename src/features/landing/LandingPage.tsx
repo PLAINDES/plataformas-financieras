@@ -2,9 +2,7 @@
 import { HeroSection } from "./sections/HeroSection";
 import { PlatformCardsSection } from "./sections/PlatformCardsSection";
 import { ClientsSection } from "./sections/ClientsSection";
-//import { BenefitsSection } from "./sections/BenefitsSection";
-//import { ProductsSection } from "./sections/ProductsSection";
-//import { ContactSection } from "./sections/ContactSection";
+import { WhatsAppSection } from "./sections/WhatsAppSection";
 import { CTASection } from "./sections/CTASection";
 import TeamSection from "./sections/TeamSection";
 import { LandingHeader } from "./layout/LandingHeader";
@@ -124,9 +122,15 @@ export function LandingPage({
         content={getContentData("contact-home")}
         onSave={handleSaveContent}
       />*/}
-
+      <WhatsAppSection
+        content={getContentData("whatsapp-home")}
+        isAdmin={isAdmin}
+        onSave={handleSaveContent}
+        onUploadImage={handleUploadClientLogo}
+      />
       <LandingFooter
         content={getContentData("main-footer")}
+        ctaContent={getContentData("cta-home")}
         onSave={handleSaveFooter}
       />
       <ScrollTop />

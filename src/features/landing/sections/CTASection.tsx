@@ -72,11 +72,11 @@ export function CTASection({ content, isAdmin, onSave }: CTASectionProps) {
             {isAdmin && (
               <div className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center gap-8 transition-all">
                 <div className="w-full flex flex-col md:flex-row items-center justify-around gap-8">
-                  <div className="flex flex-col items-center gap-3 w-full max-w-[240px]">
+                  <div className="flex flex-col items-center gap-3 w-full max-w-60">
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                       Previsualización
                     </span>
-                    <div className="relative flex items-center justify-center gap-3 w-full min-h-[52px] px-6 bg-valora-primary rounded-xl shadow-lg shadow-blue-200 transition-all">
+                    <div className="relative flex items-center justify-center gap-3 w-full min-h-13 px-6 bg-valora-primary rounded-xl shadow-lg shadow-blue-200 transition-all">
                       <WhatsAppIcon className="w-5 h-5 shrink-0 drop-shadow-sm" />
                       <div className="flex-1 relative text-white focus-within:text-gray-900">
                         <EditableText
@@ -96,16 +96,16 @@ export function CTASection({ content, isAdmin, onSave }: CTASectionProps) {
 
                   <div className="hidden md:block w-px h-16 bg-gray-200" />
 
-                  <div className="flex flex-col gap-3 w-full max-w-[280px]">
+                  <div className="flex flex-col gap-3 w-full max-w-70">
                     <div className="flex items-center gap-2">
                       <div className="p-1.5 bg-green-100 rounded-md">
                         <Phone className="w-4 h-4 text-green-600" />
                       </div>
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                        Número de WhatsApp
+                        Link de WhatsApp
                       </span>
                     </div>
-                    <div className="bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus-within:ring-2 focus-within:ring-[#2FA4FF] transition-all">
+                    <div className="bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus-within:ring-2 focus-within:ring-[#2FA4FF] transition-all overflow-hidden">
                       <EditableText
                         content={{
                           value: content.whatsappNumber,

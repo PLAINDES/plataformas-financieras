@@ -25,7 +25,7 @@ export interface UseKapitalCalculationProps {
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
   prewarmedSessionId: string | null;
   setPrewarmedSessionId: React.Dispatch<React.SetStateAction<string | null>>;
-  addToast: (type: ToastType, message: string) => void;
+  addToast: (message: string, type?: ToastType) => void;
   userId?: number | string; // Lo pasamos desde el componente principal
   ui: {
     setShowResults: (val: boolean) => void;
@@ -72,7 +72,7 @@ export function useKapitalCalculation({
     if (!dataToSubmit.sector) missingFields.push("Sector");
     if (!dataToSubmit.country) missingFields.push("País");
     if (missingFields.length > 0) {
-      addToast("warn", `Completa los campos: ${missingFields.join(", ")}`);
+      addToast(`Completa los campos: ${missingFields.join(", ")}`, "warn");
       return;
     }
 
@@ -161,21 +161,21 @@ export function useKapitalCalculation({
         ui.setResultsSection("sensitivity");
         ui.setShowComparison(false);
         addToast(
-          "success",
-          `Sensibilización calculada con β=${betaUnlevered} (cálculo #${persistedCalculation.id}).`
+          `Sensibilización calculada con β=${betaUnlevered} (cálculo #${persistedCalculation.id}).`,
+          "success"
         );
       } else {
         ui.setResultsSection("result");
         addToast(
-          "success",
-          `Resultados generados y guardados (cálculo #${persistedCalculation.id}).`
+          `Resultados generados y guardados (cálculo #${persistedCalculation.id}).`,
+          "success"
         );
       }
 
       setIsSessionFresh(true); // El excel ya se actualizado con los datos del form
     } catch (error) {
       console.error("Error in Kapital calculation", error);
-      addToast("error", "No se pudo guardar el cálculo. Intenta nuevamente.");
+      addToast("No se pudo guardar el cálculo. Intenta nuevamente.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -255,8 +255,8 @@ export function useKapitalCalculation({
     window.setTimeout(() => {
       setIsLoading(false);
       addToast(
-        "info",
-        "La sensibilización ahora se calcula desde Excel. Presiona CALCULA TU WACC para refrescar datos."
+        "La sensibilización ahora se calcula desde Excel. Presiona CALCULA TU WACC para refrescar datos.",
+        "info"
       );
     }, 800);
   };

@@ -382,7 +382,7 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
                     {company.company_name}
                   </td>
                   <td className="text-sm  px-2 py-1.5 sm:px-4 sm:py-3 font-bold text-gray-800">
-                    {company.beta_unlevered?.toFixed(4) || "N/A"}
+                    {company.beta_unlevered?.toFixed(2) || "N/A"}
                   </td>
                   <td className="px-2 py-1.5 sm:px-4 sm:py-3 text-center">
                     <div className="flex items-center justify-center gap-1">
@@ -428,7 +428,7 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
               BOA Promedio del Sector
             </span>
             <span className="text-lg sm:text-2xl font-black text-gray-900 leading-none mt-1">
-              {avgBetaUnlevered.toFixed(4)}
+              {avgBetaUnlevered.toFixed(2)}
             </span>
           </div>
           <button
