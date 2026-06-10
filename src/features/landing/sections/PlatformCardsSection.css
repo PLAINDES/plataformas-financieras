@@ -86,13 +86,13 @@
     width: max-content;
     min-width: 100%;
     align-items: stretch;
-    min-height: 360px;
+    min-height: 420px;
   }
 
   .video-card-wrapper {
     position: relative;
     width: 290px;
-    height: 360px;
+    height: 420px;
     flex: 0 0 auto;
     scroll-snap-align: center;
     scroll-snap-stop: always;
@@ -115,8 +115,8 @@
 
   .video-card-wrapper {
     position: relative;
-    width: 280px;
-    height: 380px;
+    width: 290px;
+    height: 420px;
     flex: 0 0 auto;
     scroll-snap-align: center;
     transition: transform 0.3s ease;
@@ -125,15 +125,16 @@
 
 .video-card {
   background: white;
-  border-radius: 12px;
+  border-radius: 20px;
   cursor: pointer;
   height: 100%;
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 2px solid transparent;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
   position: relative;
+  overflow: hidden;
 }
 
 .video-card.editing {
@@ -182,46 +183,46 @@
 }
 
 .card-caption {
-  font-size: 0.75rem;
-  color: #6b7280;
-  background: #f3f4f6;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  display: inline-block;
+  font-size: 1rem;
+  color: #1a1a1a;
+  background: transparent;
+  padding: 0;
+  display: block;
+  width: 100%;
   margin-bottom: 0.5rem;
+  font-weight: 700;
+  white-space: normal;
+  line-height: 1.2;
 }
 
 .card-description {
-  font-size: 0.875rem;
-  color: #1a1a1a;
+  font-size: 0.8rem;
+  color: #64748b;
   margin-bottom: 0;
-  list-style: none;
-  padding-left: 1rem;
+  list-style: none; /* No bullets */
+  padding-left: 0;
 }
 
-.card-description li::before {
-  content: "•";
-  color: #4f46e5;
-  font-weight: bold;
-  display: inline-block;
-  width: 1rem;
-  margin-left: -1rem;
+.card-description li {
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
 }
 
 .card-actions {
   padding: 0 1rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  margin-top: auto;
 }
 
 .card-btn {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.625rem 1rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
   font-weight: 500;
   border: none;
   background: color-mix(in srgb, var(--color-valora-primary) 10%, transparent);
@@ -260,14 +261,14 @@
     gap: 1.5rem;
     width: 100%;
     justify-content: center;
-    min-height: 380px;
+    min-height: 420px;
     align-items: stretch; /* Prevents vertical cut-off */
   }
 
   .carrousel-desktop-cards .video-card-wrapper {
     flex: 0 0 auto;
-    width: 250px;
-    height: 380px;
+    width: 280px;
+    height: 420px;
     scroll-snap-align: start;
   }
 

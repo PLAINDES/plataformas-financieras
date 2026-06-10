@@ -3,354 +3,356 @@
 import { useState, useEffect } from "react";
 import { FinancieraCard } from "./FinancieraCard";
 import type {
-  MarketResults,
-  Results,
-  SensibilizacionEntry,
+    MarketResults,
+    Results,
+    SensibilizacionEntry,
 } from "../KapitalPage";
 import { formatToPeruTime } from "../services/kapital.utils";
 import { ArrowRight, Sparkles } from "lucide-react";
 
-const BoaIndicator = ({ value }: { value: number | string }) => (
-  <div className="w-1/4 flex justify-center items-center h-full m-auto px-3">
-    <div className="flex items-baseline gap-4">
-      <div className="flex items-baseline text-[#0088cc]">
-        <span className="text-4xl lg:text-6xl font-serif">β</span>
-        <span className="text-lg lg:text-xl font-bold">oa</span>
-      </div>
-      <span className="text-2xl lg:text-3xl font-normal text-gray-900">
-        {value}
-      </span>
+const BoaIndicator = ({ value, label }: { value: number | string; label: string }) => (
+    <div className="w-full xl:w-1/4 flex flex-col justify-center items-center h-full m-auto px-4 py-3 bg-white border border-gray-200/80 rounded-xl shadow-sm text-center max-w-[200px] shrink-0 border-t-4 border-t-[#0088cc]">
+        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">{label}</span>
+        <div className="flex items-baseline gap-2.5">
+            <div className="flex items-baseline text-[#0088cc]">
+                <span className="text-3xl lg:text-4xl font-serif leading-none">β</span>
+                <span className="text-sm lg:text-md font-bold leading-none">oa</span>
+            </div>
+            <span className="text-2xl lg:text-3.5xl font-bold text-gray-800 leading-none">
+                {value}
+            </span>
+        </div>
+        <span className="text-[10px] font-medium text-slate-500 mt-2">
+            {label === "Original" ? "Beta económico del sector" : "Beta económico específico"}
+        </span>
     </div>
-  </div>
 );
 
 export interface KapitalAnalisisSectionProps {
-  results: Results;
-  showCompanyCard: boolean;
-  resultCurrency: "pen" | "usd";
-  onResultCurrencyChange: (currency: "pen" | "usd") => void;
-  analysisDC: string;
-  analysisKd: string;
-  analysisCurrency: string;
-  onAnalysisDCChange: (value: string) => void;
-  onAnalysisKdChange: (value: string) => void;
-  onAnalysisCurrencyChange: (value: string) => void;
-  onAnalysisSubmit: (e: React.FormEvent) => void;
-  loading: boolean;
-  showComparison: boolean;
-  onToggleComparison: (show: boolean) => void;
-  sensibilizaciones: SensibilizacionEntry[];
-  onOpenReport?: () => void;
-  localCurrency?: string;
-  chatbotComponent?: React.ReactNode;
-  shouldShowChatbot: boolean;
-  onToggleForm: () => void;
+    results: Results;
+    showCompanyCard: boolean;
+    resultCurrency: "pen" | "usd";
+    onResultCurrencyChange: (currency: "pen" | "usd") => void;
+    analysisDC: string;
+    analysisKd: string;
+    analysisCurrency: string;
+    onAnalysisDCChange: (value: string) => void;
+    onAnalysisKdChange: (value: string) => void;
+    onAnalysisCurrencyChange: (value: string) => void;
+    onAnalysisSubmit: (e: React.FormEvent) => void;
+    loading: boolean;
+    showComparison: boolean;
+    onToggleComparison: (show: boolean) => void;
+    sensibilizaciones: SensibilizacionEntry[];
+    onOpenReport?: () => void;
+    localCurrency?: string;
+    chatbotComponent?: React.ReactNode;
+    shouldShowChatbot: boolean;
+    onToggleForm: () => void;
 }
 
 type TabView = "original" | "sensibility" | "comparison";
 
 export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
-  results,
-  showCompanyCard,
-  resultCurrency,
-  onResultCurrencyChange,
-  showComparison,
-  onToggleComparison,
-  sensibilizaciones,
-  localCurrency,
-  shouldShowChatbot,
-  onToggleForm,
+    results,
+    showCompanyCard,
+    resultCurrency,
+    onResultCurrencyChange,
+    showComparison,
+    onToggleComparison,
+    sensibilizaciones,
+    localCurrency,
+    shouldShowChatbot,
+    onToggleForm,
 }) => {
-  const [selectedSensIdx, setSelectedSensIdx] = useState(0);
-  const [activeTab, setActiveTab] = useState<TabView>("sensibility");
+    const [selectedSensIdx, setSelectedSensIdx] = useState(0);
+    const [activeTab, setActiveTab] = useState<TabView>("sensibility");
 
-  useEffect(() => {
-    if (showComparison && activeTab !== "comparison") {
-      setActiveTab("comparison");
-    } else if (!showComparison && activeTab === "comparison") {
-      setActiveTab("sensibility");
-    }
-  }, [showComparison]);
+    useEffect(() => {
+        if (showComparison && activeTab !== "comparison") {
+            setActiveTab("comparison");
+        } else if (!showComparison && activeTab === "comparison") {
+            setActiveTab("sensibility");
+        }
+    }, [showComparison]);
 
-  const handleTabChange = (tab: TabView) => {
-    setActiveTab(tab);
-    if (tab === "comparison") {
-      onToggleComparison(true);
-    } else {
-      onToggleComparison(false);
-    }
-  };
+    const handleTabChange = (tab: TabView) => {
+        setActiveTab(tab);
+        if (tab === "comparison") {
+            onToggleComparison(true);
+        } else {
+            onToggleComparison(false);
+        }
+    };
 
-  // 1. DATOS ORIGINALES
-  const developedData = results.developed;
-  const emergentOriginal = results.emergent;
+    // 1. DATOS ORIGINALES
+    const developedData = results.developed;
+    const emergentOriginal = results.emergent;
 
-  const empresaOriginalBase =
-    resultCurrency === "usd" ? results.empresa_dolares : results.empresa_soles;
+    const empresaOriginalBase =
+        resultCurrency === "usd" ? results.empresa_dolares : results.empresa_soles;
 
-  const secureDEmpresaOrig =
-    empresaOriginalBase?.d_empresa ||
-    results.empresa_dolares?.d_empresa ||
-    "0%";
+    const secureDEmpresaOrig =
+        empresaOriginalBase?.d_empresa ||
+        results.empresa_dolares?.d_empresa ||
+        "0%";
 
-  const empresaOriginal = {
-    ...empresaOriginalBase,
-    d_empresa: secureDEmpresaOrig,
-  } as MarketResults;
+    const empresaOriginal = {
+        ...empresaOriginalBase,
+        d_empresa: secureDEmpresaOrig,
+    } as MarketResults;
 
-  // 2. DATOS SENSIBILIZADOS
-  const selectedSens =
-    sensibilizaciones.length > 0
-      ? (sensibilizaciones[selectedSensIdx] ?? sensibilizaciones[0])
-      : null;
+    // 2. DATOS SENSIBILIZADOS
+    const selectedSens =
+        sensibilizaciones.length > 0
+            ? (sensibilizaciones[selectedSensIdx] ?? sensibilizaciones[0])
+            : null;
 
-  // Si no hay sensibilización, usamos datos originales
-  const emergentSens = selectedSens?.mercado_emergente || emergentOriginal;
+    // Si no hay sensibilización, usamos datos originales
+    const emergentSens = selectedSens?.mercado_emergente || emergentOriginal;
 
-  const empresaSensBase = selectedSens
-    ? resultCurrency === "usd"
-      ? selectedSens.empresa_dolares
-      : selectedSens.empresa_soles
-    : empresaOriginalBase;
+    const empresaSensBase = selectedSens
+        ? resultCurrency === "usd"
+            ? selectedSens.empresa_dolares
+            : selectedSens.empresa_soles
+        : empresaOriginalBase;
 
-  const secureDEmpresaSens =
-    empresaSensBase?.d_empresa ||
-    selectedSens?.empresa_dolares?.d_empresa ||
-    results.empresa_dolares?.d_empresa ||
-    "0%";
+    const secureDEmpresaSens =
+        empresaSensBase?.d_empresa ||
+        selectedSens?.empresa_dolares?.d_empresa ||
+        results.empresa_dolares?.d_empresa ||
+        "0%";
 
-  const empresaSens = empresaSensBase
-    ? {
-        ...empresaSensBase,
-        d_empresa: secureDEmpresaSens,
-      }
-    : undefined;
+    const empresaSens = empresaSensBase
+        ? {
+            ...empresaSensBase,
+            d_empresa: secureDEmpresaSens,
+        }
+        : undefined;
 
-  // Sección de vista simple (sin comparación lado a lado)
-  const renderSingleView = (
-    dataEmergent: MarketResults,
-    dataEmpresa?: MarketResults
-  ) => (
-    <section className="flex flex-col flex-wrap md:flex-row justify-center items-center w-full gap-4 mx-auto h-full">
-      <FinancieraCard
-        title="Mercado Desarrollado"
-        data={developedData}
-        isEmpresa={false}
-        resultCurrency={resultCurrency}
-        onResultCurrencyChange={onResultCurrencyChange}
-        compact={false}
-      />
-      <FinancieraCard
-        title="Mercado Emergente"
-        data={dataEmergent}
-        isEmpresa={false}
-        resultCurrency={resultCurrency}
-        onResultCurrencyChange={onResultCurrencyChange}
-        compact={false}
-      />
-      {showCompanyCard && dataEmpresa && (
-        <FinancieraCard
-          title="Tu Empresa"
-          data={dataEmpresa}
-          isEmpresa={true}
-          resultCurrency={resultCurrency}
-          onResultCurrencyChange={onResultCurrencyChange}
-          compact={false}
-          localCurrency={localCurrency}
-        />
-      )}
-    </section>
-  );
-
-  return (
-    <>
-      <header className="flex flex-col xl:flex-row mt-2 lg:mt-0 justify-between items-center w-full gap-6">
-        {/* Izquierda: Chatbot */}
-        {shouldShowChatbot ? (
-          <button
-            type="button"
-            onClick={onToggleForm}
-            className="px-4 py-2.5 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondar max-w-100"
-          >
-            <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
-              <Sparkles className="h-5 w-5 shrink-0" />
-              Encuentra tu Costo de Capital usando el Beta específico de tu
-              Empresa
-            </span>
-
-            <ArrowRight className="h-5 w-5 shrink-0" />
-          </button>
-        ) : (
-          <div className="relative xl:w-1/3 text-center xl:text-left">
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">
-              Resultados generales
-            </h1>
-            <p className="text-gray-600">Comparación de resultados</p>
-          </div>
-        )}
-
-        {/* Centro: Switch de Vistas */}
-        <div className="flex flex-1 flex-col items-start justify-center xl:w-1/3">
-          <div className="flex gap-1 bg-slate-200/70 p-1.5 rounded-xl shadow-inner border border-slate-200">
-            <button
-              type="button"
-              onClick={() => handleTabChange("original")}
-              className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
-                activeTab === "original"
-                  ? "bg-white text-valora-primary shadow-sm"
-                  : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
-              } cursor-pointer`}
-            >
-              Original
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTabChange("sensibility")}
-              className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
-                activeTab === "sensibility"
-                  ? "bg-white text-valora-primary shadow-sm"
-                  : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
-              } cursor-pointer`}
-            >
-              Sensibilidad
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTabChange("comparison")}
-              disabled={sensibilizaciones.length === 0}
-              className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
-                activeTab === "comparison"
-                  ? "bg-white text-valora-primary shadow-sm"
-                  : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
-              } ${
-                sensibilizaciones.length === 0
-                  ? "opacity-40 cursor-not-allowed"
-                  : "cursor-pointer"
-              }`}
-            >
-              Comparación
-            </button>
-          </div>
-          {sensibilizaciones.length === 0 && (
-            <span className="text-[11px] font-semibold text-slate-500 mt-2">
-              (Ingresa un β desapalancado primero)
-            </span>
-          )}
-        </div>
-      </header>
-
-      <main className="flex flex-col justify-center min-h-0 flex-1 w-full mt-6">
-        {activeTab === "comparison" ? (
-          <div className="flex flex-col xl:flex-row w-full max-w-350 mx-auto gap-2 items-center">
-            {/* COLUMNA IZQUIERDA: Mercado Desarrollado estático */}
-            <div className="flex flex-col justify-center w-full md:w-2/5">
-              <FinancieraCard
+    // Sección de vista simple (sin comparación lado a lado)
+    const renderSingleView = (
+        dataEmergent: MarketResults,
+        dataEmpresa?: MarketResults
+    ) => (
+        <section className="flex flex-col flex-wrap md:flex-row justify-center items-center w-full gap-4 mx-auto h-full">
+            <FinancieraCard
                 title="Mercado Desarrollado"
                 data={developedData}
                 isEmpresa={false}
                 resultCurrency={resultCurrency}
                 onResultCurrencyChange={onResultCurrencyChange}
-                compact={true}
-              />
-            </div>
-
-            {/* COLUMNA DERECHA: Filas Actual y Sensibilización */}
-            <div className="flex flex-col gap-6 w-full">
-              {/* FILA 1: DATOS ORIGINALES BASE */}
-              <div className="flex flex-col xl:flex-row items-center justify-center mt-4 xl:mt-0 xl:justify-start gap-4 w-full">
-                <BoaIndicator
-                  value={results.boa ? results.boa.toFixed(2) : "0.00"}
-                />
-                <section className="flex flex-col md:flex-row items-center justify-center w-fit xl:justify-start gap-4 ">
-                  <FinancieraCard
-                    title="Mercado Emergente"
-                    data={emergentOriginal}
-                    isEmpresa={false}
+                compact={false}
+            />
+            <FinancieraCard
+                title="Mercado Emergente"
+                data={dataEmergent}
+                isEmpresa={false}
+                resultCurrency={resultCurrency}
+                onResultCurrencyChange={onResultCurrencyChange}
+                compact={false}
+            />
+            {showCompanyCard && dataEmpresa && (
+                <FinancieraCard
+                    title="Tu Empresa"
+                    data={dataEmpresa}
+                    isEmpresa={true}
                     resultCurrency={resultCurrency}
                     onResultCurrencyChange={onResultCurrencyChange}
-                    compact={true}
-                  />
-                  {showCompanyCard && empresaOriginal && (
-                    <FinancieraCard
-                      title="Tu Empresa"
-                      data={empresaOriginal}
-                      isEmpresa={true}
-                      resultCurrency={resultCurrency}
-                      onResultCurrencyChange={onResultCurrencyChange}
-                      compact={true}
-                      localCurrency={localCurrency}
-                    />
-                  )}
-                </section>
-              </div>
+                    compact={false}
+                    localCurrency={localCurrency}
+                />
+            )}
+        </section>
+    );
 
-              {/* SELECTOR DE SENSIBILIZACIÓN */}
-              {sensibilizaciones.length > 1 && (
-                <div className="w-full border-gray-200 flex flex-col md:flex-row items-center justify-center gap-3">
-                  <label className="text-sm font-semibold text-gray-700">
-                    Sensibilización:
-                  </label>
-                  <select
-                    value={selectedSensIdx}
-                    onChange={(e) => setSelectedSensIdx(Number(e.target.value))}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-valora-primary focus:border-valora-primary outline-none bg-white cursor-pointer"
-                  >
-                    {sensibilizaciones.map((s, idx) => (
-                      <option key={idx} value={idx}>
-                        (Boa = {s.boa?.toFixed(2)})
-                        {s.created_at
-                          ? ` — ${formatToPeruTime(s.created_at)}`
-                          : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+    return (
+        <>
+            <header className="flex flex-col xl:flex-row mt-2 lg:mt-0 justify-between items-center w-full gap-6">
+                {/* Izquierda: Chatbot */}
+                {shouldShowChatbot ? (
+                    <button
+                        type="button"
+                        onClick={onToggleForm}
+                        className="px-4 py-2.5 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondar max-w-100"
+                    >
+                        <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
+                            <Sparkles className="h-5 w-5 shrink-0" />
+                            Encuentra tu Costo de Capital usando el Beta específico de tu
+                            Empresa
+                        </span>
 
-              {/* FILA 2: DATOS SENSIBILIZADOS */}
-              {sensibilizaciones.length > 0 ? (
-                <div className="flex flex-col xl:flex-row items-center justify-center xl:justify-start gap-4 w-full">
-                  <BoaIndicator
-                    value={
-                      selectedSens?.boa ? selectedSens.boa.toFixed(2) : "0.00"
-                    }
-                  />
-                  <section className="flex flex-col md:flex-row items-center justify-center w-fit xl:justify-start gap-4 ">
-                    <FinancieraCard
-                      title="Mercado Emergente"
-                      data={emergentSens}
-                      isEmpresa={false}
-                      resultCurrency={resultCurrency}
-                      onResultCurrencyChange={onResultCurrencyChange}
-                      compact={true}
-                    />
-                    {showCompanyCard && empresaSens && (
-                      <FinancieraCard
-                        title="Tu Empresa"
-                        data={empresaSens}
-                        isEmpresa={true}
-                        resultCurrency={resultCurrency}
-                        onResultCurrencyChange={onResultCurrencyChange}
-                        compact={true}
-                        localCurrency={localCurrency}
-                      />
+                        <ArrowRight className="h-5 w-5 shrink-0" />
+                    </button>
+                ) : (
+                    <div className="relative xl:w-1/3 text-center xl:text-left">
+                        <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                            Resultados generales
+                        </h1>
+                        <p className="text-gray-600">Comparación de resultados</p>
+                    </div>
+                )}
+
+                {/* Centro: Switch de Vistas */}
+                <div className="flex flex-1 flex-col items-start justify-center xl:w-1/3">
+                    <div className="flex gap-1 bg-slate-200/70 p-1.5 rounded-xl shadow-inner border border-slate-200">
+                        <button
+                            type="button"
+                            onClick={() => handleTabChange("original")}
+                            className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap ${activeTab === "original"
+                                    ? "bg-white text-valora-primary shadow-sm"
+                                    : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
+                                } cursor-pointer`}
+                        >
+                            Original
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleTabChange("sensibility")}
+                            className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap ${activeTab === "sensibility"
+                                    ? "bg-white text-valora-primary shadow-sm"
+                                    : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
+                                } cursor-pointer`}
+                        >
+                            Sensibilidad
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleTabChange("comparison")}
+                            disabled={sensibilizaciones.length === 0}
+                            className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap ${activeTab === "comparison"
+                                    ? "bg-white text-valora-primary shadow-sm"
+                                    : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
+                                } ${sensibilizaciones.length === 0
+                                    ? "opacity-40 cursor-not-allowed"
+                                    : "cursor-pointer"
+                                }`}
+                        >
+                            Comparación
+                        </button>
+                    </div>
+                    {sensibilizaciones.length === 0 && (
+                        <span className="text-[11px] font-semibold text-slate-500 mt-2">
+                            (Ingresa un β desapalancado primero)
+                        </span>
                     )}
-                  </section>
                 </div>
-              ) : (
-                <div className="w-full text-center text-gray-500 py-8">
-                  No hay datos de sensibilización disponibles. Ingresa un β
-                  desapalancado.
-                </div>
-              )}
-            </div>
-          </div>
-        ) : activeTab === "original" ? (
-          renderSingleView(emergentOriginal, empresaOriginal)
-        ) : (
-          renderSingleView(emergentSens, empresaSens)
-        )}
-      </main>
-    </>
-  );
+            </header>
+
+            <main className="flex flex-col justify-center min-h-0 flex-1 w-full mt-6">
+                {activeTab === "comparison" ? (
+                    <div className="flex flex-col xl:flex-row w-full max-w-350 mx-auto gap-2 items-center">
+                        {/* COLUMNA IZQUIERDA: Mercado Desarrollado estático */}
+                        <div className="flex flex-col justify-center w-full md:w-2/5">
+                            <FinancieraCard
+                                title="Mercado Desarrollado"
+                                data={developedData}
+                                isEmpresa={false}
+                                resultCurrency={resultCurrency}
+                                onResultCurrencyChange={onResultCurrencyChange}
+                                compact={true}
+                            />
+                        </div>
+
+                        {/* COLUMNA DERECHA: Filas Actual y Sensibilización */}
+                        <div className="flex flex-col gap-6 w-full">
+                            {/* FILA 1: DATOS ORIGINALES BASE */}
+                            <div className="flex flex-col xl:flex-row items-center justify-center mt-4 xl:mt-0 xl:justify-start gap-4 w-full">
+                                <BoaIndicator
+                                    value={results.boa ? results.boa.toFixed(2) : "0.00"}
+                                    label="Original"
+                                />
+                                <section className="flex flex-col md:flex-row items-center justify-center w-fit xl:justify-start gap-4 ">
+                                    <FinancieraCard
+                                        title="Mercado Emergente"
+                                        data={emergentOriginal}
+                                        isEmpresa={false}
+                                        resultCurrency={resultCurrency}
+                                        onResultCurrencyChange={onResultCurrencyChange}
+                                        compact={true}
+                                    />
+                                    {showCompanyCard && empresaOriginal && (
+                                        <FinancieraCard
+                                            title="Tu Empresa"
+                                            data={empresaOriginal}
+                                            isEmpresa={true}
+                                            resultCurrency={resultCurrency}
+                                            onResultCurrencyChange={onResultCurrencyChange}
+                                            compact={true}
+                                            localCurrency={localCurrency}
+                                        />
+                                    )}
+                                </section>
+                            </div>
+
+                            {/* SELECTOR DE SENSIBILIZACIÓN */}
+                            {sensibilizaciones.length > 1 && (
+                                <div className="w-full border-gray-200 flex flex-col md:flex-row items-center justify-center gap-3">
+                                    <label className="text-sm font-semibold text-gray-700">
+                                        Sensibilización:
+                                    </label>
+                                    <select
+                                        value={selectedSensIdx}
+                                        onChange={(e) => setSelectedSensIdx(Number(e.target.value))}
+                                        className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-valora-primary focus:border-valora-primary outline-none bg-white cursor-pointer"
+                                    >
+                                        {sensibilizaciones.map((s, idx) => (
+                                            <option key={idx} value={idx}>
+                                                (Boa = {s.boa?.toFixed(2)})
+                                                {s.created_at
+                                                    ? ` — ${formatToPeruTime(s.created_at)}`
+                                                    : ""}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            {/* FILA 2: DATOS SENSIBILIZADOS */}
+                            {sensibilizaciones.length > 0 ? (
+                                <div className="flex flex-col xl:flex-row items-center justify-center xl:justify-start gap-4 w-full">
+                                    <BoaIndicator
+                                        value={
+                                            selectedSens?.boa ? selectedSens.boa.toFixed(2) : "0.00"
+                                        }
+                                        label="Sensibilidad"
+                                    />
+                                    <section className="flex flex-col md:flex-row items-center justify-center w-fit xl:justify-start gap-4 ">
+                                        <FinancieraCard
+                                            title="Mercado Emergente"
+                                            data={emergentSens}
+                                            isEmpresa={false}
+                                            resultCurrency={resultCurrency}
+                                            onResultCurrencyChange={onResultCurrencyChange}
+                                            compact={true}
+                                        />
+                                        {showCompanyCard && empresaSens && (
+                                            <FinancieraCard
+                                                title="Tu Empresa"
+                                                data={empresaSens}
+                                                isEmpresa={true}
+                                                resultCurrency={resultCurrency}
+                                                onResultCurrencyChange={onResultCurrencyChange}
+                                                compact={true}
+                                                localCurrency={localCurrency}
+                                            />
+                                        )}
+                                    </section>
+                                </div>
+                            ) : (
+                                <div className="w-full text-center text-gray-500 py-8">
+                                    No hay datos de sensibilización disponibles. Ingresa un β
+                                    desapalancado.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ) : activeTab === "original" ? (
+                    renderSingleView(emergentOriginal, empresaOriginal)
+                ) : (
+                    renderSingleView(emergentSens, empresaSens)
+                )}
+            </main>
+        </>
+    );
 };
