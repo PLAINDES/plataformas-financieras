@@ -15,8 +15,18 @@ export function useLandingCMS(
 ) {
   const { getToken, user } = useAuthContext();
 
-  const getFieldName = (editableId: string): string =>
-    editableId.split("_").at(-1)!;
+  const getFieldName = (editableId: string): string => {
+    const parts = editableId.split("_");
+    if (parts.length > 1) {
+      return parts.slice(1).join("_");
+    }
+    // Si no tiene guión bajo, podría tener guiones medios
+    const dashParts = editableId.split("-");
+    if (dashParts.length > 1) {
+      return dashParts.slice(1).join("-");
+    }
+    return editableId;
+  };
 
   const save = (
     contentId: number,
@@ -37,16 +47,42 @@ export function useLandingCMS(
 
   const handleSaveContent = async (editableContent: EditableContent) => {
     try {
+      console.log("Saving content for section:", editableContent.section);
       const contentObj =
         findContent(`${editableContent.section}-home`) ||
         findContent(editableContent.section);
-      if (!contentObj)
+
+      if (!contentObj) {
+        console.error(
+          "Content object not found in data.page.contents. Available slugs:",
+          (_data?.page as any)?.contents?.map((c: any) => c.slug)
+        );
         throw new Error(`Content not found for ${editableContent.section}`);
+      }
+
+      console.log(
+        "Found content object:",
+        contentObj.slug,
+        "ID:",
+        contentObj.id
+      );
+
+      const fieldName = getFieldName(editableContent.id);
+      console.log(
+        "Updating field:",
+        fieldName,
+        "with value:",
+        editableContent.value
+      );
 
       const updatedData = {
-        ...contentObj.data,
-        [getFieldName(editableContent.id)]: editableContent.value,
+        ...(typeof contentObj.data === "string"
+          ? JSON.parse(contentObj.data)
+          : contentObj.data),
+        ...editableContent.additionalData,
+        [fieldName]: editableContent.value,
       };
+
       await save(contentObj.id, { data: updatedData, status: "published" });
       onLocalUpdate(contentObj.slug, updatedData);
     } catch (error) {
@@ -157,7 +193,6 @@ export function useLandingCMS(
           const fieldMap: Record<string, string> = {
             "team-authors": "authors",
             "team-developmentTeam": "developmentTeam",
-            "team-collaborators": "collaborators",
           };
           const fieldName = fieldMap[collectionData.id];
           if (!fieldName) throw new Error("Unknown team collection");

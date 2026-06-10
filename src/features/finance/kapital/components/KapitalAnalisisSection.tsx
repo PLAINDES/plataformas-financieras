@@ -10,17 +10,21 @@ import type {
 import { formatToPeruTime } from "../services/kapital.utils";
 import { ArrowRight, Sparkles } from "lucide-react";
 
-const BoaIndicator = ({ value }: { value: number | string }) => (
-  <div className="w-1/4 flex justify-center items-center h-full m-auto px-3">
-    <div className="flex items-baseline gap-4">
+const BoaIndicator = ({ value, label }: { value: number | string; label: string }) => (
+  <div className="w-full xl:w-1/4 flex flex-col justify-center items-center h-full m-auto px-4 py-3 bg-white border border-gray-200/80 rounded-xl shadow-sm text-center max-w-[200px] shrink-0 border-t-4 border-t-[#0088cc]">
+    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">{label}</span>
+    <div className="flex items-baseline gap-2.5">
       <div className="flex items-baseline text-[#0088cc]">
-        <span className="text-4xl lg:text-6xl font-serif">β</span>
-        <span className="text-lg lg:text-xl font-bold">oa</span>
+        <span className="text-3xl lg:text-4xl font-serif leading-none">β</span>
+        <span className="text-sm lg:text-md font-bold leading-none">oa</span>
       </div>
-      <span className="text-2xl lg:text-3xl font-normal text-gray-900">
+      <span className="text-2xl lg:text-3.5xl font-bold text-gray-800 leading-none">
         {value}
       </span>
     </div>
+    <span className="text-[10px] font-medium text-slate-500 mt-2">
+      {label === "Original" ? "Beta económico del sector" : "Beta económico específico"}
+    </span>
   </div>
 );
 
@@ -260,6 +264,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
               <div className="flex flex-col xl:flex-row items-center justify-center mt-4 xl:mt-0 xl:justify-start gap-4 w-full">
                 <BoaIndicator
                   value={results.boa ? results.boa.toFixed(2) : "0.00"}
+                  label="Original"
                 />
                 <section className="flex flex-col md:flex-row items-center justify-center w-fit xl:justify-start gap-4 ">
                   <FinancieraCard
@@ -314,6 +319,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                     value={
                       selectedSens?.boa ? selectedSens.boa.toFixed(2) : "0.00"
                     }
+                    label="Sensibilidad"
                   />
                   <section className="flex flex-col md:flex-row items-center justify-center w-fit xl:justify-start gap-4 ">
                     <FinancieraCard
