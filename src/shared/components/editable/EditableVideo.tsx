@@ -95,7 +95,11 @@ export function EditableVideo({
                 throw new Error("Error de red al subir el video");
             });
 
-            xhr.open("POST", uploadEndpoint);
+            const resolvedEndpoint = import.meta.env.DEV
+                ? uploadEndpoint
+                : `${(import.meta.env.VITE_API_URL || "").replace(/\/$/, "")}${uploadEndpoint.startsWith("/") ? uploadEndpoint : `/${uploadEndpoint}`}`;
+
+            xhr.open("POST", resolvedEndpoint);
             xhr.send(formData);
         } catch (error) {
             console.error("Error uploading video:", error);
@@ -133,7 +137,11 @@ export function EditableVideo({
                 formData.append("old_url", video.poster);
             }
 
-            const response = await fetch("/api/v1/cms/contents/upload-image", {
+            const resolvedPosterEndpoint = import.meta.env.DEV
+                ? "/api/v1/cms/contents/upload-image"
+                : `${(import.meta.env.VITE_API_URL || "").replace(/\/$/, "")}/api/v1/cms/contents/upload-image`;
+
+            const response = await fetch(resolvedPosterEndpoint, {
                 method: "POST",
                 body: formData,
                 credentials: "include",
