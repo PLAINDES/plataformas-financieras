@@ -62,7 +62,11 @@ export function EditableImage({
                 formData.append("old_url", content.value);
             }
 
-            const response = await fetch(uploadEndpoint, {
+            const resolvedEndpoint = import.meta.env.DEV
+                ? uploadEndpoint
+                : `${(import.meta.env.VITE_API_URL || "").replace(/\/$/, "")}${uploadEndpoint.startsWith("/") ? uploadEndpoint : `/${uploadEndpoint}`}`;
+
+            const response = await fetch(resolvedEndpoint, {
                 method: "POST",
                 body: formData,
                 credentials: "include",
