@@ -6,6 +6,7 @@ export interface EditableContent {
   value: string;
   section: string;
   data?: any;
+  additionalData?: Record<string, any>;
 }
 
 export interface CollectionItem {

@@ -23,97 +23,96 @@ import { UsersPage } from "./features/admin/pages/UsersPage";
 import { ToastProvider } from "./shared/components/common/ToastProvider";
 
 const COMPANY = {
-  id: 1,
-  name: "Plataforma Finanzas",
-  host: "https://kapitals.org",
-  logos: [
-    { id: 1, patch: "/images/logo.png", type: "default" as const },
-    { id: 2, patch: "/images/diseñador.png", type: "sticky" as const },
-  ],
+    id: 1,
+    name: "Plataforma Finanzas",
+    host: "https://kapitals.org",
+    logos: [
+        { id: 1, patch: "/images/logo.png", type: "default" as const },
+        { id: 2, patch: "/images/diseñador.png", type: "sticky" as const },
+    ],
 };
 
 function App() {
-  const {
-    user,
-    logout,
-    login,
-    register,
-    loading: authLoading,
-  } = useAuthContext();
+    const {
+        user,
+        logout,
+        login,
+        register,
+        loading: authLoading,
+    } = useAuthContext();
 
-  if (authLoading) {
+    if (authLoading) {
+        return (
+            <div
+                className="d-flex justify-content-center align-items-center"
+                style={{ minHeight: "100vh" }}
+            >
+                <div className="spinner-border text-primary" />
+            </div>
+        );
+    }
+
     return (
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "100vh" }}
-      >
-        <div className="spinner-border text-primary" />
-      </div>
+        <ToastProvider>
+            <Routes>
+                {/* Rutas públicas */}
+                <Route element={<PublicLayout />}>
+                    <Route
+                        path="/"
+                        element={
+                            <LandingPage
+                                company={COMPANY}
+                                user={user}
+                                onLogout={logout}
+                                onLogin={login}
+                                onRegister={register}
+                            />
+                        }
+                    />
+                </Route>
+
+                {/* Rutas internas */}
+                <Route element={<InternalLayout />}>
+                    <Route path="/kapital" element={<KapitalPage />} />
+                    <Route path="/kapital/:code" element={<KapitalPage />} />
+                    <Route path="/valora" element={<ValoraPage />} />
+                    <Route
+                        path="usuario/proyectos"
+                        element={<ProyectosUsuarioPage onOpenForm={() => { }} />}
+                    />
+                </Route>
+
+                <Route
+                    path="/admin"
+                    element={
+                        <ProtectedRoute requireAdmin={true}>
+                            <MainLayout>
+                                <Outlet />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route index element={<DashboardPage />} />
+                    <Route
+                        path="master/plantillas"
+                        element={<PlantillasMaestrasPage />}
+                    />
+                    <Route path="reportes" element={<ReportesKapitalPage />} />
+                    <Route path="reportes/nuevo" element={<ReporteKapitalEditor />} />
+                    <Route path="kapital" element={<KapitalSettingsPage />} />
+                    <Route path="portadas" element={<PortadasPage />} />
+                    <Route path="portadas/nuevo" element={<PortadaCreatePage />} />
+                    <Route path="portadas/:id/editar" element={<PortadaEditPage />} />
+                    <Route
+                        path="reportes/:id/editar"
+                        element={<ReporteKapitalEditor />}
+                    />
+                    <Route path="usuarios" element={<UsersPage />} />
+                    <Route path="configuraciones" element={<ConfiguracionPage />} />
+                </Route>
+            </Routes>
+        </ToastProvider>
     );
-  }
-
-  return (
-    <ToastProvider>
-      <Routes>
-        {/* Rutas públicas */}
-        <Route element={<PublicLayout />}>
-          <Route
-            path="/"
-            element={
-              <LandingPage
-                isAdmin={user?.role === "admin"}
-                company={COMPANY}
-                user={user}
-                onLogout={logout}
-                onLogin={login}
-                onRegister={register}
-              />
-            }
-          />
-        </Route>
-
-        {/* Rutas internas */}
-        <Route element={<InternalLayout />}>
-          <Route path="/kapital" element={<KapitalPage />} />
-          <Route path="/kapital/:code" element={<KapitalPage />} />
-          <Route path="/valora" element={<ValoraPage />} />
-          <Route
-            path="usuario/proyectos"
-            element={<ProyectosUsuarioPage onOpenForm={() => {}} />}
-          />
-        </Route>
-
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute requireAdmin={true}>
-              <MainLayout>
-                <Outlet />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<DashboardPage />} />
-          <Route
-            path="master/plantillas"
-            element={<PlantillasMaestrasPage />}
-          />
-          <Route path="reportes" element={<ReportesKapitalPage />} />
-          <Route path="reportes/nuevo" element={<ReporteKapitalEditor />} />
-          <Route path="kapital" element={<KapitalSettingsPage />} />
-          <Route path="portadas" element={<PortadasPage />} />
-          <Route path="portadas/nuevo" element={<PortadaCreatePage />} />
-          <Route path="portadas/:id/editar" element={<PortadaEditPage />} />
-          <Route
-            path="reportes/:id/editar"
-            element={<ReporteKapitalEditor />}
-          />
-          <Route path="usuarios" element={<UsersPage />} />
-          <Route path="configuraciones" element={<ConfiguracionPage />} />
-        </Route>
-      </Routes>
-    </ToastProvider>
-  );
 }
 
 export default App;
