@@ -1,8 +1,6 @@
 import { useState } from "react";
 import {
     Send,
-    Settings,
-    Phone,
     Loader2,
     UploadCloud,
     Check,

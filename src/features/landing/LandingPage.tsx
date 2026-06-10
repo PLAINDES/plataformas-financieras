@@ -1,7 +1,6 @@
 // src/features/landing/LandingPage.tsx
 import { HeroSection } from "./sections/HeroSection";
 import { PlatformCardsSection } from "./sections/PlatformCardsSection";
-import { ClientsSection } from "./sections/ClientsSection";
 import { WhatsAppSection } from "./sections/WhatsAppSection";
 import { CTASection } from "./sections/CTASection";
 import TeamSection from "./sections/TeamSection";

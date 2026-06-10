@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { EditableText } from "@/shared/components/editable/EditableText";
 import {
     EditableCollection,
@@ -37,7 +37,6 @@ export default function TeamSection({
     content,
     onSave,
     onSaveCollection,
-    onUploadImage,
 }: TeamSectionProps) {
     const [openSections, setOpenSections] = useState<Record<string, boolean>>({
         authors: false,
