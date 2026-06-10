@@ -207,8 +207,8 @@ export function EditableImage({
                                         onClick={() => setUploadMethod("file")}
                                         disabled={isSaving || isUploading}
                                         className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${uploadMethod === "file"
-                                                ? "border-blue-600 text-blue-600"
-                                                : "border-transparent text-slate-500 hover:text-slate-700"
+                                            ? "border-blue-600 text-blue-600"
+                                            : "border-transparent text-slate-500 hover:text-slate-700"
                                             }`}
                                     >
                                         <UploadCloud className="w-4 h-4" /> Subir archivo
@@ -217,8 +217,8 @@ export function EditableImage({
                                         onClick={() => setUploadMethod("url")}
                                         disabled={isSaving || isUploading}
                                         className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${uploadMethod === "url"
-                                                ? "border-blue-600 text-blue-600"
-                                                : "border-transparent text-slate-500 hover:text-slate-700"
+                                            ? "border-blue-600 text-blue-600"
+                                            : "border-transparent text-slate-500 hover:text-slate-700"
                                             }`}
                                     >
                                         <LinkIcon className="w-4 h-4" /> URL externa
