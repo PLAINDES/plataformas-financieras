@@ -502,17 +502,21 @@ const KapitalPage: React.FC = () => {
         ) : null;
 
     const panelHeaderClose = (onClose: () => void) => (
-        <div className="flex justify-between items-center px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-100 bg-gray-50/50 shrink-0">
-            <h3 className="font-bold text-gray-800 text-base sm:text-lg flex items-center gap-2">
-                <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-valora-primary" />
-                Empresas Comparables
-            </h3>
+        <div className="flex justify-between items-center px-3 py-2 sm:px-4 sm:py-2.5 border-b border-gray-100 bg-gray-50/60 shrink-0">
+            <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 shadow-xs">
+                    <Bot className="w-3.5 h-3.5 text-valora-primary" />
+                </div>
+                <span className="text-xs sm:text-[13px] font-semibold tracking-tight text-slate-700">
+                    Empresas Comparables
+                </span>
+            </div>
             <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"
+                className="p-1 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"
             >
-                <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                <X className="w-4 h-4" />
             </button>
         </div>
     );
@@ -523,13 +527,9 @@ const KapitalPage: React.FC = () => {
             <div className="flex-1 flex flex-col p-4 sm:p-5 overflow-y-auto gap-4 min-h-0 bg-slate-50/40">
                 {/* Input del subsector (Paso 1, siempre arriba si iniciamos la búsqueda con modal) */}
                 {subsectorModalOpen && (
-                    <div className="flex flex-col gap-3 bg-white p-4 rounded-xl border border-gray-100 shadow-sm shrink-0">
-
-                        <div className="flex gap-2 items-end">
-                            <div className="flex-1 flex flex-col gap-1">
-                                <label className="text-[11px] font-bold text-gray-700">
-                                    Subsector o tipo de empresa
-                                </label>
+                    <div className="shrink-0">
+                        <div className="flex gap-2 items-center rounded-full border border-gray-200 bg-white px-2 py-1.5 focus-within:border-valora-primary/60 focus-within:ring-2 focus-within:ring-valora-primary/10 transition-all">
+                            <div className="flex-1 min-w-0">
                                 <input
                                     type="text"
                                     autoFocus
@@ -543,14 +543,14 @@ const KapitalPage: React.FC = () => {
                                         if (e.key === "Escape") handleCloseModal();
                                     }}
                                     placeholder="Ej: software de pagos, manufactura..."
-                                    className="w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-valora-primary transition-colors disabled:opacity-50 h-[36px]"
+                                    className="w-full bg-transparent px-2 py-1.5 text-xs focus:outline-none disabled:opacity-50"
                                 />
                             </div>
                             <button
                                 type="button"
                                 disabled={isSearchingBeta}
                                 onClick={() => executeSearchSectorBeta(subsectorInput)}
-                                className="px-5 py-2 text-xs font-bold text-white bg-valora-primary rounded-lg hover:bg-valora-secondary transition-colors cursor-pointer shadow-sm flex items-center gap-1.5 h-[36px] disabled:opacity-50 shrink-0"
+                                className="px-3 py-1.5 text-xs font-semibold text-white bg-valora-primary rounded-full hover:bg-valora-secondary transition-colors cursor-pointer shadow-sm flex items-center gap-1.5 h-8 disabled:opacity-50 shrink-0"
                             >
                                 {isSearchingBeta && (
                                     <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
@@ -576,7 +576,7 @@ const KapitalPage: React.FC = () => {
                 )}
 
                 {modalData && (
-                    <div className="flex-1 min-h-0 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col p-4 sm:p-5">
+                    <div className="flex-1 min-h-0  overflow-hidden flex flex-col ">
                         <YahooResults
                             data={modalData}
                             isWaccCalculated={calc.isWaccCalculated || false}
@@ -709,7 +709,7 @@ const KapitalPage: React.FC = () => {
                     />
                 </div>
                 {(subsectorModalOpen || modalData) && (
-                    <div className="hidden lg:flex w-125 xl:w-162.5 h-[calc(100vh-14rem)] bg-white border border-gray-200/80 rounded-xl flex-col shrink-0 animate-in slide-in-from-left-8 duration-300 ml-4 overflow-hidden self-start mt-4 ">
+                    <div className="hidden lg:flex w-125 xl:w-162.5 h-[calc(100dvh-8rem)] max-h-[calc(100dvh-8rem)] bg-white border border-gray-200/80 rounded-xl flex-col shrink-0 animate-in slide-in-from-left-8 duration-300 ml-4 overflow-hidden self-start mt-4 ">
                         {yahooPanelContent}
                     </div>
                 )}
@@ -726,8 +726,8 @@ const KapitalPage: React.FC = () => {
 
             {/* Modal Flotante de Empresas (SOLO MÓVIL/TABLET: < lg) */}
             {(subsectorModalOpen || modalData) && (
-                <div className="fixed inset-0 z-120 flex lg:hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-all animate-in fade-in">
-                    <div className={`bg-white rounded-xl shadow-2xl w-[90dvw] max-w-2xl overflow-hidden flex flex-col animate-in zoom-in-95 justify-between ${modalData ? "h-[80dvh] sm:max-h-[85dvh]" : "h-auto"}`}>
+                <div className="fixed inset-0 z-120 flex lg:hidden items-start justify-center overflow-y-auto bg-gray-900/40 backdrop-blur-sm transition-all animate-in fade-in p-2 sm:p-4">
+                    <div className={`bg-white rounded-xl shadow-2xl w-[96dvw] max-w-2xl overflow-hidden flex flex-col animate-in zoom-in-95 justify-between ${modalData ? "h-[calc(100dvh-1rem)] sm:h-[85dvh]" : "h-auto"}`}>
                         {yahooPanelContent}
                     </div>
                 </div>
