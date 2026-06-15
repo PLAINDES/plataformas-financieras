@@ -161,15 +161,12 @@ export function useKapitalCalculation({
         ui.setResultsSection("sensitivity");
         ui.setShowComparison(false);
         addToast(
-          `Sensibilización calculada con β=${betaUnlevered} (cálculo #${persistedCalculation.id}).`,
+          `Sensibilización calculada con β=${betaUnlevered}.`,
           "success"
         );
       } else {
         ui.setResultsSection("result");
-        addToast(
-          `Resultados generados y guardados (cálculo #${persistedCalculation.id}).`,
-          "success"
-        );
+        addToast("Resultados generados y guardados.", "success");
       }
 
       setIsSessionFresh(true); // El excel ya se actualizado con los datos del form

@@ -114,7 +114,7 @@ export function LandingHeader({
                                 }}
                                 onSave={onSave!}
                                 alt="Logo"
-                                className="h-8 lg:h-10 w-auto object-contain"
+                                className="h-14 lg:h-16 w-auto object-contain"
                             />
                         </div>
                     </div>
@@ -160,7 +160,7 @@ export function LandingHeader({
                                 Iniciar Sesión
                             </Button>
                         )}
-                        <div className="flex items-center group cursor-pointer transition-transform duration-300 hover:scale-105">
+                        <div className="flex shrink-0 items-center group cursor-pointer transition-transform duration-300 hover:scale-105">
                             <EditableImage
                                 content={{
                                     value: content?.logo_right || "images/logo.png",
@@ -170,7 +170,7 @@ export function LandingHeader({
                                 }}
                                 onSave={onSave!}
                                 alt="Logo"
-                                className="h-8 lg:h-10 w-auto object-contain"
+                                className="h-12 lg:h-14 w-auto object-contain"
                             />
                         </div>
                     </div>
@@ -202,7 +202,7 @@ export function LandingHeader({
                 >
                     <div className="flex flex-col h-full">
                         <div className="p-6 flex items-center justify-between border-b border-gray-50">
-                            <img src="images/logo.png" alt="Logo" className="h-7" />
+                            <img src="images/logo.png" alt="Logo" className="h-8" />
                             <Button
                                 variant="ghost"
                                 size="icon"
