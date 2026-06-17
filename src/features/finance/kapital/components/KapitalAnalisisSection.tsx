@@ -10,7 +10,7 @@ import type {
 import { formatToPeruTime } from "../services/kapital.utils";
 import { ArrowRight, Sparkles } from "lucide-react";
 
-const BoaIndicator = ({ value, label }: { value: number | string; label: string }) => (
+const BoaIndicator = ({ value, label, selectedSector }: { value: number | string; label: string; selectedSector?: string | null }) => (
     <div className="w-full xl:w-1/4 flex flex-col justify-center items-center h-full m-auto px-4 py-3 bg-white border border-gray-200/80 rounded-xl shadow-sm text-center max-w-[200px] shrink-0 border-t-4 border-t-[#0088cc]">
         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">{label}</span>
         <div className="flex items-baseline gap-2.5">
@@ -23,13 +23,15 @@ const BoaIndicator = ({ value, label }: { value: number | string; label: string 
             </span>
         </div>
         <span className="text-[10px] font-medium text-slate-500 mt-2">
-            {label === "Original" ? "Beta económico del sector" : "Beta económico específico"}
+            {label === selectedSector ? "Beta económico del sector" : "Beta económico específico"}
         </span>
     </div>
 );
 
 export interface KapitalAnalisisSectionProps {
     results: Results;
+    selectedSector?: string | null;
+    selectedSubsector?: string | null;
     showCompanyCard: boolean;
     resultCurrency: "pen" | "usd";
     onResultCurrencyChange: (currency: "pen" | "usd") => void;
@@ -55,6 +57,8 @@ type TabView = "original" | "sensibility" | "comparison";
 
 export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
     results,
+    selectedSector,
+    selectedSubsector,
     showCompanyCard,
     resultCurrency,
     onResultCurrencyChange,
@@ -65,6 +69,10 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
     shouldShowChatbot,
     onToggleForm,
 }) => {
+    const titleContext = selectedSubsector?.trim()
+        ? ` del subsector ${selectedSubsector.trim()}`
+        : ` del sector ${(selectedSector || "").trim()}`;
+
     const [selectedSensIdx, setSelectedSensIdx] = useState(0);
     const [activeTab, setActiveTab] = useState<TabView>("sensibility");
 
@@ -178,8 +186,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                     >
                         <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
                             <Sparkles className="h-5 w-5 shrink-0" />
-                            Encuentra tu Costo de Capital usando el Beta específico de tu
-                            Empresa
+                            Afina tu cálculo con tu subsector específico
                         </span>
 
                         <ArrowRight className="h-5 w-5 shrink-0" />
@@ -187,7 +194,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                 ) : (
                     <div className="relative xl:w-1/3 text-center xl:text-left">
                         <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                            Resultados generales
+                            Resultados generales{titleContext}
                         </h1>
                         <p className="text-gray-600">Comparación de resultados</p>
                     </div>
@@ -200,8 +207,8 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                             type="button"
                             onClick={() => handleTabChange("original")}
                             className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap ${activeTab === "original"
-                                    ? "bg-white text-valora-primary shadow-sm"
-                                    : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
+                                ? "bg-white text-valora-primary shadow-sm"
+                                : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
                                 } cursor-pointer`}
                         >
                             Original
@@ -210,8 +217,8 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                             type="button"
                             onClick={() => handleTabChange("sensibility")}
                             className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap ${activeTab === "sensibility"
-                                    ? "bg-white text-valora-primary shadow-sm"
-                                    : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
+                                ? "bg-white text-valora-primary shadow-sm"
+                                : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
                                 } cursor-pointer`}
                         >
                             Sensibilidad
@@ -221,8 +228,8 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                             onClick={() => handleTabChange("comparison")}
                             disabled={sensibilizaciones.length === 0}
                             className={`px-4 sm:px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap ${activeTab === "comparison"
-                                    ? "bg-white text-valora-primary shadow-sm"
-                                    : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
+                                ? "bg-white text-valora-primary shadow-sm"
+                                : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
                                 } ${sensibilizaciones.length === 0
                                     ? "opacity-40 cursor-not-allowed"
                                     : "cursor-pointer"
@@ -260,7 +267,8 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                             <div className="flex flex-col xl:flex-row items-center justify-center mt-4 xl:mt-0 xl:justify-start gap-4 w-full">
                                 <BoaIndicator
                                     value={results.boa ? results.boa.toFixed(2) : "0.00"}
-                                    label="Original"
+                                    label={selectedSector as string}
+                                    selectedSector={selectedSector || undefined}
                                 />
                                 <section className="flex flex-col md:flex-row items-center justify-center w-fit xl:justify-start gap-4 ">
                                     <FinancieraCard
@@ -315,7 +323,8 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                                         value={
                                             selectedSens?.boa ? selectedSens.boa.toFixed(2) : "0.00"
                                         }
-                                        label="Sensibilidad"
+                                        label={selectedSubsector ? selectedSubsector : "Personalizado"}
+                                        selectedSector={selectedSector || undefined}
                                     />
                                     <section className="flex flex-col md:flex-row items-center justify-center w-fit xl:justify-start gap-4 ">
                                         <FinancieraCard

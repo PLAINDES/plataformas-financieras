@@ -44,6 +44,7 @@ import { YahooResults } from "../components/Chatbot/ChatbotUI";
 export interface FormData {
     date: string;
     sector: string;
+    subsector?: string;
     beta_unlevered_industry: string;
     instrument: string;
     bono: string;
@@ -121,6 +122,9 @@ const KapitalPage: React.FC = () => {
     const [modalData, setModalData] = useState<YahooFinanceData | null>(null);
     const [subsectorModalOpen, setSubsectorModalOpen] = useState(false);
     const [subsectorInput, setSubsectorInput] = useState("");
+    const [selectedSubsector, setSelectedSubsector] = useState<string | null>(
+        null
+    );
 
     const [toasts, setToasts] = useState<
         Array<{ id: string; type: ToastType; message: string }>
@@ -240,8 +244,6 @@ const KapitalPage: React.FC = () => {
     };
 
     const handleCloseModal = useCallback(() => {
-        setModalData(null);
-        setModalActions(null);
         setSubsectorModalOpen(false);
     }, []);
 
@@ -375,18 +377,23 @@ const KapitalPage: React.FC = () => {
 
     const handleSearchSectorBeta = () => {
         if (!form.formData.sector) return;
-        setSubsectorInput("");
         setSubsectorModalOpen(true);
     };
 
     const executeSearchSectorBeta = async (subsector: string) => {
         const currentSector = form.formData.sector;
         if (!currentSector) return;
+        const normalizedSubsector = subsector.trim();
 
-        const cacheKey = `${currentSector}__${subsector.trim().toLowerCase()}`;
+        const cacheKey = `${currentSector}__${normalizedSubsector.toLowerCase()}`;
 
         // 1. Verificación de caché
         if (sectorCache.current[cacheKey]) {
+            setSelectedSubsector(normalizedSubsector || null);
+            form.setFormData((prev) => ({
+                ...prev,
+                subsector: normalizedSubsector || "",
+            }));
             setModalData(sectorCache.current[cacheKey]);
             setModalActions({
                 onApplyCompany: (company: CompanyData) => {
@@ -449,6 +456,11 @@ const KapitalPage: React.FC = () => {
             if (data.tickers && data.tickers.length > 0) {
                 const res = await MainService.analyzeCompanies(data.tickers);
                 if (res.success && res.valid_companies?.length) {
+                    setSelectedSubsector(normalizedSubsector || null);
+                    form.setFormData((prev) => ({
+                        ...prev,
+                        subsector: normalizedSubsector || "",
+                    }));
                     sectorCache.current[cacheKey] = res;
 
                     setModalData(res);
@@ -521,48 +533,46 @@ const KapitalPage: React.FC = () => {
         </div>
     );
 
-    const yahooPanelContent = (subsectorModalOpen || modalData) ? (
+    const yahooPanelContent = subsectorModalOpen ? (
         <>
             {panelHeaderClose(handleCloseModal)}
             <div className="flex-1 flex flex-col p-4 sm:p-5 overflow-y-auto gap-4 min-h-0 bg-slate-50/40">
                 {/* Input del subsector (Paso 1, siempre arriba si iniciamos la búsqueda con modal) */}
-                {subsectorModalOpen && (
-                    <div className="shrink-0">
-                        <div className="flex gap-2 items-center rounded-full border border-gray-200 bg-white px-2 py-1.5 focus-within:border-valora-primary/60 focus-within:ring-2 focus-within:ring-valora-primary/10 transition-all">
-                            <div className="flex-1 min-w-0">
-                                <input
-                                    type="text"
-                                    autoFocus
-                                    disabled={isSearchingBeta}
-                                    value={subsectorInput}
-                                    onChange={(e) => setSubsectorInput(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter" && !isSearchingBeta) {
-                                            executeSearchSectorBeta(subsectorInput);
-                                        }
-                                        if (e.key === "Escape") handleCloseModal();
-                                    }}
-                                    placeholder="Ej: software de pagos, manufactura..."
-                                    className="w-full bg-transparent px-2 py-1.5 text-xs focus:outline-none disabled:opacity-50"
-                                />
-                            </div>
-                            <button
-                                type="button"
+                <div className="shrink-0">
+                    <div className="flex gap-2 items-center rounded-full border border-gray-200 bg-white px-2 py-1.5 focus-within:border-valora-primary/60 focus-within:ring-2 focus-within:ring-valora-primary/10 transition-all">
+                        <div className="flex-1 min-w-0">
+                            <input
+                                type="text"
+                                autoFocus
                                 disabled={isSearchingBeta}
-                                onClick={() => executeSearchSectorBeta(subsectorInput)}
-                                className="px-3 py-1.5 text-xs font-semibold text-white bg-valora-primary rounded-full hover:bg-valora-secondary transition-colors cursor-pointer shadow-sm flex items-center gap-1.5 h-8 disabled:opacity-50 shrink-0"
-                            >
-                                {isSearchingBeta && (
-                                    <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                    </svg>
-                                )}
-                                {isSearchingBeta ? "Buscando..." : "Buscar"}
-                            </button>
+                                value={subsectorInput}
+                                onChange={(e) => setSubsectorInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" && !isSearchingBeta) {
+                                        executeSearchSectorBeta(subsectorInput);
+                                    }
+                                    if (e.key === "Escape") handleCloseModal();
+                                }}
+                                placeholder="Ej: software de pagos, manufactura..."
+                                className="w-full bg-transparent px-2 py-1.5 text-xs focus:outline-none disabled:opacity-50"
+                            />
                         </div>
+                        <button
+                            type="button"
+                            disabled={isSearchingBeta}
+                            onClick={() => executeSearchSectorBeta(subsectorInput)}
+                            className="px-3 py-1.5 text-xs font-semibold text-white bg-valora-primary rounded-full hover:bg-valora-secondary transition-colors cursor-pointer shadow-sm flex items-center gap-1.5 h-8 disabled:opacity-50 shrink-0"
+                        >
+                            {isSearchingBeta && (
+                                <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                            )}
+                            {isSearchingBeta ? "Buscando..." : "Buscar"}
+                        </button>
                     </div>
-                )}
+                </div>
 
                 {/* loader o tabla (Paso 2, se acopla abajo) */}
                 {isSearchingBeta && !modalData && (
@@ -605,6 +615,14 @@ const KapitalPage: React.FC = () => {
                 <KapitalResults
                     section={resultsSection}
                     results={calc.results}
+                    selectedSector={
+                        form.formData.sector
+                            ? (INDUSTRY_TRANSLATIONS[form.formData.sector] || form.formData.sector)
+                            : null
+                    }
+                    selectedSubsector={
+                        selectedSubsector || form.formData.subsector || null
+                    }
                     showCompanyCard={calc.showCompanyCard}
                     resultCurrency={calc.resultCurrency}
                     onResultCurrencyChange={calc.setResultCurrency}
@@ -708,7 +726,7 @@ const KapitalPage: React.FC = () => {
                         isSearchingBeta={isSearchingBeta}
                     />
                 </div>
-                {(subsectorModalOpen || modalData) && (
+                {subsectorModalOpen && (
                     <div className="hidden lg:flex w-125 xl:w-162.5 h-[calc(100dvh-8rem)] max-h-[calc(100dvh-8rem)] bg-white border border-gray-200/80 rounded-xl flex-col shrink-0 animate-in slide-in-from-left-8 duration-300 ml-4 overflow-hidden self-start mt-4 ">
                         {yahooPanelContent}
                     </div>
@@ -725,7 +743,7 @@ const KapitalPage: React.FC = () => {
             />
 
             {/* Modal Flotante de Empresas (SOLO MÓVIL/TABLET: < lg) */}
-            {(subsectorModalOpen || modalData) && (
+            {subsectorModalOpen && (
                 <div className="fixed inset-0 z-120 flex lg:hidden items-start justify-center overflow-y-auto bg-gray-900/40 backdrop-blur-sm transition-all animate-in fade-in p-2 sm:p-4">
                     <div className={`bg-white rounded-xl shadow-2xl w-[96dvw] max-w-2xl overflow-hidden flex flex-col animate-in zoom-in-95 justify-between ${modalData ? "h-[calc(100dvh-1rem)] sm:h-[85dvh]" : "h-auto"}`}>
                         {yahooPanelContent}
