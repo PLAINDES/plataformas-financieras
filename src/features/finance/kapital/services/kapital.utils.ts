@@ -206,6 +206,8 @@ export const enrichCalculationInputPayload = (formData: FormData) => {
   const payload = {
     fecha: toPossibleNumber(formData.date),
     industria: toPossibleNumber(formData.sector),
+    subsector:
+      typeof formData.subsector === "string" ? formData.subsector.trim() : "",
     tasa_libre_riesgo: toPossibleNumber(formData.instrument),
     anio_bono: toPossibleNumber(formData.bono),
     pais: toPossibleNumber(formData.country),

@@ -277,8 +277,8 @@ export const ChatbotToggler = ({
         onClick={onClick}
         aria-label={isOpen ? "Cerrar chat" : "Abrir chat"}
         className={`px-4 py-2.5 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer ${isOpen
-                ? "bg-gray-900 text-white rounded-t-xl rounded-b-none border border-b-0 border-gray-200"
-                : "bg-valora-primary text-white rounded-xl hover:bg-valora-secondary"
+            ? "bg-gray-900 text-white rounded-t-xl rounded-b-none border border-b-0 border-gray-200"
+            : "bg-valora-primary text-white rounded-xl hover:bg-valora-secondary"
             }`}
     >
         <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
@@ -387,23 +387,6 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
                                         <div className="flex items-center justify-center gap-1">
                                             <button
                                                 type="button"
-                                                onClick={() => onApply(company)}
-                                                disabled={!isWaccCalculated}
-                                                title={
-                                                    !isWaccCalculated
-                                                        ? "Debe calcular el WACC primero"
-                                                        : "Insertar al formulario"
-                                                }
-                                                className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold mx-auto ${isWaccCalculated
-                                                        ? "bg-valora-primary text-white hover:bg-valora-secondary cursor-pointer shadow-sm"
-                                                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                                    }`}
-                                            >
-                                                <MousePointerClick className="w-3.5 h-3.5" />
-                                                Insertar
-                                            </button>
-                                            <button
-                                                type="button"
                                                 onClick={() => setTickerToDelete(company.ticker)}
                                                 title="Eliminar de la lista"
                                                 className="p-1.5 rounded-md bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-colors cursor-pointer border border-red-100"
@@ -450,8 +433,8 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
                                 : "Insertar promedio al formulario"
                         }
                         className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-semibold transition-all shrink-0 ${isWaccCalculated
-                                ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer shadow-md active:scale-95"
-                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer shadow-md active:scale-95"
+                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
                             }`}
                     >
                         <MousePointerClick className="w-4 h-4" />
@@ -460,12 +443,6 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
                 </div>
             )}
 
-            {!isWaccCalculated && (
-                <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 text-center">
-                    Realiza el cálculo base de tu WACC en el panel izquierdo antes de
-                    insertar datos optimizados.
-                </p>
-            )}
             {/* Componente del Modal */}
             <ConfirmationModal
                 isOpen={tickerToDelete !== null}

@@ -208,6 +208,7 @@ export function useKapitalCalculation({
               ...prev,
               date: (latestInput.fecha as string) || "",
               sector: (latestInput.industria as string) || "",
+              subsector: (latestInput.subsector as string) || "",
               instrument: (latestInput.tasa_libre_riesgo as string) || "",
               bono: (latestInput.anio_bono as string) || "",
               country: (latestInput.pais as string) || "",

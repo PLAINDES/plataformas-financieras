@@ -5,94 +5,101 @@ import { ArrowRight, Sparkles } from "lucide-react";
 //import { Book } from "./Book";
 
 export interface KapitalResultadosSectionProps {
-  results: Results;
-  showCompanyCard: boolean;
-  resultCurrency: "pen" | "usd";
-  onResultCurrencyChange: (currency: "pen" | "usd") => void;
-  onOpenReport?: () => void;
-  localCurrency?: string;
-  chatbotComponent?: React.ReactNode;
-  shouldShowChatbot: boolean;
-  onToggleForm: () => void;
+    results: Results;
+    selectedSector?: string | null;
+    selectedSubsector?: string | null;
+    showCompanyCard: boolean;
+    resultCurrency: "pen" | "usd";
+    onResultCurrencyChange: (currency: "pen" | "usd") => void;
+    onOpenReport?: () => void;
+    localCurrency?: string;
+    chatbotComponent?: React.ReactNode;
+    shouldShowChatbot: boolean;
+    onToggleForm: () => void;
 }
 
 export const KapitalResultadosSection: React.FC<
-  KapitalResultadosSectionProps
+    KapitalResultadosSectionProps
 > = ({
-  results,
-  showCompanyCard,
-  resultCurrency,
-  onResultCurrencyChange,
-  localCurrency,
-  shouldShowChatbot,
-  onToggleForm,
-  //onOpenReport,
+    results,
+    selectedSector,
+    selectedSubsector,
+    showCompanyCard,
+    resultCurrency,
+    onResultCurrencyChange,
+    localCurrency,
+    shouldShowChatbot,
+    onToggleForm,
+    //onOpenReport,
 }) => {
-  // 1. Armamos el arreglo de tarjetas. Siempre incluimos los mercados.
-  const cards = [
-    {
-      id: "developed",
-      title: "Resultados del mercado desarrollado",
-      data: results.developed,
-    },
-    {
-      id: "emergent",
-      title: "Resultados del mercado emergente",
-      data: results.emergent,
-    },
-  ];
+        const titleContext = selectedSubsector?.trim()
+            ? ` del subsector ${selectedSubsector.trim()}`
+            : ` del sector ${(selectedSector || "").trim()}`;
 
-  if (showCompanyCard) {
-    // Usa empresa_dolares o empresa_soles en base a la moneda seleccionada
-    const empresaData =
-      resultCurrency === "usd"
-        ? results.empresa_dolares
-        : results.empresa_soles;
+        // 1. Armamos el arreglo de tarjetas. Siempre incluimos los mercados.
+        const cards = [
+            {
+                id: "developed",
+                title: "Resultados del mercado desarrollado",
+                data: results.developed,
+            },
+            {
+                id: "emergent",
+                title: "Resultados del mercado emergente",
+                data: results.emergent,
+            },
+        ];
 
-    const secureDEmpresa =
-      empresaData?.d_empresa || results.empresa_dolares?.d_empresa || "0%";
+        if (showCompanyCard) {
+            // Usa empresa_dolares o empresa_soles en base a la moneda seleccionada
+            const empresaData =
+                resultCurrency === "usd"
+                    ? results.empresa_dolares
+                    : results.empresa_soles;
 
-    const newEmpresaData = {
-      ...empresaData,
-      d_empresa: secureDEmpresa,
-    };
+            const secureDEmpresa =
+                empresaData?.d_empresa || results.empresa_dolares?.d_empresa || "0%";
 
-    cards.push({
-      id: "empresa",
-      title: "Resultados de la empresa",
-      data: newEmpresaData,
-    });
-  }
+            const newEmpresaData = {
+                ...empresaData,
+                d_empresa: secureDEmpresa,
+            };
 
-  return (
-    <>
-      <header className="max-lg:text-center mt-2 lg:mt-0 flex flex-col xl:flex-row-reverse justify-between items-center w-full gap-4">
-        <div
-          className={`flex flex-1 flex-col justify-center items-start ${shouldShowChatbot ? "xl:pl-15" : "xl:pl-0"}`}
-        >
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
-            Resultados generales
-          </h1>
-          <p className="text-gray-600 max-xl:mx-auto">
-            Comparación de resultados
-          </p>
-        </div>
-        {shouldShowChatbot && (
-          <button
-            type="button"
-            onClick={onToggleForm}
-            className="px-4 py-2.5 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100"
-          >
-            <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
-              <Sparkles className="h-5 w-5 shrink-0" />
-              Encuentra tu Costo de Capital usando el Beta específico de tu
-              Empresa
-            </span>
+            cards.push({
+                id: "empresa",
+                title: "Resultados de la empresa",
+                data: newEmpresaData,
+            });
+        }
 
-            <ArrowRight className="h-5 w-5 shrink-0" />
-          </button>
-        )}
-        {/*<div className="xl:w-1/3 flex justify-center xl:justify-end w-full">
+        return (
+            <>
+                <header className="max-lg:text-center mt-2 lg:mt-0 flex flex-col xl:flex-row-reverse justify-between items-center w-full gap-4">
+                    <div
+                        className={`flex flex-1 flex-col justify-center items-start ${shouldShowChatbot ? "xl:pl-15" : "xl:pl-0"}`}
+                    >
+                        <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                            Resultados generales{titleContext}
+                        </h1>
+                        <p className="text-gray-600 max-xl:mx-auto">
+                            Comparación de resultados
+                        </p>
+                    </div>
+                    {shouldShowChatbot && (
+                        <button
+                            type="button"
+                            onClick={onToggleForm}
+                            className="px-4 py-2.5 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100"
+                        >
+                            <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
+                                <Sparkles className="h-5 w-5 shrink-0" />
+                                Afina tu cálculo con tu subsector específico
+                            </span>
+
+                            <ArrowRight className="h-5 w-5 shrink-0" />
+                        </button>
+                    )}
+                    {/*<div className="xl:w-1/3 flex justify-center xl:justify-end w-full">
           <section className="flex flex-col items-center justify-center rounded-[24px] max-w-105 w-full xl:w-fit overflow-visible mx-auto">
             <div onClick={onOpenReport} className="w-fit h-fit cursor-pointer">
               <Book
@@ -112,21 +119,21 @@ export const KapitalResultadosSection: React.FC<
             </div>
           </section>
         </div>*/}
-      </header>
-      <section className="flex flex-col flex-wrap md:flex-row justify-center items-center w-full gap-4 mt-6 mx-auto h-full">
-        {cards.map((card) => (
-          <FinancieraCard
-            key={card.id}
-            title={card.title}
-            data={card.data}
-            isEmpresa={card.id === "empresa"}
-            resultCurrency={resultCurrency}
-            onResultCurrencyChange={onResultCurrencyChange}
-            compact={false}
-            localCurrency={localCurrency}
-          />
-        ))}
-      </section>
-    </>
-  );
-};
+                </header>
+                <section className="flex flex-col flex-wrap md:flex-row justify-center items-center w-full gap-4 mt-6 mx-auto h-full">
+                    {cards.map((card) => (
+                        <FinancieraCard
+                            key={card.id}
+                            title={card.title}
+                            data={card.data}
+                            isEmpresa={card.id === "empresa"}
+                            resultCurrency={resultCurrency}
+                            onResultCurrencyChange={onResultCurrencyChange}
+                            compact={false}
+                            localCurrency={localCurrency}
+                        />
+                    ))}
+                </section>
+            </>
+        );
+    };

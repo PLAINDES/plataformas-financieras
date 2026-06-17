@@ -11,6 +11,7 @@ export function useKapitalForm() {
   const [formData, setFormData] = useState<FormData>({
     date: "",
     sector: "",
+    subsector: "",
     beta_unlevered_industry: "",
     instrument: "",
     bono: "",
