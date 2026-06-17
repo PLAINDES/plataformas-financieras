@@ -161,7 +161,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                         showClearButton={false}
                                         inputClassName="col-span-9"
                                     />
-                                    {isWaccCalculated && canSensibilizeBeta && (
+                                    {
                                         <div className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end">
                                             <button
                                                 ref={betaButtonRef}
@@ -176,10 +176,10 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                                     "disabled:cursor-not-allowed disabled:opacity-50"
                                                 )}
                                             >
-                                                {isSearchingBeta ? "Buscando..." : "Busca tu beta específico"}
+                                                {isSearchingBeta ? "Buscando..." : "Obtén tu beta del subsector"}
                                             </button>
                                         </div>
-                                    )}
+                                    }
                                 </div>
                                 <FormField
                                     label="Tasa libre de riesgo"
@@ -236,6 +236,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     disabled
                                     value={formData.devaluation}
                                     onChange={handleCustomInputChange}
+                                    tooltip="Obtenido de Marco Macroeconómico Multianual por país"
                                     suffix="%"
                                     layout="horizontal"
                                     showClearButton={false}
@@ -251,6 +252,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     step="any"
                                     value={formData.tax}
                                     onChange={handleCustomInputChange}
+                                    tooltip="IR declarado por cada país. Reporte EY."
                                     suffix="%"
                                     layout="horizontal"
                                     showClearButton={false}
@@ -304,6 +306,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     step="any"
                                     value={formData.debt}
                                     onChange={handleCustomInputChange}
+                                    tooltip="Pasivo Financiero / (Pasivo Financiero/Patrimonio)"
                                     suffix="%"
                                     layout="horizontal"
                                     maxDecimals={0}
@@ -319,6 +322,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     step="any"
                                     value={formData.capital}
                                     onChange={handleCustomInputChange}
+                                    tooltip="Patrimonio / (Pasivo Financiero/Patrimonio)"
                                     suffix="%"
                                     layout="horizontal"
                                     inputClassName="col-span-6"
