@@ -153,6 +153,10 @@ export const computeResultsFromCalculationData = (
 
   const showCompanyCard = hasCompanyInputData(source);
 
+  const betaDesapalancadoCustom = toOptionalNumber(
+    (latestInput as Record<string, unknown>)?.beta_desapalancado_custom
+  );
+
   // Choose which data to show in the top-level results (cppc, kd, ke, koa)
   const primary = showCompanyCard ? empresa_dolares : emergent;
 
@@ -163,6 +167,7 @@ export const computeResultsFromCalculationData = (
       ke: primary.ke,
       koa: primary.koa,
       boa: toOptionalNumber(latestResult?.boa),
+      boa_custom: betaDesapalancadoCustom,
       emergent,
       developed,
       empresa_dolares,
@@ -191,6 +196,8 @@ export const extractSensibilizaciones = (
       ),
       empresa_dolares: toMarketResults(pickBlock(entry, ["empresa_dolares"])),
       empresa_soles: toMarketResults(pickBlock(entry, ["empresa_soles"])),
+      subsector: (entry.subsector as string) || undefined,
+      tickers: (entry.tickers_subsector_sensibilizacion as string) || undefined,
     }));
 };
 
@@ -208,6 +215,16 @@ export const enrichCalculationInputPayload = (formData: FormData) => {
     industria: toPossibleNumber(formData.sector),
     subsector:
       typeof formData.subsector === "string" ? formData.subsector.trim() : "",
+    tickers_subsector:
+      typeof formData.tickers_subsector === "string" ? formData.tickers_subsector : "",
+    subsector_sensibilizacion:
+      typeof formData.subsector_sensibilizacion === "string"
+        ? formData.subsector_sensibilizacion.trim()
+        : "",
+    tickers_subsector_sensibilizacion:
+      typeof formData.tickers_subsector_sensibilizacion === "string"
+        ? formData.tickers_subsector_sensibilizacion
+        : "",
     tasa_libre_riesgo: toPossibleNumber(formData.instrument),
     anio_bono: toPossibleNumber(formData.bono),
     pais: toPossibleNumber(formData.country),
@@ -223,10 +240,12 @@ export const enrichCalculationInputPayload = (formData: FormData) => {
   const effectiveTaxRate = toOptionalNumber(formData.effective_tax_rate);
   const betaLevered = toOptionalNumber(formData.beta_levered);
   const betaUnlevered = toOptionalNumber(formData.beta_unlevered);
+  const betaUnleveredCustom = toOptionalNumber(formData.beta_unlevered_custom);
 
   if (tax !== undefined) payload.tasa_impositiva = tax;
   if (devaluation !== undefined) payload.devaluacion = devaluation;
   if (betaUnlevered !== undefined) payload.beta_desapalancado = betaUnlevered;
+  if (betaUnleveredCustom !== undefined) payload.beta_desapalancado_custom = betaUnleveredCustom;
   if (
     formData.typeId ||
     kd !== undefined ||

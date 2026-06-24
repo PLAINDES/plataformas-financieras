@@ -65,7 +65,7 @@ export function LandingHeader({
         const id = title.toLowerCase().replace(/\s+/g, "-");
         const element = document.getElementById(id);
         if (element) {
-            const offset = 80;
+            const offset = 120;
             const bodyRect = document.body.getBoundingClientRect().top;
             const elementRect = element.getBoundingClientRect().top;
             window.scrollTo({
@@ -93,7 +93,7 @@ export function LandingHeader({
             <nav
                 className={`
         fixed top-0 left-0 w-full z-50 transition-all duration-500
-        ${isSticky ? "bg-white/90 backdrop-blur-lg h-16 lg:h-16.25 shadow-sm" : "bg-transparent h-20 lg:h-24"}`}
+        ${isSticky ? "bg-white/90 backdrop-blur-lg h-16 lg:h-20 shadow-sm" : "bg-transparent h-28 lg:h-32"}`}
             >
                 <div className="max-w-350 mx-auto px-6 grid grid-cols-2 lg:grid-cols-12 items-center h-full">
                     {/* Logo */}
@@ -104,18 +104,78 @@ export function LandingHeader({
                                 isOpen={isMobileMenuOpen}
                             />
                         </div>
-                        <div className="flex items-center group cursor-pointer transition-transform duration-300 hover:scale-105">
-                            <EditableImage
-                                content={{
-                                    value: content?.logo || "images/logo.png",
-                                    id: "header_logo",
-                                    type: "text",
-                                    section: "header",
-                                }}
-                                onSave={onSave!}
-                                alt="Logo"
-                                className="h-14 lg:h-16 w-auto object-contain"
-                            />
+                        <div className="relative">
+                            {/* Stacked layout — visible cuando NO sticky */}
+                            <div
+                                className={`flex flex-col items-start gap-1 transition-all duration-700 ${
+                                    isSticky
+                                        ? "opacity-0 scale-95 pointer-events-none absolute inset-0"
+                                        : "opacity-100 scale-100 relative"
+                                }`}
+                            >
+                                <div className="flex items-center group cursor-pointer transition-transform duration-300 hover:scale-105">
+                                    <EditableImage
+                                        content={{
+                                            value: content?.logo || "images/logo.png",
+                                            id: "header_logo",
+                                            type: "text",
+                                            section: "header",
+                                        }}
+                                        onSave={onSave!}
+                                        alt="Logo"
+                                        className="w-auto object-contain h-14 lg:h-16"
+                                    />
+                                </div>
+                                <div className="flex items-center group cursor-pointer transition-transform duration-300 hover:scale-105">
+                                    <EditableImage
+                                        content={{
+                                            value: content?.logo_right || "images/logo.png",
+                                            id: "header_logo_right",
+                                            type: "text",
+                                            section: "header",
+                                        }}
+                                        onSave={onSave!}
+                                        alt="Logo secundario"
+                                        className="w-auto object-contain h-11 lg:h-13"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Side-by-side layout — visible cuando sticky */}
+                            <div
+                                className={`flex flex-row items-center gap-3 transition-all duration-700 ${
+                                    isSticky
+                                        ? "opacity-100 scale-100 relative"
+                                        : "opacity-0 scale-95 pointer-events-none absolute inset-0"
+                                }`}
+                            >
+                                <div className="flex items-center group cursor-pointer transition-transform duration-300 hover:scale-105">
+                                    <EditableImage
+                                        content={{
+                                            value: content?.logo || "images/logo.png",
+                                            id: "header_logo",
+                                            type: "text",
+                                            section: "header",
+                                        }}
+                                        onSave={onSave!}
+                                        alt="Logo"
+                                        className="w-auto object-contain h-10 lg:h-12"
+                                    />
+                                </div>
+                                <div className="flex items-center group cursor-pointer transition-transform duration-300 hover:scale-105">
+                                    <EditableImage
+                                        content={{
+                                            value: content?.logo_right || "images/logo.png",
+                                            id: "header_logo_right",
+                                            type: "text",
+                                            section: "header",
+                                        }}
+                                        onSave={onSave!}
+                                        alt="Logo secundario"
+                                        className="w-auto object-contain h-8 lg:h-10"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -160,19 +220,7 @@ export function LandingHeader({
                                 Iniciar Sesión
                             </Button>
                         )}
-                        <div className="flex shrink-0 items-center group cursor-pointer transition-transform duration-300 hover:scale-105">
-                            <EditableImage
-                                content={{
-                                    value: content?.logo_right || "images/logo.png",
-                                    id: "header_logo_right",
-                                    type: "text",
-                                    section: "header",
-                                }}
-                                onSave={onSave!}
-                                alt="Logo"
-                                className="h-12 lg:h-14 w-auto object-contain"
-                            />
-                        </div>
+
                     </div>
                 </div>
 
@@ -257,7 +305,7 @@ export function LandingHeader({
                 }}
             />
 
-            <div className="h-20 lg:h-16.25" />
+            <div className="h-28 lg:h-32" />
         </header>
     );
 }

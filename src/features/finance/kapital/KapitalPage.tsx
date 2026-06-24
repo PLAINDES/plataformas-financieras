@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { NavBar } from "./components/NavBar";
 import { NavigationTabs } from "./components/NavigationTabs";
 import { FormSidebar } from "./components/FormSidebar";
@@ -19,7 +19,6 @@ import { useKapitalCalculation } from "./hooks/useKapitalCalculation";
 import { useKapitalForm } from "./hooks/useKapitalForm";
 import { useToast } from "@/shared/components/common/ToastProvider";
 import {
-    type CompanyData,
     type YahooFinanceData,
     type CompanyModalActions,
 } from "../components/Chatbot/chatbot.interfaces";
@@ -39,12 +38,14 @@ import {
 
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 import { ReportViewer } from "./components/ReportViewer";
-import { YahooResults } from "../components/Chatbot/ChatbotUI";
 
 export interface FormData {
     date: string;
     sector: string;
     subsector?: string;
+    tickers_subsector?: string;
+    subsector_sensibilizacion?: string;
+    tickers_subsector_sensibilizacion?: string;
     beta_unlevered_industry: string;
     instrument: string;
     bono: string;
@@ -60,6 +61,7 @@ export interface FormData {
     effective_tax_rate: string;
     beta_levered: string;
     beta_unlevered: string;
+    beta_unlevered_custom?: string;
 }
 
 export interface MarketResults {
@@ -77,6 +79,7 @@ export interface Results {
     ke: number | string;
     koa: number | string;
     boa?: number;
+    boa_custom?: number;
     emergent: MarketResults;
     developed: MarketResults;
     empresa_dolares: MarketResults;
@@ -91,6 +94,8 @@ export interface SensibilizacionEntry {
     mercado_emergente?: MarketResults;
     empresa_dolares?: MarketResults;
     empresa_soles?: MarketResults;
+    subsector?: string;
+    tickers?: string;
 }
 
 const KapitalPage: React.FC = () => {
@@ -98,8 +103,8 @@ const KapitalPage: React.FC = () => {
     const { addToast } = useToast();
     const location = useLocation();
 
-    const sectorCache = useRef<Record<string, YahooFinanceData>>({});
-    const requestTimestamps = useRef<number[]>([]);
+    const [subsectoresData, setSubsectoresData] = useState<any[]>([]);
+    const [subsectoresFecha, setSubsectoresFecha] = useState<string | null>(null);
 
     // Estadps de UI
     const [isFormOpen, setIsFormOpen] = useState(true);
@@ -118,19 +123,24 @@ const KapitalPage: React.FC = () => {
     const [analysisCurrency, setAnalysisCurrency] = useState("Dólares");
 
     const [betaInput, setBetaInput] = useState("");
-    const [isSearchingBeta, setIsSearchingBeta] = useState(false);
+    const isSearchingBeta = false;
     const [modalData, setModalData] = useState<YahooFinanceData | null>(null);
     const [subsectorModalOpen, setSubsectorModalOpen] = useState(false);
-    const [subsectorInput, setSubsectorInput] = useState("");
+    const [subsectorModalMode, setSubsectorModalMode] = useState<"principal" | "sensibilizacion">("principal");
     const [selectedSubsector, setSelectedSubsector] = useState<string | null>(
         null
     );
+    const [subsectorDetail, setSubsectorDetail] = useState<any>(null);
+    const [detailTickers, setDetailTickers] = useState<string[]>([]);
+    const [inactiveTickers, setInactiveTickers] = useState<string[]>([]);
+    const subsectorTickersRef = useRef<Record<string, string[]>>({});
+    const subsectorSensibilizacionTickersRef = useRef<Record<string, string[]>>({});
 
     const [toasts, setToasts] = useState<
         Array<{ id: string; type: ToastType; message: string }>
     >([]);
 
-    const [modalActions, setModalActions] = useState<CompanyModalActions | null>(
+    const [, setModalActions] = useState<CompanyModalActions | null>(
         null
     );
 
@@ -245,23 +255,8 @@ const KapitalPage: React.FC = () => {
 
     const handleCloseModal = useCallback(() => {
         setSubsectorModalOpen(false);
+        setSubsectorDetail(null);
     }, []);
-
-    const handleRemoveTicker = useCallback(
-        (ticker: string) => {
-            modalActions?.onRemoveTicker(ticker);
-            setModalData((prev) => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    valid_companies: prev.valid_companies.filter(
-                        (company) => company.ticker !== ticker
-                    ),
-                };
-            });
-        },
-        [modalActions]
-    );
 
     const handleLogout = async () => {
         await logout();
@@ -290,28 +285,6 @@ const KapitalPage: React.FC = () => {
     // --- INTEGRACIÓN DE HOOKS ---
 
     const form = useKapitalForm();
-
-    const applyCompanyToForm = useCallback(
-        (company: CompanyData) => {
-            if (company.beta_unlevered == null) return;
-
-            const formattedBeta = Number(company.beta_unlevered).toFixed(2);
-            form.setFormData((prev) => ({
-                ...prev,
-                beta_unlevered: formattedBeta,
-            }));
-        },
-        [form.setFormData]
-    );
-
-    const handleApplyCompany = useCallback(
-        (company: CompanyData) => {
-            modalActions?.onApplyCompany(company);
-            applyCompanyToForm(company);
-            handleCloseModal();
-        },
-        [applyCompanyToForm, handleCloseModal, modalActions]
-    );
 
     const calc = useKapitalCalculation({
         formData: form.formData,
@@ -363,6 +336,52 @@ const KapitalPage: React.FC = () => {
         });
     }, []);
 
+    // Cargar subsectores
+    useEffect(() => {
+        const fetchSubsectores = async () => {
+            try {
+                const data = await MainService.getTemplateComplements("subsectores");
+                const match = data.find((c: any) => c.nombre === "subsectores");
+                const items = match && Array.isArray(match.data) ? match.data : [];
+                setSubsectoresData(items);
+                if (match?.fecha) {
+                    setSubsectoresFecha(match.fecha);
+                }
+            } catch (error) {
+                console.error("Error fetching subsectores data", error);
+            }
+        };
+        fetchSubsectores();
+    }, []);
+
+    // Sincronizar tickers_subsector restaurados desde URL al ref del modal
+    useEffect(() => {
+        if (form.formData.tickers_subsector && form.formData.subsector) {
+            try {
+                const parsed = JSON.parse(form.formData.tickers_subsector);
+                if (Array.isArray(parsed)) {
+                    subsectorTickersRef.current[form.formData.subsector] = parsed;
+                }
+            } catch { /* ignora parseo inválido */ }
+        }
+    }, [form.formData.tickers_subsector, form.formData.subsector]);
+
+    useEffect(() => {
+        if (form.formData.tickers_subsector_sensibilizacion && form.formData.subsector_sensibilizacion) {
+            try {
+                const parsed = JSON.parse(form.formData.tickers_subsector_sensibilizacion);
+                if (Array.isArray(parsed)) {
+                    subsectorSensibilizacionTickersRef.current[form.formData.subsector_sensibilizacion] = parsed;
+                }
+            } catch { /* ignora parseo inválido */ }
+        }
+    }, [form.formData.tickers_subsector_sensibilizacion, form.formData.subsector_sensibilizacion]);
+
+    const filteredSubsectores = useMemo(() => {
+        if (!form.formData.sector) return [];
+        return subsectoresData.filter((d: any) => d.sector === form.formData.sector);
+    }, [subsectoresData, form.formData.sector]);
+
     const isProyectosRoute = location.pathname.includes("/proyectos");
     const shouldShowChatbot =
         !isReportViewerOpen &&
@@ -377,122 +396,10 @@ const KapitalPage: React.FC = () => {
 
     const handleSearchSectorBeta = () => {
         if (!form.formData.sector) return;
-        setSubsectorModalOpen(true);
-    };
-
-    const executeSearchSectorBeta = async (subsector: string) => {
-        const currentSector = form.formData.sector;
-        if (!currentSector) return;
-        const normalizedSubsector = subsector.trim();
-
-        const cacheKey = `${currentSector}__${normalizedSubsector.toLowerCase()}`;
-
-        // 1. Verificación de caché
-        if (sectorCache.current[cacheKey]) {
-            setSelectedSubsector(normalizedSubsector || null);
-            form.setFormData((prev) => ({
-                ...prev,
-                subsector: normalizedSubsector || "",
-            }));
-            setModalData(sectorCache.current[cacheKey]);
-            setModalActions({
-                onApplyCompany: (company: CompanyData) => {
-                    if (company.beta_unlevered != null) {
-                        const formattedBeta = Number(company.beta_unlevered).toFixed(2);
-                        form.handleInputChange({
-                            target: { name: "beta_unlevered", value: formattedBeta },
-                        } as any);
-                        setModalData(null);
-                    }
-                },
-                onRemoveTicker: (tickerToRemove: string) => {
-                    setModalData((prev) => {
-                        if (!prev) return prev;
-                        return {
-                            ...prev,
-                            valid_companies: prev.valid_companies.filter(
-                                (c) => c.ticker !== tickerToRemove
-                            ),
-                        };
-                    });
-                },
-            });
-            return;
-        }
-        // 2. Control de límite de pedidos de beta por minuto
-        const now = Date.now();
-        requestTimestamps.current = requestTimestamps.current.filter(
-            (t) => now - t < 60000
+        setSubsectorModalMode(
+            calc.isWaccCalculated ? "sensibilizacion" : "principal"
         );
-
-        if (requestTimestamps.current.length >= 3) {
-            addToast(
-                "Límite de 3 consultas por minuto alcanzado. Intente en unos segundos.",
-                "warn"
-            );
-            return;
-        }
-
-        setIsSearchingBeta(true);
-        // Limpiamos los resultados antiguos durante la animación de carga para la nueva búsqueda
-        setModalData(null);
-
-        try {
-            requestTimestamps.current.push(now);
-
-            const subsectorContext = subsector.trim()
-                ? ` Subsector específico: "${subsector.trim()}".`
-                : "";
-
-            const payload = {
-                message: `Calcula mi beta.${subsectorContext}`,
-                history: [],
-                form_data: form.formData,
-            };
-
-            // Envía mensaje oculto al endpoint
-            const data = await MainService.sendChatMessage(payload);
-
-            if (data.tickers && data.tickers.length > 0) {
-                const res = await MainService.analyzeCompanies(data.tickers);
-                if (res.success && res.valid_companies?.length) {
-                    setSelectedSubsector(normalizedSubsector || null);
-                    form.setFormData((prev) => ({
-                        ...prev,
-                        subsector: normalizedSubsector || "",
-                    }));
-                    sectorCache.current[cacheKey] = res;
-
-                    setModalData(res);
-                    setModalActions({
-                        onApplyCompany: (company: CompanyData) => {
-                            if (company.beta_unlevered != null) {
-                                const formattedBeta = Number(company.beta_unlevered).toFixed(2);
-                                form.handleInputChange({
-                                    target: { name: "beta_unlevered", value: formattedBeta },
-                                } as any);
-                                setModalData(null);
-                            }
-                        },
-                        onRemoveTicker: (tickerToRemove: string) => {
-                            setModalData((prev) => {
-                                if (!prev) return prev;
-                                return {
-                                    ...prev,
-                                    valid_companies: prev.valid_companies.filter(
-                                        (c) => c.ticker !== tickerToRemove
-                                    ),
-                                };
-                            });
-                        },
-                    });
-                }
-            }
-        } catch (error) {
-            console.error("Error al buscar beta:", error);
-        } finally {
-            setIsSearchingBeta(false);
-        }
+        setSubsectorModalOpen(true);
     };
 
     /* COMPONENTES REUTILIZABLES */
@@ -513,89 +420,397 @@ const KapitalPage: React.FC = () => {
             />
         ) : null;
 
-    const panelHeaderClose = (onClose: () => void) => (
-        <div className="flex justify-between items-center px-3 py-2 sm:px-4 sm:py-2.5 border-b border-gray-100 bg-gray-50/60 shrink-0">
-            <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 shadow-xs">
-                    <Bot className="w-3.5 h-3.5 text-valora-primary" />
-                </div>
-                <span className="text-xs sm:text-[13px] font-semibold tracking-tight text-slate-700">
-                    Empresas Comparables
-                </span>
-            </div>
-            <button
-                type="button"
-                onClick={onClose}
-                className="p-1 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"
-            >
-                <X className="w-4 h-4" />
-            </button>
-        </div>
-    );
+    const handleOpenDetail = useCallback((sub: any, allTickers: string[], savedTickers?: string[]) => {
+        setSubsectorDetail(sub);
+        setDetailTickers(allTickers);
+        if (savedTickers) {
+            const savedSet = new Set(savedTickers);
+            setInactiveTickers(allTickers.filter((t) => !savedSet.has(t)));
+        } else {
+            setInactiveTickers([]);
+        }
+    }, []);
+
+    const handleToggleTicker = useCallback((ticker: string) => {
+        setInactiveTickers((prev) =>
+            prev.includes(ticker)
+                ? prev.filter((t) => t !== ticker)
+                : [...prev, ticker]
+        );
+    }, []);
+
+    const handleCalculateDetail = useCallback(() => {
+        if (!subsectorDetail) return;
+        const activeTickers = detailTickers.filter((t) => !inactiveTickers.includes(t));
+        const boas: number[] = activeTickers.map(
+            (emp) => Number(subsectorDetail.empresas_boa[emp])
+        );
+        if (boas.length === 0) return;
+        const avgBoa = boas.reduce((sum, v) => sum + v, 0) / boas.length;
+        const betaStr = avgBoa.toFixed(2);
+
+        const isSens = subsectorModalMode === "sensibilizacion";
+        const subsectorKey = isSens ? "subsector_sensibilizacion" : "subsector";
+        const tickersKey = isSens ? "tickers_subsector_sensibilizacion" : "tickers_subsector";
+        const ref = isSens ? subsectorSensibilizacionTickersRef : subsectorTickersRef;
+
+        ref.current[subsectorDetail.subsector] = activeTickers;
+        if (!isSens) {
+            setSelectedSubsector(subsectorDetail.subsector || null);
+        }
+
+        if (isSens) {
+            form.handleInputChange({
+                target: { name: "beta_unlevered", value: betaStr },
+            } as any);
+        } else {
+            form.handleInputChange({
+                target: { name: "beta_unlevered_custom", value: betaStr },
+            } as any);
+            if (!calc.isWaccCalculated) {
+                form.handleInputChange({
+                    target: { name: "beta_unlevered_industry", value: betaStr },
+                } as any);
+            }
+        }
+        form.handleInputChange({
+            target: { name: subsectorKey, value: subsectorDetail.subsector || "" },
+        } as any);
+        form.handleInputChange({
+            target: { name: tickersKey, value: JSON.stringify(activeTickers) },
+        } as any);
+        setSubsectorDetail(null);
+        setSubsectorModalOpen(false);
+    }, [subsectorDetail, detailTickers, inactiveTickers, form, calc.isWaccCalculated, subsectorModalMode]);
+
+    const detailBoa = useMemo(() => {
+        const activeTickers = detailTickers.filter((t) => !inactiveTickers.includes(t));
+        if (activeTickers.length === 0 || !subsectorDetail) return null;
+        const boas: number[] = activeTickers.map(
+            (emp) => Number(subsectorDetail.empresas_boa[emp])
+        );
+        return boas.reduce((sum, v) => sum + v, 0) / boas.length;
+    }, [detailTickers, inactiveTickers, subsectorDetail]);
 
     const yahooPanelContent = subsectorModalOpen ? (
         <>
-            {panelHeaderClose(handleCloseModal)}
-            <div className="flex-1 flex flex-col p-4 sm:p-5 overflow-y-auto gap-4 min-h-0 bg-slate-50/40">
-                {/* Input del subsector (Paso 1, siempre arriba si iniciamos la búsqueda con modal) */}
-                <div className="shrink-0">
-                    <div className="flex gap-2 items-center rounded-full border border-gray-200 bg-white px-2 py-1.5 focus-within:border-valora-primary/60 focus-within:ring-2 focus-within:ring-valora-primary/10 transition-all">
-                        <div className="flex-1 min-w-0">
-                            <input
-                                type="text"
-                                autoFocus
-                                disabled={isSearchingBeta}
-                                value={subsectorInput}
-                                onChange={(e) => setSubsectorInput(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" && !isSearchingBeta) {
-                                        executeSearchSectorBeta(subsectorInput);
-                                    }
-                                    if (e.key === "Escape") handleCloseModal();
-                                }}
-                                placeholder="Ej: software de pagos, manufactura..."
-                                className="w-full bg-transparent px-2 py-1.5 text-xs focus:outline-none disabled:opacity-50"
-                            />
+            {subsectorDetail ? (
+                <>
+                    {/* Header del detalle */}
+                    <div className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 border-b border-gray-100 bg-gray-50/60 shrink-0">
+                        <button
+                            type="button"
+                            onClick={() => setSubsectorDetail(null)}
+                            className="p-1 hover:bg-gray-200 text-gray-500 hover:text-gray-700 rounded-full transition-colors cursor-pointer shrink-0"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                            </svg>
+                        </button>
+                        <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 shadow-xs shrink-0">
+                                <Bot className="w-3.5 h-3.5 text-valora-primary" />
+                            </div>
+                            <span className="text-xs sm:text-[13px] font-semibold tracking-tight text-slate-700 truncate">
+                                {subsectorDetail.subsector || "Subsector"}
+                            </span>
                         </div>
                         <button
                             type="button"
-                            disabled={isSearchingBeta}
-                            onClick={() => executeSearchSectorBeta(subsectorInput)}
-                            className="px-3 py-1.5 text-xs font-semibold text-white bg-valora-primary rounded-full hover:bg-valora-secondary transition-colors cursor-pointer shadow-sm flex items-center gap-1.5 h-8 disabled:opacity-50 shrink-0"
+                            onClick={handleCloseModal}
+                            className="ml-auto p-1 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"
                         >
-                            {isSearchingBeta && (
-                                <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                </svg>
-                            )}
-                            {isSearchingBeta ? "Buscando..." : "Buscar"}
+                            <X className="w-4 h-4" />
                         </button>
                     </div>
-                </div>
 
-                {/* loader o tabla (Paso 2, se acopla abajo) */}
-                {isSearchingBeta && !modalData && (
-                    <div className="flex-1 flex flex-col items-center justify-center py-20 gap-3 bg-white rounded-xl border border-gray-100 shadow-sm shrink-0">
-                        <svg className="animate-spin h-8 w-8 text-valora-primary" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        <span className="text-xs font-semibold text-gray-500">Consultando etiqueteras...</span>
-                    </div>
-                )}
+                    {/* Cuerpo del detalle */}
+                    <div className="flex-1 flex flex-col p-4 sm:p-5 overflow-y-auto min-h-0 bg-slate-50/40">
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50/60">
+                                <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">
+                                    Empresas ({detailTickers.length - inactiveTickers.length} activas / {detailTickers.length})
+                                </span>
+                            </div>
+                            <div className="divide-y divide-gray-100">
+                                {detailTickers.length > 0 ? (
+                                    [...detailTickers].sort().map((emp: string, i: number) => {
+                                        const boa = subsectorDetail.empresas_boa[emp];
+                                        const isInactive = inactiveTickers.includes(emp);
+                                        return (
+                                            <div key={i} className={`flex items-center justify-between px-4 py-2.5 transition-colors ${isInactive ? "opacity-40 hover:opacity-60" : "hover:bg-gray-50/50"}`}>
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <span className={`text-xs font-bold min-w-[60px] ${isInactive ? "text-gray-400 line-through" : "text-blue-600"}`}>{emp}</span>
+                                                    <span className={`text-xs font-mono font-bold ${isInactive ? "text-gray-400" : "text-gray-800"}`}>
+                                                        {boa !== undefined ? boa.toFixed(4) : "N/A"}
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleToggleTicker(emp)}
+                                                    className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+                                                        isInactive
+                                                            ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                                                            : "text-red-400 hover:bg-red-50 hover:text-red-600"
+                                                    }`}
+                                                    title={isInactive ? "Incluir empresa" : "Excluir empresa"}
+                                                >
+                                                    {isInactive ? (
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    ) : (
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="px-4 py-8 text-center">
+                                        <span className="text-xs text-gray-400">No hay empresas disponibles</span>
+                                    </div>
+                                )}
+                                {detailBoa !== null && (
+                                    <div className="flex items-center justify-between px-4 py-2.5 bg-valora-primary/5 border-t border-valora-primary/10">
+                                        <span className="text-[10px] font-bold text-blue-700 uppercase">BOA Promedio</span>
+                                        <span className="text-lg font-black text-valora-primary leading-none">{detailBoa.toFixed(2)}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
 
-                {modalData && (
-                    <div className="flex-1 min-h-0  overflow-hidden flex flex-col ">
-                        <YahooResults
-                            data={modalData}
-                            isWaccCalculated={calc.isWaccCalculated || false}
-                            onApply={handleApplyCompany}
-                            onRemove={handleRemoveTicker}
-                        />
+                        {detailTickers.length > 0 && detailBoa !== null && (
+                            <div className="mt-auto pt-4">
+                                <button
+                                    type="button"
+                                    onClick={handleCalculateDetail}
+                                    className="w-full py-3 px-6 rounded-lg font-bold text-xs sm:text-sm text-white bg-valora-primary hover:bg-valora-secondary transition-all cursor-pointer shadow-lg hover:shadow-xl active:scale-[0.98]"
+                                >
+                                    Calcular con {detailTickers.length - inactiveTickers.length} empresa{(detailTickers.length - inactiveTickers.length) !== 1 ? "s" : ""} — BOA {detailBoa.toFixed(2)}
+                                </button>
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
+                </>
+            ) : (
+                <>
+                    {/* Header con tabs */}
+                    <div className="flex flex-col shrink-0">
+                        <div className="flex justify-between items-center px-3 py-2 sm:px-4 sm:py-2.5 border-b border-gray-100 bg-gray-50/60">
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 shadow-xs">
+                                    <Bot className="w-3.5 h-3.5 text-valora-primary" />
+                                </div>
+                                <span className="text-xs sm:text-[13px] font-semibold tracking-tight text-slate-700">
+                                    Subsectores
+                                </span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleCloseModal}
+                                className="p-1 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div className="flex border-b border-gray-200 bg-white">
+                            {(!calc.isWaccCalculated || form.formData.subsector) && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSubsectorModalMode("principal")}
+                                    className={`flex-1 px-3 py-2 text-xs font-semibold tracking-tight text-center transition-colors cursor-pointer ${
+                                        subsectorModalMode === "principal"
+                                            ? "text-valora-primary border-b-2 border-valora-primary"
+                                            : "text-gray-500 hover:text-gray-700"
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-center gap-1.5">
+                                        {calc.isWaccCalculated && form.formData.subsector && (
+                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                            </svg>
+                                        )}
+                                        Principal
+                                    </div>
+                                </button>
+                            )}
+                            {calc.isWaccCalculated && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSubsectorModalMode("sensibilizacion")}
+                                    className={`flex-1 px-3 py-2 text-xs font-semibold tracking-tight text-center transition-colors cursor-pointer ${
+                                        subsectorModalMode === "sensibilizacion"
+                                            ? "text-valora-primary border-b-2 border-valora-primary"
+                                            : "text-gray-500 hover:text-gray-700"
+                                    }`}
+                                >
+                                    Sensibilización
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                    {subsectorModalMode === "principal" && calc.isWaccCalculated && form.formData.subsector ? (
+                        /* Principal bloqueado: mostrar info del subsector seleccionado */
+                        (() => {
+                            const sub = filteredSubsectores.find(
+                                (s: any) => s.subsector === form.formData.subsector
+                            );
+                            const savedTickers = subsectorTickersRef.current[form.formData.subsector] || [];
+                            const boas: number[] = savedTickers
+                                .map((emp: string) => Number(sub?.empresas_boa?.[emp]))
+                                .filter((v: number) => !isNaN(v));
+                            const avgBoa = boas.length > 0
+                                ? (boas.reduce((sum: number, v: number) => sum + v, 0) / boas.length).toFixed(2)
+                                : null;
+
+                            return (
+                                <div className="flex-1 flex flex-col p-4 sm:p-5 overflow-y-auto min-h-0 bg-slate-50/40">
+                                    <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-white rounded-xl border border-gray-100 shadow-sm py-12">
+                                        <div className="w-12 h-12 rounded-full bg-valora-primary/10 flex items-center justify-center">
+                                            <svg className="w-6 h-6 text-valora-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                            </svg>
+                                        </div>
+                                        <div className="text-center px-6">
+                                            <h3 className="text-sm font-bold text-gray-900 mb-1">
+                                                {form.formData.subsector}
+                                            </h3>
+                                            {savedTickers.length > 0 && (
+                                                <div className="flex items-center justify-center gap-3 mt-2 text-xs text-gray-600">
+                                                    <span>{savedTickers.length} empresa{savedTickers.length !== 1 ? "s" : ""}</span>
+                                                    {avgBoa && (
+                                                        <>
+                                                            <span className="text-gray-300">|</span>
+                                                            <span className="font-bold text-valora-primary">BOA {avgBoa}</span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+                                            <p className="text-[11px] text-gray-500 mt-3">
+                                                Subsector principal bloqueado. Usa la pestaña "Sensibilización" para probar otros valores.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })()
+                    ) : (
+                        <>
+                            <div className="flex-1 flex flex-col p-4 sm:p-5 overflow-y-auto gap-3 min-h-0 bg-slate-50/40">
+                                {filteredSubsectores.length === 0 ? (
+                                <div className="flex-1 flex flex-col items-center justify-center py-20 gap-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                    <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                    </svg>
+                                    <span className="text-xs font-semibold text-gray-500">
+                                        No hay subsectores disponibles para esta industria.
+                                    </span>
+                                </div>
+                            ) : (
+                                filteredSubsectores.map((sub: any, idx: number) => {
+                                    const isPrincipal = subsectorModalMode === "sensibilizacion" && sub.subsector === form.formData.subsector;
+                                    const allTickersConBoa = Array.isArray(sub.empresas)
+                                        ? sub.empresas.filter((emp: string) => sub.empresas_boa?.[emp] !== undefined)
+                                        : [];
+                                    const isSens = subsectorModalMode === "sensibilizacion";
+                                    const selectedRef = isSens
+                                        ? (form.formData.subsector_sensibilizacion || "")
+                                        : (selectedSubsector || form.formData.subsector || "");
+                                    const isSelected = sub.subsector === selectedRef;
+                                    const savedTickers = isSens
+                                        ? subsectorSensibilizacionTickersRef.current[sub.subsector]
+                                        : subsectorTickersRef.current[sub.subsector];
+                                    const tickersParaBoa = savedTickers || allTickersConBoa;
+                                    const boas: number[] = tickersParaBoa.map(
+                                        (emp: string) => Number(sub.empresas_boa[emp])
+                                    );
+                                    const avgBoa = boas.length > 0
+                                        ? boas.reduce((sum, v) => sum + v, 0) / boas.length
+                                        : null;
+
+                                return (
+                                    <div
+                                        key={idx}
+                                        onClick={() => !isPrincipal && handleOpenDetail(sub, allTickersConBoa, savedTickers)}
+                                        className={`rounded-xl border shadow-sm transition-all px-4 py-3.5 flex items-center justify-between gap-2 ${
+                                            isPrincipal
+                                                ? "bg-blue-50/60 border-blue-200 cursor-not-allowed opacity-80"
+                                                : `group cursor-pointer active:scale-[0.99] ${
+                                                    isSelected
+                                                        ? "bg-valora-primary/5 border-valora-primary shadow-md"
+                                                        : "bg-white border-gray-200 shadow-sm hover:border-valora-primary/40 hover:shadow-md"
+                                                }`
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <h3 className={`text-sm font-bold truncate transition-colors ${
+                                                isPrincipal ? "text-blue-500" : isSelected ? "text-valora-primary" : "text-gray-800 group-hover:text-valora-primary"
+                                            }`}>
+                                                {sub.subsector || "Subsector"}
+                                            </h3>
+                                            {isSelected && savedTickers && !isPrincipal && (
+                                                <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap">
+                                                    ({savedTickers.length} emp.)
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            {isPrincipal && (
+                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                    </svg>
+                                                    Principal
+                                                </span>
+                                            )}
+                                            {isSelected && !isPrincipal && (
+                                                <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full">
+                                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                                    </svg>
+                                                    Usado
+                                                </span>
+                                            )}
+                                            {avgBoa !== null && (
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wide hidden sm:inline">
+                                                        BOA
+                                                    </span>
+                                                    <span className="text-lg font-black text-valora-primary leading-none">
+                                                        {avgBoa.toFixed(2)}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {!isPrincipal && (
+                                                <svg className="w-4 h-4 text-gray-300 group-hover:text-valora-primary/40 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                    {subsectoresFecha && (
+                        <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/60 shrink-0">
+                            <span className="text-[11px] text-gray-400 font-medium">
+                                Actualizado{" "}
+                                {new Date(subsectoresFecha).toLocaleDateString("es-PE", {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                })}
+                            </span>
+                        </div>
+                    )}
+                    </>
+                    )}
+                </>
+            )}
         </>
     ) : null;
 
@@ -727,7 +942,7 @@ const KapitalPage: React.FC = () => {
                     />
                 </div>
                 {subsectorModalOpen && (
-                    <div className="hidden lg:flex w-125 xl:w-162.5 h-[calc(100dvh-8rem)] max-h-[calc(100dvh-8rem)] bg-white border border-gray-200/80 rounded-xl flex-col shrink-0 animate-in slide-in-from-left-8 duration-300 ml-4 overflow-hidden self-start mt-4 ">
+                    <div className="hidden lg:flex w-96 xl:w-125 h-[calc(100dvh-16rem)] max-h-[calc(100dvh-16rem)] bg-white border border-gray-200/80 rounded-xl flex-col shrink-0 animate-in slide-in-from-left-8 duration-300 ml-4 overflow-hidden self-start mt-4 ">
                         {yahooPanelContent}
                     </div>
                 )}

@@ -568,6 +568,85 @@ export const mapRow = (row: any, defaultFecha: string, activeTab: string) => {
   };
 };
 
+export const parseSubsectoresSheet = (ws: any) => {
+  const rawData = utils.sheet_to_json<any[]>(ws, { header: 1 });
+  let headerRowIndex = -1;
+
+  for (let i = 0; i < Math.min(30, rawData.length); i++) {
+    const row = rawData[i];
+    if (!row || !Array.isArray(row)) continue;
+    const rowStr = row
+      .map((c: any) => String(c || "").toLowerCase().trim())
+      .join(" ");
+    if (rowStr.includes("industry name") && rowStr.includes("subsector")) {
+      headerRowIndex = i;
+      break;
+    }
+  }
+
+  if (headerRowIndex === -1)
+    throw new Error(
+      "No se encontraron las cabeceras 'Industry Name' y 'Subsector'."
+    );
+
+  const headers = rawData[headerRowIndex].map((h: any) =>
+    String(h || "").trim()
+  );
+  const dataRows = rawData.slice(headerRowIndex + 1);
+  const result: any[] = [];
+
+  let industryNameIdx = -1;
+  let subsectoresIdx = -1;
+  const empresaIdxs: number[] = [];
+
+  headers.forEach((h: string, i: number) => {
+    const lower = h.toLowerCase();
+    if (lower.includes("industry name") && industryNameIdx === -1) {
+      industryNameIdx = i;
+    }
+    if (lower.includes("subsector")) {
+      subsectoresIdx = i;
+    }
+    if (/^empresa\s*\d+$/i.test(lower)) {
+      empresaIdxs.push(i);
+    }
+  });
+
+  if (subsectoresIdx === -1)
+    throw new Error("No se encontró la columna 'Subsector'.");
+
+  let lastIndustry = "";
+
+  for (const row of dataRows) {
+    if (!row || row.length === 0) continue;
+
+    const sectorRaw = row[industryNameIdx];
+    const sector =
+      sectorRaw !== undefined &&
+        sectorRaw !== null &&
+        String(sectorRaw).trim()
+        ? String(sectorRaw).trim()
+        : lastIndustry;
+
+    if (sector) lastIndustry = sector;
+
+    const subsector = String(row[subsectoresIdx] || "").trim();
+    if (!subsector) continue;
+
+    const empresas = empresaIdxs
+      .map((i) => String(row[i] || "").trim())
+      .filter((v) => v !== "");
+
+    result.push({
+      sector,
+      subsector,
+      empresas,
+    });
+  }
+
+  return result;
+};
+
 export const parseFinancialExcel = (
   file: File,
   activeTab: string,
@@ -606,7 +685,23 @@ export const parseFinancialExcel = (
           );
         }
 
-        if (activeTab === "devaluacion") {
+        if (activeTab === "subsectores") {
+          const sheetName = sheets.find(
+            (s) => s.toLowerCase() === "by subsectores"
+          );
+          if (!sheetName)
+            throw new Error(
+              "No se encontró la hoja 'by subsectores' en el archivo."
+            );
+          const ws = wb.Sheets[sheetName];
+          parsedData = parseSubsectoresSheet(ws);
+
+          if (parsedData.length === 0) {
+            throw new Error(
+              "El archivo está vacío o no tiene datos válidos de Subsectores."
+            );
+          }
+        } else if (activeTab === "devaluacion") {
           sheets.forEach((sheetName) => {
             const ws = wb.Sheets[sheetName];
             const sheetData = parseDevaluacionSheet(ws, sheetName);
@@ -813,11 +908,13 @@ export const parseFinancialExcel = (
             });
           }
         }
-        parsedData = parsedData.sort((a, b) => {
-          a = new Date(a.fecha).getTime();
-          b = new Date(b.fecha).getTime();
-          return b - a;
-        });
+        if (activeTab !== "subsectores") {
+          parsedData = parsedData.sort((a, b) => {
+            a = new Date(a.fecha).getTime();
+            b = new Date(b.fecha).getTime();
+            return b - a;
+          });
+        }
 
         resolve(parsedData);
       } catch (error: any) {
