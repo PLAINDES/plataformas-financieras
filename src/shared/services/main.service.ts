@@ -434,7 +434,7 @@ export const MainService = {
   },
 
   analyzeCompanies: async (tickers: string[]): Promise<any> => {
-    const { job_id, total } = await api.post<any>("chatbot/calculate-subsectores-boa", { tickers });
+    const { job_id } = await api.post<any>("chatbot/calculate-subsectores-boa", { tickers });
     while (true) {
       const progress = await api.get<any>(`chatbot/boa-progress/${job_id}`);
       if (progress.status === "completed" || progress.status === "error") {
