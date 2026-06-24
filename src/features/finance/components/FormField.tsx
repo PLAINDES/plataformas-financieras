@@ -110,10 +110,22 @@ export const FormField: React.FC<FormFieldProps> = ({
 
         if (tooltipButtonRef.current) {
             const rect = tooltipButtonRef.current.getBoundingClientRect();
-            setTooltipPos({
-                top: rect.top + rect.height / 2,
-                left: rect.right + 8,
-            });
+            const gap = 8;
+            const tooltipWidth = 256;
+            const tooltipHeight = 80;
+
+            let left: number;
+            const rightSpace = window.innerWidth - rect.right;
+            if (rightSpace >= tooltipWidth + gap) {
+                left = rect.right + gap;
+            } else {
+                left = rect.left - gap - tooltipWidth;
+            }
+
+            let top = rect.top + rect.height / 2;
+            top = Math.max(tooltipHeight / 2 + 4, Math.min(top, window.innerHeight - tooltipHeight / 2 - 4));
+
+            setTooltipPos({ top, left });
         }
 
         setTooltipVisible(true);
@@ -198,7 +210,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                         <button
                             type="button"
                             className={`w-full rounded border border-gray-300 px-2 py-1.25 pr-16 text-left text-sm focus:border-valora-primary ${disabled
-                                ? "bg-blue-100 border-blue-200 text-blue-700 cursor-not-allowed"
+                                ? "bg-valora-primary/5 text-black cursor-not-allowed"
                                 : "cursor-pointer"
                                 }`}
                             onClick={() => setIsOpen((prev) => !prev)}
@@ -282,7 +294,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                 ) : (
                     <div className="relative flex-1">
                         <div
-                            className={`flex items-stretch border border-gray-300 rounded transition-colors focus-within:border-valora-primary ${disabled ? "bg-blue-100 border-blue-200" : ""
+                            className={`flex items-stretch border border-gray-300 rounded transition-colors focus-within:border-valora-primary ${disabled ? "bg-valora-primary/5" : ""
                                 }`}
                         >
                             {prefixSelect && (
@@ -291,7 +303,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                                     value={prefixSelect.value}
                                     onChange={onChange}
                                     className={`px-0.5 py-1.25 text-sm border-r border-gray-300 outline-none focus:outline-none text-wrap ${disabled
-                                        ? "bg-blue-100 border-blue-200 text-blue-700 cursor-not-allowed"
+                                        ? "bg-valora-primary/5 text-black cursor-not-allowed"
                                         : "bg-gray-50 cursor-pointer hover:bg-gray-100"
                                         }`}
                                     disabled={disabled}
@@ -310,7 +322,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                                     max={max}
                                     step={step}
                                     className={`w-full flex-1 px-2 py-1.25 text-[13px] sm:text-sm outline-none focus:outline-none bg-transparent
-                    ${disabled ? "bg-blue-100 text-blue-700 cursor-not-allowed" : readOnly ? "bg-gray-200 text-gray-500 cursor-not-allowed" : ""} 
+                    ${disabled ? "bg-valora-primary/5 text-black cursor-not-allowed" : readOnly ? "bg-gray-200 text-gray-500 cursor-not-allowed" : ""} 
                     ${type === "number" ? "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" : ""}
                   `}
                                     placeholder={placeholder}
@@ -334,7 +346,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                                 )}
                             </div>
                             {suffix && (
-                                <span className="text-sm text-gray-600 px-2 py-1.25 bg-slate-100/80 border-l border-gray-300 whitespace-nowrap flex items-center justify-center gap-1">
+                                <span className="text-sm text-black px-2 py-1.25 bg-valora-primary/5 border-l border-gray-300 whitespace-nowrap flex items-center justify-center gap-1">
                                     {suffix}
                                 </span>
                             )}
@@ -345,9 +357,11 @@ export const FormField: React.FC<FormFieldProps> = ({
                                     ref={tooltipButtonRef}
                                     onMouseEnter={handleTooltipEnter}
                                     onMouseLeave={handleTooltipLeave}
-                                    className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-400 text-[11px] font-bold text-white cursor-help select-none"
+                                    className="flex h-5 w-5 items-center justify-center rounded-full bg-valora-primary/5 text-[11px] font-bold text-valora-primary cursor-help select-none"
                                 >
-                                    ?
+                                    <svg className="h-3 w-3 text-valora-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
                                 </span>
                             </div>
                         )}
@@ -374,24 +388,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                         }}
                         className="w-64 rounded-lg bg-white p-3 text-[11px] text-gray-600 shadow-2xl"
                     >
-                        <div className="flex items-center justify-center gap-2">
-                            <div className="mt-0.5 shrink-0 rounded-full bg-valora-primary/10 p-1.5">
-                                <svg
-                                    className="h-3.5 w-3.5 text-valora-primary"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2.5}
-                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                            </div>
-                            <p className="leading-relaxed">{tooltip}</p>
-                        </div>
+                        <p className="leading-relaxed">{tooltip}</p>
                     </div>,
                     document.body
                 )}

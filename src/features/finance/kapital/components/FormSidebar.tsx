@@ -135,7 +135,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     required
                                 />
                                 <FormField
-                                    label="Industria"
+                                    label="Sector"
                                     name="sector"
                                     type="select"
                                     value={formData.sector}
@@ -153,7 +153,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                         name="beta_unlevered_industry"
                                         type="number"
                                         step="any"
-                                        value={formData.beta_unlevered_industry}
+                                        value={formData.beta_unlevered_custom || formData.beta_unlevered_industry}
                                         disabled
                                         onChange={handleCustomInputChange}
                                         suffix="coef."
@@ -166,17 +166,20 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                             <button
                                                 ref={betaButtonRef}
                                                 type="button"
-                                                onClick={onSearchSectorBeta}
+                                                onClick={() => {
+                                                    setBetaInfoVisible(false);
+                                                    onSearchSectorBeta();
+                                                }}
                                                 disabled={isSearchingBeta || !formData.sector}
                                                 onMouseEnter={handleBetaButtonEnter}
                                                 onMouseLeave={handleBetaButtonLeave}
                                                 className={cn(
-                                                    "text-[10px] w-full h-10 py-0.5 px-1 rounded-sm text-wrap font-bold cursor-pointer flex items-center justify-center text-center leading-tight",
+                                                    "text-[10px] w-full h-10 py-0.5 px-1 rounded-sm text-wrap font-bold cursor-pointer flex items-center justify-center text-center leading-tight tracking-wider",
                                                     "text-valora-primary bg-white border border-valora-primary focus:outline-none",
                                                     "disabled:cursor-not-allowed disabled:opacity-50"
                                                 )}
                                             >
-                                                {isSearchingBeta ? "Buscando..." : "Obtén tu beta del subsector"}
+                                                {isSearchingBeta ? "Buscando..." : "Obtén Tu Beta Por Subsector"}
                                             </button>
                                         </div>
                                     }
@@ -346,7 +349,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                         name="beta_unlevered"
                                         type="number"
                                         step="any"
-                                        value={formData.beta_unlevered || ""}
+                                        value={formData.subsector_sensibilizacion ? formData.beta_unlevered || "" : ""}
                                         onChange={handleCustomInputChange}
                                         layout="horizontal"
                                         inputClassName="col-span-6"

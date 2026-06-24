@@ -10,20 +10,35 @@ import type {
 import { formatToPeruTime } from "../services/kapital.utils";
 import { ArrowRight, Sparkles } from "lucide-react";
 
-const BoaIndicator = ({ value, label, selectedSector }: { value: number | string; label: string; selectedSector?: string | null }) => (
+const BoaIndicator = ({ value, label, selectedSector, sectorName, subsectorName }: {
+    value: number | string;
+    label: string;
+    selectedSector?: string | null;
+    sectorName?: string | null;
+    subsectorName?: string | null;
+}) => (
     <div className="w-full xl:w-1/4 flex flex-col justify-center items-center h-full m-auto px-4 py-3 bg-white border border-gray-200/80 rounded-xl shadow-sm text-center max-w-[200px] shrink-0 border-t-4 border-t-[#0088cc]">
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">{label}</span>
+        {sectorName ? (
+            <div className="mb-1.5 text-center">
+                <span className="text-[10px] font-medium text-gray-500"><span className="text-gray-700 font-semibold">{sectorName}</span></span>
+                {subsectorName && (
+                    <span className="block text-[10px] font-medium text-gray-500 mt-0.5">Subsector: <span className="text-gray-700 font-semibold">{subsectorName}</span></span>
+                )}
+            </div>
+        ) : (
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">{label}</span>
+        )}
         <div className="flex items-baseline gap-2.5">
             <div className="flex items-baseline text-[#0088cc]">
-                <span className="text-3xl lg:text-4xl font-serif leading-none">β</span>
-                <span className="text-sm lg:text-md font-bold leading-none">oa</span>
+                <span className="text-3xl lg:text-5xl font-serif leading-none">β</span>
+                <span className="text-sm lg:text-lg font-bold leading-none">oa</span>
             </div>
-            <span className="text-2xl lg:text-3.5xl font-bold text-gray-800 leading-none">
+            <span className="text-2xl lg:text-4.5xl font-bold text-gray-800 leading-none">
                 {value}
             </span>
         </div>
         <span className="text-[10px] font-medium text-slate-500 mt-2">
-            {label === selectedSector ? "Beta económico del sector" : "Beta económico específico"}
+            {label === selectedSector ? "Beta Económico Base" : "Beta Económico Sensibilidad"}
         </span>
     </div>
 );
@@ -186,7 +201,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                     >
                         <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
                             <Sparkles className="h-5 w-5 shrink-0" />
-                            Afina tu cálculo con tu subsector específico
+                            {selectedSubsector?.trim() ? "Cambia tu subsector" : "Afina tu cálculo con tu subsector específico"}
                         </span>
 
                         <ArrowRight className="h-5 w-5 shrink-0" />
@@ -266,9 +281,11 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                             {/* FILA 1: DATOS ORIGINALES BASE */}
                             <div className="flex flex-col xl:flex-row items-center justify-center mt-4 xl:mt-0 xl:justify-start gap-4 w-full">
                                 <BoaIndicator
-                                    value={results.boa ? results.boa.toFixed(2) : "0.00"}
+                                    value={results.boa_custom ? results.boa_custom.toFixed(2) : results.boa ? results.boa.toFixed(2) : "0.00"}
                                     label={selectedSector as string}
                                     selectedSector={selectedSector || undefined}
+                                    sectorName={selectedSector || undefined}
+                                    subsectorName={selectedSubsector || undefined}
                                 />
                                 <section className="flex flex-col md:flex-row items-center justify-center w-fit xl:justify-start gap-4 ">
                                     <FinancieraCard
@@ -306,6 +323,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                                     >
                                         {sensibilizaciones.map((s, idx) => (
                                             <option key={idx} value={idx}>
+                                                {s.subsector ? `${s.subsector} ` : ""}
                                                 (Boa = {s.boa?.toFixed(2)})
                                                 {s.created_at
                                                     ? ` — ${formatToPeruTime(s.created_at)}`
@@ -323,8 +341,9 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                                         value={
                                             selectedSens?.boa ? selectedSens.boa.toFixed(2) : "0.00"
                                         }
-                                        label={selectedSubsector ? selectedSubsector : "Personalizado"}
+                                        label={selectedSens?.subsector ? selectedSens.subsector : "Personalizado"}
                                         selectedSector={selectedSector || undefined}
+                                        sectorName={selectedSens?.subsector || undefined}
                                     />
                                     <section className="flex flex-col md:flex-row items-center justify-center w-fit xl:justify-start gap-4 ">
                                         <FinancieraCard
