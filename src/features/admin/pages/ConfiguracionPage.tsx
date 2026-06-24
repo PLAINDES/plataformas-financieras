@@ -32,7 +32,7 @@ const MOCK_EMBI: BaseFinancialItem[] = [];
 
 export const ConfiguracionPage = () => {
   const [activeFrequency, setActiveFrequency] = useState<
-    "trimestral" | "anual"
+    "trimestral" | "anual" | ""
   >("trimestral");
   const [activeTab, setActiveTab] = useState("rf");
   const [isLoading, setIsLoading] = useState(false);
