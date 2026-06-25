@@ -55,6 +55,13 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
     });
     const hasAutoCollapsed = useRef(false);
 
+    const isSection1Complete = Boolean(
+        formData.date && formData.sector && formData.instrument && formData.bono
+    );
+    const isSection2Complete = Boolean(formData.country);
+    const isSection2Disabled = !isSection1Complete;
+    const isSection3Disabled = !(isSection1Complete && isSection2Complete);
+
     const betaButtonRef = useRef<HTMLButtonElement>(null);
     const [betaInfoVisible, setBetaInfoVisible] = useState(false);
     const [betaInfoPos, setBetaInfoPos] = useState({ top: 0, left: 0 });
@@ -64,8 +71,10 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
         if (betaHideTimeout.current) clearTimeout(betaHideTimeout.current);
         if (betaButtonRef.current) {
             const rect = betaButtonRef.current.getBoundingClientRect();
-            // Position: above the button, right-aligned
-            setBetaInfoPos({ top: rect.top - 8, left: rect.right - 288 });
+            const viewportWidth = window.innerWidth;
+            const tooltipWidth = Math.min(288, viewportWidth - 32);
+            const left = Math.max(16, Math.min(rect.right - tooltipWidth, viewportWidth - tooltipWidth - 16));
+            setBetaInfoPos({ top: rect.top - 8, left });
         }
         setBetaInfoVisible(true);
     };
@@ -162,7 +171,11 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                         inputClassName="col-span-9"
                                     />
                                     {
-                                        <div className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end">
+                                        <div
+                                            className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end"
+                                            onMouseEnter={handleBetaButtonEnter}
+                                            onMouseLeave={handleBetaButtonLeave}
+                                        >
                                             <button
                                                 ref={betaButtonRef}
                                                 type="button"
@@ -171,8 +184,6 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                                     onSearchSectorBeta();
                                                 }}
                                                 disabled={isSearchingBeta || !formData.sector}
-                                                onMouseEnter={handleBetaButtonEnter}
-                                                onMouseLeave={handleBetaButtonLeave}
                                                 className={cn(
                                                     "text-[10px] w-full h-10 py-0.5 px-1 rounded-sm text-wrap font-bold cursor-pointer flex items-center justify-center text-center leading-tight tracking-wider",
                                                     "text-valora-primary bg-white border border-valora-primary focus:outline-none",
@@ -217,6 +228,8 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                             step={2}
                             isCollapsed={collapsed.step2}
                             onToggleCollapse={() => toggleCollapse("step2")}
+                            disabled={isSection2Disabled}
+                            disabledMessage="Completa los Inputs de la industria primero"
                         >
                             <section className="flex gap-1 flex-col">
                                 <FormField
@@ -230,6 +243,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     layout="horizontal"
                                     inputClassName="col-span-11"
                                     required
+                                    disabled={isSection2Disabled}
                                 />
                                 <FormField
                                     label="Devaluación"
@@ -276,6 +290,8 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     target: { name: "typeId", value: !formData.typeId },
                                 } as any)
                             }
+                            disabled={isSection3Disabled}
+                            disabledMessage="Completa los Inputs de la industria y del sector primero"
                         >
                             <section className="flex gap-1 flex-col">
                                 {/* Costo de deuda con selector de moneda */}
@@ -299,6 +315,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                         value: formData.currency,
                                         options: dynamicCurrenciesList,
                                     }}
+                                    disabled={isSection3Disabled}
                                 />
                                 <FormField
                                     label="% de deuda"
@@ -315,6 +332,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     maxDecimals={0}
                                     inputClassName="col-span-6"
                                     showClearButton={false}
+                                    disabled={isSection3Disabled}
                                 />
                                 <FormField
                                     label="% de capital"
@@ -330,6 +348,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     layout="horizontal"
                                     inputClassName="col-span-6"
                                     showClearButton={false}
+                                    disabled={isSection3Disabled}
                                 />
                             </section>
                         </FormSection>
@@ -426,7 +445,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                         transition: "opacity 200ms ease, transform 200ms ease",
                         transformOrigin: "bottom right",
                     }}
-                    className="w-72 bg-white rounded-lg shadow-2xl p-4"
+                    className="max-w-[min(288px,calc(100vw-32px))] w-auto min-w-[200px] bg-white rounded-lg shadow-2xl p-4"
                 >
                     <div className="flex items-start gap-3">
                         <div className="mt-0.5 shrink-0 bg-valora-primary/10 p-1.5 rounded-full">

@@ -905,6 +905,7 @@ const KapitalPage: React.FC = () => {
                 onNavigate={handleResultsSectionChange}
                 onOpenReport={handleReportSidebarOpen}
                 hasResults={!!calc.results}
+                hasSensibilizaciones={calc.sensibilizaciones.length > 0}
             />
 
             <main

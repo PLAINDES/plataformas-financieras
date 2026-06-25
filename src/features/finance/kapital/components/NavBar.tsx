@@ -102,9 +102,9 @@ export const NavBar: React.FC<NavbarProps> = ({
       onToggleForm={onToggleForm}
       actions={
         <>
-          <a className="flex flex-row gap-1 px-3 py-2 bg-valora-primary text-white rounded-lg text-xs md:text-sm font-semibold hover:bg-valora-secondary cursor-pointer">
+          <a className="flex flex-row gap-1 px-4 sm:px-3 py-1.5 sm:py-2 bg-valora-primary text-white rounded-lg max-sm:text-[10px] text-xs md:text-sm font-semibold hover:bg-valora-secondary cursor-pointer">
             Curso de capacitación
-            <ChevronRight className="w-4 h-4 my-auto" />
+            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 my-auto" />
           </a>
           {user ? (
             <UserMenu user={user} onLogout={onLogout}>
@@ -117,7 +117,7 @@ export const NavBar: React.FC<NavbarProps> = ({
             </UserMenu>
           ) : (
             <a
-              className="flex items-center justify-center px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold max-sm:w-fit max-sm:text-center text-valora-primary bg-white border border-valora-primary rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
+              className="flex items-center justify-center px-4 sm:px-4 py-1.5 sm:py-2 max-sm:text-[10px] text-xs sm:text-sm font-semibold max-sm:w-fit max-sm:text-center text-valora-primary bg-white border border-valora-primary rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
               onClick={onLoginClick}
             >
               Iniciar sesión
