@@ -1,4 +1,4 @@
-import { Info } from "lucide-react";
+import { Info, Lock } from "lucide-react";
 
 type FormSectionProps = {
     step: number;
@@ -9,6 +9,8 @@ type FormSectionProps = {
     isCollapsed?: boolean;
     onToggleCollapse?: () => void;
     tooltip?: string;
+    disabled?: boolean;
+    disabledMessage?: string;
 };
 
 export const FormSection: React.FC<FormSectionProps> = ({
@@ -18,14 +20,22 @@ export const FormSection: React.FC<FormSectionProps> = ({
     isCollapsed,
     onToggleCollapse,
     tooltip,
+    disabled,
+    disabledMessage,
 }) => {
     const isVisible = !isCollapsed;
     return (
         <div className="rounded-lg w-full">
             <div className="flex items-center gap-2 border-b border-gray-50 bg-gray-50 p-2">
-                <span className="inline-flex size-4.5 sm:h-5 sm:w-5 text-[11px] sm:text-xs shrink-0 items-center justify-center rounded-full bg-valora-primary text-center font-bold leading-none text-white pb-[0.75px]">
-                    {step}
-                </span>
+                {disabled ? (
+                    <span className="inline-flex size-4.5 sm:h-5 sm:w-5 text-[11px] sm:text-xs shrink-0 items-center justify-center rounded-full bg-gray-400 text-center font-bold leading-none text-white pb-[0.75px]">
+                        <Lock className="size-3" />
+                    </span>
+                ) : (
+                    <span className="inline-flex size-4.5 sm:h-5 sm:w-5 text-[11px] sm:text-xs shrink-0 items-center justify-center rounded-full bg-valora-primary text-center font-bold leading-none text-white pb-[0.75px]">
+                        {step}
+                    </span>
+                )}
 
                 <h3
                     className="text-[10px] sm:text-xs font-bold uppercase text-gray-800 flex-1 truncate"
@@ -66,7 +76,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
                                     tip.style.opacity = "0";
                                 }}
                             />
-                            <div className="absolute bottom-full mb-2 right-0 w-48 py-2.5 px-3 bg-gray-100 text-black text-[11px] rounded-md shadow-lg opacity-0 transition-opacity duration-200 z-50 pointer-events-none">
+                            <div className="absolute bottom-full mb-2 right-0 w-auto min-w-[140px] max-w-[min(192px,calc(100vw-32px))] py-2.5 px-3 bg-gray-100 text-black text-[11px] rounded-md shadow-lg opacity-0 transition-opacity duration-200 z-50 pointer-events-none">
                                 <p className="text-blue-800 leading-relaxed">
                                     <strong>Sugerencia: </strong>
                                     {tooltip}
@@ -79,10 +89,19 @@ export const FormSection: React.FC<FormSectionProps> = ({
 
             <div
                 className={`flex flex-col pl-2 gap-3 transition-all duration-300 ease-in-out overflow-visible relative
-          ${isVisible ? "max-h-[2000px] opacity-100 pt-2" : "max-h-0 opacity-0 py-0 overflow-hidden"}`}
+          ${isVisible ? "max-h-[2000px] opacity-100 pt-2" : "max-h-0 opacity-0 py-0 overflow-hidden"}
+          ${disabled ? "opacity-40" : ""}`}
             >
                 {children}
             </div>
+            {disabled && !isCollapsed && (
+                <div className="px-4 pb-3 pt-1">
+                    <p className="text-[11px] text-gray-500 italic flex items-center gap-1.5">
+                        <Lock className="size-3" />
+                        {disabledMessage || "Completa la secci\u00f3n anterior primero"}
+                    </p>
+                </div>
+            )}
         </div>
     );
 };

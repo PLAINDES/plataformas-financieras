@@ -111,15 +111,18 @@ export const FormField: React.FC<FormFieldProps> = ({
         if (tooltipButtonRef.current) {
             const rect = tooltipButtonRef.current.getBoundingClientRect();
             const gap = 8;
-            const tooltipWidth = 256;
+            const viewportWidth = window.innerWidth;
+            const tooltipWidth = Math.min(256, viewportWidth - 32);
             const tooltipHeight = 80;
 
             let left: number;
-            const rightSpace = window.innerWidth - rect.right;
+            const rightSpace = viewportWidth - rect.right;
             if (rightSpace >= tooltipWidth + gap) {
                 left = rect.right + gap;
-            } else {
+            } else if (rect.left >= tooltipWidth + gap) {
                 left = rect.left - gap - tooltipWidth;
+            } else {
+                left = Math.max(16, (viewportWidth - tooltipWidth) / 2);
             }
 
             let top = rect.top + rect.height / 2;
@@ -357,7 +360,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                                     ref={tooltipButtonRef}
                                     onMouseEnter={handleTooltipEnter}
                                     onMouseLeave={handleTooltipLeave}
-                                    className="flex h-5 w-5 items-center justify-center rounded-full bg-valora-primary/5 text-[11px] font-bold text-valora-primary cursor-help select-none"
+                                    className="flex h-5 w-5 items-center justify-center rounded-full bg-valora-primary/5 text-[11px] font-bold text-valora-primary cursor-pointer select-none"
                                 >
                                     <svg className="h-3 w-3 text-valora-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -386,7 +389,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                             pointerEvents: tooltipVisible ? "auto" : "none",
                             transition: "opacity 200ms ease, transform 200ms ease",
                         }}
-                        className="w-64 rounded-lg bg-white p-3 text-[11px] text-gray-600 shadow-2xl"
+                        className="max-w-[min(256px,calc(100vw-32px))] w-auto min-w-[180px] rounded-lg bg-white p-3 text-[11px] text-gray-600 shadow-2xl"
                     >
                         <p className="leading-relaxed">{tooltip}</p>
                     </div>,
