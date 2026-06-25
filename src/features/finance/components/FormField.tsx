@@ -65,10 +65,12 @@ export const FormField: React.FC<FormFieldProps> = ({
     const [query, setQuery] = useState("");
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const dropdownRef = useRef<HTMLDivElement | null>(null);
     const tooltipButtonRef = useRef<HTMLSpanElement | null>(null);
     const tooltipHideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [tooltipVisible, setTooltipVisible] = useState(false);
     const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
+    const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
 
     const filteredOptions = useMemo(() => {
         const normalizedQuery = query.trim().toLowerCase();
@@ -85,7 +87,8 @@ export const FormField: React.FC<FormFieldProps> = ({
         const handleClickOutside = (event: MouseEvent) => {
             if (
                 containerRef.current &&
-                !containerRef.current.contains(event.target as Node)
+                !containerRef.current.contains(event.target as Node) &&
+                !(dropdownRef.current && dropdownRef.current.contains(event.target as Node))
             ) {
                 setIsOpen(false);
             }
@@ -94,6 +97,24 @@ export const FormField: React.FC<FormFieldProps> = ({
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        const handleScrollOrResize = () => {
+            if (isOpen && containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                setDropdownPos({ top: rect.bottom + 8, left: rect.left, width: rect.width });
+            }
+        };
+
+        if (isOpen) {
+            window.addEventListener("scroll", handleScrollOrResize, true);
+            window.addEventListener("resize", handleScrollOrResize);
+        }
+        return () => {
+            window.removeEventListener("scroll", handleScrollOrResize, true);
+            window.removeEventListener("resize", handleScrollOrResize);
+        };
+    }, [isOpen]);
 
     useEffect(() => {
         return () => {
@@ -216,7 +237,13 @@ export const FormField: React.FC<FormFieldProps> = ({
                                 ? "bg-valora-primary/5 text-black cursor-not-allowed"
                                 : "cursor-pointer"
                                 }`}
-                            onClick={() => setIsOpen((prev) => !prev)}
+                            onClick={() => {
+                                setIsOpen((prev) => !prev);
+                                if (!isOpen && containerRef.current) {
+                                    const rect = containerRef.current.getBoundingClientRect();
+                                    setDropdownPos({ top: rect.bottom + 8, left: rect.left, width: rect.width });
+                                }
+                            }}
                             aria-haspopup="listbox"
                             aria-expanded={isOpen}
                             disabled={disabled}
@@ -257,8 +284,18 @@ export const FormField: React.FC<FormFieldProps> = ({
                                 className="hidden"
                             />
                         )}
-                        {isOpen && !disabled && (
-                            <div className="absolute z-20 mt-2 w-full overflow-hidden rounded border border-gray-200 bg-white text-sm shadow">
+                        {isOpen && !disabled && createPortal(
+                            <div
+                                ref={dropdownRef}
+                                style={{
+                                    position: "fixed",
+                                    top: dropdownPos.top,
+                                    left: dropdownPos.left,
+                                    width: dropdownPos.width,
+                                    zIndex: 99999,
+                                }}
+                                className="overflow-hidden rounded border border-gray-200 bg-white text-sm shadow"
+                            >
                                 <div className="border-b border-gray-100 p-2">
                                     <input
                                         type="text"
@@ -291,7 +328,8 @@ export const FormField: React.FC<FormFieldProps> = ({
                                         })
                                     )}
                                 </div>
-                            </div>
+                            </div>,
+                            document.body
                         )}
                     </div>
                 ) : (

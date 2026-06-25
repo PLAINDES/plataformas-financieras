@@ -75,12 +75,12 @@ export const KapitalResultadosSection: React.FC<
                     <div
                         className={`flex flex-1 flex-col justify-center items-start ${shouldShowChatbot ? "xl:pl-15" : "xl:pl-0"}`}
                     >
-                        <div className="flex items-center gap-4 mb-1">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-1">
                             <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">
                                 Resultados generales
                             </h1>
                             {(selectedSector || selectedSubsector?.trim()) && (
-                                <div className="flex flex-col sm:flex-row items-stretch gap-0 sm:gap-px bg-valora-primary/[0.06] rounded-xl overflow-hidden border border-valora-primary/20 w-auto shrink-0">
+                                <div className="flex flex-col sm:flex-row items-stretch gap-0 sm:gap-px bg-valora-primary/[0.06] rounded-xl overflow-hidden border border-valora-primary/20 max-sm:w-full w-auto shrink-0">
                                     {selectedSector && (
                                         <div className="flex items-center gap-2.5 px-4 py-3 bg-white border-b sm:border-b-0 sm:border-r border-valora-primary/[0.06] text-left">
                                             <svg className="w-5 h-5 text-valora-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
