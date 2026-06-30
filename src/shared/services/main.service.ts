@@ -433,10 +433,13 @@ export const MainService = {
     return api.post<any>("chatbot/chat", payload);
   },
 
-  analyzeCompanies: async (tickers: string[]): Promise<any> => {
+  analyzeCompanies: async (tickers: string[], onProgress?: (result: any) => void): Promise<any> => {
     const { job_id } = await api.post<any>("chatbot/calculate-subsectores-boa", { tickers });
     while (true) {
       const progress = await api.get<any>(`chatbot/boa-progress/${job_id}`);
+      if (progress.result?.valid_companies?.length && progress.status === "running") {
+        onProgress?.(progress.result);
+      }
       if (progress.status === "completed" || progress.status === "error") {
         return progress.result || { success: false, valid_companies: [] };
       }

@@ -1,9 +1,9 @@
 import {
-  type MarketResults,
-  type Results,
+  type KapitalMarketResults,
+  type KapitalResults,
   type SensibilizacionEntry,
-  type FormData,
-} from "../KapitalPage";
+  type KapitalFormData,
+} from "@/shared/types";
 
 export const formatToPeruTime = (isoString: string | undefined): string => {
   if (!isoString) return "-";
@@ -82,7 +82,7 @@ export const hasCompanyInputData = (
 
 export const toMarketResults = (
   source: Record<string, unknown> | null
-): MarketResults => {
+): KapitalMarketResults => {
   return {
     ke: toRate(source?.ke),
     koa: toRate(source?.koa),
@@ -114,7 +114,7 @@ export const toRate = (value: unknown): number => {
 
 export const computeResultsFromCalculationData = (
   data: Record<string, unknown> | null
-): { results: Results; showCompanyCard: boolean } => {
+): { results: KapitalResults; showCompanyCard: boolean } => {
   const root = data ?? {};
   const inputs = Array.isArray(root.inputs) ? root.inputs : [];
   const latestInput = inputs[inputs.length - 1];
@@ -209,7 +209,7 @@ export const buildCalculationDataPayload = () => {
   } as Record<string, unknown>;
 };
 
-export const enrichCalculationInputPayload = (formData: FormData) => {
+export const enrichCalculationInputPayload = (formData: KapitalFormData) => {
   const payload = {
     fecha: toPossibleNumber(formData.date),
     industria: toPossibleNumber(formData.sector),
@@ -265,8 +265,31 @@ export const enrichCalculationInputPayload = (formData: FormData) => {
   return payload;
 };
 
-export // Función para extraer año y trimestre de la fecha ingresada, con múltiples formatos soportados
-const getYearAndQuarter = (dateStr: string) => {
+export const formatterx100p = (value: number | string): string => {
+  if (typeof value === "string") return value;
+  return `${(value * 100).toFixed(2)}%`;
+};
+
+export const formatSmartPercentage = (value?: string | number): string => {
+  if (value === undefined || value === null || value === "") {
+    return "0.00%";
+  }
+  if (typeof value === "string") {
+    return value.replace(",", ".");
+  }
+  if (typeof value === "number" && !isNaN(value)) {
+    return `${(value * 100).toFixed(2)}%`;
+  }
+  return "0.00%";
+};
+
+export const parsePercentageString = (value: string): number => {
+  if (!value) return 0;
+  const cleaned = value.replace(",", ".").replace("%", "");
+  return parseFloat(cleaned) || 0;
+};
+
+export const getYearAndQuarter = (dateStr: string) => {
   if (!dateStr) return { year: null, quarter: null };
 
   const trimmed = dateStr.trim();

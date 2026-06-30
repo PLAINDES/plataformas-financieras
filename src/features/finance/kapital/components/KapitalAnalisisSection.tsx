@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import { FinancieraCard } from "./FinancieraCard";
 import type {
-    MarketResults,
-    Results,
+    KapitalMarketResults,
+    KapitalResults,
     SensibilizacionEntry,
-} from "../KapitalPage";
+} from "@/shared/types";
 import { formatToPeruTime } from "../services/kapital.utils";
 import { ArrowRight, Sparkles } from "lucide-react";
 
@@ -16,11 +16,15 @@ const BoaIndicator = ({ value, label, selectedSector, sectorName, subsectorName 
     selectedSector?: string | null;
     sectorName?: string | null;
     subsectorName?: string | null;
-}) => (
+}) => {
+    const isBase = label === selectedSector;
+    const showSectorPrefix = isBase && subsectorName;
+
+    return (
     <div className="w-full xl:w-1/4 flex flex-col justify-center items-center h-full m-auto px-4 py-3 bg-white border border-gray-200/80 rounded-xl shadow-sm text-center max-w-[200px] shrink-0 border-t-4 border-t-[#0088cc]">
         {sectorName ? (
             <div className="mb-1.5 text-center">
-                <span className="text-[10px] font-medium text-gray-500"><span className="text-gray-700 font-semibold">{sectorName}</span></span>
+                <span className="text-[10px] font-medium text-gray-500">{showSectorPrefix ? "Sector: " : ""}<span className="text-gray-700 font-semibold">{sectorName}</span></span>
                 {subsectorName && (
                     <span className="block text-[10px] font-medium text-gray-500 mt-0.5">Subsector: <span className="text-gray-700 font-semibold">{subsectorName}</span></span>
                 )}
@@ -38,32 +42,24 @@ const BoaIndicator = ({ value, label, selectedSector, sectorName, subsectorName 
             </span>
         </div>
         <span className="text-[10px] font-medium text-slate-500 mt-2">
-            {label === selectedSector ? "Beta Económico Base" : "Beta Económico Sensibilidad"}
+            {isBase ? "Beta Económico Base" : "Beta Económico Sensibilidad"}
         </span>
     </div>
-);
+    );
+};
 
 export interface KapitalAnalisisSectionProps {
-    results: Results;
+    results: KapitalResults;
     selectedSector?: string | null;
     selectedSubsector?: string | null;
     showCompanyCard: boolean;
     resultCurrency: "pen" | "usd";
     onResultCurrencyChange: (currency: "pen" | "usd") => void;
-    analysisDC: string;
-    analysisKd: string;
-    analysisCurrency: string;
-    onAnalysisDCChange: (value: string) => void;
-    onAnalysisKdChange: (value: string) => void;
-    onAnalysisCurrencyChange: (value: string) => void;
-    onAnalysisSubmit: (e: React.FormEvent) => void;
-    loading: boolean;
     showComparison: boolean;
     onToggleComparison: (show: boolean) => void;
     sensibilizaciones: SensibilizacionEntry[];
     onOpenReport?: () => void;
     localCurrency?: string;
-    chatbotComponent?: React.ReactNode;
     shouldShowChatbot: boolean;
     onToggleForm: () => void;
 }
@@ -123,7 +119,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
     const empresaOriginal = {
         ...empresaOriginalBase,
         d_empresa: secureDEmpresaOrig,
-    } as MarketResults;
+    } as KapitalMarketResults;
 
     // 2. DATOS SENSIBILIZADOS
     const selectedSens =
@@ -155,8 +151,8 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
 
     // Sección de vista simple (sin comparación lado a lado)
     const renderSingleView = (
-        dataEmergent: MarketResults,
-        dataEmpresa?: MarketResults
+        dataEmergent: KapitalMarketResults,
+        dataEmpresa?: KapitalMarketResults
     ) => (
         <section className="flex flex-col flex-wrap md:flex-row justify-center items-center w-full gap-4 mx-auto h-full">
             <FinancieraCard

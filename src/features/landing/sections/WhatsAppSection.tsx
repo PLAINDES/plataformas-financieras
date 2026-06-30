@@ -42,15 +42,24 @@ interface WhatsAppSectionProps {
     };
     onSave: (content: EditableContent) => Promise<void>;
     onUploadImage?: (file: File, oldUrl?: string) => Promise<string> | undefined;
+    isOpen?: boolean;
+    onToggle?: (open: boolean) => void;
 }
 
 export function WhatsAppSection({
     content,
     onSave,
     onUploadImage,
+    isOpen: controlledIsOpen,
+    onToggle,
 }: WhatsAppSectionProps) {
     const { isAdmin } = useAuthContext();
-    const [isOpen, setIsOpen] = useState(false);
+    const [internalIsOpen, setInternalIsOpen] = useState(false);
+    const isOpen = controlledIsOpen ?? internalIsOpen;
+    const setIsOpen = (val: boolean) => {
+        setInternalIsOpen(val);
+        onToggle?.(val);
+    };
     const [userMessage, setUserMessage] = useState("");
     const [isUploading, setIsUploading] = useState(false);
 
@@ -139,8 +148,16 @@ export function WhatsAppSection({
     return (
         <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-4 pointer-events-none">
             {/* MOCKUP CELULAR (Chat Window) */}
-            {isOpen && (
-                <div className="w-[320px] md:w-[350px] bg-[#EFEAE2] rounded-[1.5rem] shadow-2xl border-4 border-white overflow-hidden relative flex flex-col pointer-events-auto animate-in fade-in slide-in-from-bottom-5 duration-300">
+            <div
+                className={`
+                    w-[320px] md:w-[350px] bg-[#EFEAE2] rounded-[1.5rem] shadow-2xl border-4 border-white overflow-hidden relative flex flex-col pointer-events-auto
+                    transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]
+                    ${isOpen
+                        ? "opacity-100 scale-100 translate-y-0"
+                        : "opacity-0 scale-95 translate-y-4 pointer-events-none"
+                    }
+                `}
+            >
                     {/* Header del Chat */}
                     <div className="bg-[#075E54] px-4 py-3 flex items-center gap-3 shadow-md z-10">
                         {/* Avatar Editable */}
@@ -282,20 +299,26 @@ export function WhatsAppSection({
                         </button>
                     </div>
                 </div>
-            )}
 
             {/* BOTÓN FLOTANTE PRINCIPAL */}
             <div className="relative pointer-events-auto">
-                {!isOpen && (
-                    <div className="absolute -top-12 right-0 bg-white px-4 py-2 rounded-2xl shadow-xl border border-slate-100 text-slate-800 text-sm font-semibold whitespace-nowrap animate-in fade-in slide-in-from-bottom-4 duration-1000 flex items-center gap-2">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                        </span>
-                        ¿En qué podemos ayudarte?
-                        <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-white border-r border-b border-slate-100 rotate-45" />
-                    </div>
-                )}
+                <div
+                    className={`
+                        absolute -top-12 right-0 bg-white px-4 py-2 rounded-2xl shadow-xl border border-slate-100 text-slate-800 text-sm font-semibold whitespace-nowrap flex items-center gap-2
+                        transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]
+                        ${isOpen
+                            ? "opacity-0 translate-y-2 scale-95 pointer-events-none"
+                            : "opacity-100 translate-y-0 scale-100"
+                        }
+                    `}
+                >
+                    <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    ¿En qué podemos ayudarte?
+                    <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-white border-r border-b border-slate-100 rotate-45" />
+                </div>
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className={`w-16 h-16 rounded-full flex items-center justify-center shadow-[0_10px_40px_rgba(37,211,102,0.4)] transition-all duration-500 active:scale-90 group ${isOpen

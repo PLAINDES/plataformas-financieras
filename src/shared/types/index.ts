@@ -15,6 +15,16 @@ export type {
 
 export * from "./templatecomplement.types";
 
+export type {
+  KapitalFormData,
+  KapitalMarketResults,
+  KapitalResults,
+  SensibilizacionEntry,
+  MethodologyItem,
+  MethodologyCategory,
+  UseKapitalCalculationProps,
+} from "./kapital.types";
+
 // Re-export User types from auth module - unica fuente de la verdad
 export type {
   User,

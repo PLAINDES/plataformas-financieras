@@ -40,13 +40,19 @@ export const ConfiguracionPage = () => {
   const [boaProgressText, setBoaProgressText] = useState<string | null>(null);
   const resolveBoaRef = useRef<((v: boolean) => void) | null>(null);
   const boaPollingRef = useRef(false);
+  const parsedDataRef = useRef<any[] | null>(null);
+  const boaTabRef = useRef<string | null>(null);
+  const activeTabRef = useRef("rf");
 
   type BoaJob = { jobId: string; total: number; processed: number; failed: number };
   const [activeBoaJob, setActiveBoaJob] = useState<BoaJob | null>(null);
 
+  const loadDataRef = useRef<() => Promise<void>>(null as any);
+
   const startBoaPolling = useCallback(async (jobId: string, total: number) => {
     if (boaPollingRef.current) return;
     boaPollingRef.current = true;
+    let lastSavedCompanies = 0;
     try {
       while (true) {
         let progress;
@@ -70,14 +76,47 @@ export const ConfiguracionPage = () => {
           return { ...prev, processed: progress.processed, failed: progress.failed };
         });
 
+        // Save intermediate results when new batch data is available
+        const currentCompanies = progress.result?.valid_companies?.length || 0;
+        const tab = boaTabRef.current;
+        const pData = parsedDataRef.current;
+        if (currentCompanies > lastSavedCompanies && tab === "subsectores" && pData) {
+          lastSavedCompanies = currentCompanies;
+          try {
+            const boaMap: Record<string, number> = {};
+            progress.result.valid_companies.forEach((c: any) => {
+              boaMap[c.ticker] = c.beta_unlevered;
+            });
+            pData.forEach((item: any) => {
+              item.empresas_boa = item.empresas_boa || {};
+              (item.empresas || []).forEach((emp: string) => {
+                if (boaMap[emp] !== undefined) {
+                  item.empresas_boa[emp] = boaMap[emp];
+                }
+              });
+            });
+            await MainService.createTemplateComplement({
+              nombre: tab,
+              fecha: new Date().toISOString(),
+              data: [...pData],
+            });
+            // Refrescar la tabla para reflejar el progreso intermedio
+            loadDataRef.current();
+          } catch (e) {
+            console.warn("Error saving intermediate BOA results", e);
+          }
+        } else if (progress.status === "running") {
+          console.log(
+            `BOA polling: skip save (saved: ${lastSavedCompanies}, current: ${currentCompanies}, tab: "${tab}", pData: ${!!pData}, liveTab: "${activeTabRef.current}")`
+          );
+        }
+
         if (progress.status === "completed") {
           setActiveBoaJob(null);
-
           return progress.result;
         }
         if (progress.status === "error") {
           setActiveBoaJob(null);
-
           throw new Error(
             progress.result?.error || "Error desconocido en el cálculo BOA"
           );
@@ -95,17 +134,31 @@ export const ConfiguracionPage = () => {
     let cancelled = false;
     (async () => {
       try {
-        const jobs = await MainService.getActiveBoaJobs();
+        const [jobs, complements] = await Promise.all([
+          MainService.getActiveBoaJobs(),
+          MainService.getTemplateComplements("subsectores"),
+        ]);
         if (cancelled || !jobs?.length) return;
         const job = jobs[0];
+        if (complements?.length) {
+          const latest = complements.reduce((a: any, b: any) =>
+            new Date(a.fecha || a.created_at) > new Date(b.fecha || b.created_at) ? a : b
+          );
+          parsedDataRef.current = Array.isArray(latest.data) ? latest.data : [];
+        }
+        boaTabRef.current = "subsectores";
         setActiveBoaJob({ jobId: job.id, total: job.total, processed: job.processed, failed: job.failed });
         startBoaPolling(job.id, job.total).catch(() => {});
       } catch {
-        // Backend no disponible
+        // Backend no disponible o no hay subsectores previos
       }
     })();
     return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
 
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -216,6 +269,7 @@ export const ConfiguracionPage = () => {
       setIsLoading(false);
     }
   };
+  loadDataRef.current = loadData;
 
   // Generic Handlers (simplified for demo)
   const handleDelete = async (
@@ -323,51 +377,7 @@ export const ConfiguracionPage = () => {
     });
   };
 
-  const pollBoaProgress = async (
-    jobId: string,
-    tickersCount: number
-  ): Promise<any> => {
-    boaPollingRef.current = true;
-    try {
-      while (true) {
-        let progress;
-        try {
-          progress = await MainService.getBoaProgress(jobId);
-        } catch (err) {
-          console.warn("pollBoaProgress: error polling, retrying in 5s:", err);
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-          continue;
-        }
 
-        setBoaProgressText(
-          progress.status === "completed"
-            ? `Cálculo finalizado: ${progress.processed}/${tickersCount} empresas procesadas (${progress.failed} errores).`
-            : progress.status === "error"
-            ? `Error: ${progress.result?.error || "desconocido"}`
-            : `Procesando ${progress.processed + progress.failed}/${tickersCount} empresas\n• Correctos: ${progress.processed}\n• Errores: ${progress.failed}\n\nPuede continuar navegando, la operación sigue en segundo plano.`
-        );
-        setActiveBoaJob((prev) => {
-          if (!prev) return prev;
-          const next = { ...prev, processed: progress.processed, failed: progress.failed };
-          sessionStorage.setItem("activeBoaJob", JSON.stringify(next));
-          return next;
-        });
-
-        if (progress.status === "completed") {
-          return progress.result;
-        }
-        if (progress.status === "error") {
-          throw new Error(
-            progress.result?.error || "Error desconocido en el cálculo BOA"
-          );
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-      }
-    } finally {
-      boaPollingRef.current = false;
-    }
-  };
 
   const doImport = async (parsedData: any[], boaResult: any, tab: string) => {
     try {
@@ -438,6 +448,10 @@ export const ConfiguracionPage = () => {
             return;
           }
 
+          parsedDataRef.current = parsedData;
+          activeTabRef.current = activeTab;
+          boaTabRef.current = activeTab;
+
           const { job_id } = await MainService.startSubsectoresBoa(tickers);
           setActiveBoaJob({ jobId: job_id, total: tickers.length, processed: 0, failed: 0 });
           setBoaProgressText(
@@ -453,19 +467,18 @@ export const ConfiguracionPage = () => {
           });
 
           try {
-            boaResult = await pollBoaProgress(job_id, tickers.length);
+            boaResult = await startBoaPolling(job_id, tickers.length);
             closeModal();
             setActiveBoaJob(null);
-  
             setBoaProgressText(null);
 
             const boaMap: Record<string, number> = {};
-            (boaResult.valid_companies || []).forEach((c: any) => {
+            (boaResult?.valid_companies || []).forEach((c: any) => {
               boaMap[c.ticker] = c.beta_unlevered;
             });
 
             parsedData.forEach((item: any) => {
-              item.empresas_boa = {};
+              item.empresas_boa = item.empresas_boa || {};
               (item.empresas || []).forEach((emp: string) => {
                 if (boaMap[emp] !== undefined) {
                   item.empresas_boa[emp] = boaMap[emp];
@@ -475,7 +488,6 @@ export const ConfiguracionPage = () => {
           } catch (err) {
             closeModal();
             setActiveBoaJob(null);
-  
             setBoaProgressText(null);
             console.warn("Error obteniendo BOA, se continuará sin BOA:", err);
           }

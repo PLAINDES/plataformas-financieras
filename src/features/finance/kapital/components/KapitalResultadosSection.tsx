@@ -1,11 +1,11 @@
 // features/finance/kapital/components/KapitalResultadosSection.tsx
 import { FinancieraCard } from "./FinancieraCard";
-import type { Results } from "../KapitalPage";
+import type { KapitalResults } from "@/shared/types";
 import { ArrowRight, Sparkles } from "lucide-react";
 //import { Book } from "./Book";
 
 export interface KapitalResultadosSectionProps {
-    results: Results;
+    results: KapitalResults;
     selectedSector?: string | null;
     selectedSubsector?: string | null;
     showCompanyCard: boolean;
