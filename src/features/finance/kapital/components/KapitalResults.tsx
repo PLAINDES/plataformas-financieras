@@ -3,23 +3,16 @@
 import { KapitalResultadosSection } from "./KapitalResultadosSection";
 import { KapitalAnalisisSection } from "./KapitalAnalisisSection";
 import { LoadingOverlay } from "@/shared/components/common/LoadingOverlay";
-import type { Results, SensibilizacionEntry } from "../KapitalPage";
+import type { KapitalResults as KapitalResultsType, SensibilizacionEntry, MethodologyCategory } from "@/shared/types";
 
 export interface KapitalResultsProps {
     section: "result" | "sensitivity";
-    results: Results | null;
+    results: KapitalResultsType | null;
     selectedSector?: string | null;
     selectedSubsector?: string | null;
     showCompanyCard: boolean;
     resultCurrency: "pen" | "usd";
     onResultCurrencyChange: (currency: "pen" | "usd") => void;
-    analysisDC: string;
-    analysisKd: string;
-    analysisCurrency: string;
-    onAnalysisDCChange: (value: string) => void;
-    onAnalysisKdChange: (value: string) => void;
-    onAnalysisCurrencyChange: (value: string) => void;
-    onAnalysisSubmit: (e: React.FormEvent) => void;
     loading: boolean;
     methodologyCategories: MethodologyCategory[];
     showComparison: boolean;
@@ -32,16 +25,6 @@ export interface KapitalResultsProps {
     onToggleForm: () => void;
 }
 
-interface MethodologyItem {
-    name: string;
-    file: string;
-}
-
-interface MethodologyCategory {
-    name: string;
-    products: MethodologyItem[];
-}
-
 export const KapitalResults: React.FC<KapitalResultsProps> = ({
     section,
     results,
@@ -50,13 +33,6 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
     showCompanyCard,
     resultCurrency,
     onResultCurrencyChange,
-    analysisDC,
-    analysisKd,
-    analysisCurrency,
-    onAnalysisDCChange,
-    onAnalysisKdChange,
-    onAnalysisCurrencyChange,
-    onAnalysisSubmit,
     loading,
     showComparison,
     onToggleComparison,
@@ -100,14 +76,6 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
                             showCompanyCard={showCompanyCard}
                             resultCurrency={resultCurrency}
                             onResultCurrencyChange={onResultCurrencyChange}
-                            analysisDC={analysisDC}
-                            analysisKd={analysisKd}
-                            analysisCurrency={analysisCurrency}
-                            onAnalysisDCChange={onAnalysisDCChange}
-                            onAnalysisKdChange={onAnalysisKdChange}
-                            onAnalysisCurrencyChange={onAnalysisCurrencyChange}
-                            onAnalysisSubmit={onAnalysisSubmit}
-                            loading={loading}
                             showComparison={showComparison}
                             onToggleComparison={onToggleComparison}
                             sensibilizaciones={sensibilizaciones}

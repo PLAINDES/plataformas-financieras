@@ -1,15 +1,10 @@
 // features/finance/kapital/components/FinancieraCard.tsx
 
 import { BalanceSheetBlock } from "./BalanceSheetBlock";
+import type { KapitalMarketResults } from "@/shared/types";
+import { formatterx100p, formatSmartPercentage } from "../services/kapital.utils";
 
-export interface MarketResults {
-  cppc: number | string;
-  kd: number | string;
-  ke: number | string;
-  koa: number | string;
-  "kd(1-t)": string | number;
-  d_empresa: string | number;
-}
+type MarketResults = KapitalMarketResults;
 
 interface FinancieraCardProps {
   title: string;
@@ -18,32 +13,8 @@ interface FinancieraCardProps {
   resultCurrency?: "pen" | "usd";
   onResultCurrencyChange?: (currency: "pen" | "usd") => void;
   compact?: boolean;
-  country?: string;
   localCurrency?: string;
 }
-
-const formatterx100p = (value: number | string): string => {
-  if (typeof value === "string") return value;
-  return `${(value * 100).toFixed(2)}%`;
-};
-
-const formatSmartPercentage = (value?: string | number): string => {
-  if (value === undefined || value === null || value === "") {
-    return "0.00%";
-  }
-
-  // Si ya es un texto del backend (ej: "8,32%"), lo devolvemos tal cual
-  if (typeof value === "string") {
-    return value.replace(",", ".");
-  }
-
-  // Si es un número decimal puro (ej: 0.0832), lo formateamos a texto
-  if (typeof value === "number" && !isNaN(value)) {
-    return `${(value * 100).toFixed(2)}%`;
-  }
-
-  return "0.00%";
-};
 
 export const FinancieraCard: React.FC<FinancieraCardProps> = ({
   title,

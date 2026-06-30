@@ -17,13 +17,14 @@ import { LoginModal } from "@/features/auth/components/LoginModal";
 
 import { useKapitalCalculation } from "./hooks/useKapitalCalculation";
 import { useKapitalForm } from "./hooks/useKapitalForm";
+import { useKapitalSession } from "./hooks/useKapitalSession";
+import { useKapitalData } from "./hooks/useKapitalData";
+import { useSubsectorModal } from "./hooks/useSubsectorModal";
 import { useToast } from "@/shared/components/common/ToastProvider";
 import {
-    type CompanyData,
     type YahooFinanceData,
     type CompanyModalActions,
 } from "../components/Chatbot/chatbot.interfaces";
-import { Bot, X } from "lucide-react";
 
 import {
     INSTRUMENTS,
@@ -39,329 +40,140 @@ import {
 
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 import { ReportViewer } from "./components/ReportViewer";
-import { YahooResults } from "../components/Chatbot/ChatbotUI";
-
-export interface FormData {
-    date: string;
-    sector: string;
-    subsector?: string;
-    beta_unlevered_industry: string;
-    instrument: string;
-    bono: string;
-    country: string;
-    devaluation: string;
-    tax: string;
-    typeId: boolean;
-    currency: string;
-    kd: string;
-    debt: string;
-    capital: string;
-    dc_ratio: string;
-    effective_tax_rate: string;
-    beta_levered: string;
-    beta_unlevered: string;
-}
-
-export interface MarketResults {
-    cppc: number | string;
-    kd: number | string;
-    ke: number | string;
-    koa: number | string;
-    "kd(1-t)": string | number;
-    d_empresa: string | number;
-}
-
-export interface Results {
-    cppc: number | string;
-    kd: number | string;
-    ke: number | string;
-    koa: number | string;
-    boa?: number;
-    emergent: MarketResults;
-    developed: MarketResults;
-    empresa_dolares: MarketResults;
-    empresa_soles: MarketResults;
-    d_empresa: string | number;
-}
-
-export interface SensibilizacionEntry {
-    created_at?: string;
-    boa?: number;
-    mercado_desarrollado?: MarketResults;
-    mercado_emergente?: MarketResults;
-    empresa_dolares?: MarketResults;
-    empresa_soles?: MarketResults;
-}
+import { SubsectorModal } from "./components/SubsectorModal";
 
 const KapitalPage: React.FC = () => {
     const { user, login, logout } = useAuthContext();
     const { addToast } = useToast();
     const location = useLocation();
 
-    const sectorCache = useRef<Record<string, YahooFinanceData>>({});
-    const requestTimestamps = useRef<number[]>([]);
-
-    // Estadps de UI
+    // --- UI State ---
     const [isFormOpen, setIsFormOpen] = useState(true);
-    const [resultsSection, setResultsSection] = useState<
-        "result" | "sensitivity"
-    >("result");
+    const [resultsSection, setResultsSection] = useState<"result" | "sensitivity">("result");
     const [showResults, setShowResults] = useState(false);
-
     const [isReportSidebarOpen, setIsReportSidebarOpen] = useState(false);
     const [isReportViewerOpen, setIsReportViewerOpen] = useState(false);
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-
     const [selectedReportProductId, setSelectedReportProductId] = useState("");
-    const [analysisDC, setAnalysisDC] = useState("");
-    const [analysisKd, setAnalysisKd] = useState("");
-    const [analysisCurrency, setAnalysisCurrency] = useState("Dólares");
-
     const [betaInput, setBetaInput] = useState("");
-    const [isSearchingBeta, setIsSearchingBeta] = useState(false);
+    const isSearchingBeta = false;
     const [modalData, setModalData] = useState<YahooFinanceData | null>(null);
-    const [subsectorModalOpen, setSubsectorModalOpen] = useState(false);
-    const [subsectorInput, setSubsectorInput] = useState("");
-    const [selectedSubsector, setSelectedSubsector] = useState<string | null>(
-        null
-    );
-
-    const [toasts, setToasts] = useState<
-        Array<{ id: string; type: ToastType; message: string }>
-    >([]);
-
-    const [modalActions, setModalActions] = useState<CompanyModalActions | null>(
-        null
-    );
-
-    // Guarda el ID de la sesión que el servidor pre-calentó
-    const [prewarmedSessionId, setPrewarmedSessionId] = useState<string | null>(
-        null
-    );
-
-    // Estado para controlar el botón de Mostrar comparaciones
+    const [, setModalActions] = useState<CompanyModalActions | null>(null);
     const [showComparison, setShowComparison] = useState(false);
+    const [maxSensibilizaciones, setMaxSensibilizaciones] = useState<number>(3);
+    const [toasts, setToasts] = useState<Array<{ id: string; type: ToastType; message: string }>>([]);
 
     const toastTimeoutsRef = useRef<Map<string, number>>(new Map());
 
-    // Maximo de sensibilizaciones permitidas, traído desde la configuración de Kapital en el backend
-    const [maxSensibilizaciones, setMaxSensibilizaciones] = useState<number>(3);
+    // --- Custom Hooks ---
+    const form = useKapitalForm();
+    const session = useKapitalSession();
+    const data = useKapitalData(form.formData.sector);
 
-    useEffect(
-        () => () => {
-            toastTimeoutsRef.current.forEach((timeoutId) =>
-                window.clearTimeout(timeoutId)
-            );
-            toastTimeoutsRef.current.clear();
-        },
-        []
-    );
+    const calc = useKapitalCalculation({
+        formData: form.formData,
+        setFormData: form.setFormData,
+        prewarmedSessionId: session.prewarmedSessionId,
+        setPrewarmedSessionId: session.setPrewarmedSessionId,
+        addToast,
+        userId: user?.id,
+        ui: { setShowResults, setIsFormOpen, setResultsSection, setShowComparison },
+    });
 
+    const modal = useSubsectorModal({
+        formData: form.formData,
+        isWaccCalculated: calc.isWaccCalculated,
+        handleInputChange: form.handleInputChange,
+        subsectorTickersRef: data.subsectorTickersRef,
+        subsectorSensibilizacionTickersRef: data.subsectorSensibilizacionTickersRef,
+    });
+
+    // --- Effects ---
+
+    // Cleanup toast timeouts
     useEffect(() => {
-        if (!showResults) {
-            setIsReportViewerOpen(false);
-        }
+        return () => {
+            toastTimeoutsRef.current.forEach((id) => window.clearTimeout(id));
+            toastTimeoutsRef.current.clear();
+        };
+    }, []);
+
+    // Close report viewer when results hidden
+    useEffect(() => {
+        if (!showResults) setIsReportViewerOpen(false);
     }, [showResults]);
 
-    // UseEffect
+    // Body overflow lock on mobile
     useEffect(() => {
-        let intervalId: number;
-        let attempts = 0;
-        const MAX_ATTEMPTS = 10; // 10 intentos * 2 min = 20 minutos máximo de vida
+        const isMobile = window.innerWidth <= 540;
+        document.body.style.overflow = isFormOpen && isMobile ? "hidden" : "unset";
+        return () => { document.body.style.overflow = "unset"; };
+    }, [isFormOpen]);
 
-        if (prewarmedSessionId) {
-            // 4 minutos = 240,000 ms (justo antes de los 5 min de expiración)
-            intervalId = window.setInterval(async () => {
-                attempts++;
-                if (attempts > MAX_ATTEMPTS) {
-                    clearInterval(intervalId);
-                    console.log(
-                        "Se dejó expirar la sesión de Excel para ahorrar recursos."
-                    );
-                    return;
-                }
+    // Pre-warm session
+    useEffect(() => {
+        if (!calc.currentCalculation) session.prewarmSession();
+    }, [calc.currentCalculation]);
 
-                try {
-                    await MainService.keepAliveSession(prewarmedSessionId);
-                    console.log(
-                        `Sesión Excel refrescada (intento ${attempts}/${MAX_ATTEMPTS})`
-                    );
-                } catch (e) {
-                    console.warn("Fallo el keep-alive, la sesión podría morir.", e);
-                }
-            }, 240000);
-        }
+    // Load from URL
+    useEffect(() => { calc.loadFromUrl(); }, []);
 
-        // Cleanup: Si el usuario cambia de página o cierra el componente, el intervalo se limpia
-        // y la sesión en Microsoft morirá a los 5 minutos solita.
-        return () => {
-            if (intervalId) window.clearInterval(intervalId);
-        };
-    }, [prewarmedSessionId]);
+    // Load Kapital settings
+    useEffect(() => {
+        MainService.getKapitalSettings().then((settings) => {
+            if (settings?.max_sensibilizaciones !== undefined) {
+                setMaxSensibilizaciones(settings.max_sensibilizaciones);
+            }
+        });
+    }, []);
 
-    const removeToast = (id: string) => {
-        setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    // Sync restored tickers from URL to refs
+    useEffect(() => {
+        data.syncTickersFromUrl("tickers_subsector", "subsector", form.formData.tickers_subsector || "", form.formData.subsector);
+    }, [form.formData.tickers_subsector, form.formData.subsector]);
+
+    useEffect(() => {
+        data.syncTickersFromUrl("tickers_subsector_sensibilizacion", "subsector_sensibilizacion", form.formData.tickers_subsector_sensibilizacion || "", form.formData.subsector_sensibilizacion);
+    }, [form.formData.tickers_subsector_sensibilizacion, form.formData.subsector_sensibilizacion]);
+
+    // --- Handlers ---
+
+    const removeToast = useCallback((id: string) => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
         const timeoutId = toastTimeoutsRef.current.get(id);
         if (timeoutId) {
             window.clearTimeout(timeoutId);
             toastTimeoutsRef.current.delete(id);
         }
-    };
+    }, []);
 
-    /*const addToast = (type: ToastType, message: string) => {
-      const id =
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-      setToasts((prev) => [...prev, { id, type, message }]);
-      const timeoutId = window.setTimeout(() => removeToast(id), 3500);
-      toastTimeoutsRef.current.set(id, timeoutId);
-    };*/
-
-    const handleResultsSectionChange = (
-        nextSection: "result" | "sensitivity"
-    ) => {
-        if (isReportViewerOpen) {
-            setIsReportViewerOpen(false);
-        }
-        if (isReportSidebarOpen) {
-            setIsReportSidebarOpen(false);
-        }
+    const handleResultsSectionChange = useCallback((nextSection: "result" | "sensitivity") => {
+        if (isReportViewerOpen) setIsReportViewerOpen(false);
+        if (isReportSidebarOpen) setIsReportSidebarOpen(false);
         setResultsSection(nextSection);
-        /*if (nextSection === "methodology" && isFormOpen) {
-          setIsFormOpen(false);
-        }*/
-    };
+    }, [isReportViewerOpen, isReportSidebarOpen]);
 
-    const handleReportSidebarOpen = () => {
+    const handleReportSidebarOpen = useCallback(() => {
         setIsReportSidebarOpen(true);
         if (isFormOpen) setIsFormOpen(false);
-    };
-
-    const handleReportViewerOpen = () => {
-        setIsReportViewerOpen(true);
-        setIsReportSidebarOpen(false);
-    };
-
-    const handleCloseModal = useCallback(() => {
-        setSubsectorModalOpen(false);
-    }, []);
-
-    const handleRemoveTicker = useCallback(
-        (ticker: string) => {
-            modalActions?.onRemoveTicker(ticker);
-            setModalData((prev) => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    valid_companies: prev.valid_companies.filter(
-                        (company) => company.ticker !== ticker
-                    ),
-                };
-            });
-        },
-        [modalActions]
-    );
-
-    const handleLogout = async () => {
-        await logout();
-        addToast("Has cerrado sesión exitosamente.", "success");
-    };
-
-    const getSelectedView = (): "result" | "sensitivity" | "" => {
-        if (!showResults || isReportViewerOpen) return "";
-        return resultsSection;
-    };
-
-    useEffect(() => {
-        const isMobile = window.innerWidth <= 540;
-
-        if (isFormOpen && isMobile) {
-            document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "unset";
-        }
-
-        return () => {
-            document.body.style.overflow = "unset";
-        };
     }, [isFormOpen]);
 
-    // --- INTEGRACIÓN DE HOOKS ---
-
-    const form = useKapitalForm();
-
-    const applyCompanyToForm = useCallback(
-        (company: CompanyData) => {
-            if (company.beta_unlevered == null) return;
-
-            const formattedBeta = Number(company.beta_unlevered).toFixed(2);
-            form.setFormData((prev) => ({
-                ...prev,
-                beta_unlevered: formattedBeta,
-            }));
-        },
-        [form.setFormData]
-    );
-
-    const handleApplyCompany = useCallback(
-        (company: CompanyData) => {
-            modalActions?.onApplyCompany(company);
-            applyCompanyToForm(company);
-            handleCloseModal();
-        },
-        [applyCompanyToForm, handleCloseModal, modalActions]
-    );
-
-    const calc = useKapitalCalculation({
-        formData: form.formData,
-        setFormData: form.setFormData,
-        prewarmedSessionId,
-        setPrewarmedSessionId,
-        addToast,
-        userId: user?.id,
-        ui: {
-            setShowResults,
-            setIsFormOpen,
-            setResultsSection,
-            setShowComparison,
-        },
-    });
-
-    //  Llama al pre-warm en segundo plano
-    useEffect(() => {
-        const preWarmSession = async () => {
-            try {
-                const data = await MainService.prewarmSession();
-
-                if (data && data.session_id) {
-                    setPrewarmedSessionId(data.session_id);
-                }
-            } catch (e) {
-                console.error("Fallo pre-warm. Se creará la sesión al dar clic.", e);
-            }
-        };
-
-        // Solo hacemos pre-warm si no hay un cálculo activo
-        if (!calc.currentCalculation) {
-            preWarmSession();
-        }
-    }, [calc.currentCalculation]);
-
-    // Fetch inicial desde URL
-    useEffect(() => {
-        calc.loadFromUrl();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+    const handleReportViewerOpen = useCallback(() => {
+        setIsReportViewerOpen(true);
+        setIsReportSidebarOpen(false);
     }, []);
 
-    // Cargar configuración global de Kapital
-    useEffect(() => {
-        MainService.getKapitalSettings().then((settings) => {
-            if (settings && settings.max_sensibilizaciones !== undefined) {
-                setMaxSensibilizaciones(settings.max_sensibilizaciones);
-            }
-        });
-    }, []);
+    const handleLogout = useCallback(async () => {
+        await logout();
+        addToast("Has cerrado sesión exitosamente.", "success");
+    }, [logout, addToast]);
+
+    const getSelectedView = useCallback((): "result" | "sensitivity" | "" => {
+        if (!showResults || isReportViewerOpen) return "";
+        return resultsSection;
+    }, [showResults, isReportViewerOpen, resultsSection]);
+
+    // --- Derived ---
 
     const isProyectosRoute = location.pathname.includes("/proyectos");
     const shouldShowChatbot =
@@ -370,234 +182,25 @@ const KapitalPage: React.FC = () => {
         !isProyectosRoute &&
         calc.sensibilizaciones.length < maxSensibilizaciones;
 
-    // La etiqueta de la moneda local siempre depende del país guardado
     const activeSavedCurrency = form.formData.country
         ? COUNTRY_LOCAL_CURRENCIES[form.formData.country] || "Moneda Local"
         : "Moneda Local";
 
-    const handleSearchSectorBeta = () => {
-        if (!form.formData.sector) return;
-        setSubsectorModalOpen(true);
-    };
-
-    const executeSearchSectorBeta = async (subsector: string) => {
-        const currentSector = form.formData.sector;
-        if (!currentSector) return;
-        const normalizedSubsector = subsector.trim();
-
-        const cacheKey = `${currentSector}__${normalizedSubsector.toLowerCase()}`;
-
-        // 1. Verificación de caché
-        if (sectorCache.current[cacheKey]) {
-            setSelectedSubsector(normalizedSubsector || null);
-            form.setFormData((prev) => ({
-                ...prev,
-                subsector: normalizedSubsector || "",
-            }));
-            setModalData(sectorCache.current[cacheKey]);
-            setModalActions({
-                onApplyCompany: (company: CompanyData) => {
-                    if (company.beta_unlevered != null) {
-                        const formattedBeta = Number(company.beta_unlevered).toFixed(2);
-                        form.handleInputChange({
-                            target: { name: "beta_unlevered", value: formattedBeta },
-                        } as any);
-                        setModalData(null);
-                    }
-                },
-                onRemoveTicker: (tickerToRemove: string) => {
-                    setModalData((prev) => {
-                        if (!prev) return prev;
-                        return {
-                            ...prev,
-                            valid_companies: prev.valid_companies.filter(
-                                (c) => c.ticker !== tickerToRemove
-                            ),
-                        };
-                    });
-                },
-            });
-            return;
-        }
-        // 2. Control de límite de pedidos de beta por minuto
-        const now = Date.now();
-        requestTimestamps.current = requestTimestamps.current.filter(
-            (t) => now - t < 60000
-        );
-
-        if (requestTimestamps.current.length >= 3) {
-            addToast(
-                "Límite de 3 consultas por minuto alcanzado. Intente en unos segundos.",
-                "warn"
-            );
-            return;
-        }
-
-        setIsSearchingBeta(true);
-        // Limpiamos los resultados antiguos durante la animación de carga para la nueva búsqueda
-        setModalData(null);
-
-        try {
-            requestTimestamps.current.push(now);
-
-            const subsectorContext = subsector.trim()
-                ? ` Subsector específico: "${subsector.trim()}".`
-                : "";
-
-            const payload = {
-                message: `Calcula mi beta.${subsectorContext}`,
-                history: [],
-                form_data: form.formData,
-            };
-
-            // Envía mensaje oculto al endpoint
-            const data = await MainService.sendChatMessage(payload);
-
-            if (data.tickers && data.tickers.length > 0) {
-                const res = await MainService.analyzeCompanies(data.tickers);
-                if (res.success && res.valid_companies?.length) {
-                    setSelectedSubsector(normalizedSubsector || null);
-                    form.setFormData((prev) => ({
-                        ...prev,
-                        subsector: normalizedSubsector || "",
-                    }));
-                    sectorCache.current[cacheKey] = res;
-
-                    setModalData(res);
-                    setModalActions({
-                        onApplyCompany: (company: CompanyData) => {
-                            if (company.beta_unlevered != null) {
-                                const formattedBeta = Number(company.beta_unlevered).toFixed(2);
-                                form.handleInputChange({
-                                    target: { name: "beta_unlevered", value: formattedBeta },
-                                } as any);
-                                setModalData(null);
-                            }
-                        },
-                        onRemoveTicker: (tickerToRemove: string) => {
-                            setModalData((prev) => {
-                                if (!prev) return prev;
-                                return {
-                                    ...prev,
-                                    valid_companies: prev.valid_companies.filter(
-                                        (c) => c.ticker !== tickerToRemove
-                                    ),
-                                };
-                            });
-                        },
-                    });
-                }
-            }
-        } catch (error) {
-            console.error("Error al buscar beta:", error);
-        } finally {
-            setIsSearchingBeta(false);
-        }
-    };
-
-    /* COMPONENTES REUTILIZABLES */
-
-    const chatbotComponent =
-        shouldShowChatbot &&
-            calc.sensibilizaciones.length < maxSensibilizaciones ? (
-            <Chatbot
-                formData={form.formData}
-                isWaccCalculated={calc.isWaccCalculated}
-                isOpen={true}
-                onOpenModal={(data, actions) => {
-                    setModalData(data);
-                    setModalActions(actions);
-                }}
-                betaInput={betaInput}
-                setBetaInput={setBetaInput}
-            />
-        ) : null;
-
-    const panelHeaderClose = (onClose: () => void) => (
-        <div className="flex justify-between items-center px-3 py-2 sm:px-4 sm:py-2.5 border-b border-gray-100 bg-gray-50/60 shrink-0">
-            <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200 shadow-xs">
-                    <Bot className="w-3.5 h-3.5 text-valora-primary" />
-                </div>
-                <span className="text-xs sm:text-[13px] font-semibold tracking-tight text-slate-700">
-                    Empresas Comparables
-                </span>
-            </div>
-            <button
-                type="button"
-                onClick={onClose}
-                className="p-1 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"
-            >
-                <X className="w-4 h-4" />
-            </button>
-        </div>
-    );
-
-    const yahooPanelContent = subsectorModalOpen ? (
-        <>
-            {panelHeaderClose(handleCloseModal)}
-            <div className="flex-1 flex flex-col p-4 sm:p-5 overflow-y-auto gap-4 min-h-0 bg-slate-50/40">
-                {/* Input del subsector (Paso 1, siempre arriba si iniciamos la búsqueda con modal) */}
-                <div className="shrink-0">
-                    <div className="flex gap-2 items-center rounded-full border border-gray-200 bg-white px-2 py-1.5 focus-within:border-valora-primary/60 focus-within:ring-2 focus-within:ring-valora-primary/10 transition-all">
-                        <div className="flex-1 min-w-0">
-                            <input
-                                type="text"
-                                autoFocus
-                                disabled={isSearchingBeta}
-                                value={subsectorInput}
-                                onChange={(e) => setSubsectorInput(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" && !isSearchingBeta) {
-                                        executeSearchSectorBeta(subsectorInput);
-                                    }
-                                    if (e.key === "Escape") handleCloseModal();
-                                }}
-                                placeholder="Ej: software de pagos, manufactura..."
-                                className="w-full bg-transparent px-2 py-1.5 text-xs focus:outline-none disabled:opacity-50"
-                            />
-                        </div>
-                        <button
-                            type="button"
-                            disabled={isSearchingBeta}
-                            onClick={() => executeSearchSectorBeta(subsectorInput)}
-                            className="px-3 py-1.5 text-xs font-semibold text-white bg-valora-primary rounded-full hover:bg-valora-secondary transition-colors cursor-pointer shadow-sm flex items-center gap-1.5 h-8 disabled:opacity-50 shrink-0"
-                        >
-                            {isSearchingBeta && (
-                                <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                </svg>
-                            )}
-                            {isSearchingBeta ? "Buscando..." : "Buscar"}
-                        </button>
-                    </div>
-                </div>
-
-                {/* loader o tabla (Paso 2, se acopla abajo) */}
-                {isSearchingBeta && !modalData && (
-                    <div className="flex-1 flex flex-col items-center justify-center py-20 gap-3 bg-white rounded-xl border border-gray-100 shadow-sm shrink-0">
-                        <svg className="animate-spin h-8 w-8 text-valora-primary" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        <span className="text-xs font-semibold text-gray-500">Consultando etiqueteras...</span>
-                    </div>
-                )}
-
-                {modalData && (
-                    <div className="flex-1 min-h-0  overflow-hidden flex flex-col ">
-                        <YahooResults
-                            data={modalData}
-                            isWaccCalculated={calc.isWaccCalculated || false}
-                            onApply={handleApplyCompany}
-                            onRemove={handleRemoveTicker}
-                        />
-                    </div>
-                )}
-            </div>
-        </>
+    const chatbotComponent = shouldShowChatbot ? (
+        <Chatbot
+            formData={form.formData}
+            isWaccCalculated={calc.isWaccCalculated}
+            isOpen={true}
+            onOpenModal={(data, actions) => {
+                setModalData(data);
+                setModalActions(actions);
+            }}
+            betaInput={betaInput}
+            setBetaInput={setBetaInput}
+        />
     ) : null;
+
+    // --- Main Content ---
 
     const mainContent = showResults ? (
         <div className="flex flex-col min-h-[calc(100vh-4rem)]">
@@ -609,7 +212,7 @@ const KapitalPage: React.FC = () => {
                     calculationId={calc.currentCalculation?.id}
                     isSessionFresh={calc.isSessionFresh}
                     setIsSessionFresh={calc.setIsSessionFresh}
-                    prewarmedSessionId={prewarmedSessionId}
+                    prewarmedSessionId={session.prewarmedSessionId}
                 />
             ) : (
                 <KapitalResults
@@ -620,19 +223,10 @@ const KapitalPage: React.FC = () => {
                             ? (INDUSTRY_TRANSLATIONS[form.formData.sector] || form.formData.sector)
                             : null
                     }
-                    selectedSubsector={
-                        selectedSubsector || form.formData.subsector || null
-                    }
+                    selectedSubsector={modal.selectedSubsector || form.formData.subsector || null}
                     showCompanyCard={calc.showCompanyCard}
                     resultCurrency={calc.resultCurrency}
                     onResultCurrencyChange={calc.setResultCurrency}
-                    analysisDC={analysisDC}
-                    analysisKd={analysisKd}
-                    analysisCurrency={analysisCurrency}
-                    onAnalysisDCChange={setAnalysisDC}
-                    onAnalysisKdChange={setAnalysisKd}
-                    onAnalysisCurrencyChange={setAnalysisCurrency}
-                    onAnalysisSubmit={calc.handleAnalysisSubmit}
                     loading={calc.isLoading}
                     methodologyCategories={METHODOLOGY_CATEGORIES}
                     showComparison={showComparison}
@@ -644,7 +238,6 @@ const KapitalPage: React.FC = () => {
                     onToggleForm={() => setIsFormOpen((prev) => !prev)}
                 />
             )}
-
             <MainPageFooter brandName="Valora" brandHref="/valora" />
         </div>
     ) : (
@@ -680,9 +273,7 @@ const KapitalPage: React.FC = () => {
                 isOpen={isLoginModalOpen}
                 onClose={() => setIsLoginModalOpen(false)}
                 onLogin={login}
-                onSwitchToRegister={() => {
-                    setIsLoginModalOpen(false);
-                }}
+                onSwitchToRegister={() => setIsLoginModalOpen(false)}
             />
 
             <NavigationTabs
@@ -690,6 +281,7 @@ const KapitalPage: React.FC = () => {
                 onNavigate={handleResultsSectionChange}
                 onOpenReport={handleReportSidebarOpen}
                 hasResults={!!calc.results}
+                hasSensibilizaciones={calc.sensibilizaciones.length > 0}
             />
 
             <main
@@ -699,7 +291,7 @@ const KapitalPage: React.FC = () => {
             </main>
 
             <aside
-                className={`fixed left-0 top-16 max-[540px]:z-70 z-40 h-[calc(100dvh-4rem)] flex  bg-transparent transition-transform duration-200 ${isFormOpen ? "translate-x-0" : "-translate-x-full"}`}
+                className={`fixed left-0 top-16 max-[540px]:z-70 z-40 h-[calc(100dvh-4rem)] flex bg-transparent transition-transform duration-200 ${isFormOpen ? "translate-x-0" : "-translate-x-full"}`}
             >
                 <div className="h-full w-full max-[540px]:w-screen sm:w-90 border-r border-gray-200 bg-white shadow-sm shrink-0">
                     <FormSidebar
@@ -711,9 +303,7 @@ const KapitalPage: React.FC = () => {
                         dates={form.dynamicDates.length > 0 ? form.dynamicDates : []}
                         sectors={form.dynamicSectors.length > 0 ? form.dynamicSectors : []}
                         hasSensibilizaciones={calc.sensibilizaciones.length > 0}
-                        canSensibilizeBeta={
-                            calc.sensibilizaciones.length < maxSensibilizaciones
-                        }
+                        canSensibilizeBeta={calc.sensibilizaciones.length < maxSensibilizaciones}
                         industryTranslations={INDUSTRY_TRANSLATIONS}
                         instruments={INSTRUMENTS}
                         bonos={BONOS}
@@ -722,13 +312,33 @@ const KapitalPage: React.FC = () => {
                         countriesTranslations={COUNTRIES_TRANSLATIONS}
                         countryLocalCurrencies={COUNTRY_LOCAL_CURRENCIES}
                         chatbotComponent={chatbotComponent}
-                        onSearchSectorBeta={handleSearchSectorBeta}
+                        onSearchSectorBeta={modal.openSubsectorModal}
                         isSearchingBeta={isSearchingBeta}
                     />
                 </div>
-                {subsectorModalOpen && (
-                    <div className="hidden lg:flex w-125 xl:w-162.5 h-[calc(100dvh-8rem)] max-h-[calc(100dvh-8rem)] bg-white border border-gray-200/80 rounded-xl flex-col shrink-0 animate-in slide-in-from-left-8 duration-300 ml-4 overflow-hidden self-start mt-4 ">
-                        {yahooPanelContent}
+                {modal.subsectorModalOpen && (
+                    <div className="hidden lg:flex w-96 xl:w-125 h-[calc(100dvh-16rem)] max-h-[calc(100dvh-16rem)] bg-white border border-gray-200/80 rounded-xl flex-col shrink-0 animate-in slide-in-from-left-8 duration-300 ml-4 overflow-hidden self-start mt-4">
+                        <SubsectorModal
+                            subsectorDetail={modal.subsectorDetail}
+                            detailTickers={modal.detailTickers}
+                            inactiveTickers={modal.inactiveTickers}
+                            subsectorModalMode={modal.subsectorModalMode}
+                            isWaccCalculated={calc.isWaccCalculated}
+                            formDataSubsector={form.formData.subsector}
+                            formDataSubsectorSensibilizacion={form.formData.subsector_sensibilizacion}
+                            selectedSubsector={modal.selectedSubsector}
+                            filteredSubsectores={data.filteredSubsectores}
+                            subsectoresFecha={data.subsectoresFecha}
+                            detailBoa={modal.detailBoa}
+                            onSetSubsectorDetail={modal.setSubsectorDetail}
+                            onCloseModal={modal.handleCloseModal}
+                            onOpenDetail={modal.handleOpenDetail}
+                            onToggleTicker={modal.handleToggleTicker}
+                            onCalculateDetail={modal.handleCalculateDetail}
+                            onSetSubsectorModalMode={modal.setSubsectorModalMode}
+                            subsectorTickersRef={data.subsectorTickersRef}
+                            subsectorSensibilizacionTickersRef={data.subsectorSensibilizacionTickersRef}
+                        />
                     </div>
                 )}
             </aside>
@@ -742,11 +352,31 @@ const KapitalPage: React.FC = () => {
                 onOpenReportViewer={handleReportViewerOpen}
             />
 
-            {/* Modal Flotante de Empresas (SOLO MÓVIL/TABLET: < lg) */}
-            {subsectorModalOpen && (
+            {/* Mobile/Tablet Modal */}
+            {modal.subsectorModalOpen && (
                 <div className="fixed inset-0 z-120 flex lg:hidden items-start justify-center overflow-y-auto bg-gray-900/40 backdrop-blur-sm transition-all animate-in fade-in p-2 sm:p-4">
                     <div className={`bg-white rounded-xl shadow-2xl w-[96dvw] max-w-2xl overflow-hidden flex flex-col animate-in zoom-in-95 justify-between ${modalData ? "h-[calc(100dvh-1rem)] sm:h-[85dvh]" : "h-auto"}`}>
-                        {yahooPanelContent}
+                        <SubsectorModal
+                            subsectorDetail={modal.subsectorDetail}
+                            detailTickers={modal.detailTickers}
+                            inactiveTickers={modal.inactiveTickers}
+                            subsectorModalMode={modal.subsectorModalMode}
+                            isWaccCalculated={calc.isWaccCalculated}
+                            formDataSubsector={form.formData.subsector}
+                            formDataSubsectorSensibilizacion={form.formData.subsector_sensibilizacion}
+                            selectedSubsector={modal.selectedSubsector}
+                            filteredSubsectores={data.filteredSubsectores}
+                            subsectoresFecha={data.subsectoresFecha}
+                            detailBoa={modal.detailBoa}
+                            onSetSubsectorDetail={modal.setSubsectorDetail}
+                            onCloseModal={modal.handleCloseModal}
+                            onOpenDetail={modal.handleOpenDetail}
+                            onToggleTicker={modal.handleToggleTicker}
+                            onCalculateDetail={modal.handleCalculateDetail}
+                            onSetSubsectorModalMode={modal.setSubsectorModalMode}
+                            subsectorTickersRef={data.subsectorTickersRef}
+                            subsectorSensibilizacionTickersRef={data.subsectorSensibilizacionTickersRef}
+                        />
                     </div>
                 </div>
             )}

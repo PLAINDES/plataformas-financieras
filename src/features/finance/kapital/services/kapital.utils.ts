@@ -1,9 +1,9 @@
 import {
-  type MarketResults,
-  type Results,
+  type KapitalMarketResults,
+  type KapitalResults,
   type SensibilizacionEntry,
-  type FormData,
-} from "../KapitalPage";
+  type KapitalFormData,
+} from "@/shared/types";
 
 export const formatToPeruTime = (isoString: string | undefined): string => {
   if (!isoString) return "-";
@@ -82,7 +82,7 @@ export const hasCompanyInputData = (
 
 export const toMarketResults = (
   source: Record<string, unknown> | null
-): MarketResults => {
+): KapitalMarketResults => {
   return {
     ke: toRate(source?.ke),
     koa: toRate(source?.koa),
@@ -114,7 +114,7 @@ export const toRate = (value: unknown): number => {
 
 export const computeResultsFromCalculationData = (
   data: Record<string, unknown> | null
-): { results: Results; showCompanyCard: boolean } => {
+): { results: KapitalResults; showCompanyCard: boolean } => {
   const root = data ?? {};
   const inputs = Array.isArray(root.inputs) ? root.inputs : [];
   const latestInput = inputs[inputs.length - 1];
@@ -153,6 +153,10 @@ export const computeResultsFromCalculationData = (
 
   const showCompanyCard = hasCompanyInputData(source);
 
+  const betaDesapalancadoCustom = toOptionalNumber(
+    (latestInput as Record<string, unknown>)?.beta_desapalancado_custom
+  );
+
   // Choose which data to show in the top-level results (cppc, kd, ke, koa)
   const primary = showCompanyCard ? empresa_dolares : emergent;
 
@@ -163,6 +167,7 @@ export const computeResultsFromCalculationData = (
       ke: primary.ke,
       koa: primary.koa,
       boa: toOptionalNumber(latestResult?.boa),
+      boa_custom: betaDesapalancadoCustom,
       emergent,
       developed,
       empresa_dolares,
@@ -191,6 +196,8 @@ export const extractSensibilizaciones = (
       ),
       empresa_dolares: toMarketResults(pickBlock(entry, ["empresa_dolares"])),
       empresa_soles: toMarketResults(pickBlock(entry, ["empresa_soles"])),
+      subsector: (entry.subsector as string) || undefined,
+      tickers: (entry.tickers_subsector_sensibilizacion as string) || undefined,
     }));
 };
 
@@ -202,12 +209,22 @@ export const buildCalculationDataPayload = () => {
   } as Record<string, unknown>;
 };
 
-export const enrichCalculationInputPayload = (formData: FormData) => {
+export const enrichCalculationInputPayload = (formData: KapitalFormData) => {
   const payload = {
     fecha: toPossibleNumber(formData.date),
     industria: toPossibleNumber(formData.sector),
     subsector:
       typeof formData.subsector === "string" ? formData.subsector.trim() : "",
+    tickers_subsector:
+      typeof formData.tickers_subsector === "string" ? formData.tickers_subsector : "",
+    subsector_sensibilizacion:
+      typeof formData.subsector_sensibilizacion === "string"
+        ? formData.subsector_sensibilizacion.trim()
+        : "",
+    tickers_subsector_sensibilizacion:
+      typeof formData.tickers_subsector_sensibilizacion === "string"
+        ? formData.tickers_subsector_sensibilizacion
+        : "",
     tasa_libre_riesgo: toPossibleNumber(formData.instrument),
     anio_bono: toPossibleNumber(formData.bono),
     pais: toPossibleNumber(formData.country),
@@ -223,10 +240,12 @@ export const enrichCalculationInputPayload = (formData: FormData) => {
   const effectiveTaxRate = toOptionalNumber(formData.effective_tax_rate);
   const betaLevered = toOptionalNumber(formData.beta_levered);
   const betaUnlevered = toOptionalNumber(formData.beta_unlevered);
+  const betaUnleveredCustom = toOptionalNumber(formData.beta_unlevered_custom);
 
   if (tax !== undefined) payload.tasa_impositiva = tax;
   if (devaluation !== undefined) payload.devaluacion = devaluation;
   if (betaUnlevered !== undefined) payload.beta_desapalancado = betaUnlevered;
+  if (betaUnleveredCustom !== undefined) payload.beta_desapalancado_custom = betaUnleveredCustom;
   if (
     formData.typeId ||
     kd !== undefined ||
@@ -246,8 +265,31 @@ export const enrichCalculationInputPayload = (formData: FormData) => {
   return payload;
 };
 
-export // Función para extraer año y trimestre de la fecha ingresada, con múltiples formatos soportados
-const getYearAndQuarter = (dateStr: string) => {
+export const formatterx100p = (value: number | string): string => {
+  if (typeof value === "string") return value;
+  return `${(value * 100).toFixed(2)}%`;
+};
+
+export const formatSmartPercentage = (value?: string | number): string => {
+  if (value === undefined || value === null || value === "") {
+    return "0.00%";
+  }
+  if (typeof value === "string") {
+    return value.replace(",", ".");
+  }
+  if (typeof value === "number" && !isNaN(value)) {
+    return `${(value * 100).toFixed(2)}%`;
+  }
+  return "0.00%";
+};
+
+export const parsePercentageString = (value: string): number => {
+  if (!value) return 0;
+  const cleaned = value.replace(",", ".").replace("%", "");
+  return parseFloat(cleaned) || 0;
+};
+
+export const getYearAndQuarter = (dateStr: string) => {
   if (!dateStr) return { year: null, quarter: null };
 
   const trimmed = dateStr.trim();

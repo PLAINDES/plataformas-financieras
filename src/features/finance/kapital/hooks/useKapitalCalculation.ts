@@ -6,7 +6,7 @@ import {
   extractSensibilizaciones,
 } from "../services/kapital.utils";
 import { type Calculation } from "@/shared/types";
-import { type ToastType } from "@/shared/types/toast.types";
+
 import {
   toOptionalNumber,
   enrichCalculationInputPayload,
@@ -15,25 +15,10 @@ import {
 } from "../services/kapital.utils";
 
 import {
-  type FormData,
-  type Results,
+  type KapitalResults,
   type SensibilizacionEntry,
-} from "../KapitalPage";
-
-export interface UseKapitalCalculationProps {
-  formData: FormData;
-  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
-  prewarmedSessionId: string | null;
-  setPrewarmedSessionId: React.Dispatch<React.SetStateAction<string | null>>;
-  addToast: (message: string, type?: ToastType) => void;
-  userId?: number | string; // Lo pasamos desde el componente principal
-  ui: {
-    setShowResults: (val: boolean) => void;
-    setIsFormOpen: (val: boolean) => void;
-    setResultsSection: (val: "result" | "sensitivity") => void;
-    setShowComparison: (val: boolean) => void;
-  };
-}
+  type UseKapitalCalculationProps,
+} from "@/shared/types";
 
 export function useKapitalCalculation({
   formData,
@@ -46,7 +31,7 @@ export function useKapitalCalculation({
 }: UseKapitalCalculationProps) {
   const [currentCalculation, setCurrentCalculation] =
     useState<Calculation | null>(null);
-  const [results, setResults] = useState<Results | null>(null);
+  const [results, setResults] = useState<KapitalResults | null>(null);
   const [sensibilizaciones, setSensibilizaciones] = useState<
     SensibilizacionEntry[]
   >([]);
@@ -151,6 +136,7 @@ export function useKapitalCalculation({
       setShowCompanyCard(hasCompanyData);
       setCurrentCalculation(persistedCalculation);
       setSensibilizaciones(sensibilizacionData);
+
       setIsWaccCalculated(true);
 
       ui.setShowResults(true);
@@ -221,6 +207,17 @@ export function useKapitalCalculation({
               effective_tax_rate:
                 (latestInput.tasa_efectiva_impuesto as string) || "",
               beta_levered: (latestInput.beta_apalancado as string) || "",
+              beta_unlevered: (latestInput.beta_desapalancado as string) || "",
+              beta_unlevered_custom:
+                (latestInput.beta_desapalancado_custom as string) || "",
+              beta_unlevered_industry:
+                (latestInput.beta_desapalancado as string) || "",
+              tickers_subsector:
+                (latestInput.tickers_subsector as string) || "",
+              subsector_sensibilizacion:
+                (latestInput.subsector_sensibilizacion as string) || "",
+              tickers_subsector_sensibilizacion:
+                (latestInput.tickers_subsector_sensibilizacion as string) || "",
               typeId: !!(
                 latestInput.costo_deuda || latestInput.porcentaje_deuda
               ),
@@ -235,7 +232,27 @@ export function useKapitalCalculation({
 
           setResults(rebuiltResults);
           setShowCompanyCard(hasCompanyData);
-          setSensibilizaciones(sensibilizacionData);
+
+          // Asignar subsector/tickers a cada entry de sensibilización
+          // Prioridad: 1) valor del backend en entry.subsector 2) último input
+          if (sensibilizacionData.length > 0 && latestInput) {
+            const latestSubsector = (latestInput as Record<string, unknown>)
+              .subsector_sensibilizacion as string | undefined;
+            const latestTickers = (latestInput as Record<string, unknown>)
+              .tickers_subsector_sensibilizacion as string | undefined;
+            if (latestSubsector || latestTickers) {
+              const patched = sensibilizacionData.map((entry) => ({
+                ...entry,
+                subsector: entry.subsector || latestSubsector || undefined,
+                tickers: entry.tickers || latestTickers || undefined,
+              }));
+              setSensibilizaciones(patched);
+            } else {
+              setSensibilizaciones(sensibilizacionData);
+            }
+          } else {
+            setSensibilizaciones(sensibilizacionData);
+          }
           setIsWaccCalculated(true);
           ui.setShowResults(true);
           ui.setIsFormOpen(false);

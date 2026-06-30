@@ -433,8 +433,38 @@ export const MainService = {
     return api.post<any>("chatbot/chat", payload);
   },
 
-  analyzeCompanies: async (tickers: string[]): Promise<any> => {
-    return api.post<any>("chatbot/analyze-companies", { tickers });
+  analyzeCompanies: async (tickers: string[], onProgress?: (result: any) => void): Promise<any> => {
+    const { job_id } = await api.post<any>("chatbot/calculate-subsectores-boa", { tickers });
+    while (true) {
+      const progress = await api.get<any>(`chatbot/boa-progress/${job_id}`);
+      if (progress.result?.valid_companies?.length && progress.status === "running") {
+        onProgress?.(progress.result);
+      }
+      if (progress.status === "completed" || progress.status === "error") {
+        return progress.result || { success: false, valid_companies: [] };
+      }
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  },
+
+  getActiveBoaJobs: async (): Promise<any> => {
+    return api.get<any>("chatbot/boa-active-jobs");
+  },
+
+  startSubsectoresBoa: async (tickers: string[]): Promise<any> => {
+    return api.post<any>("chatbot/calculate-subsectores-boa", { tickers });
+  },
+
+  getBoaProgress: async (jobId: string): Promise<any> => {
+    return api.get<any>(`chatbot/boa-progress/${jobId}`);
+  },
+
+  cancelBoaJob: async (jobId: string): Promise<any> => {
+    return api.post<any>(`chatbot/boa-cancel/${jobId}`);
+  },
+
+  deleteBoaJob: async (jobId: string): Promise<any> => {
+    return api.post<any>(`chatbot/boa-job/${jobId}/delete`);
   },
 
   // ==================== USERS ====================

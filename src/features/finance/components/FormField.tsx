@@ -65,10 +65,12 @@ export const FormField: React.FC<FormFieldProps> = ({
     const [query, setQuery] = useState("");
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const dropdownRef = useRef<HTMLDivElement | null>(null);
     const tooltipButtonRef = useRef<HTMLSpanElement | null>(null);
     const tooltipHideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [tooltipVisible, setTooltipVisible] = useState(false);
     const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
+    const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
 
     const filteredOptions = useMemo(() => {
         const normalizedQuery = query.trim().toLowerCase();
@@ -85,7 +87,8 @@ export const FormField: React.FC<FormFieldProps> = ({
         const handleClickOutside = (event: MouseEvent) => {
             if (
                 containerRef.current &&
-                !containerRef.current.contains(event.target as Node)
+                !containerRef.current.contains(event.target as Node) &&
+                !(dropdownRef.current && dropdownRef.current.contains(event.target as Node))
             ) {
                 setIsOpen(false);
             }
@@ -94,6 +97,24 @@ export const FormField: React.FC<FormFieldProps> = ({
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        const handleScrollOrResize = () => {
+            if (isOpen && containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                setDropdownPos({ top: rect.bottom + 8, left: rect.left, width: rect.width });
+            }
+        };
+
+        if (isOpen) {
+            window.addEventListener("scroll", handleScrollOrResize, true);
+            window.addEventListener("resize", handleScrollOrResize);
+        }
+        return () => {
+            window.removeEventListener("scroll", handleScrollOrResize, true);
+            window.removeEventListener("resize", handleScrollOrResize);
+        };
+    }, [isOpen]);
 
     useEffect(() => {
         return () => {
@@ -110,10 +131,25 @@ export const FormField: React.FC<FormFieldProps> = ({
 
         if (tooltipButtonRef.current) {
             const rect = tooltipButtonRef.current.getBoundingClientRect();
-            setTooltipPos({
-                top: rect.top + rect.height / 2,
-                left: rect.right + 8,
-            });
+            const gap = 8;
+            const viewportWidth = window.innerWidth;
+            const tooltipWidth = Math.min(256, viewportWidth - 32);
+            const tooltipHeight = 80;
+
+            let left: number;
+            const rightSpace = viewportWidth - rect.right;
+            if (rightSpace >= tooltipWidth + gap) {
+                left = rect.right + gap;
+            } else if (rect.left >= tooltipWidth + gap) {
+                left = rect.left - gap - tooltipWidth;
+            } else {
+                left = Math.max(16, (viewportWidth - tooltipWidth) / 2);
+            }
+
+            let top = rect.top + rect.height / 2;
+            top = Math.max(tooltipHeight / 2 + 4, Math.min(top, window.innerHeight - tooltipHeight / 2 - 4));
+
+            setTooltipPos({ top, left });
         }
 
         setTooltipVisible(true);
@@ -198,10 +234,16 @@ export const FormField: React.FC<FormFieldProps> = ({
                         <button
                             type="button"
                             className={`w-full rounded border border-gray-300 px-2 py-1.25 pr-16 text-left text-sm focus:border-valora-primary ${disabled
-                                ? "bg-blue-100 border-blue-200 text-blue-700 cursor-not-allowed"
+                                ? "bg-valora-primary/5 text-black cursor-not-allowed"
                                 : "cursor-pointer"
                                 }`}
-                            onClick={() => setIsOpen((prev) => !prev)}
+                            onClick={() => {
+                                setIsOpen((prev) => !prev);
+                                if (!isOpen && containerRef.current) {
+                                    const rect = containerRef.current.getBoundingClientRect();
+                                    setDropdownPos({ top: rect.bottom + 8, left: rect.left, width: rect.width });
+                                }
+                            }}
                             aria-haspopup="listbox"
                             aria-expanded={isOpen}
                             disabled={disabled}
@@ -242,8 +284,18 @@ export const FormField: React.FC<FormFieldProps> = ({
                                 className="hidden"
                             />
                         )}
-                        {isOpen && !disabled && (
-                            <div className="absolute z-20 mt-2 w-full overflow-hidden rounded border border-gray-200 bg-white text-sm shadow">
+                        {isOpen && !disabled && createPortal(
+                            <div
+                                ref={dropdownRef}
+                                style={{
+                                    position: "fixed",
+                                    top: dropdownPos.top,
+                                    left: dropdownPos.left,
+                                    width: dropdownPos.width,
+                                    zIndex: 99999,
+                                }}
+                                className="overflow-hidden rounded border border-gray-200 bg-white text-sm shadow"
+                            >
                                 <div className="border-b border-gray-100 p-2">
                                     <input
                                         type="text"
@@ -276,13 +328,14 @@ export const FormField: React.FC<FormFieldProps> = ({
                                         })
                                     )}
                                 </div>
-                            </div>
+                            </div>,
+                            document.body
                         )}
                     </div>
                 ) : (
                     <div className="relative flex-1">
                         <div
-                            className={`flex items-stretch border border-gray-300 rounded transition-colors focus-within:border-valora-primary ${disabled ? "bg-blue-100 border-blue-200" : ""
+                            className={`flex items-stretch border border-gray-300 rounded transition-colors focus-within:border-valora-primary ${disabled ? "bg-valora-primary/5" : ""
                                 }`}
                         >
                             {prefixSelect && (
@@ -291,7 +344,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                                     value={prefixSelect.value}
                                     onChange={onChange}
                                     className={`px-0.5 py-1.25 text-sm border-r border-gray-300 outline-none focus:outline-none text-wrap ${disabled
-                                        ? "bg-blue-100 border-blue-200 text-blue-700 cursor-not-allowed"
+                                        ? "bg-valora-primary/5 text-black cursor-not-allowed"
                                         : "bg-gray-50 cursor-pointer hover:bg-gray-100"
                                         }`}
                                     disabled={disabled}
@@ -310,7 +363,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                                     max={max}
                                     step={step}
                                     className={`w-full flex-1 px-2 py-1.25 text-[13px] sm:text-sm outline-none focus:outline-none bg-transparent
-                    ${disabled ? "bg-blue-100 text-blue-700 cursor-not-allowed" : readOnly ? "bg-gray-200 text-gray-500 cursor-not-allowed" : ""} 
+                    ${disabled ? "bg-valora-primary/5 text-black cursor-not-allowed" : readOnly ? "bg-gray-200 text-gray-500 cursor-not-allowed" : ""} 
                     ${type === "number" ? "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" : ""}
                   `}
                                     placeholder={placeholder}
@@ -334,7 +387,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                                 )}
                             </div>
                             {suffix && (
-                                <span className="text-sm text-gray-600 px-2 py-1.25 bg-slate-100/80 border-l border-gray-300 whitespace-nowrap flex items-center justify-center gap-1">
+                                <span className="text-sm text-black px-2 py-1.25 bg-valora-primary/5 border-l border-gray-300 whitespace-nowrap flex items-center justify-center gap-1">
                                     {suffix}
                                 </span>
                             )}
@@ -345,9 +398,11 @@ export const FormField: React.FC<FormFieldProps> = ({
                                     ref={tooltipButtonRef}
                                     onMouseEnter={handleTooltipEnter}
                                     onMouseLeave={handleTooltipLeave}
-                                    className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-400 text-[11px] font-bold text-white cursor-help select-none"
+                                    className="flex h-5 w-5 items-center justify-center rounded-full bg-valora-primary/5 text-[11px] font-bold text-valora-primary cursor-pointer select-none"
                                 >
-                                    ?
+                                    <svg className="h-3 w-3 text-valora-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
                                 </span>
                             </div>
                         )}
@@ -372,26 +427,9 @@ export const FormField: React.FC<FormFieldProps> = ({
                             pointerEvents: tooltipVisible ? "auto" : "none",
                             transition: "opacity 200ms ease, transform 200ms ease",
                         }}
-                        className="w-64 rounded-lg bg-white p-3 text-[11px] text-gray-600 shadow-2xl"
+                        className="max-w-[min(256px,calc(100vw-32px))] w-auto min-w-[180px] rounded-lg bg-white p-3 text-[11px] text-gray-600 shadow-2xl"
                     >
-                        <div className="flex items-center justify-center gap-2">
-                            <div className="mt-0.5 shrink-0 rounded-full bg-valora-primary/10 p-1.5">
-                                <svg
-                                    className="h-3.5 w-3.5 text-valora-primary"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2.5}
-                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                            </div>
-                            <p className="leading-relaxed">{tooltip}</p>
-                        </div>
+                        <p className="leading-relaxed">{tooltip}</p>
                     </div>,
                     document.body
                 )}

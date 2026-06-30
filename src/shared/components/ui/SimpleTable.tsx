@@ -21,6 +21,7 @@ interface SimpleTableProps<T> {
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
   onRowClick?: (item: T) => void;
+  children?: React.ReactNode;
 
   yearFilterOptions?: Array<string | number>;
   selectedYear?: string;
@@ -44,6 +45,7 @@ export function SimpleTable<T extends object>({
   onPageChange,
   searchQuery = "",
   onSearchChange,
+  children,
 }: SimpleTableProps<T>) {
   const [pageInputValue, setPageInputValue] = useState(String(currentPage));
 
@@ -79,6 +81,7 @@ export function SimpleTable<T extends object>({
             className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         )}
+        {children}
         {onCreate && (
           <div className="ml-auto">
             <button

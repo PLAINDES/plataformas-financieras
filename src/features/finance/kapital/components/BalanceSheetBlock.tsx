@@ -1,8 +1,4 @@
-const parsePercentageValue = (value: string): number => {
-  if (!value) return 0;
-  const cleaned = value.replace(",", ".").replace("%", "");
-  return parseFloat(cleaned) || 0;
-};
+import { parsePercentageString } from "../services/kapital.utils";
 
 export const BalanceSheetBlock: React.FC<{
   koa: string;
@@ -11,7 +7,7 @@ export const BalanceSheetBlock: React.FC<{
   compact: boolean;
   d_empresa: string;
 }> = ({ koa, kd_1_minus_t, ke, compact, d_empresa }) => {
-  const rawPasivoPerc = parsePercentageValue(d_empresa);
+  const rawPasivoPerc = parsePercentageString(d_empresa);
   const rawPatrimonioPerc = 100 - rawPasivoPerc;
 
   const MIN_VISUAL_PERC = 25;

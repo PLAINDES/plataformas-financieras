@@ -5,13 +5,16 @@ import {
   EXCLUDED_INDUSTRIES,
   COUNTRY_LOCAL_CURRENCIES,
 } from "@/shared/constants/kapital";
-import type { FormData } from "../KapitalPage";
+import type { KapitalFormData } from "@/shared/types";
 
 export function useKapitalForm() {
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<KapitalFormData>({
     date: "",
     sector: "",
     subsector: "",
+    tickers_subsector: "",
+    subsector_sensibilizacion: "",
+    tickers_subsector_sensibilizacion: "",
     beta_unlevered_industry: "",
     instrument: "",
     bono: "",
@@ -27,6 +30,7 @@ export function useKapitalForm() {
     effective_tax_rate: "",
     beta_levered: "",
     beta_unlevered: "",
+    beta_unlevered_custom: "",
   });
   // Estado para guardar la lista dinámica de sectores
   const [dynamicSectors, setDynamicSectors] = useState<string[]>([]);
@@ -112,6 +116,11 @@ export function useKapitalForm() {
             ? { ...prev, beta_unlevered_industry: "" }
             : prev
         );
+        return;
+      }
+
+      // 2. Si hay un subsector restaurado con su propio beta, preservarlo
+      if (formData.subsector && formData.beta_unlevered_industry) {
         return;
       }
 

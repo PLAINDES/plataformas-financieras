@@ -1,43 +1,42 @@
-// src/components/layout/ScrollTop.tsx
-
 import { useState, useEffect } from "react";
 
-export function ScrollTop() {
+interface ScrollTopProps {
+    whatsappOpen?: boolean;
+}
+
+export function ScrollTop({ whatsappOpen = false }: ScrollTopProps) {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
         const toggleVisibility = () => {
-            if (window.scrollY > 300) {
-                setIsVisible(true);
-            } else {
-                setIsVisible(false);
-            }
+            setIsVisible(window.scrollY > 300);
         };
 
         window.addEventListener("scroll", toggleVisibility);
+        toggleVisibility();
         return () => window.removeEventListener("scroll", toggleVisibility);
     }, []);
 
     const scrollToTop = () => {
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth",
-        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     return (
         <div
-            id="kt_scrolltop"
             onClick={scrollToTop}
             className={`
-        fixed bottom-36 right-8 z-[110]
-        flex items-center justify-center
-        w-12 h-12 rounded-full cursor-pointer shadow-lg
-        bg-blue-600 text-white
-        hover:bg-blue-700
-        transition-all duration-300
-        ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}
-      `}
+                fixed z-[110]
+                flex items-center justify-center
+                w-12 h-12 rounded-full cursor-pointer shadow-lg
+                bg-blue-600 text-white
+                hover:bg-blue-700
+                ${whatsappOpen ? "bottom-[510px] right-6" : "bottom-36 right-8"}
+                transition-all duration-500 ease-in-out
+                ${isVisible
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-6 pointer-events-none"
+                }
+            `}
         >
             <span className="flex items-center justify-center">
                 <svg

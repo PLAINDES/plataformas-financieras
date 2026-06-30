@@ -91,6 +91,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 
   // Lee las variables directamente del estado global
   const { items, history, input, loading } = sharedState;
+  const yahooItemIdRef = useRef<string | null>(null);
 
   // 3. Redefinimos los setters para que actualicen el store global
   const setInput = (val: any) => setSharedState("input", val);
@@ -168,11 +169,36 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     async (tickers: string[]) => {
       addSimple("Buscando empresas comparables en el mercado...", "ai");
       setLoading(true);
+      yahooItemIdRef.current = null;
       try {
-        const res = await MainService.analyzeCompanies(tickers);
+        const res = await MainService.analyzeCompanies(tickers, (interim) => {
+          if (!yahooItemIdRef.current) {
+            const id = uid();
+            yahooItemIdRef.current = id;
+            pushItem({ id, type: "yahoo", yahooData: interim, time: now() });
+          } else {
+            setItems((prev: ConvItem[]) =>
+              prev.map((item) =>
+                item.id === yahooItemIdRef.current
+                  ? { ...item, yahooData: interim }
+                  : item
+              )
+            );
+          }
+        });
 
         if (res.success && res.valid_companies?.length) {
-          pushItem({ id: uid(), type: "yahoo", yahooData: res, time: now() });
+          if (yahooItemIdRef.current) {
+            setItems((prev: ConvItem[]) =>
+              prev.map((item) =>
+                item.id === yahooItemIdRef.current
+                  ? { ...item, yahooData: res }
+                  : item
+              )
+            );
+          } else {
+            pushItem({ id: uid(), type: "yahoo", yahooData: res, time: now() });
+          }
         } else {
           addSimple(
             "No se pudieron obtener datos válidos de Yahoo Finance para los tickers proporcionados.",
@@ -185,7 +211,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
         setLoading(false);
       }
     },
-    [addSimple, pushItem]
+    [addSimple, pushItem, setItems]
   );
 
   const callChatbotAPI = useCallback(
