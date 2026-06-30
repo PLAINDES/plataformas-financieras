@@ -6,7 +6,7 @@ import {
   extractSensibilizaciones,
 } from "../services/kapital.utils";
 import { type Calculation } from "@/shared/types";
-import { type ToastType } from "@/shared/types/toast.types";
+
 import {
   toOptionalNumber,
   enrichCalculationInputPayload,
@@ -15,7 +15,6 @@ import {
 } from "../services/kapital.utils";
 
 import {
-  type KapitalFormData,
   type KapitalResults,
   type SensibilizacionEntry,
   type UseKapitalCalculationProps,

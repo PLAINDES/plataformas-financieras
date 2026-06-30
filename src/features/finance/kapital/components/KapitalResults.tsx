@@ -3,11 +3,11 @@
 import { KapitalResultadosSection } from "./KapitalResultadosSection";
 import { KapitalAnalisisSection } from "./KapitalAnalisisSection";
 import { LoadingOverlay } from "@/shared/components/common/LoadingOverlay";
-import type { KapitalResults, SensibilizacionEntry, MethodologyCategory } from "@/shared/types";
+import type { KapitalResults as KapitalResultsType, SensibilizacionEntry, MethodologyCategory } from "@/shared/types";
 
 export interface KapitalResultsProps {
     section: "result" | "sensitivity";
-    results: KapitalResults | null;
+    results: KapitalResultsType | null;
     selectedSector?: string | null;
     selectedSubsector?: string | null;
     showCompanyCard: boolean;

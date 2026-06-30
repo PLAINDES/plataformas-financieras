@@ -10,7 +10,6 @@ interface UseSubsectorModalProps {
 }
 
 export function useSubsectorModal({
-    formData,
     isWaccCalculated,
     handleInputChange,
     subsectorTickersRef,
