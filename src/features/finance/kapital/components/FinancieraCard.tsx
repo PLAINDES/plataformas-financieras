@@ -4,7 +4,7 @@ import { BalanceSheetBlock } from "./BalanceSheetBlock";
 import type { KapitalMarketResults } from "@/shared/types";
 import { formatterx100p, formatSmartPercentage } from "../services/kapital.utils";
 
-export type { KapitalMarketResults as MarketResults };
+type MarketResults = KapitalMarketResults;
 
 interface FinancieraCardProps {
   title: string;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { MainService } from "@/shared/services/main.service";
 
 export function useKapitalSession() {
