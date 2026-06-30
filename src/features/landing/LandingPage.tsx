@@ -1,4 +1,5 @@
 // src/features/landing/LandingPage.tsx
+import { useState } from "react";
 import { HeroSection } from "./sections/HeroSection";
 import { PlatformCardsSection } from "./sections/PlatformCardsSection";
 import { WhatsAppSection } from "./sections/WhatsAppSection";
@@ -53,6 +54,8 @@ export function LandingPage({
         handleSaveFooter,
         handleUploadClientLogo,
     } = useLandingCMS(data, updateContentLocally, findContent);
+
+    const [whatsappOpen, setWhatsappOpen] = useState(false);
 
     if (loading)
         return (
@@ -124,13 +127,15 @@ export function LandingPage({
                 content={getContentData("whatsapp-home")}
                 onSave={handleSaveContent}
                 onUploadImage={handleUploadClientLogo}
+                isOpen={whatsappOpen}
+                onToggle={setWhatsappOpen}
             />
             <LandingFooter
                 content={getContentData("main-footer")}
                 ctaContent={getContentData("cta-home")}
                 onSave={handleSaveFooter}
             />
-            <ScrollTop />
+            <ScrollTop whatsappOpen={whatsappOpen} />
         </div>
     );
 }

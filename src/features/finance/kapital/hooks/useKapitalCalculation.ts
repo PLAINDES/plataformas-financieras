@@ -15,25 +15,11 @@ import {
 } from "../services/kapital.utils";
 
 import {
-  type FormData,
-  type Results,
+  type KapitalFormData,
+  type KapitalResults,
   type SensibilizacionEntry,
-} from "../KapitalPage";
-
-export interface UseKapitalCalculationProps {
-  formData: FormData;
-  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
-  prewarmedSessionId: string | null;
-  setPrewarmedSessionId: React.Dispatch<React.SetStateAction<string | null>>;
-  addToast: (message: string, type?: ToastType) => void;
-  userId?: number | string; // Lo pasamos desde el componente principal
-  ui: {
-    setShowResults: (val: boolean) => void;
-    setIsFormOpen: (val: boolean) => void;
-    setResultsSection: (val: "result" | "sensitivity") => void;
-    setShowComparison: (val: boolean) => void;
-  };
-}
+  type UseKapitalCalculationProps,
+} from "@/shared/types";
 
 export function useKapitalCalculation({
   formData,
@@ -46,7 +32,7 @@ export function useKapitalCalculation({
 }: UseKapitalCalculationProps) {
   const [currentCalculation, setCurrentCalculation] =
     useState<Calculation | null>(null);
-  const [results, setResults] = useState<Results | null>(null);
+  const [results, setResults] = useState<KapitalResults | null>(null);
   const [sensibilizaciones, setSensibilizaciones] = useState<
     SensibilizacionEntry[]
   >([]);
