@@ -104,6 +104,13 @@ export const MainService = {
   },
 
   /*
+  Delete a template complement by name
+  */
+  deleteTemplateComplementByName: async (name: string): Promise<void> => {
+    return api.delete<void>(`main/template-complements/by-name/${name}`);
+  },
+
+  /*
   ============ CALCULATIONS =============
   */
 

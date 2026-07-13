@@ -162,7 +162,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                         name="beta_unlevered_industry"
                                         type="number"
                                         step="any"
-                                        value={formData.beta_unlevered_custom || formData.beta_unlevered_industry}
+                                        value={formData.beta_subsector || formData.beta_unlevered_industry}
                                         disabled
                                         onChange={handleCustomInputChange}
                                         suffix="coef."
@@ -329,8 +329,8 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     tooltip="Pasivo Financiero / (Pasivo Financiero/Patrimonio)"
                                     suffix="%"
                                     layout="horizontal"
-                                    maxDecimals={0}
-                                    inputClassName="col-span-6"
+                                    maxDecimals={2}
+                                    inputClassName="col-span-8"
                                     showClearButton={false}
                                     disabled={isSection3Disabled}
                                 />
@@ -346,14 +346,15 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     tooltip="Patrimonio / (Pasivo Financiero/Patrimonio)"
                                     suffix="%"
                                     layout="horizontal"
-                                    inputClassName="col-span-6"
+                                    inputClassName="col-span-8"
+                                    maxDecimals={2}
                                     showClearButton={false}
                                     disabled={isSection3Disabled}
                                 />
                             </section>
                         </FormSection>
-                        {/* Section 4: Sensibilizaciones */}
-                        {isWaccCalculated && canSensibilizeBeta && (
+                        {/* Section 4: Sensibilizaciones (Disabled/Hidden) */}
+                        {false && isWaccCalculated && canSensibilizeBeta && (
                             <FormSection
                                 title="Sensibiliza tu Beta"
                                 step={4}

@@ -1,8 +1,167 @@
 // features/finance/kapital/components/KapitalResultadosSection.tsx
 import { FinancieraCard } from "./FinancieraCard";
 import type { KapitalResults } from "@/shared/types";
-import { ArrowRight, Sparkles } from "lucide-react";
-//import { Book } from "./Book";
+import { ArrowRight, Sparkles, ChevronDown } from "lucide-react";
+import { INDUSTRY_TRANSLATIONS } from "@/shared/constants/kapital";
+import { useState } from "react";
+
+const translateIndustry = (industry?: string | null) => {
+    if (!industry) return industry;
+    return INDUSTRY_TRANSLATIONS[industry] || industry;
+};
+
+const InputDetail = ({
+    label,
+    value,
+}: {
+    label: string;
+    value: string | number;
+}) => (
+    <div className="flex justify-between items-center py-1 border-b border-gray-100 last:border-0">
+        <span className="text-[10px] text-gray-500 font-medium">{label}</span>
+        <span className="text-[10px] text-gray-700 font-bold">{value}</span>
+    </div>
+);
+
+const InputsDropdown = ({ inputs, label }: { inputs: any; label?: string }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    if (!inputs) return null;
+
+    return (
+        <div className="w-full">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full flex items-center justify-between gap-1 py-1.5 px-2 text-[10px] font-medium text-gray-500 hover:text-valora-primary transition-colors border-t border-gray-100 mt-2"
+            >
+                <span className="truncate">{label || "Ver parámetros usados"}</span>
+                <ChevronDown
+                    size={12}
+                    className={`shrink-0 transition-transform duration-500 ${isOpen ? "rotate-180" : "rotate-0"}`}
+                />
+            </button>
+            <div
+                className={`grid transition-[grid-template-rows] duration-500 ease-in-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                    }`}
+            >
+                <div className="overflow-hidden">
+                    <div className="p-2 mt-1 opacity-100 transition-opacity duration-500 bg-slate-50 rounded-lg border border-slate-200 shadow-sm mb-1">
+                        <InputDetail label="Costo Deuda" value={`${inputs.costo_deuda}%`} />
+                        <InputDetail label="Deuda" value={`${inputs.porcentaje_deuda}%`} />
+                        <InputDetail
+                            label="Capital"
+                            value={`${inputs.porcentaje_capital}%`}
+                        />
+                        <InputDetail label="Devaluación" value={`${inputs.devaluacion}%`} />
+                        <InputDetail
+                            label="Tasa Imp."
+                            value={`${inputs.tasa_impositiva}%`}
+                        />
+                        {inputs.damodaran?.beta && (
+                            <InputDetail
+                                label="Beta (Damo)"
+                                value={inputs.damodaran.beta.toFixed(3)}
+                            />
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const BoaIndicator = ({
+    value,
+    label,
+    sector,
+    subsector,
+    inputs,
+    showDropdown = true,
+    mode = "both",
+}: {
+    value: number | string;
+    label: string;
+    sector?: string | null;
+    subsector?: string | null;
+    inputs?: any;
+    showDropdown?: boolean;
+    mode?: "sector" | "subsector" | "both";
+}) => {
+    const isBase = label.toLowerCase().includes("base");
+    const translatedSector = translateIndustry(sector);
+
+    return (
+        <div className="w-[210px] flex flex-col justify-between items-center px-4 py-3 bg-white border border-gray-200/80 rounded-3xl shadow-sm text-center shrink-0 border-t-4 border-t-valora-primary min-h-[130px] overflow-hidden">
+            <div className="flex flex-col items-center gap-1 w-full">
+                {(mode === "sector" || mode === "both") && (
+                    <span className="text-[10px] font-black text-gray-900 uppercase leading-tight tracking-wider w-full truncate px-1">
+                        {translatedSector || "Sector"}
+                    </span>
+                )}
+                {(mode === "subsector" || mode === "both") && subsector && (
+                    <span className="text-[9px] font-bold text-gray-500 leading-tight w-full line-clamp-2 px-1">
+                        {subsector}
+                    </span>
+                )}
+            </div>
+
+            <div className="flex items-baseline gap-1.5 my-1">
+                <div className="flex items-baseline text-valora-primary">
+                    <span className="text-2xl lg:text-3xl font-serif leading-none">
+                        β
+                    </span>
+                    <span className="text-[10px] font-bold leading-none ml-0.5">
+                        oa
+                    </span>
+                </div>
+                <span className="text-xl lg:text-2xl font-bold text-gray-800 leading-none">
+                    {value}
+                </span>
+            </div>
+
+            <div className="w-full">
+                {showDropdown && (
+                    <InputsDropdown
+                        inputs={inputs}
+                        label={isBase ? "Beta económico Sector" : "Beta económico Sensibilidad"}
+                    />
+                )}
+            </div>
+        </div>
+    );
+};
+
+const SectorBadge = ({ sector, subsector }: { sector?: string | null, subsector?: string | null }) => {
+    if (!sector && !subsector?.trim()) return null;
+    const translatedSector = translateIndustry(sector);
+
+    return (
+        <div className="flex flex-col sm:flex-row items-stretch gap-2 w-full sm:w-auto shrink-0">
+            {sector && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-valora-primary/20 shadow-sm text-left min-h-[40px] min-w-[180px]">
+                    <svg className="w-4 h-4 text-valora-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                    </svg>
+                    <div className="flex flex-col">
+                        <span className="text-[9px] font-bold text-valora-primary uppercase tracking-wider leading-none block mb-0.5">Sector</span>
+                        <span className="text-[12px] font-bold text-gray-900 leading-tight block break-words line-clamp-1">{translatedSector}</span>
+                    </div>
+                </div>
+            )}
+            {subsector?.trim() && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-valora-primary/20 shadow-sm text-left min-h-[40px] min-w-[180px]">
+                    <svg className="w-4 h-4 text-valora-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
+                    </svg>
+                    <div className="flex flex-col">
+                        <span className="text-[9px] font-bold text-valora-primary uppercase tracking-wider leading-none block mb-0.5">Subsector</span>
+                        <span className="text-[12px] font-bold text-gray-900 leading-tight block break-words line-clamp-1">{subsector.trim()}</span>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 export interface KapitalResultadosSectionProps {
     results: KapitalResults;
@@ -33,133 +192,130 @@ export const KapitalResultadosSection: React.FC<
     //onOpenReport,
 }) => {
 
-        // 1. Armamos el arreglo de tarjetas. Siempre incluimos los mercados.
-        const cards = [
-            {
-                id: "developed",
-                title: "Resultados del mercado desarrollado",
-                data: results.developed,
-            },
-            {
-                id: "emergent",
-                title: "Resultados del mercado emergente",
-                data: results.emergent,
-            },
-        ];
+    const mainIndustry = results.industria || selectedSector;
+    const mainSubsector = results.subsector || selectedSubsector;
 
-        if (showCompanyCard) {
-            // Usa empresa_dolares o empresa_soles en base a la moneda seleccionada
-            const empresaData =
-                resultCurrency === "usd"
-                    ? results.empresa_dolares
-                    : results.empresa_soles;
+    // Resolve empresa data with secure d_empresa fallback
+    const empresaDataRaw = resultCurrency === "usd"
+        ? results.empresa_dolares
+        : results.empresa_soles;
 
-            const secureDEmpresa =
-                empresaData?.d_empresa || results.empresa_dolares?.d_empresa || "0%";
+    const secureDEmpresa = empresaDataRaw?.d_empresa || results.empresa_dolares?.d_empresa || "0%";
 
-            const newEmpresaData = {
-                ...empresaData,
-                d_empresa: secureDEmpresa,
-            };
+    const empresaData = empresaDataRaw ? {
+        ...empresaDataRaw,
+        d_empresa: secureDEmpresa
+    } : undefined;
 
-            cards.push({
-                id: "empresa",
-                title: "Resultados de la empresa",
-                data: newEmpresaData,
-            });
-        }
-
-        return (
-            <>
-                <header className="max-lg:text-center mt-2 lg:mt-0 flex flex-col xl:flex-row-reverse justify-between items-center w-full gap-4">
-                    <div
-                        className={`flex flex-1 flex-col justify-center items-start ${shouldShowChatbot ? "xl:pl-15" : "xl:pl-0"}`}
+    return (
+        <>
+            <header className="flex flex-col xl:flex-row mt-0 lg:mt-0 justify-between items-center w-full gap-2 px-4">
+                {shouldShowChatbot && (
+                    <button
+                        type="button"
+                        onClick={onToggleForm}
+                        className="px-4 py-2 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100"
                     >
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-1">
-                            <h1 className="text-2xl font-bold text-gray-900 whitespace-nowrap">
-                                Resultados generales
-                            </h1>
-                            {(selectedSector || selectedSubsector?.trim()) && (
-                                <div className="flex flex-col sm:flex-row items-stretch gap-0 sm:gap-px bg-valora-primary/[0.06] rounded-xl overflow-hidden border border-valora-primary/20 max-sm:w-full w-auto shrink-0">
-                                    {selectedSector && (
-                                        <div className="flex items-center gap-2.5 px-4 py-3 bg-white border-b sm:border-b-0 sm:border-r border-valora-primary/[0.06] text-left">
-                                            <svg className="w-5 h-5 text-valora-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                                            </svg>
-                                            <div>
-                                                <span className="text-[10px] font-bold text-valora-primary uppercase tracking-wider leading-none block">Sector</span>
-                                                <span className="text-sm font-bold text-gray-900 leading-tight">{selectedSector}</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                    {selectedSubsector?.trim() && (
-                                        <div className="flex items-center gap-2.5 px-4 py-3 bg-white text-left">
-                                            <svg className="w-5 h-5 text-valora-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
-                                            </svg>
-                                            <div>
-                                                <span className="text-[10px] font-bold text-valora-primary uppercase tracking-wider leading-none block">Subsector</span>
-                                                <span className="text-sm font-bold text-gray-900 leading-tight">{selectedSubsector.trim()}</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                        <p className="text-gray-600 max-xl:mx-auto">
+                        <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
+                            <Sparkles className="h-5 w-5 shrink-0" />
+                            {selectedSubsector?.trim() ? "Cambia tu subsector" : "Afina tu cálculo con tu subsector específico"}
+                        </span>
+
+                        <ArrowRight className="h-5 w-5 shrink-0" />
+                    </button>
+                )}
+            </header>
+            <div className="flex flex-col items-center justify-center gap-2 w-full max-w-none mx-auto px-4 mt-0">
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <div className="flex flex-col text-center sm:text-left">
+                        <h1 className="text-xl font-bold text-gray-900 whitespace-nowrap">
+                            Resultados generales
+                        </h1>
+                        <p className="text-gray-600 text-[11px]">
                             Comparación de resultados
                         </p>
                     </div>
-                    {shouldShowChatbot && (
-                        <button
-                            type="button"
-                            onClick={onToggleForm}
-                            className="px-4 py-2.5 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100"
-                        >
-                            <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
-                                <Sparkles className="h-5 w-5 shrink-0" />
-                                {selectedSubsector?.trim() ? "Cambia tu subsector" : "Afina tu cálculo con tu subsector específico"}
-                            </span>
+                    <SectorBadge sector={mainIndustry} subsector={mainSubsector} />
+                </div>
+            </div>
+            <section className="flex flex-col lg:flex-row justify-center items-center w-full gap-3 mt-2 mx-auto px-4 max-w-none">
+                <div className="shrink-0">
+                    <BoaIndicator
+                        value={
+                            results.boa_sector
+                                ? results.boa_sector.toFixed(2)
+                                : results.boa
+                                    ? results.boa.toFixed(2)
+                                    : "0.00"
+                        }
+                        label="boa"
+                        sector={mainIndustry}
+                        subsector={mainSubsector}
+                        inputs={results.inputs}
+                        showDropdown={results.inputs !== undefined}
+                        mode="sector"
+                    />
+                </div>
 
-                            <ArrowRight className="h-5 w-5 shrink-0" />
-                        </button>
-                    )}
-                    {/*<div className="xl:w-1/3 flex justify-center xl:justify-end w-full">
-          <section className="flex flex-col items-center justify-center rounded-[24px] max-w-105 w-full xl:w-fit overflow-visible mx-auto">
-            <div onClick={onOpenReport} className="w-fit h-fit cursor-pointer">
-              <Book
-                href="/images/portada-kapital-less.webp"
-                width={110}
-                height={150}
-                interactive={true}
-              />
-            </div>
-            <div className="flex flex-col justify-center gap-2 flex-1">
-              <button
-                onClick={onOpenReport}
-                className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer "
-              >
-                Reporte de Costo de Capital
-              </button>
-            </div>
-          </section>
-        </div>*/}
-                </header>
-                <section className="flex flex-col flex-wrap md:flex-row justify-center items-center w-full gap-4 mt-6 mx-auto h-full">
-                    {cards.map((card) => (
+                    <div className="lg:flex-1 min-w-[340px] max-w-[450px] w-full">
                         <FinancieraCard
-                            key={card.id}
-                            title={card.title}
-                            data={card.data}
-                            isEmpresa={card.id === "empresa"}
+                            title="Mercado Desarrollado"
+                            data={results.developed}
+                            isEmpresa={false}
                             resultCurrency={resultCurrency}
                             onResultCurrencyChange={onResultCurrencyChange}
                             compact={false}
                             localCurrency={localCurrency}
                         />
-                    ))}
+                    </div>
+
+                    {mainSubsector && (
+                        <div className="shrink-0">
+                            <BoaIndicator
+                                value={
+                                    results.boa_subsector
+                                        ? results.boa_subsector.toFixed(2)
+                                        : results.boa
+                                            ? results.boa.toFixed(2)
+                                            : "0.00"
+                                }
+                                label="boa"
+                                sector={mainIndustry}
+                                subsector={mainSubsector}
+                                showDropdown={false}
+                                mode="subsector"
+                            />
+                        </div>
+                    )}
+
+                    <div className="lg:flex-1 min-w-[340px] max-w-[450px] w-full">
+                        <FinancieraCard
+                            title={`Mercado emergente: ${results.pais || ""}`}
+                            data={results.emergent}
+                            isEmpresa={false}
+                            resultCurrency={resultCurrency}
+                            onResultCurrencyChange={onResultCurrencyChange}
+                            compact={false}
+                            localCurrency={localCurrency}
+                        />
+                    </div>
+
+                    {showCompanyCard && empresaData && (
+                        <div className="lg:flex-1 min-w-[340px] max-w-[450px] w-full">
+                            <FinancieraCard
+                                title="Tu empresa"
+                                data={empresaData}
+                                isEmpresa={true}
+                                resultCurrency={resultCurrency}
+                                onResultCurrencyChange={onResultCurrencyChange}
+                                compact={false}
+                                localCurrency={localCurrency}
+                            />
+                        </div>
+                    )}
                 </section>
+
             </>
         );
+
     };

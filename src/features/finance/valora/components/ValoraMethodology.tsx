@@ -33,7 +33,7 @@ const Navbar: React.FC<{
         </div>
         <div className="d-flex ms-3">
           <a
-            href={`/valora/${uid}/analisis`}
+            href={`/valora/${uid}/sensibilidad`}
             className={`btn btn-flex flex-center bg-body btn-color-gray-700 btn-active-color-primary w-40px w-md-auto h-40px px-0 px-md-6 ${selected === "analysis" ? "active" : ""}`}
             style={{ background: "transparent", border: "1px solid #e4e6ef" }}
           >

@@ -443,58 +443,69 @@ export const ConfiguracionPage = () => {
             });
           });
 
-          if (!shouldCalcBoa) {
+          if (shouldCalcBoa) {
+            // Asignar las referencias ANTES de iniciar el job
+            parsedDataRef.current = parsedData;
+            boaTabRef.current = activeTab;
+
+            const { job_id, message, total } = await MainService.startSubsectoresBoa(tickers);
+
+            // Mostrar el mensaje informativo del backend
+            if (message) {
+              addToast("info", message);
+            }
+
+            if (job_id) {
+              setActiveBoaJob({ jobId: job_id, total: total, processed: 0, failed: 0 });
+              setBoaProgressText(`Iniciando cálculo para ${total} empresas...`);
+              setModalState({
+                isOpen: true,
+                title: "Calculando BOA...",
+                description: undefined,
+                confirmText: "Cerrar y seguir en segundo plano",
+                variant: "default",
+                onConfirm: closeModal,
+              });
+
+              try {
+                boaResult = await startBoaPolling(job_id, total);
+                closeModal();
+                setActiveBoaJob(null);
+                setBoaProgressText(null);
+
+                const boaMap: Record<string, number> = {};
+                (boaResult?.valid_companies || []).forEach((c: any) => {
+                  boaMap[c.ticker] = c.beta_unlevered;
+                });
+
+                parsedData.forEach((item: any) => {
+                  item.empresas_boa = item.empresas_boa || {};
+                  (item.empresas || []).forEach((emp: string) => {
+                    if (boaMap[emp] !== undefined) {
+                      item.empresas_boa[emp] = boaMap[emp];
+                    }
+                  });
+                });
+              } catch (err) {
+                closeModal();
+                setActiveBoaJob(null);
+                setBoaProgressText(null);
+                console.warn("Error obteniendo BOA, se continuará sin BOA:", err);
+              }
+            }
+          } else {
+            // Si el usuario omite el cálculo de BOA, importa los datos directamente.
             await doImport(parsedData, null, activeTab);
             return;
-          }
-
-          parsedDataRef.current = parsedData;
-          activeTabRef.current = activeTab;
-          boaTabRef.current = activeTab;
-
-          const { job_id } = await MainService.startSubsectoresBoa(tickers);
-          setActiveBoaJob({ jobId: job_id, total: tickers.length, processed: 0, failed: 0 });
-          setBoaProgressText(
-            `Iniciando cálculo para ${tickers.length} empresas...`
-          );
-          setModalState({
-            isOpen: true,
-            title: "Calculando BOA...",
-            description: undefined,
-            confirmText: "Cerrar",
-            variant: "default",
-            onConfirm: closeModal,
-          });
-
-          try {
-            boaResult = await startBoaPolling(job_id, tickers.length);
-            closeModal();
-            setActiveBoaJob(null);
-            setBoaProgressText(null);
-
-            const boaMap: Record<string, number> = {};
-            (boaResult?.valid_companies || []).forEach((c: any) => {
-              boaMap[c.ticker] = c.beta_unlevered;
-            });
-
-            parsedData.forEach((item: any) => {
-              item.empresas_boa = item.empresas_boa || {};
-              (item.empresas || []).forEach((emp: string) => {
-                if (boaMap[emp] !== undefined) {
-                  item.empresas_boa[emp] = boaMap[emp];
-                }
-              });
-            });
-          } catch (err) {
-            closeModal();
-            setActiveBoaJob(null);
-            setBoaProgressText(null);
-            console.warn("Error obteniendo BOA, se continuará sin BOA:", err);
           }
         }
       }
 
-      await doImport(parsedData, boaResult, activeTab);
+      // Importar los datos finales solo si hubo un resultado de BOA
+      // o si no se trataba de una importación de subsectores.
+      if (activeTab !== 'subsectores' || boaResult) {
+        await doImport(parsedData, boaResult, activeTab);
+      }
     } catch (err: any) {
       console.error("Error processing Excel file", err);
       addToast(
@@ -734,31 +745,19 @@ export const ConfiguracionPage = () => {
           ? Math.round((attempted / activeBoaJob.total) * 100)
           : 0;
         return (
-          <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2">
-            <button
-              onClick={async () => {
-                await MainService.cancelBoaJob(activeBoaJob.jobId);
-                await MainService.deleteBoaJob(activeBoaJob.jobId);
-                setActiveBoaJob(null);
-                setBoaProgressText("Cálculo cancelado.");
-              }}
-              className="flex items-center gap-1 px-3 py-3 rounded-full shadow-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
-              title="Cancelar cálculo BOA"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <button
-              onClick={showBoaProgressModal}
-              className="flex items-center gap-2 px-4 py-3 rounded-full shadow-lg transition-all text-white font-medium"
-              title="Ver progreso del cálculo BOA"
-              style={{
-                background: `linear-gradient(to right, #2563eb ${pct}%, rgba(37,99,235,0.3) ${pct}%)`,
-              }}
-            >
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+          <div
+            className="relative flex items-center rounded-full shadow-lg bg-white/80 backdrop-blur-sm border border-slate-200/80 text-slate-700 font-medium cursor-pointer overflow-hidden"
+            onClick={showBoaProgressModal}
+            title="Ver progreso del cálculo BOA"
+          >
+            <div
+              className="absolute left-0 top-0 h-full bg-blue-500/20"
+              style={{ width: `${pct}%`, transition: 'width 0.3s ease' }}
+            />
+            <div className="relative flex items-center gap-2 px-4 py-3">
               <svg
-                className="animate-spin h-4 w-4 shrink-0"
+                className="animate-spin h-5 w-5 text-blue-600"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -778,10 +777,38 @@ export const ConfiguracionPage = () => {
                 />
               </svg>
               <span className="text-sm">
-                BOA {attempted}/{activeBoaJob.total}
+                Procesando BOA: {attempted}/{activeBoaJob.total}
               </span>
-            </button>
+              <span className="text-xs font-bold text-blue-600 ml-1">({pct}%)</span>
+            </div>
           </div>
+          <button
+            onClick={async () => {
+              setModalState({
+                isOpen: true,
+                title: '¿Cancelar cálculo de BOA?',
+                description: 'Esta acción detendrá el proceso actual de cálculo de tickers. No se guardará el progreso no finalizado.',
+                confirmText: 'Sí, cancelar',
+                cancelText: 'No, continuar',
+                variant: 'destructive',
+                onConfirm: async () => {
+                  await MainService.cancelBoaJob(activeBoaJob.jobId);
+                  await MainService.deleteBoaJob(activeBoaJob.jobId);
+                  setActiveBoaJob(null);
+                  setBoaProgressText("Cálculo cancelado por el usuario.");
+                  addToast('info', 'El cálculo de BOA ha sido cancelado.');
+                  closeModal();
+                },
+              });
+            }}
+            className="flex items-center justify-center h-12 w-12 rounded-full shadow-lg bg-white/80 hover:bg-red-500/80 backdrop-blur-sm border border-slate-200/80 text-slate-600 hover:text-white transition-all"
+            title="Cancelar cálculo BOA"
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
         );
       })()}
     </>

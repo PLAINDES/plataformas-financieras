@@ -3,6 +3,8 @@ import { FinanceNavbar } from "@/features/finance/components/FinanceNavbar";
 import type { NavTab } from "@/features/finance/components/FinanceNavbar";
 import { UserMenu } from "@/shared/components/common/UserMenu";
 import type { User } from "@/shared/types/user.types";
+import { ChevronRight } from "lucide-react";
+import type { ValoraResultsSectionKey } from "./ValoraResults";
 
 interface NavBarProps {
   user: User | null;
@@ -14,11 +16,8 @@ interface NavBarProps {
   logoSrc: string;
   logoAlt: string;
   projectsHref: string;
-  selected: "estados" | "resultados" | "analisis" | "metodologia" | "";
-  onNavigate: (
-    view: "estados" | "resultados" | "analisis" | "metodologia"
-  ) => void;
-  onOpenReport: () => void;
+  selected: ValoraResultsSectionKey | "";
+  onNavigate: (view: ValoraResultsSectionKey) => void;
 }
 
 export const NavBar: React.FC<NavBarProps> = ({
@@ -33,7 +32,6 @@ export const NavBar: React.FC<NavBarProps> = ({
   projectsHref,
   selected,
   onNavigate,
-  onOpenReport,
 }) => {
   const tabs: NavTab[] = useMemo(() => {
     if (!hasResults) return [];
@@ -149,12 +147,12 @@ l347 -2 4 -472 c4 -533 6 -547 78 -696 76 -157 229 -281 404 -327 49 -12 137
         ),
       },
       {
-        id: "analisis",
-        label: "Análisis",
+        id: "sensibilidad",
+        label: "Sensibilidad",
         icon: (
           <span
             className={
-              selected === "metodologia" ? "text-blue-600" : "text-gray-400"
+              selected === "sensibilidad" ? "text-blue-600" : "text-gray-400"
             }
           >
             <svg
@@ -173,35 +171,6 @@ l347 -2 4 -472 c4 -533 6 -547 78 -696 76 -157 229 -281 404 -327 49 -12 137
           </span>
         ),
       },
-      {
-        id: "metodologia",
-        label: "Metodología",
-        icon: (
-          <span
-            className={
-              selected === "metodologia" ? "text-blue-600" : "text-gray-600"
-            }
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-5 h-5"
-            >
-              <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
-              <path d="M22 10v6" />
-              <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
-            </svg>
-          </span>
-        ),
-        isInHeader: true,
-      },
     ];
   }, [hasResults]);
 
@@ -215,15 +184,10 @@ l347 -2 4 -472 c4 -533 6 -547 78 -696 76 -157 229 -281 404 -327 49 -12 137
       onToggleForm={onToggleForm}
       actions={
         <>
-          {hasResults && (
-            <button
-              onClick={onOpenReport}
-              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm border border-purple-600 text-purple-600 hover:bg-purple-50"
-            >
-              Reportes
-            </button>
-          )}
-
+          <a className="flex flex-row gap-1 px-4 sm:px-3 py-1.5 sm:py-2 bg-valora-primary text-white rounded-lg max-sm:text-[10px] text-xs md:text-sm font-semibold hover:bg-valora-secondary cursor-pointer">
+            Curso de capacitación
+            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 my-auto" />
+          </a>
           <UserMenu user={user} onLogout={onLogout}>
             <a
               href={projectsHref}
