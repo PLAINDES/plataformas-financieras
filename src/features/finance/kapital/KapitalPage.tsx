@@ -66,9 +66,16 @@ const KapitalPage: React.FC = () => {
     const toastTimeoutsRef = useRef<Map<string, number>>(new Map());
 
     // --- Custom Hooks ---
+    const subsectorTickersRef = useRef<Record<string, string[]>>({});
+    const subsectorSensibilizacionTickersRef = useRef<Record<string, string[]>>({});
+
     const form = useKapitalForm();
     const session = useKapitalSession();
-    const data = useKapitalData(form.formData.sector);
+    const data = useKapitalData(
+        form.formData.sector,
+        subsectorTickersRef,
+        subsectorSensibilizacionTickersRef
+    );
 
     const calc = useKapitalCalculation({
         formData: form.formData,
@@ -84,8 +91,8 @@ const KapitalPage: React.FC = () => {
         formData: form.formData,
         isWaccCalculated: calc.isWaccCalculated,
         handleInputChange: form.handleInputChange,
-        subsectorTickersRef: data.subsectorTickersRef,
-        subsectorSensibilizacionTickersRef: data.subsectorSensibilizacionTickersRef,
+        subsectorTickersRef: subsectorTickersRef,
+        subsectorSensibilizacionTickersRef: subsectorSensibilizacionTickersRef,
     });
 
     // --- Effects ---
@@ -336,8 +343,8 @@ const KapitalPage: React.FC = () => {
                             onToggleTicker={modal.handleToggleTicker}
                             onCalculateDetail={modal.handleCalculateDetail}
                             onSetSubsectorModalMode={modal.setSubsectorModalMode}
-                            subsectorTickersRef={data.subsectorTickersRef}
-                            subsectorSensibilizacionTickersRef={data.subsectorSensibilizacionTickersRef}
+                            subsectorTickersRef={subsectorTickersRef}
+                            subsectorSensibilizacionTickersRef={subsectorSensibilizacionTickersRef}
                         />
                     </div>
                 )}
@@ -374,8 +381,8 @@ const KapitalPage: React.FC = () => {
                             onToggleTicker={modal.handleToggleTicker}
                             onCalculateDetail={modal.handleCalculateDetail}
                             onSetSubsectorModalMode={modal.setSubsectorModalMode}
-                            subsectorTickersRef={data.subsectorTickersRef}
-                            subsectorSensibilizacionTickersRef={data.subsectorSensibilizacionTickersRef}
+                            subsectorTickersRef={subsectorTickersRef}
+                            subsectorSensibilizacionTickersRef={subsectorSensibilizacionTickersRef}
                         />
                     </div>
                 </div>

@@ -208,8 +208,11 @@ export function useKapitalCalculation({
                 (latestInput.tasa_efectiva_impuesto as string) || "",
               beta_levered: (latestInput.beta_apalancado as string) || "",
               beta_unlevered: (latestInput.beta_desapalancado as string) || "",
-              beta_unlevered_custom:
-                (latestInput.beta_desapalancado_custom as string) || "",
+              beta_subsector:
+                (latestInput.beta_subsector as string) ||
+                (latestInput.beta_subsector_custom as string) ||
+                (latestInput.beta_unlevered_custom as string) ||
+                "",
               beta_unlevered_industry:
                 (latestInput.beta_desapalancado as string) || "",
               tickers_subsector:

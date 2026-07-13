@@ -1,173 +1,605 @@
-import React from 'react';
-import { IconActionButton } from '../../../../shared/components/ui/IconActionButton';
-import { FormField } from '../../components/FormField';
-import type { FormData } from '@/shared/types/ValoraTypes';
-import { FormSection } from '../../components/FormSection';
+import React, { useEffect, useMemo, useState } from "react";
 
+import { IconActionButton } from "../../../../shared/components/ui/IconActionButton";
+import { FormField } from "../../components/FormField";
+import { FormSection } from "../../components/FormSection";
+import { cn } from "@/lib/utils";
+import type { FormData } from "@/shared/types/ValoraTypes";
 
 export interface ValoraFormPanelProps {
-    formData: FormData;
-    dates: string[];
-    countries: string[];
-    currencies: string[];
-    sectors: string[];
-    fileUploaded: boolean;
-    uploadedFileUrl: string | null;
-    onClearUploadedFile: () => void;
-    onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-    onSubmit: (e: React.FormEvent) => void;
-    onDownloadTemplate: () => void;
-    onUploadTemplate: () => void;
+  formData: FormData;
+  dates: string[];
+  countries: string[];
+  currencies: string[];
+  sectors: string[];
+  fileUploaded: boolean;
+  uploadedFileUrl: string | null;
+  instruments?: string[];
+  bonos?: string[];
+  countryLocalCurrencies?: Record<string, string>;
+  industryTranslations?: Record<string, string>;
+  bonosTranslations?: Record<string, string>;
+  countriesTranslations?: Record<string, string>;
+  onClearUploadedFile: () => void;
+  onInputChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onDownloadTemplate: () => void;
+  onUploadTemplate: () => void;
+  onSearchSectorBeta?: () => void;
+  isSearchingBeta?: boolean;
+  onSearchRate?: (name: keyof FormData) => void;
+  loading?: boolean;
+  hasCalculated?: boolean;
 }
 
 export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
-    formData,
-    dates,
-    countries,
-    currencies,
-    sectors,
-    fileUploaded,
-    uploadedFileUrl,
-    onClearUploadedFile,
-    onInputChange,
-    onSubmit,
-    onDownloadTemplate,
-    onUploadTemplate
-}) => (
+  formData,
+  dates,
+  countries,
+  currencies,
+  sectors,
+  fileUploaded,
+  uploadedFileUrl,
+  instruments = [],
+  bonos = [],
+  countryLocalCurrencies = {},
+  industryTranslations,
+  bonosTranslations,
+  countriesTranslations,
+  onClearUploadedFile,
+  onInputChange,
+  onSubmit,
+  onDownloadTemplate,
+  onUploadTemplate,
+  onSearchSectorBeta,
+  isSearchingBeta = false,
+  onSearchRate,
+  loading = false,
+  hasCalculated = false,
+}) => {
+  const [collapsed, setCollapsed] = useState({
+    step1: false,
+    step2: true,
+    step3: true,
+    step4: true,
+    step5: true,
+  });
+
+  const isSection2Disabled = !fileUploaded;
+  const isSection2Complete = Boolean(
+    formData.date && formData.sector && formData.instrument && formData.bono
+  );
+  const isSection3Disabled = !(fileUploaded && isSection2Complete);
+  const isSection4Disabled = !(
+    fileUploaded &&
+    isSection2Complete &&
+    formData.country
+  );
+
+  const toggleCollapse = (
+    step: "step1" | "step2" | "step3" | "step4" | "step5"
+  ) => {
+    setCollapsed((prev) => ({ ...prev, [step]: !prev[step] }));
+  };
+
+  useEffect(() => {
+    if (!isSection2Disabled) {
+      setCollapsed((prev) => ({ ...prev, step2: false }));
+    }
+  }, [isSection2Disabled]);
+
+  useEffect(() => {
+    if (!isSection3Disabled) {
+      setCollapsed((prev) => ({ ...prev, step3: false }));
+    }
+  }, [isSection3Disabled]);
+
+  useEffect(() => {
+    if (!isSection4Disabled) {
+      setCollapsed((prev) => ({ ...prev, step4: false }));
+    }
+  }, [isSection4Disabled]);
+
+  const kdCurrencyOptions = useMemo(() => {
+    const localCode = formData.country
+      ? countryLocalCurrencies[formData.country]
+      : null;
+    if (localCode && localCode !== "USD") {
+      return ["USD", localCode];
+    }
+    return currencies.length > 0 ? currencies : ["USD"];
+  }, [formData.country, countryLocalCurrencies, currencies]);
+
+  const handleSearchSectorBeta = () => {
+    if (onSearchSectorBeta && formData.sector) {
+      onSearchSectorBeta();
+    }
+  };
+
+  const handleSearchRate = (name: keyof FormData) => {
+    if (onSearchRate) {
+      onSearchRate(name);
+    }
+  };
+
+  const submitLabel = hasCalculated ? "SENSIBILIZAR" : "VALORIZAR";
+
+  return (
     <form className="flex h-full flex-col" onSubmit={onSubmit}>
-        <div className="flex-1 bg-white p-2">
-            <div className='overflow-auto pb-6'>
-                <FormSection step={1} title="Ingrese inputs de su pais">
-                    <div className='flex gap-4 flex-col pt-6'>
-                        <FormField
-                            label="Fecha"
-                            name="date"
-                            type="select"
-                            value={formData.date}
-                            options={dates}
-                            required
-                            onChange={onInputChange}
-                        />
-                        <FormField
-                            label="Pais"
-                            name="country"
-                            type="select"
-                            value={formData.country}
-                            options={countries}
-                            required
-                            onChange={onInputChange}
-                        />
-                        <FormField
-                            label="Moneda"
-                            name="currency"
-                            type="select"
-                            value={formData.currency}
-                            options={currencies}
-                            required
-                            onChange={onInputChange}
-                        />
-                        <FormField
-                            label="Sector"
-                            name="sector"
-                            type="select"
-                            value={formData.sector}
-                            options={sectors}
-                            required
-                            onChange={onInputChange}
-                        />
-                    </div>
-                </FormSection>
+      <div className="flex-1 min-h-0 bg-white p-2 pb-0 flex flex-col">
+        <div className="flex-1 overflow-y-auto flex flex-col gap-2">
+          {/* Section 1: Company info */}
+          <FormSection
+            step={1}
+            title="Ingrese la información de su empresa"
+            isCollapsed={collapsed.step1}
+            onToggleCollapse={() => toggleCollapse("step1")}
+          >
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 font-semibold">
+                  Descargar Plantilla EEFF
+                </span>
+                <IconActionButton
+                  iconClassName="fa-solid fa-download"
+                  ariaLabel="Descargar plantilla"
+                  onClick={onDownloadTemplate}
+                />
+              </div>
 
-                <div className="mt-6">
-                    <FormSection step={2} title="Ingrese inputs de su empresa">
-                        <div className="flex w-full justify-between pt-6">
-                            <label className="text-sm text-gray-600 md:col-span-8 font-semibold">Descargar plantilla EEFF</label>
-                            <div className="md:col-span-4 md:flex md:justify-end">
-                                <IconActionButton
-                                    iconClassName="fa-solid fa-download"
-                                    ariaLabel="Descargar plantilla"
-                                    onClick={onDownloadTemplate}
-                                />
-                            </div>
-                        </div>
+              <div className="flex items-center justify-between">
+                <label className="text-sm text-gray-600 font-semibold flex items-center gap-2">
+                  <span>Subir Plantilla EEFF</span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold border ${
+                      fileUploaded
+                        ? "bg-emerald-50 text-green-600 border-green-600"
+                        : "bg-amber-50 text-amber-500 border-amber-500"
+                    }`}
+                  >
+                    {fileUploaded ? "Cargado" : "Pendiente"}
+                  </span>
+                  {!fileUploaded && (
+                    <input
+                      type="text"
+                      name="fileUsername"
+                      value=""
+                      className="hidden"
+                      required
+                    />
+                  )}
+                </label>
+                <IconActionButton
+                  iconClassName="fa-solid fa-file-import"
+                  ariaLabel="Subir plantilla"
+                  onClick={onUploadTemplate}
+                />
+              </div>
 
-                        <div className="flex w-full justify-between">
-                            <label className="text-sm text-gray-600 md:col-span-8 font-semibold flex items-center gap-2">
-                                <span>Subir plantilla EEFF</span>
-                                <span
-                                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${fileUploaded ? 'bg-emerald-50 text-green-500 border border-green-500' : 'bg-amber-50 border border-amber-400 text-amber-400'}`}
-                                >
-                                    {fileUploaded ? 'Cargado' : 'Pendiente'}
-                                </span>
-                                {!fileUploaded && (
-                                    <input
-                                        type="text"
-                                        name="fileUsername"
-                                        value=""
-                                        id="fileUsername"
-                                        className="hidden"
-                                        required
-                                    />
-                                )}
-                            </label>
-                            <div className="md:col-span-4 md:flex md:justify-end">
-                                <IconActionButton
-                                    iconClassName="fa-solid fa-file-import"
-                                    ariaLabel="Subir plantilla"
-                                    onClick={onUploadTemplate}
-                                />
-                            </div>
-                        </div>
-
-                        {fileUploaded && (
-                            <div id="fileUsernameAlert" className="rounded border border-green-500/30 bg-green-500/10 p-3">
-                                <div className="flex items-center gap-2 text-green-500">
-                                    <i className="fa-regular fa-circle-check text-lg text-green-500"></i>
-                                    <div className="relative w-full flex items-center justify-between gap-2">
-                                        <span className='text-sm'>Plantilla cargada: {formData.fileUsername}</span>
-                                        <div className="flex items-center gap-2">
-                                            {uploadedFileUrl && (
-                                                <a
-                                                    href={uploadedFileUrl}
-                                                    download={formData.fileUsername || undefined}
-                                                    title="Descargar plantilla cargada"
-                                                    id="fileUsernameUrl"
-                                                    className="text-green-500"
-                                                >
-                                                    <i className="fa-solid fa-file-arrow-down text-lg"></i>
-                                                </a>
-                                            )}
-                                            <button
-                                                type="button"
-                                                className="rounded w-5 h-5 flex justify-center items-center font-semibold text-white bg-red-500 cursor-pointer hover:bg-red-600 transition-colors"
-                                                onClick={onClearUploadedFile}
-                                            >
-                                                <i className="fa-solid fa-trash text-[9px]"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+              {fileUploaded && (
+                <div className="rounded border border-green-500/30 bg-green-500/10 p-3">
+                  <div className="flex items-center gap-2 text-green-600">
+                    <i className="fa-regular fa-circle-check text-lg"></i>
+                    <div className="relative w-full flex items-center justify-between gap-2">
+                      <span className="text-sm">
+                        Plantilla cargada: {formData.fileUsername}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {uploadedFileUrl && (
+                          <a
+                            href={uploadedFileUrl}
+                            download={formData.fileUsername || undefined}
+                            title="Descargar plantilla cargada"
+                            className="text-green-600 hover:text-green-700"
+                          >
+                            <i className="fa-solid fa-file-arrow-down text-lg"></i>
+                          </a>
                         )}
-
-                        <FormField
-                            label="Acciones"
-                            name="action"
-                            type="text"
-                            value={formData.action}
-                            onChange={onInputChange}
-                        />
-                    </FormSection>
+                        <button
+                          type="button"
+                          className="rounded w-5 h-5 flex justify-center items-center font-semibold text-white bg-red-500 cursor-pointer hover:bg-red-600 transition-colors"
+                          onClick={onClearUploadedFile}
+                        >
+                          <i className="fa-solid fa-trash text-[9px]"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              )}
+
+              <FormField
+                label="Número de Acciones"
+                name="shares"
+                type="number"
+                step="any"
+                value={formData.shares || ""}
+                onChange={onInputChange}
+                tooltip="Si no se cuenta con el número de acciones, se estimará usando el capital social y un valor nominal de 1 por acción"
+                layout="horizontal"
+                inputClassName="col-span-12"
+              />
+
+              <FormField
+                label="Moneda"
+                name="currency"
+                type="select"
+                value={formData.currency}
+                options={currencies}
+                required
+                onChange={onInputChange}
+                layout="horizontal"
+                inputClassName="col-span-12"
+              />
             </div>
-        </div>
-        <div className="sticky bottom-0 bg-white p-2 pt-0">
-            <button
-                type="submit"
-                className="w-full rounded bg-blue-600 py-2 text-md font-semibold text-white transition-colors hover:bg-blue-700 cursor-pointer"
+          </FormSection>
+
+          {/* Section 2: Industry inputs */}
+          <FormSection
+            step={2}
+            title="Inputs de la industria"
+            isCollapsed={collapsed.step2}
+            onToggleCollapse={() => toggleCollapse("step2")}
+            disabled={isSection2Disabled}
+            disabledMessage="Sube y carga la plantilla EEFF primero"
+          >
+            <div className="flex flex-col gap-1">
+              <FormField
+                label="Fecha"
+                name="date"
+                type="select"
+                value={formData.date}
+                options={dates}
+                required
+                onChange={onInputChange}
+                layout="horizontal"
+                inputClassName="col-span-12"
+                disabled={isSection2Disabled}
+              />
+              <FormField
+                label="Sector"
+                name="sector"
+                type="select"
+                value={formData.sector}
+                options={sectors}
+                translations={industryTranslations}
+                required
+                onChange={onInputChange}
+                layout="horizontal"
+                inputClassName="col-span-18"
+                disabled={isSection2Disabled}
+              />
+
+              <div className="relative w-full border border-transparent">
+                <FormField
+                  label="Beta desapalancado"
+                  name="beta_unlevered_industry"
+                  type="number"
+                  step="any"
+                  value={
+                    formData.beta_subsector || formData.beta_unlevered_industry || ""
+                  }
+                  disabled
+                  onChange={onInputChange}
+                  suffix="coef."
+                  layout="horizontal"
+                  showClearButton={false}
+                  inputClassName="col-span-9"
+                />
+                <div className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end">
+                  <button
+                    type="button"
+                    onClick={handleSearchSectorBeta}
+                    disabled={
+                      isSearchingBeta || !formData.sector || isSection2Disabled
+                    }
+                    className={cn(
+                      "text-[10px] w-full h-10 py-0.5 px-1 rounded-sm text-wrap font-bold cursor-pointer flex items-center justify-center text-center leading-tight tracking-wider",
+                      "text-valora-primary bg-white border border-valora-primary focus:outline-none",
+                      "disabled:cursor-not-allowed disabled:opacity-50"
+                    )}
+                  >
+                    {isSearchingBeta ? "Buscando..." : "Obtén Tu Beta Por Subsector"}
+                  </button>
+                </div>
+              </div>
+
+              <FormField
+                label="Tasa libre de riesgo"
+                name="instrument"
+                type="select"
+                value={formData.instrument || ""}
+                options={instruments}
+                required
+                onChange={onInputChange}
+                layout="horizontal"
+                inputClassName="col-span-18"
+                disabled={isSection2Disabled}
+              />
+              <FormField
+                label="Año del bono"
+                name="bono"
+                type="select"
+                value={formData.bono || ""}
+                options={bonos}
+                translations={bonosTranslations}
+                required
+                onChange={onInputChange}
+                layout="horizontal"
+                inputClassName="col-span-12"
+                showClearButton={false}
+                disabled={isSection2Disabled}
+              />
+            </div>
+          </FormSection>
+
+          {/* Section 3: Sector inputs */}
+          <FormSection
+            step={3}
+            title="Inputs del sector"
+            isCollapsed={collapsed.step3}
+            onToggleCollapse={() => toggleCollapse("step3")}
+            disabled={isSection3Disabled}
+            disabledMessage="Completa los Inputs del sector primero"
+          >
+            <div className="flex flex-col gap-1">
+              <FormField
+                label="País"
+                name="country"
+                type="select"
+                value={formData.country}
+                options={countries}
+                translations={countriesTranslations}
+                required
+                onChange={onInputChange}
+                layout="horizontal"
+                inputClassName="col-span-11"
+                disabled={isSection3Disabled}
+              />
+              <FormField
+                label="Devaluación"
+                name="devaluation"
+                type="number"
+                step="any"
+                value={formData.devaluation || ""}
+                onChange={onInputChange}
+                suffix="%"
+                tooltip="Obtenido de Marco Macroeconómico Multianual por país"
+                layout="horizontal"
+                showClearButton={false}
+                inputClassName="col-span-8"
+                disabled
+              />
+              <FormField
+                label="Tasa impositiva"
+                name="tax"
+                type="number"
+                step="any"
+                value={formData.tax || ""}
+                onChange={onInputChange}
+                suffix="%"
+                tooltip="IR declarado por cada país. Reporte EY."
+                layout="horizontal"
+                showClearButton={false}
+                inputClassName="col-span-8"
+                disabled
+              />
+            </div>
+          </FormSection>
+
+          {/* Section 4: Company inputs */}
+          <FormSection
+            step={4}
+            title="Inputs de su empresa"
+            isCollapsed={collapsed.step4}
+            onToggleCollapse={() => toggleCollapse("step4")}
+            toggle={formData.typeId}
+            onToggle={() =>
+              onInputChange({
+                target: { name: "typeId", value: !formData.typeId },
+              } as any)
+            }
+            disabled={isSection4Disabled}
+            disabledMessage="Completa los Inputs de la industria y del sector primero"
+          >
+            <div className="flex flex-col gap-1">
+              <FormField
+                label="Costo de Deuda de la Empresa"
+                name="kd"
+                type="number"
+                step="any"
+                min={0}
+                max={100}
+                value={formData.kd || ""}
+                onChange={onInputChange}
+                suffix="%"
+                tooltip="Calculado a partir de Gasto Financiero/Deuda Financiera"
+                layout="horizontal"
+                showClearButton={false}
+                inputClassName="col-span-12"
+                prefixSelect={{
+                  name: "currency",
+                  value: formData.currency,
+                  options: kdCurrencyOptions,
+                }}
+                maxDecimals={2}
+                disabled={isSection4Disabled}
+              />
+              <FormField
+                label="% de Deuda"
+                name="debt"
+                type="number"
+                step="any"
+                min={0}
+                max={100}
+                value={formData.debt || ""}
+                onChange={onInputChange}
+                suffix="%"
+                layout="horizontal"
+                showClearButton={false}
+                inputClassName="col-span-8"
+                maxDecimals={2}
+                disabled={isSection4Disabled}
+              />
+              <FormField
+                label="% de Capital"
+                name="capital"
+                type="number"
+                step="any"
+                min={0}
+                max={100}
+                value={formData.capital || ""}
+                onChange={onInputChange}
+                suffix="%"
+                layout="horizontal"
+                showClearButton={false}
+                inputClassName="col-span-8"
+                maxDecimals={2}
+                disabled={isSection4Disabled}
+              />
+            </div>
+          </FormSection>
+
+          {/* Section 5: Sensibilización - visible only after first calculation */}
+          {hasCalculated && (
+            <FormSection
+              step={5}
+              title="Sensibilización"
+              isCollapsed={collapsed.step5}
+              onToggleCollapse={() => toggleCollapse("step5")}
             >
-                CALCULAR
-            </button>
+              <div className="flex flex-col gap-2">
+                <SensitivityRow
+                  label="Tasa Forecast Ingresos"
+                  name="revenue_forecast_rate"
+                  suffix="%"
+                  value={formData.revenue_forecast_rate || ""}
+                  onChange={onInputChange}
+                  onSearchRate={handleSearchRate}
+                />
+                <SensitivityRow
+                  label="Tasa Forecast FDC"
+                  name="fdc_forecast_rate"
+                  suffix="%"
+                  value={formData.fdc_forecast_rate || ""}
+                  onChange={onInputChange}
+                  onSearchRate={handleSearchRate}
+                />
+                <SensitivityRow
+                  label="Tasa de Crecimiento Perpetuo"
+                  name="perpetual_growth_rate"
+                  suffix="%"
+                  value={formData.perpetual_growth_rate || ""}
+                  onChange={onInputChange}
+                  onSearchRate={handleSearchRate}
+                />
+                <SensitivityRow
+                  label="Beta Desapalancado"
+                  name="beta_unlevered_sensitivity"
+                  suffix="Coef."
+                  value={formData.beta_unlevered_sensitivity || ""}
+                  onChange={onInputChange}
+                  onSearchRate={handleSearchRate}
+                />
+              </div>
+            </FormSection>
+          )}
         </div>
+      </div>
+
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 transition-all duration-300 w-full">
+        <button
+          type="submit"
+          disabled={loading}
+          className={cn(
+            "cursor-pointer w-full py-3 px-6 rounded-lg font-bold text-xs md:text-sm transition-all duration-200",
+            loading
+              ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+              : "bg-valora-primary text-white hover:bg-valora-secondary shadow-lg hover:shadow-xl active:scale-95"
+          )}
+        >
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg
+                className="animate-spin h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              Calculando...
+            </span>
+          ) : (
+            submitLabel
+          )}
+        </button>
+      </div>
     </form>
+  );
+};
+
+interface SensitivityRowProps {
+  label: string;
+  name: keyof FormData;
+  suffix: React.ReactNode;
+  value: string;
+  disabled?: boolean;
+  onChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => void;
+  onSearchRate: (name: keyof FormData) => void;
+}
+
+const SensitivityRow: React.FC<SensitivityRowProps> = ({
+  label,
+  name,
+  suffix,
+  value,
+  disabled,
+  onChange,
+  onSearchRate,
+}) => (
+  <div className="relative w-full border border-transparent">
+    <FormField
+      label={label}
+      name={name}
+      type="number"
+      step="any"
+      value={value}
+      onChange={onChange}
+      suffix={suffix}
+      layout="horizontal"
+      showClearButton={false}
+      inputClassName="col-span-9"
+      disabled={disabled}
+    />
+    <div className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end">
+      <button
+        type="button"
+        onClick={() => onSearchRate(name)}
+        disabled={disabled}
+        className={cn(
+          "text-[10px] w-full h-10 py-0.5 px-1 rounded-sm text-wrap font-bold cursor-pointer flex items-center justify-center text-center leading-tight tracking-wider",
+          "text-valora-primary bg-white border border-valora-primary focus:outline-none",
+          "disabled:cursor-not-allowed disabled:opacity-50"
+        )}
+      >
+        Obtén tu Tasa
+      </button>
+    </div>
+  </div>
 );

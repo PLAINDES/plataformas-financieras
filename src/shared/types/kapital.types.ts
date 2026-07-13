@@ -22,7 +22,7 @@ export interface KapitalFormData {
     effective_tax_rate: string;
     beta_levered: string;
     beta_unlevered: string;
-    beta_unlevered_custom?: string;
+    beta_subsector?: string;
 }
 
 export interface KapitalMarketResults {
@@ -32,6 +32,9 @@ export interface KapitalMarketResults {
     koa: number | string;
     "kd(1-t)": string | number;
     d_empresa: string | number;
+    inputs?: any;
+    industria?: string;
+    subsector?: string;
 }
 
 export interface KapitalResults {
@@ -41,22 +44,33 @@ export interface KapitalResults {
     koa: number | string;
     boa?: number;
     boa_custom?: number;
+    boa_sector?: number;
+    boa_subsector?: number;
     emergent: KapitalMarketResults;
     developed: KapitalMarketResults;
     empresa_dolares: KapitalMarketResults;
     empresa_soles: KapitalMarketResults;
     d_empresa: string | number;
+    industria?: string;
+    subsector?: string;
+    pais?: string;
+    inputs?: any;
 }
 
 export interface SensibilizacionEntry {
     created_at?: string;
     boa?: number;
+    boa_sector?: number;
+    boa_subsector?: number;
+    beta_subsector?: number;
     mercado_desarrollado?: KapitalMarketResults;
     mercado_emergente?: KapitalMarketResults;
     empresa_dolares?: KapitalMarketResults;
     empresa_soles?: KapitalMarketResults;
     subsector?: string;
+    industria?: string;
     tickers?: string;
+    inputs?: any;
 }
 
 export interface MethodologyItem {

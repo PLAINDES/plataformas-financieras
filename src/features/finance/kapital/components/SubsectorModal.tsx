@@ -39,7 +39,7 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
     onOpenDetail,
     onToggleTicker,
     onCalculateDetail,
-    onSetSubsectorModalMode,
+    onSetSubsectorModalMode: _onSetSubsectorModalMode,
     subsectorTickersRef,
     subsectorSensibilizacionTickersRef,
 }) => {
@@ -177,16 +177,8 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                     </button>
                 </div>
                 <div className="flex border-b border-gray-200 bg-white">
-                    {(!isWaccCalculated || formDataSubsector) && (
-                        <button
-                            type="button"
-                            onClick={() => onSetSubsectorModalMode("principal")}
-                            className={`flex-1 px-3 py-2 text-xs font-semibold tracking-tight text-center transition-colors cursor-pointer ${
-                                subsectorModalMode === "principal"
-                                    ? "text-valora-primary border-b-2 border-valora-primary"
-                                    : "text-gray-500 hover:text-gray-700"
-                            }`}
-                        >
+                    {subsectorModalMode === "principal" ? (
+                        <div className="flex-1 px-3 py-2 text-xs font-semibold tracking-tight text-center text-valora-primary border-b-2 border-valora-primary bg-valora-primary/5">
                             <div className="flex items-center justify-center gap-1.5">
                                 {isWaccCalculated && formDataSubsector && (
                                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -195,32 +187,25 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                 )}
                                 Principal
                             </div>
-                        </button>
-                    )}
-                    {isWaccCalculated && (
-                        <button
-                            type="button"
-                            onClick={() => onSetSubsectorModalMode("sensibilizacion")}
-                            className={`flex-1 px-3 py-2 text-xs font-semibold tracking-tight text-center transition-colors cursor-pointer ${
-                                subsectorModalMode === "sensibilizacion"
-                                    ? "text-valora-primary border-b-2 border-valora-primary"
-                                    : "text-gray-500 hover:text-gray-700"
-                            }`}
-                        >
+                        </div>
+                    ) : (
+                        <div className="flex-1 px-3 py-2 text-xs font-semibold tracking-tight text-center text-valora-primary border-b-2 border-valora-primary bg-valora-primary/5">
                             Sensibilización
-                        </button>
+                        </div>
                     )}
                 </div>
             </div>
 
-            {isPrincipalLocked ? (
+            {false && isPrincipalLocked ? (
                 /* Principal locked after WACC calculated */
                 (() => {
                     const sub = filteredSubsectores.find(
                         (s: any) => s.subsector === formDataSubsector
                     );
                     const savedTickers = subsectorTickersRef.current[formDataSubsector || ""] || [];
-                    const boas: number[] = savedTickers
+                    const allTickersConBoa = Array.isArray(sub?.empresas) ? sub.empresas : [];
+                    const tickersParaBoa = savedTickers.length > 0 ? savedTickers : allTickersConBoa;
+                    const boas: number[] = tickersParaBoa
                         .map((emp: string) => Number(sub?.empresas_boa?.[emp]))
                         .filter((v: number) => !isNaN(v));
                     const avgBoa = boas.length > 0
@@ -239,9 +224,9 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                     <h3 className="text-sm font-bold text-gray-900 mb-1">
                                         {formDataSubsector}
                                     </h3>
-                                    {savedTickers.length > 0 && (
+                                    {tickersParaBoa.length > 0 && (
                                         <div className="flex items-center justify-center gap-3 mt-2 text-xs text-gray-600">
-                                            <span>{savedTickers.length} empresa{savedTickers.length !== 1 ? "s" : ""}</span>
+                                            <span>{tickersParaBoa.length} empresa{tickersParaBoa.length !== 1 ? "s" : ""}</span>
                                             {avgBoa && (
                                                 <>
                                                     <span className="text-gray-300">|</span>
@@ -273,11 +258,9 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                             </div>
                         ) : (
                             filteredSubsectores.map((sub: any, idx: number) => {
-                                const isPrincipal = subsectorModalMode === "sensibilizacion" && sub.subsector === formDataSubsector;
-                                const allTickersConBoa = Array.isArray(sub.empresas)
-                                    ? sub.empresas.filter((emp: string) => sub.empresas_boa?.[emp] !== undefined)
-                                    : [];
                                 const isSens = subsectorModalMode === "sensibilizacion";
+                                const isPrincipal = isSens && sub.subsector === formDataSubsector;
+                                const allTickersConBoa = Array.isArray(sub.empresas) ? sub.empresas : [];
                                 const selectedRef = isSens
                                     ? (formDataSubsectorSensibilizacion || "")
                                     : (selectedSubsector || formDataSubsector || "");
@@ -286,9 +269,9 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                     ? subsectorSensibilizacionTickersRef.current[sub.subsector]
                                     : subsectorTickersRef.current[sub.subsector];
                                 const tickersParaBoa = savedTickers || allTickersConBoa;
-                                const boas: number[] = tickersParaBoa.map(
-                                    (emp: string) => Number(sub.empresas_boa[emp])
-                                );
+                                const boas: number[] = tickersParaBoa
+                                    .map((emp: string) => Number(sub.empresas_boa?.[emp]))
+                                    .filter((v: number) => !isNaN(v));
                                 const avgBoa = boas.length > 0
                                     ? boas.reduce((sum, v) => sum + v, 0) / boas.length
                                     : null;

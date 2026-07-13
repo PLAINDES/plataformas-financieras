@@ -153,9 +153,10 @@ export const computeResultsFromCalculationData = (
 
   const showCompanyCard = hasCompanyInputData(source);
 
-  const betaDesapalancadoCustom = toOptionalNumber(
-    (latestInput as Record<string, unknown>)?.beta_desapalancado_custom
-  );
+  const betaSubsector =
+    toOptionalNumber((latestInput as Record<string, unknown>)?.beta_subsector) ??
+    toOptionalNumber((latestInput as Record<string, unknown>)?.beta_subsector_custom) ??
+    toOptionalNumber((latestInput as Record<string, unknown>)?.beta_unlevered_custom);
 
   // Choose which data to show in the top-level results (cppc, kd, ke, koa)
   const primary = showCompanyCard ? empresa_dolares : emergent;
@@ -167,12 +168,18 @@ export const computeResultsFromCalculationData = (
       ke: primary.ke,
       koa: primary.koa,
       boa: toOptionalNumber(latestResult?.boa),
-      boa_custom: betaDesapalancadoCustom,
+      boa_custom: betaSubsector,
+      boa_sector: toOptionalNumber(latestResult?.boa_sector),
+      boa_subsector: toOptionalNumber(latestResult?.boa_subsector),
       emergent,
       developed,
       empresa_dolares,
       empresa_soles,
       d_empresa: toRate(latestResult?.d_empresa),
+      industria: latestResult?.industria as string | undefined,
+      subsector: latestResult?.subsector as string | undefined,
+      pais: (latestResult?.pais || latestInput?.pais) as string | undefined,
+      inputs: latestResult?.inputs,
     },
     showCompanyCard,
   };
@@ -185,20 +192,32 @@ export const extractSensibilizaciones = (
   const arr = Array.isArray(root.sensibilizacion) ? root.sensibilizacion : [];
   return arr
     .filter((e): e is Record<string, unknown> => !!e && typeof e === "object")
-    .map((entry) => ({
-      created_at: entry.created_at as string | undefined,
-      boa: toOptionalNumber(entry.boa),
-      mercado_desarrollado: toMarketResults(
-        pickBlock(entry, ["mercado_desarrollado"])
-      ),
-      mercado_emergente: toMarketResults(
-        pickBlock(entry, ["mercado_emergente"])
-      ),
-      empresa_dolares: toMarketResults(pickBlock(entry, ["empresa_dolares"])),
-      empresa_soles: toMarketResults(pickBlock(entry, ["empresa_soles"])),
-      subsector: (entry.subsector as string) || undefined,
-      tickers: (entry.tickers_subsector_sensibilizacion as string) || undefined,
-    }));
+    .map((entry) => {
+      const inputs = entry.inputs as Record<string, unknown> | undefined;
+      const betaSubsectorInput =
+        toOptionalNumber(inputs?.beta_subsector) ??
+        toOptionalNumber(inputs?.beta_subsector_custom) ??
+        toOptionalNumber(inputs?.beta_unlevered_custom);
+      return {
+        created_at: entry.created_at as string | undefined,
+        boa: toOptionalNumber(entry.boa),
+        boa_sector: toOptionalNumber(entry.boa_sector),
+        boa_subsector: toOptionalNumber(entry.boa_subsector),
+        beta_subsector: betaSubsectorInput,
+        mercado_desarrollado: toMarketResults(
+          pickBlock(entry, ["mercado_desarrollado"])
+        ),
+        mercado_emergente: toMarketResults(
+          pickBlock(entry, ["mercado_emergente"])
+        ),
+        empresa_dolares: toMarketResults(pickBlock(entry, ["empresa_dolares"])),
+        empresa_soles: toMarketResults(pickBlock(entry, ["empresa_soles"])),
+        subsector: (entry.subsector as string) || undefined,
+        industria: (entry.industria as string) || undefined,
+        tickers: (entry.tickers_subsector_sensibilizacion as string) || undefined,
+        inputs: entry.inputs,
+      };
+    });
 };
 
 export const buildCalculationDataPayload = () => {
@@ -240,12 +259,13 @@ export const enrichCalculationInputPayload = (formData: KapitalFormData) => {
   const effectiveTaxRate = toOptionalNumber(formData.effective_tax_rate);
   const betaLevered = toOptionalNumber(formData.beta_levered);
   const betaUnlevered = toOptionalNumber(formData.beta_unlevered);
-  const betaUnleveredCustom = toOptionalNumber(formData.beta_unlevered_custom);
+  const betaSubsector = toOptionalNumber(formData.beta_subsector);
 
   if (tax !== undefined) payload.tasa_impositiva = tax;
   if (devaluation !== undefined) payload.devaluacion = devaluation;
   if (betaUnlevered !== undefined) payload.beta_desapalancado = betaUnlevered;
-  if (betaUnleveredCustom !== undefined) payload.beta_desapalancado_custom = betaUnleveredCustom;
+  if (betaSubsector !== undefined) payload.beta_subsector = betaSubsector;
+
   if (
     formData.typeId ||
     kd !== undefined ||

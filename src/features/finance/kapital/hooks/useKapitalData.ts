@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MainService } from "@/shared/services/main.service";
 
-export function useKapitalData(sector: string) {
+export function useKapitalData(
+    sector: string,
+    subsectorTickersRef: React.RefObject<Record<string, string[]>>,
+    subsectorSensibilizacionTickersRef: React.RefObject<Record<string, string[]>>
+) {
     const [subsectoresData, setSubsectoresData] = useState<any[]>([]);
     const [subsectoresFecha, setSubsectoresFecha] = useState<string | null>(null);
-
-    const subsectorTickersRef = useRef<Record<string, string[]>>({});
-    const subsectorSensibilizacionTickersRef = useRef<Record<string, string[]>>({});
 
     // Fetch subsectores
     useEffect(() => {
@@ -38,7 +39,7 @@ export function useKapitalData(sector: string) {
         value: string,
         subsectorValue: string | undefined
     ) => {
-        if (value && subsectorField) {
+        if (value && subsectorField && subsectorTickersRef.current && subsectorSensibilizacionTickersRef.current) {
             try {
                 const parsed = JSON.parse(value);
                 if (Array.isArray(parsed)) {
@@ -56,8 +57,6 @@ export function useKapitalData(sector: string) {
         subsectoresData,
         subsectoresFecha,
         filteredSubsectores,
-        subsectorTickersRef,
-        subsectorSensibilizacionTickersRef,
         syncTickersFromUrl,
     };
 }
