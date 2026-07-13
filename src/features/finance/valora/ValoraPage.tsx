@@ -1,32 +1,41 @@
 import { useEffect, useRef, useState } from "react";
 import { FinancePageTemplate } from "../components/MainPage";
 import { UploadTemplateModal } from "./components/UploadTemplateModal";
-import { ValoraResults } from "./components/ValoraResults";
+import {
+  ValoraResults,
+  type ValoraResultsSectionKey,
+} from "./components/ValoraResults";
 import { LoadingOverlay } from "@/shared/components/common/LoadingOverlay";
 import { ToastStack } from "@/shared/components/common/ToastStack";
-import type { FinancialTable, FormData } from "@/shared/types/ValoraTypes";
+import type { FinancialTable } from "@/shared/types/ValoraTypes";
 import type { ToastType } from "@/shared/types/toast.types";
 import { MainPageFooter } from "../components/MainPageFooter";
 import { parseFinancialTablesFromFile } from "./types/valoraFileParsing";
 import { NavBar } from "./components/Navbar";
 import { NavigationTabs } from "./components/ValoraNavigationTabs";
 import { ValoraFormPanel } from "./components/ValoraFormPanel";
-import { ReportSidebar } from "../components/ReportSidebar";
+import { BetitoRateModal, type RateField } from "./components/BetitoRateModal";
+import { useValoraForm } from "./hooks/useValoraForm";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import {
+  INSTRUMENTS,
+  BONOS,
+  COUNTRIES,
+  COUNTRY_LOCAL_CURRENCIES,
+  INDUSTRY_TRANSLATIONS,
+  BONOS_TRANSLATIONS,
+  COUNTRIES_TRANSLATIONS,
+} from "@/shared/constants/kapital";
+
 const ValoraPage: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({
-    date: "",
-    country: "",
-    currency: "",
-    sector: "",
-    fileUsername: "",
-    action: "",
-    longgrowth: "",
-    capitalcost: "",
-    revenuegrowth: "",
-    beta_unlevered_industry: "",
-  });
+  const {
+    formData,
+    setFormData,
+    handleInputChange,
+    dynamicSectors,
+    dynamicDates,
+  } = useValoraForm();
   const [fileUploaded, setFileUploaded] = useState(false);
   const [isDesktopFormOpen, setIsDesktopFormOpen] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -38,59 +47,29 @@ const ValoraPage: React.FC = () => {
   const toastTimeoutsRef = useRef<Map<string, number>>(new Map());
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
   const [uploadResetKey, setUploadResetKey] = useState(0);
-  const [resultsSection, setResultsSection] = useState<
-    "estados" | "resultados" | "analisis" | "metodologia"
-  >("resultados");
+  const [resultsSection, setResultsSection] = useState<ValoraResultsSectionKey>(
+    "resultados"
+  );
   const [_isResultsSidebarOpen, setIsResultsSidebarOpen] = useState(false);
-  const [isReportSidebarOpen, setIsReportSidebarOpen] = useState(false);
-  const [isReportViewerOpen, setIsReportViewerOpen] = useState(false);
-  const [selectedReportProductId, setSelectedReportProductId] =
-    useState("datos");
   const [balanceTable, setBalanceTable] = useState<FinancialTable | null>(null);
   const [resultsTable, setResultsTable] = useState<FinancialTable | null>(null);
+  const [betitoOpen, setBetitoOpen] = useState(false);
+  const [betitoField, setBetitoField] = useState<RateField | null>(null);
+  const [hasCalculated, setHasCalculated] = useState(false);
+
+  const handleResultsSectionChange = (nextSection: ValoraResultsSectionKey) => {
+    setResultsSection(nextSection);
+  };
+
   const mainContent = showResults ? (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
-      {isReportViewerOpen ? (
-        <section className="flex justify-center w-full px-4 pb-10 sm:px-8 lg:pt-6">
-          <div className="w-full max-w-7xl rounded-lg border border-gray-200 bg-white shadow">
-            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-              <h4 className="text-sm font-semibold text-gray-800">
-                REPORTE DE DATOS
-              </h4>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleReportViewerClose}
-                  className="rounded border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600"
-                >
-                  Salir
-                </button>
-                <a
-                  href="/files/Reporte-Detallado.pdf"
-                  download
-                  className="rounded bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
-                >
-                  Descargar
-                </a>
-              </div>
-            </div>
-            <div className="h-[70vh] w-full">
-              <iframe
-                title="Reporte de datos"
-                src="/files/Reporte-Detallado.pdf"
-                className="h-full w-full"
-              />
-            </div>
-          </div>
-        </section>
-      ) : (
-        <ValoraResults
-          section={resultsSection}
-          balanceTable={balanceTable}
-          resultsTable={resultsTable}
-          formData={formData}
-        />
-      )}
+      <ValoraResults
+        section={resultsSection}
+        balanceTable={balanceTable}
+        resultsTable={resultsTable}
+        formData={formData}
+        onSectionChange={handleResultsSectionChange}
+      />
       <MainPageFooter brandName={"Valora"} brandHref={"/valora"} />
     </div>
   ) : (
@@ -103,11 +82,10 @@ const ValoraPage: React.FC = () => {
     />
   );
 
-  // Sample data
-  const dates = ["2024-Q1", "2024-Q2", "2024-Q3", "2024-Q4"];
-  const countries = ["Perú", "Estados Unidos", "Chile", "Colombia", "México"];
-  const currencies = ["USD", "PEN", "EUR", "CLP", "COP", "MXN"];
-  const sectors = [
+  // Sample data with dynamic fallback
+  const fallbackDates = ["2024-Q1", "2024-Q2", "2024-Q3", "2024-Q4"];
+  const fallbackCountries = COUNTRIES;
+  const fallbackSectors = [
     "Tecnología",
     "Finanzas",
     "Manufactura",
@@ -116,19 +94,12 @@ const ValoraPage: React.FC = () => {
     "Salud",
     "Energía",
   ];
-  const reportProducts = [
-    {
-      id: "datos",
-      title: "REPORTE DE DATOS",
-      iconClassName: "fa-solid fa-laptop text-2xl text-gray-400",
-    },
-    {
-      id: "especializado",
-      title: "REPORTE ESPECIALIZADO",
-      iconClassName: "fa-solid fa-laptop text-2xl text-gray-400",
-    },
-  ];
+  const currencies = ["USD", "PEN", "CLP", "BRL", "MXN", "COP", "ARS"];
 
+  const dates = dynamicDates.length > 0 ? dynamicDates : fallbackDates;
+  const countries =
+    dynamicSectors.length > 0 ? fallbackCountries : fallbackCountries;
+  const sectors = dynamicSectors.length > 0 ? dynamicSectors : fallbackSectors;
   useEffect(
     () => () => {
       toastTimeoutsRef.current.forEach((timeoutId) =>
@@ -148,35 +119,6 @@ const ValoraPage: React.FC = () => {
     [uploadedFileUrl]
   );
 
-  const handleResultsSectionChange = (
-    nextSection: "estados" | "resultados" | "analisis" | "metodologia"
-  ) => {
-    setResultsSection(nextSection);
-    if (nextSection === "metodologia" && isDesktopFormOpen) {
-      setIsDesktopFormOpen(false);
-    }
-  };
-
-  const handleReportSidebarOpen = () => {
-    setIsReportSidebarOpen(true);
-    if (isDesktopFormOpen) {
-      setIsDesktopFormOpen(false);
-    }
-  };
-
-  const handleReportSidebarClose = () => {
-    setIsReportSidebarOpen(false);
-  };
-
-  const handleReportViewerOpen = () => {
-    setIsReportViewerOpen(true);
-    setIsReportSidebarOpen(false);
-  };
-
-  function handleReportViewerClose() {
-    setIsReportViewerOpen(false);
-  }
-
   useEffect(() => {
     if (!showResults) {
       setIsResultsSidebarOpen(false);
@@ -187,37 +129,38 @@ const ValoraPage: React.FC = () => {
     setIsResultsSidebarOpen((prev) => !prev);
   };*/
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleOpenBetito = (name: RateField) => {
+    setBetitoField(name);
+    setBetitoOpen(true);
+  };
+
+  const handleInsertBetitoRate = (value: string) => {
+    if (betitoField) {
+      setFormData((prev) => ({ ...prev, [betitoField]: value }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const missingFields: string[] = [];
 
-    if (!formData.date) {
-      missingFields.push("Fecha");
-    }
-    if (!formData.country) {
-      missingFields.push("Pais");
-    }
-    if (!formData.currency) {
-      missingFields.push("Moneda");
-    }
-    if (!formData.sector) {
-      missingFields.push("Sector");
-    }
-    if (!fileUploaded) {
-      missingFields.push("Plantilla EEFF");
-    }
+    if (!formData.date) missingFields.push("Fecha");
+    if (!formData.country) missingFields.push("País");
+    if (!formData.currency) missingFields.push("Moneda");
+    if (!formData.sector) missingFields.push("Sector");
+    if (!fileUploaded) missingFields.push("Plantilla EEFF");
 
     if (missingFields.length > 0) {
       addToast("warn", `Completa los campos: ${missingFields.join(", ")}`);
       return;
     }
+
+    const isSensitivityRun =
+      hasCalculated &&
+      (formData.revenue_forecast_rate ||
+        formData.fdc_forecast_rate ||
+        formData.perpetual_growth_rate ||
+        formData.beta_unlevered_sensitivity);
 
     setShowResults(false);
     setIsLoading(true);
@@ -227,7 +170,15 @@ const ValoraPage: React.FC = () => {
       setShowResults(true);
       setIsResultsSidebarOpen(true);
       setIsDesktopFormOpen(false);
-      addToast("success", "Resultados generados correctamente.");
+
+      if (isSensitivityRun) {
+        setResultsSection("sensibilidad");
+        addToast("success", "Sensibilización calculada correctamente.");
+      } else {
+        setHasCalculated(true);
+        setResultsSection("resultados");
+        addToast("success", "Resultados generados correctamente.");
+      }
     }, 1000);
   };
 
@@ -314,12 +265,7 @@ const ValoraPage: React.FC = () => {
     }
   };
 
-  const getSelectedView = ():
-    | "estados"
-    | "resultados"
-    | "analisis"
-    | "metodologia"
-    | "" => {
+  const getSelectedView = (): ValoraResultsSectionKey | "" => {
     if (!showResults) return "";
     return resultsSection;
   };
@@ -344,13 +290,11 @@ const ValoraPage: React.FC = () => {
         projectsHref="/usuario/proyectos"
         selected={getSelectedView()}
         onNavigate={handleResultsSectionChange}
-        onOpenReport={handleReportSidebarOpen}
       />
 
       <NavigationTabs
         selected={getSelectedView()}
         onNavigate={handleResultsSectionChange}
-        onOpenReport={handleReportSidebarOpen}
         hasResults={showResults}
       />
       <main
@@ -370,11 +314,22 @@ const ValoraPage: React.FC = () => {
             sectors={sectors}
             fileUploaded={fileUploaded}
             uploadedFileUrl={uploadedFileUrl}
+            instruments={INSTRUMENTS}
+            bonos={BONOS}
+            countryLocalCurrencies={COUNTRY_LOCAL_CURRENCIES}
+            industryTranslations={INDUSTRY_TRANSLATIONS}
+            bonosTranslations={BONOS_TRANSLATIONS}
+            countriesTranslations={COUNTRIES_TRANSLATIONS}
             onClearUploadedFile={handleClearUploadedFile}
             onInputChange={handleInputChange}
             onSubmit={handleSubmit}
             onDownloadTemplate={downloadTemplate}
             onUploadTemplate={openUploadTemplateModal}
+            onSearchSectorBeta={() => addToast("info", "Buscando beta por subsector...")}
+            isSearchingBeta={false}
+            onSearchRate={(name) => handleOpenBetito(name as RateField)}
+            loading={isLoading}
+            hasCalculated={hasCalculated}
           />
         </div>
       </aside>
@@ -387,13 +342,15 @@ const ValoraPage: React.FC = () => {
         onUploadTemplate={handleUploadTemplate}
         onToast={addToast}
       />
-      <ReportSidebar
-        isOpen={isReportSidebarOpen}
-        onClose={handleReportSidebarClose}
-        reportProducts={reportProducts}
-        selectedReportProductId={selectedReportProductId}
-        onSelectReportProduct={setSelectedReportProductId}
-        onOpenReportViewer={handleReportViewerOpen}
+      <BetitoRateModal
+        isOpen={betitoOpen}
+        field={betitoField}
+        currentValue={betitoField ? formData[betitoField] : ""}
+        onClose={() => {
+          setBetitoOpen(false);
+          setBetitoField(null);
+        }}
+        onInsert={handleInsertBetitoRate}
       />
       <ToastStack toasts={toasts} onDismiss={removeToast} />
       {isLoading && <LoadingOverlay />}

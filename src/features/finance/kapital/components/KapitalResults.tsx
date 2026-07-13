@@ -52,8 +52,8 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
 
     return (
         <div className="flex-12 flex flex-row w-full h-full p-6 lg:p-8 bg-[#f3f6f9]">
-            <div className="flex-1 w-full mx-2">
-                <div className="mx-auto flex w-full max-w-300 flex-col gap-6">
+            <div className="flex-1 w-full">
+                <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6">
                     {section === "result" && (
                         <KapitalResultadosSection
                             results={results}

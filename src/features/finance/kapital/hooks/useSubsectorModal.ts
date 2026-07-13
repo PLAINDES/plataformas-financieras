@@ -10,6 +10,7 @@ interface UseSubsectorModalProps {
 }
 
 export function useSubsectorModal({
+    formData,
     isWaccCalculated,
     handleInputChange,
     subsectorTickersRef,
@@ -49,9 +50,9 @@ export function useSubsectorModal({
     const handleCalculateDetail = useCallback(() => {
         if (!subsectorDetail) return;
         const activeTickers = detailTickers.filter((t) => !inactiveTickers.includes(t));
-        const boas: number[] = activeTickers.map(
-            (emp) => Number(subsectorDetail.empresas_boa[emp])
-        );
+        const boas: number[] = activeTickers
+            .map((emp) => Number(subsectorDetail.empresas_boa?.[emp]))
+            .filter((v) => !isNaN(v));
         if (boas.length === 0) return;
         const avgBoa = boas.reduce((sum, v) => sum + v, 0) / boas.length;
         const betaStr = avgBoa.toFixed(2);
@@ -62,24 +63,22 @@ export function useSubsectorModal({
         const ref = isSens ? subsectorSensibilizacionTickersRef : subsectorTickersRef;
 
         ref.current[subsectorDetail.subsector] = activeTickers;
-        if (!isSens) {
-            setSelectedSubsector(subsectorDetail.subsector || null);
-        }
+
+        // Siempre actualizamos beta_unlevered_industry y beta_subsector
+        // para que se vea reflejado en el Section 1
+        handleInputChange({
+            target: { name: "beta_subsector", value: betaStr },
+        } as any);
+        handleInputChange({
+            target: { name: "beta_unlevered_industry", value: betaStr },
+        } as any);
 
         if (isSens) {
             handleInputChange({
                 target: { name: "beta_unlevered", value: betaStr },
             } as any);
-        } else {
-            handleInputChange({
-                target: { name: "beta_unlevered_custom", value: betaStr },
-            } as any);
-            if (!isWaccCalculated) {
-                handleInputChange({
-                    target: { name: "beta_unlevered_industry", value: betaStr },
-                } as any);
-            }
         }
+
         handleInputChange({
             target: { name: subsectorKey, value: subsectorDetail.subsector || "" },
         } as any);
@@ -93,17 +92,20 @@ export function useSubsectorModal({
     const detailBoa = useMemo(() => {
         const activeTickers = detailTickers.filter((t) => !inactiveTickers.includes(t));
         if (activeTickers.length === 0 || !subsectorDetail) return null;
-        const boas: number[] = activeTickers.map(
-            (emp) => Number(subsectorDetail.empresas_boa[emp])
-        );
+        const boas: number[] = activeTickers
+            .map((emp) => Number(subsectorDetail.empresas_boa?.[emp]))
+            .filter((v) => !isNaN(v));
+        if (boas.length === 0) return null;
         return boas.reduce((sum, v) => sum + v, 0) / boas.length;
     }, [detailTickers, inactiveTickers, subsectorDetail]);
 
     const openSubsectorModal = () => {
         setSubsectorModalMode(
-            isWaccCalculated ? "sensibilizacion" : "principal"
+            (isWaccCalculated && formData.subsector) ? "sensibilizacion" : "principal"
         );
         setSubsectorModalOpen(true);
+        setSelectedSubsector(null);
+        setSubsectorDetail(null);
     };
 
     return {
