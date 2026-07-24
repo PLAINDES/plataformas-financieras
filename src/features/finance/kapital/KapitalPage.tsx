@@ -88,7 +88,6 @@ const KapitalPage: React.FC = () => {
     });
 
     const modal = useSubsectorModal({
-        formData: form.formData,
         isWaccCalculated: calc.isWaccCalculated,
         handleInputChange: form.handleInputChange,
         subsectorTickersRef: subsectorTickersRef,

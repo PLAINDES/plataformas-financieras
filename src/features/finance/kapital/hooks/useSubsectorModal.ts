@@ -1,8 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
-import type { KapitalFormData } from "@/shared/types";
 
 interface UseSubsectorModalProps {
-    formData: KapitalFormData;
     isWaccCalculated: boolean;
     handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
     subsectorTickersRef: React.MutableRefObject<Record<string, string[]>>;
@@ -10,7 +8,6 @@ interface UseSubsectorModalProps {
 }
 
 export function useSubsectorModal({
-    formData,
     isWaccCalculated,
     handleInputChange,
     subsectorTickersRef,
@@ -100,8 +97,10 @@ export function useSubsectorModal({
     }, [detailTickers, inactiveTickers, subsectorDetail]);
 
     const openSubsectorModal = () => {
+        // Si ya se calculó el WACC, cualquier subsector seleccionado posteriormente
+        // se destina exclusivamente a la sensibilización, no a resultados generales.
         setSubsectorModalMode(
-            (isWaccCalculated && formData.subsector) ? "sensibilizacion" : "principal"
+            isWaccCalculated ? "sensibilizacion" : "principal"
         );
         setSubsectorModalOpen(true);
         setSelectedSubsector(null);
