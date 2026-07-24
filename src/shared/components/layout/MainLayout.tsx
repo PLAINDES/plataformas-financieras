@@ -62,7 +62,7 @@ export function MainLayout({
 
   return (
     <div
-      className="flex flex-col min-h-screen bg-white dark:bg-slate-900"
+      className="relative flex flex-col min-h-screen bg-white dark:bg-slate-900"
       id="kt_app_root"
     >
       <Header

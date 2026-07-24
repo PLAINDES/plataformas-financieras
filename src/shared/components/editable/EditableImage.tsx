@@ -1,9 +1,10 @@
 // src/components/editable/EditableImage.tsx
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { EditableContent } from "../../types/editable.types";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
+import { api } from "@/shared/services/api";
 import {
     Loader2,
     UploadCloud,
@@ -33,8 +34,31 @@ export function EditableImage({
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadMethod, setUploadMethod] = useState<"file" | "url">("file");
+    const [hasError, setHasError] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const { isAdmin } = useAuthContext();
+    const { isAdmin, getToken } = useAuthContext();
+
+    const isEmpty = !content.value || content.value.trim() === "";
+    const showPlaceholder = isEmpty || hasError;
+
+    useEffect(() => {
+        setHasError(false);
+        setImageUrl(content.value);
+        setPreviewUrl(content.value);
+    }, [content.value]);
+
+    const isPlaceholderUrl = (url: string) => {
+        return !url || url.includes("via.placeholder.com") || url.includes("placeholder.com");
+    };
+
+    const verifyImageUrl = (url: string): Promise<boolean> => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(false);
+            img.src = url;
+        });
+    };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -51,44 +75,42 @@ export function EditableImage({
         }
 
         setIsUploading(true);
+        const objectUrl = URL.createObjectURL(file);
+        setPreviewUrl(objectUrl);
 
         try {
-            const objectUrl = URL.createObjectURL(file);
-            setPreviewUrl(objectUrl);
-
             const formData = new FormData();
             formData.append("file", file);
-            if (content.value) {
+            if (!isPlaceholderUrl(content.value)) {
                 formData.append("old_url", content.value);
             }
 
-            const resolvedEndpoint = import.meta.env.DEV
-                ? uploadEndpoint
-                : `${(import.meta.env.VITE_API_URL || "").replace(/\/$/, "")}${uploadEndpoint.startsWith("/") ? uploadEndpoint : `/${uploadEndpoint}`}`;
+            const data = await api.postForm<{ success: boolean; media?: { url: string } }>(
+                uploadEndpoint,
+                formData,
+                { token: getToken() || undefined }
+            );
 
-            const response = await fetch(resolvedEndpoint, {
-                method: "POST",
-                body: formData,
-                credentials: "include",
-            });
+            const uploadedUrl = data?.media?.url;
 
-            if (!response.ok) throw new Error("Error al subir la imagen");
-
-            const data = await response.json();
-            const uploadedUrl = data.media?.url || data.url || data.imageUrl || data.path;
-
-            if (!uploadedUrl)
+            if (!uploadedUrl) {
                 throw new Error("El servidor no devolvió una URL válida");
+            }
+
+            const isReachable = await verifyImageUrl(uploadedUrl);
+            if (!isReachable) {
+                throw new Error("La imagen se subió pero no se puede visualizar. Verifica la configuración de almacenamiento (S3) o la URL devuelta.");
+            }
 
             setImageUrl(uploadedUrl);
             setPreviewUrl(uploadedUrl);
-            URL.revokeObjectURL(objectUrl);
         } catch (error) {
             console.error("Error uploading image:", error);
-            alert("Error al subir la imagen. Intenta nuevamente.");
+            alert(error instanceof Error ? error.message : "Error al subir la imagen. Intenta nuevamente.");
             setPreviewUrl(content.value);
             setImageUrl(content.value);
         } finally {
+            URL.revokeObjectURL(objectUrl);
             setIsUploading(false);
         }
     };
@@ -130,24 +152,42 @@ export function EditableImage({
 
     return (
         <>
-            {/* IMAGEN BASE: Siempre renderizada, Tailwind maneja los hovers */}
+            {/* IMAGEN BASE / PLACEHOLDER: Siempre editable para admin */}
             <div
                 className={`relative inline-block ${isAdmin ? "cursor-pointer group" : ""}`}
                 onClick={() => isAdmin && setIsEditing(true)}
             >
-                <img
-                    src={content.value}
-                    alt={alt}
-                    className={`
-            ${className} 
-            ${isAdmin ? "transition-all duration-200 group-hover:ring-4 group-hover:ring-blue-500/50 group-hover:brightness-90" : ""}
-          `}
-                    onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src =
-                            "https://via.placeholder.com/400x300?text=Error+de+Imagen";
-                    }}
-                />
+                {showPlaceholder ? (
+                    <div
+                        className={`
+              ${className}
+              flex items-center justify-center bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg
+              ${isAdmin ? "hover:bg-slate-200 hover:border-blue-400 transition-all duration-200" : ""}
+            `}
+                    >
+                        <div className="flex flex-col items-center gap-1 px-2 text-center">
+                            <ImageIcon className={`w-5 h-5 ${isAdmin ? "text-blue-500" : "text-slate-400"}`} />
+                            {isAdmin && (
+                                <span className="text-[10px] font-semibold text-slate-500 leading-tight">
+                                    {isEmpty ? "Agregar imagen" : "Imagen no disponible"}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <img
+                        src={content.value}
+                        alt={alt}
+                        className={`
+              ${className}
+              ${isAdmin ? "transition-all duration-200 group-hover:ring-4 group-hover:ring-blue-500/50 group-hover:brightness-90" : ""}
+            `}
+                        onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            setHasError(true);
+                        }}
+                    />
+                )}
                 {isAdmin && (
                     <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded shadow-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center gap-1">
                         <ImageIcon className="w-3 h-3" /> Editar
@@ -189,16 +229,23 @@ export function EditableImage({
                                             </span>
                                         </div>
                                     ) : (
-                                        <img
-                                            src={previewUrl}
-                                            alt="Preview"
-                                            className="max-w-full max-h-70 rounded-lg object-contain shadow-sm"
-                                            onError={(e) => {
-                                                e.currentTarget.onerror = null;
-                                                e.currentTarget.src =
-                                                    "https://via.placeholder.com/400x300?text=Vista+Previa+No+Disponible";
-                                            }}
-                                        />
+                                        <>
+                                            <img
+                                                src={previewUrl}
+                                                alt="Preview"
+                                                className="max-w-full max-h-70 rounded-lg object-contain shadow-sm"
+                                                onError={(e) => {
+                                                    e.currentTarget.onerror = null;
+                                                    e.currentTarget.style.display = "none";
+                                                    const placeholder = e.currentTarget.nextElementSibling as HTMLElement | null;
+                                                    if (placeholder) placeholder.style.display = "flex";
+                                                }}
+                                            />
+                                            <div className="hidden flex-col items-center justify-center gap-2 text-slate-400">
+                                                <ImageIcon className="w-10 h-10" />
+                                                <span className="text-sm font-medium">Vista previa no disponible</span>
+                                            </div>
+                                        </>
                                     )}
                                 </div>
 
