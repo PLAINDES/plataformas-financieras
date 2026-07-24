@@ -69,7 +69,7 @@ export function LandingPage({
         );
 
     return (
-        <div className="landing-page">
+        <div className="relative landing-page">
             <LandingHeader
                 company={COMPANY}
                 menuItems={menuItems}
