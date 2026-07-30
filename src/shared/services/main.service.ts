@@ -135,32 +135,47 @@ export const MainService = {
   },
 
   getCalculation: async (id: number): Promise<Calculation> => {
-    return api.get<Calculation>(`main/calculations/${id}`);
+    console.time(`[API] getCalculation ${id}`);
+    const res = await api.get<Calculation>(`main/calculations/${id}`);
+    console.timeEnd(`[API] getCalculation ${id}`);
+    return res;
   },
 
   getCalculationByCode: async (code: string): Promise<Calculation> => {
-    return api.get<Calculation>(`main/calculations/by-code/${code}`);
+    console.time(`[API] getCalculationByCode ${code}`);
+    const res = await api.get<Calculation>(`main/calculations/by-code/${code}`);
+    console.timeEnd(`[API] getCalculationByCode ${code}`);
+    return res;
   },
 
   createCalculation: async (data: CalculationCreate): Promise<Calculation> => {
-    return api.post<Calculation>("main/calculations", data);
+    console.time("[API] createCalculation");
+    const res = await api.post<Calculation>("main/calculations", data);
+    console.timeEnd("[API] createCalculation");
+    return res;
   },
 
   updateCalculation: async (
     id: number,
     data: CalculationUpdate
   ): Promise<Calculation> => {
-    return api.put<Calculation>(`main/calculations/${id}`, data);
+    console.time(`[API] updateCalculation ${id}`);
+    const res = await api.put<Calculation>(`main/calculations/${id}`, data);
+    console.timeEnd(`[API] updateCalculation ${id}`);
+    return res;
   },
 
   refreshCalculation: async (
     id: number,
     prewarmedSessionId?: string | null
   ): Promise<Calculation> => {
+    console.time(`[API] refreshCalculation ${id}`);
     const payload = prewarmedSessionId
       ? { prewarmed_session_id: prewarmedSessionId }
       : {};
-    return api.post<Calculation>(`main/calculations/${id}/refresh`, payload);
+    const res = await api.post<Calculation>(`main/calculations/${id}/refresh`, payload);
+    console.timeEnd(`[API] refreshCalculation ${id}`);
+    return res;
   },
 
   deleteCalculation: async (id: number): Promise<void> => {
@@ -550,5 +565,52 @@ export const MainService = {
     return api.patch(`main/settings/kapital`, {
       settings: { [key]: value },
     });
+  },
+
+  // ==================== VALORA TEMPLATE ====================
+
+  getValoraTemplate: async (): Promise<{
+    templates: Array<{
+      url: string;
+      filename: string;
+      original_name: string;
+      last_modified: string;
+      object_key: string;
+      is_current?: boolean;
+    }>;
+  }> => {
+    try {
+      return await api.get("main/valora-template");
+    } catch {
+      return { templates: [] };
+    }
+  },
+
+  uploadValoraTemplate: async (file: File): Promise<{
+    templates: Array<{
+      url: string;
+      filename: string;
+      original_name: string;
+      last_modified: string;
+      object_key: string;
+      is_current?: boolean;
+    }>;
+  }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return api.postForm("main/valora-template/upload", formData);
+  },
+
+  setValoraTemplateDefault: async (objectKey: string): Promise<{
+    templates: Array<{
+      url: string;
+      filename: string;
+      original_name: string;
+      last_modified: string;
+      object_key: string;
+      is_current?: boolean;
+    }>;
+  }> => {
+    return api.post("main/valora-template/set-default", { object_key: objectKey });
   },
 };

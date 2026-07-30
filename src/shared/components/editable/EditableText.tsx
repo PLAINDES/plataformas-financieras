@@ -9,6 +9,7 @@ interface EditableTextProps {
   onSave: (content: EditableContent) => Promise<void>;
   className?: string;
   as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span" | "div";
+  singleLine?: boolean;
 }
 
 export function EditableText({
@@ -16,11 +17,12 @@ export function EditableText({
   onSave,
   className = "",
   as: Component = "p",
+  singleLine = false,
 }: EditableTextProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(content.value);
   const [isSaving, setIsSaving] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { isAdmin } = useAuthContext();
 
@@ -70,8 +72,13 @@ export function EditableText({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && e.ctrlKey) {
-      handleSave();
+    if (e.key === "Enter") {
+      if (singleLine) {
+        e.preventDefault();
+        handleSave();
+      } else if (e.ctrlKey) {
+        handleSave();
+      }
     } else if (e.key === "Escape") {
       handleCancel();
     }
@@ -84,16 +91,28 @@ export function EditableText({
   if (isEditing) {
     return (
       <div ref={containerRef} className="relative inline-block min-w-50 w-full">
-        {/* Textarea de edición */}
-        <textarea
-          ref={inputRef}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={isSaving}
-          rows={1}
-          className="w-full min-h-10 p-2 border-2 border-blue-500 rounded-md shadow-lg outline-none resize-y bg-white text-inherit font-inherit leading-inherit"
-        />
+        {/* Input de edición */}
+        {singleLine ? (
+          <input
+            ref={inputRef as React.Ref<HTMLInputElement>}
+            type="text"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isSaving}
+            className="w-full min-h-10 p-2 border-2 border-blue-500 rounded-md shadow-lg outline-none bg-white text-inherit font-inherit leading-inherit"
+          />
+        ) : (
+          <textarea
+            ref={inputRef as React.Ref<HTMLTextAreaElement>}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isSaving}
+            rows={1}
+            className="w-full min-h-10 p-2 border-2 border-blue-500 rounded-md shadow-lg outline-none resize-y bg-white text-inherit font-inherit leading-inherit"
+          />
+        )}
 
         {/* Panel compacto debajo */}
         <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white border border-gray-200 rounded-md p-2 shadow-xl z-50 flex flex-col gap-2">
@@ -117,7 +136,7 @@ export function EditableText({
 
           {/* Atajos */}
           <div className="text-[9px] text-gray-400 text-center uppercase tracking-wider">
-            Ctrl+Enter = Guardar • Esc = Cancelar
+            {singleLine ? "Enter = Guardar • Esc = Cancelar" : "Ctrl+Enter = Guardar • Esc = Cancelar"}
           </div>
         </div>
       </div>

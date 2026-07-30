@@ -78,6 +78,7 @@ export function useKapitalCalculation({
 
     ui.setShowResults(false);
     setIsLoading(true);
+    console.time("[KAPITAL] Total calculation");
 
     const betaUnlevered = toOptionalNumber(dataToSubmit.beta_unlevered);
     const isBetaUpdate =
@@ -87,7 +88,8 @@ export function useKapitalCalculation({
       let persistedCalculation: Calculation;
       // Si ya hay un cálculo actual, SIEMPRE hacemos PUT
       if (currentCalculation) {
-        const updated = await MainService.updateCalculation(
+        console.time("[KAPITAL] updateCalculation API");
+        persistedCalculation = await MainService.updateCalculation(
           currentCalculation!.id,
           {
             data: {
@@ -96,10 +98,11 @@ export function useKapitalCalculation({
             },
           }
         );
-        persistedCalculation = await MainService.getCalculation(updated.id);
+        console.timeEnd("[KAPITAL] updateCalculation API");
       } else {
         // CREATE new calculation
-        const created = await MainService.createCalculation({
+        console.time("[KAPITAL] createCalculation API");
+        persistedCalculation = await MainService.createCalculation({
           calculation_file_id: null,
           user_id: currentUserId ? Number(currentUserId) : null,
           code: generateCalculationCode(),
@@ -110,7 +113,7 @@ export function useKapitalCalculation({
             prewarmed_session_id: prewarmedSessionId,
           },
         });
-        persistedCalculation = await MainService.getCalculation(created.id);
+        console.timeEnd("[KAPITAL] createCalculation API");
 
         window.history.pushState(
           {},
@@ -126,11 +129,16 @@ export function useKapitalCalculation({
         setPrewarmedSessionId(newSessionId);
       }
 
+      console.time("[KAPITAL] computeResultsFromCalculationData");
       const { results: rebuiltResults, showCompanyCard: hasCompanyData } =
         computeResultsFromCalculationData(persistedCalculation.data);
+      console.timeEnd("[KAPITAL] computeResultsFromCalculationData");
+
+      console.time("[KAPITAL] extractSensibilizaciones");
       const sensibilizacionData = extractSensibilizaciones(
         persistedCalculation.data
       );
+      console.timeEnd("[KAPITAL] extractSensibilizaciones");
 
       setResults(rebuiltResults);
       setShowCompanyCard(hasCompanyData);
@@ -156,8 +164,10 @@ export function useKapitalCalculation({
       }
 
       setIsSessionFresh(true); // El excel ya se actualizado con los datos del form
+      console.timeEnd("[KAPITAL] Total calculation");
     } catch (error) {
       console.error("Error in Kapital calculation", error);
+      console.timeEnd("[KAPITAL] Total calculation");
       addToast("No se pudo guardar el cálculo. Intenta nuevamente.", "error");
     } finally {
       setIsLoading(false);
@@ -171,17 +181,25 @@ export function useKapitalCalculation({
 
     if (code && code !== "kapital" && code !== "") {
       try {
+        console.time("[KAPITAL] loadFromUrl total");
+        console.time("[KAPITAL] getCalculationByCode API");
         const calculationData = await MainService.getCalculationByCode(code);
+        console.timeEnd("[KAPITAL] getCalculationByCode API");
 
         if (calculationData) {
           setCurrentCalculation(calculationData);
 
           // Reconstruir resultados y sensibilizaciones
+          console.time("[KAPITAL] computeResultsFromCalculationData (URL)");
           const { results: rebuiltResults, showCompanyCard: hasCompanyData } =
             computeResultsFromCalculationData(calculationData.data);
+          console.timeEnd("[KAPITAL] computeResultsFromCalculationData (URL)");
+
+          console.time("[KAPITAL] extractSensibilizaciones (URL)");
           const sensibilizacionData = extractSensibilizaciones(
             calculationData.data
           );
+          console.timeEnd("[KAPITAL] extractSensibilizaciones (URL)");
 
           // Reconstruir el formData con el último input guardado
           const dataObj = calculationData.data as { inputs?: any[] };
@@ -261,8 +279,10 @@ export function useKapitalCalculation({
           ui.setIsFormOpen(false);
           setIsSessionFresh(false); // El front tiene datos pero el excel aún no se ha refrescado
         }
+        console.timeEnd("[KAPITAL] loadFromUrl total");
       } catch (error) {
         console.error("No se encontró el cálculo en la URL", error);
+        console.timeEnd("[KAPITAL] loadFromUrl total");
       }
     }
   };

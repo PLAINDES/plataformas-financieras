@@ -1,103 +1,91 @@
+import { useState } from "react";
 import { BarChart3, PieChart } from "lucide-react";
 import { ValoraResultsHeader } from "./ValoraResultsHeader";
-import { ValoraMethodSummaryCard } from "./ValoraMethodSummaryCard";
+import { ValoraSensibilidadBalanceSheetBlock } from "./ValoraSensibilidadBalanceSheetBlock";
+import { ValoraMethodsToggleCard } from "./ValoraMethodsToggleCard";
 
-const formatNumber = (value: number, decimals = 0) =>
-  value.toLocaleString("es-PE", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
+export interface ValoraSensibilidadResultsBlockProps {
+  onOpenFormPanel?: () => void;
+  sector?: string;
+}
 
-const ValueBox = ({
-  label,
-  value,
-  colorClass,
-}: {
-  label: string;
-  value: number;
-  colorClass: string;
-}) => (
-  <div className="flex-1 border-[3px] border-blue-300 rounded-xl p-6 flex flex-col items-center justify-center bg-blue-50/30">
-    <span className="text-xs font-bold uppercase tracking-wider text-gray-500 text-center">
-      {label}
-    </span>
-    <span className={`text-2xl sm:text-3xl font-bold mt-2 ${colorClass}`}>
-      {formatNumber(value)}
-    </span>
-  </div>
-);
+type ChartMode = "default" | "conceptos" | "integrado";
 
-export const ValoraSensibilidadResultsBlock: React.FC = () => (
-  <div className="flex flex-col gap-6">
-    <ValoraResultsHeader
-      wacc={10.5}
-      title="Sensibilidad"
-      subtitle="Resultados sensibilizados"
-      hideButton
-    />
+export const ValoraSensibilidadResultsBlock: React.FC<
+  ValoraSensibilidadResultsBlockProps
+> = ({ onOpenFormPanel, sector }) => {
+  const [chartMode, setChartMode] = useState<ChartMode>("default");
 
-    <div className="flex flex-col lg:flex-row gap-6">
-      <div className="lg:w-1/3 flex flex-col gap-6">
-        <ValoraMethodSummaryCard
-          icon={PieChart}
-          headerText="Método por Conceptos"
-          empresaValue={2259768}
-          patrimonioValue={14056078}
-          accionValue={22.6}
-        />
-        <ValoraMethodSummaryCard
-          icon={BarChart3}
-          headerText="Método Integrado"
-          empresaValue={2285958}
-          patrimonioValue={15045999}
-          accionValue={22.86}
-        />
-      </div>
+  const handleMethodClick = (method: "conceptos" | "integrado") => {
+    setChartMode((prev) => (prev === method ? "default" : method));
+  };
 
-      <div className="lg:w-2/3">
-        <div className="flex flex-col rounded-lg shadow bg-white overflow-hidden h-full">
-          <div className="flex items-center justify-center py-4 px-6 bg-[#f5f8fa]">
-            <h2 className="text-sm sm:text-base font-bold text-gray-800 uppercase tracking-tight">
-              Valoración Sensibilizada
-            </h2>
-          </div>
-          <div className="p-6 flex flex-col gap-6 flex-1 justify-center">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <ValueBox
-                label="Valor Esperado"
-                value={2259768}
-                colorClass="text-blue-600"
-              />
-              <ValueBox
-                label="Valor Sensibilizado"
-                value={2612926}
-                colorClass="text-valora-primary"
-              />
-            </div>
+  const methods = [
+    {
+      id: "conceptos" as const,
+      headerText: "Método por Conceptos Sensibilizado",
+      empresaValue: 2612926,
+      patrimonioValue: 9000000,
+      accionValue: 24.6,
+      tasaForecast: 10.84,
+      tasaForecastLabel: "Tasa de crecimiento ingresos forecast primer periodo",
+      tasaPerpetua: 2,
+      icon: PieChart,
+      buttonColor: "orange" as const,
+    },
+    {
+      id: "integrado" as const,
+      headerText: "Método Integrado Sensibilizado",
+      empresaValue: 2585958,
+      patrimonioValue: 17045999,
+      accionValue: 24.86,
+      tasaForecast: 19.39,
+      tasaForecastLabel: "Tasa de crecimiento FCE forecast primer periodo",
+      tasaPerpetua: 2,
+      icon: BarChart3,
+      buttonColor: "blue" as const,
+    },
+  ];
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 rounded-xl p-4 border border-slate-200">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                  Crecimiento forecast ingresos
-                </span>
-                <span className="text-sm font-bold text-gray-800">8.50%</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                  Crecimiento forecast perpetuo
-                </span>
-                <span className="text-sm font-bold text-gray-800">3.00%</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                  WACC
-                </span>
-                <span className="text-sm font-bold text-gray-800">10.5%</span>
-              </div>
-            </div>
-          </div>
+  return (
+    <div className="flex flex-col gap-6">
+      <ValoraResultsHeader
+        wacc={14}
+        title="Sensibilidad"
+        subtitle="Resultados sensibilizados"
+        sector={sector}
+        onSensibilidadClick={() => {
+          onOpenFormPanel?.();
+        }}
+        hideButton={!onOpenFormPanel}
+      />
+
+      <div className="flex flex-col lg:flex-row gap-4 h-[29rem] lg:h-[29rem]">
+        <div className="lg:w-1/3 h-full">
+          <ValoraMethodsToggleCard
+            methods={methods}
+            selectedMethod={chartMode === "default" ? "none" : chartMode}
+            onSelectMethod={handleMethodClick}
+          />
+        </div>
+
+        <div className="lg:w-2/3 h-full">
+          <ValoraSensibilidadBalanceSheetBlock
+            activo={12231540}
+            pasivo={9979152}
+            patrimonio={2252388}
+            conceptosPatrimonioEsperado={14056078}
+            conceptosPatrimonioSensibilizado={9056078}
+            integradoPatrimonioEsperado={15045999}
+            integradoPatrimonioSensibilizado={17045999}
+            conceptosEmpresaEsperado={2259768}
+            conceptosEmpresaSensibilizado={2612926}
+            integradoEmpresaEsperado={2285958}
+            integradoEmpresaSensibilizado={2585958}
+            variant={chartMode}
+          />
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};

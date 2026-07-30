@@ -168,10 +168,14 @@ const PortadasPage: React.FC = () => {
                       openGallery(imgs, 0);
                     }}
                   >
-                    {c.portada && c.portada.url ? (
-                      <CoverImage url={c.portada.url} alt={c.nombre} />
-                    ) : c.imagen_central && c.imagen_central.url ? (
+                    {c.imagen_central && c.imagen_central.url ? (
                       <CoverImage url={c.imagen_central.url} alt={c.nombre} />
+                    ) : c.portada && c.portada.url ? (
+                      <CoverImage url={c.portada.url} alt={c.nombre} />
+                    ) : c.primer_imagen_footer && c.primer_imagen_footer.url ? (
+                      <CoverImage url={c.primer_imagen_footer.url} alt={c.nombre} />
+                    ) : c.imagen_fondo && c.imagen_fondo.url ? (
+                      <CoverImage url={c.imagen_fondo.url} alt={c.nombre} />
                     ) : (
                       <div className="text-gray-400 text-sm">Sin imagen</div>
                     )}

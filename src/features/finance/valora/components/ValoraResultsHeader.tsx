@@ -4,6 +4,7 @@ export interface ValoraResultsHeaderProps {
   wacc: number;
   title: string;
   subtitle: string;
+  sector?: string;
   onSensibilidadClick?: () => void;
   hideButton?: boolean;
 }
@@ -12,6 +13,7 @@ export const ValoraResultsHeader: React.FC<ValoraResultsHeaderProps> = ({
   wacc,
   title,
   subtitle,
+  sector,
   onSensibilidadClick,
   hideButton = false,
 }) => (
@@ -34,7 +36,11 @@ export const ValoraResultsHeader: React.FC<ValoraResultsHeaderProps> = ({
 
     <div className="text-center">
       <h1 className="text-lg sm:text-xl font-bold text-gray-900">{title}</h1>
-      <p className="text-xs text-gray-500">{subtitle}</p>
+      {sector ? (
+        <p className="text-xs font-bold text-gray-700 mt-0.5">{sector}</p>
+      ) : (
+        <p className="text-xs text-gray-500">{subtitle}</p>
+      )}
     </div>
 
     <div className="px-4 py-2 bg-blue-50 text-valora-primary rounded-full text-sm font-bold border border-valora-primary/20 whitespace-nowrap">

@@ -4,6 +4,7 @@ import { EditableText } from "@/shared/components/editable/EditableText";
 import type { CTAContent } from "../types/landing.types";
 import type { EditableContent } from "@/shared/types/editable.types";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
+import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
 
 interface CTASectionProps {
     content: CTAContent;
@@ -30,7 +31,9 @@ export const WhatsAppIcon = ({ className }: { className?: string }) => (
 
 export function CTASection({ content, onSave }: CTASectionProps) {
     const { isAdmin } = useAuthContext();
+    const { trackEvent } = useAnalytics();
     const handleWhatsAppClick = () => {
+        trackEvent("cta_whatsapp_click", { location: "cta_section" });
         if (content.whatsappNumber) {
             window.open(content.whatsappNumber, "_blank");
         }
@@ -116,6 +119,7 @@ export function CTASection({ content, onSave }: CTASectionProps) {
                                                 }}
                                                 onSave={onSave}
                                                 as="p"
+                                                singleLine={true}
                                                 className="mb-0 text-gray-700 font-medium text-sm outline-none"
                                             />
                                         </div>
