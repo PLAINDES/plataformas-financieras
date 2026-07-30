@@ -7,6 +7,7 @@ import {
   AdminControls,
 } from "@/shared/components/editable/EditableCollection";
 import { useAuthContext } from "../../auth/hooks/useAuthContext";
+import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
 import type {
   EditableContent,
   EditableCollectionData,
@@ -324,6 +325,32 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product, isSingleCard, helpers }: ProductCardProps) {
+  const { trackEvent } = useAnalytics();
+
+  const handleBuyClick = () => {
+    if (product.contact) {
+      trackEvent("cta_whatsapp_click", {
+        location: "products_section",
+        product_name: product.name,
+        product_type: product.typeName || "producto",
+      });
+      const message = encodeURIComponent(
+        `Hola, estoy interesado en adquirir el ${product.typeName || "producto"}: ${product.name}`
+      );
+      window.open(
+        `https://wa.me/${product.contact}?text=${message}`,
+        "_blank"
+      );
+    } else if ((product as any).url) {
+      trackEvent("cta_link_click", {
+        location: "products_section",
+        product_name: product.name,
+        url: (product as any).url,
+      });
+      window.open((product as any).url, "_blank");
+    }
+  };
+
   return (
     <div className="flex flex-col p-8 bs-card-2 h-full relative max-md:text-center">
       {helpers.onEdit && (
@@ -356,19 +383,7 @@ function ProductCard({ product, isSingleCard, helpers }: ProductCardProps) {
       <div className="mt-auto pt-4 border-t border-gray-100 flex flex-col gap-4">
         <Button
           variant="outline"
-          onClick={() => {
-            if (product.contact) {
-              const message = encodeURIComponent(
-                `Hola, estoy interesado en adquirir el ${product.typeName || "producto"}: ${product.name}`
-              );
-              window.open(
-                `https://wa.me/${product.contact}?text=${message}`,
-                "_blank"
-              );
-            } else if ((product as any).url) {
-              window.open((product as any).url, "_blank");
-            }
-          }}
+          onClick={handleBuyClick}
           className="w-full py-2.5 px-4 border-2 border-valora-primary text-valora-primary font-semibold rounded-lg hover:bg-valora-primary hover:text-white group h-auto"
         >
           Adquirir {product.typeName || ""}

@@ -11,6 +11,7 @@ import { ScrollTop } from "@/shared/components/layout/ScrollTop";
 import ErrorFallback from "@/shared/components/ErrorFallback";
 import { useLandingData } from "@/features/landing/hooks/useLandingData";
 import { useLandingCMS } from "@/features/landing/hooks/useLandingCMS";
+import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
 import type { Company } from "@/shared/types";
 import type { User } from "@/shared/types/user.types";
 import type { LoginCredentials, RegisterData } from "../auth/types/user.types";
@@ -39,6 +40,7 @@ export function LandingPage({
     onLogin,
     onRegister,
 }: LandingPageProps) {
+    useAnalytics(); // Trackea métricas automáticamente en la landing page
     const {
         data,
         loading,
@@ -124,7 +126,7 @@ export function LandingPage({
         onSave={handleSaveContent}
       />*/}
             <WhatsAppSection
-                content={getContentData("whatsapp-home")}
+                content={getContentData("cta-home")}
                 onSave={handleSaveContent}
                 onUploadImage={handleUploadClientLogo}
                 isOpen={whatsappOpen}

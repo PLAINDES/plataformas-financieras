@@ -5,6 +5,9 @@ import {
   type ToastItem,
 } from "@/shared/components/common/ToastStack";
 import { ConfirmationModal } from "@/shared/components/common/ConfirmationModal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { BaseFinancialItem, DamodaranItem } from "@/shared/types"; // Fallback import
 import { Upload } from "lucide-react";
 
@@ -32,7 +35,7 @@ const MOCK_EMBI: BaseFinancialItem[] = [];
 
 export const ConfiguracionPage = () => {
   const [activeFrequency, setActiveFrequency] = useState<
-    "trimestral" | "anual" | ""
+    "trimestral" | "anual" | "subsectores" | "kapital" | ""
   >("trimestral");
   const [activeTab, setActiveTab] = useState("rf");
   const [isLoading, setIsLoading] = useState(false);
@@ -203,6 +206,45 @@ export const ConfiguracionPage = () => {
   const [riesgoData, setRiesgoData] = useState<any[]>([]);
   const [taxData, setTaxData] = useState<any[]>([]);
   const [subsectoresData, setSubsectoresData] = useState<any[]>([]);
+
+  // Kapital sensibilizaciones
+  const [maxSensibilidad, setMaxSensibilidad] = useState<number>(3);
+  const [loadingSens, setLoadingSens] = useState(true);
+  const [savingSens, setSavingSens] = useState(false);
+
+  useEffect(() => {
+    const fetchKapitalSettings = async () => {
+      try {
+        const res = await MainService.getKapitalSettings();
+        setMaxSensibilidad(res.max_sensibilizaciones ?? 3);
+      } catch {
+        // Silenciar
+      } finally {
+        setLoadingSens(false);
+      }
+    };
+    fetchKapitalSettings();
+  }, []);
+
+  const handleSaveSens = async () => {
+    setSavingSens(true);
+    try {
+      await MainService.updateKapitalSetting("max_sensibilizaciones", maxSensibilidad);
+      addToast("success", "Límite de sensibilizaciones actualizado.");
+    } catch {
+      addToast("error", "Error al guardar el límite de sensibilizaciones.");
+    } finally {
+      setSavingSens(false);
+    }
+  };
+
+  const handleDecrementSens = () => {
+    setMaxSensibilidad((prev) => (prev > 1 ? prev - 1 : prev));
+  };
+
+  const handleIncrementSens = () => {
+    setMaxSensibilidad((prev) => (prev < 10 ? prev + 1 : prev));
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -580,15 +622,15 @@ export const ConfiguracionPage = () => {
         </ConfirmationModal>
         <ToastStack toasts={toasts} onDismiss={removeToast} />
 
-        {/* FREQUENCY SELECTOR & ACTIONS */}
+        {/* TABS GENERALES */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div className="flex space-x-4">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => {
                 setActiveFrequency("trimestral");
                 setActiveTab("rf");
               }}
-              className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-xs sm:text-sm font-medium ${
+              className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                 activeFrequency === "trimestral"
                   ? "bg-blue-600 text-white shadow-md"
                   : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
@@ -601,7 +643,7 @@ export const ConfiguracionPage = () => {
                 setActiveFrequency("anual");
                 setActiveTab("prima");
               }}
-              className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-xs sm:text-sm font-medium ${
+              className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                 activeFrequency === "anual"
                   ? "bg-blue-600 text-white shadow-md"
                   : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
@@ -611,57 +653,76 @@ export const ConfiguracionPage = () => {
             </button>
             <button
               onClick={() => {
-                setActiveFrequency("");
+                setActiveFrequency("subsectores");
                 setActiveTab("subsectores");
               }}
-              className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-xs sm:text-sm font-medium ${
-                activeTab === "subsectores"
+              className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                activeFrequency === "subsectores"
                   ? "bg-blue-600 text-white shadow-md"
                   : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
               }`}
             >
               Subsectores
             </button>
-          </div>
-
-          <div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={(e) => processExcel(e, activeTab)}
-              className="hidden"
-              accept=".xlsx, .xls, .csv"
-            />
             <button
-              onClick={handleImportClick}
-              className="inline-flex items-center px-4 py-2 text-xs sm:text-sm border border-gray-300 shadow-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              onClick={() => {
+                setActiveFrequency("kapital");
+                setActiveTab("kapital");
+              }}
+              className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                activeFrequency === "kapital"
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+              }`}
             >
-              <Upload className="h-4 w-4 mr-2" />
-              Importar Excel ({activeTab.toUpperCase()})
+              Límite de sensibilizaciones
             </button>
           </div>
+
+          {activeFrequency !== "kapital" && (
+            <div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={(e) => processExcel(e, activeTab)}
+                className="hidden"
+                accept=".xlsx, .xls, .csv"
+                disabled={activeFrequency === "subsectores"}
+              />
+              <button
+                onClick={handleImportClick}
+                disabled={activeFrequency === "subsectores"}
+                className="inline-flex items-center px-4 py-2 text-xs sm:text-sm border border-gray-300 shadow-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Importar Excel ({activeTab.toUpperCase()})
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* TABS HEADER */}
-        <div className="flex flex-wrap gap-2 border-b border-gray-200 mb-6 overflow-x-auto">
-          {activeFrequency === "trimestral" && (
-            <>
-              {renderTabButton("rf", "Tasa RF")}
-              {renderTabButton("embi", "EMBI")}
-            </>
-          )}
+        {/* TABS INFERIORES (solo para trimestral y anual) */}
+        {(activeFrequency === "trimestral" || activeFrequency === "anual") && (
+          <div className="flex flex-wrap gap-2 border-b border-gray-200 mb-6 overflow-x-auto">
+            {activeFrequency === "trimestral" && (
+              <>
+                {renderTabButton("rf", "Tasa RF")}
+                {renderTabButton("embi", "EMBI")}
+              </>
+            )}
 
-          {activeFrequency === "anual" && (
-            <>
-              {renderTabButton("prima", "Prima de Mercado")}
-              {renderTabButton("ir", "IR (Impuestos/Inflación)")}
-              {renderTabButton("damodaran", "Damodaran Industries")}
-              {renderTabButton("tax", "Tax Rates")}
-              {renderTabButton("riesgo", "Riesgo Crediticio")}
-              {renderTabButton("devaluacion", "Devaluación")}
-            </>
-          )}
-        </div>
+            {activeFrequency === "anual" && (
+              <>
+                {renderTabButton("prima", "Prima de Mercado")}
+                {renderTabButton("ir", "IR (Impuestos/Inflación)")}
+                {renderTabButton("damodaran", "Damodaran Industries")}
+                {renderTabButton("tax", "Tax Rates")}
+                {renderTabButton("riesgo", "Riesgo Crediticio")}
+                {renderTabButton("devaluacion", "Devaluación")}
+              </>
+            )}
+          </div>
+        )}
 
         {/* TABS CONTENT */}
         <div>
@@ -735,6 +796,38 @@ export const ConfiguracionPage = () => {
               isLoading={isLoading}
               onDelete={createDeleteHandler(setSubsectoresData)}
             />
+          )}
+
+          {activeTab === "kapital" && (
+            <div className="max-w-xl rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+              <h2 className="text-[11px] font-bold tracking-widest text-blue-600 uppercase mb-4 border-b border-slate-100">
+                Límite de sensibilizaciones
+              </h2>
+              <div className="flex flex-col gap-4">
+                <div>
+                  <Label htmlFor="maxSens" className="mb-1.5 block text-xs font-semibold text-slate-600 uppercase">
+                    Límite de Sensibilizaciones permitidas
+                  </Label>
+                  <p className="text-[10px] text-gray-500 mb-2">
+                    Define cuántos escenarios de sensibilización puede crear un usuario antes de bloquear el botón.
+                  </p>
+                  <div className="flex items-center w-fit border border-slate-200 rounded-md overflow-hidden bg-white shadow-sm mt-3">
+                    <button type="button" onClick={handleDecrementSens} disabled={maxSensibilidad <= 1 || loadingSens} className="px-4 py-2 text-slate-500 hover:bg-slate-100 disabled:opacity-50 transition-colors border-r border-slate-200 cursor-pointer disabled:cursor-not-allowed">
+                      <i className="fa-solid fa-minus text-xs"></i>
+                    </button>
+                    <Input id="maxSens" type="number" min={1} max={10} value={maxSensibilidad} disabled={loadingSens} onChange={(e) => { const val = parseInt(e.target.value); if (!isNaN(val)) setMaxSensibilidad(val); }} className="h-9 w-16 border-0 rounded-none text-center focus-visible:ring-0 p-0 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                    <button type="button" onClick={handleIncrementSens} disabled={maxSensibilidad >= 10 || loadingSens} className="px-4 py-2 text-slate-500 hover:bg-slate-100 disabled:opacity-50 transition-colors border-l border-slate-200 cursor-pointer disabled:cursor-not-allowed">
+                      <i className="fa-solid fa-plus text-xs"></i>
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={handleSaveSens} disabled={savingSens || loadingSens} className="bg-blue-600 text-sm h-9 px-6 text-white hover:bg-blue-700 cursor-pointer">
+                    {savingSens ? "Guardando..." : "Guardar cambios"}
+                  </Button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>

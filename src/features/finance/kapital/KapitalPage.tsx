@@ -39,6 +39,7 @@ import {
 } from "@/shared/constants/kapital";
 
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
+import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
 import { ReportViewer } from "./components/ReportViewer";
 import { SubsectorModal } from "./components/SubsectorModal";
 
@@ -46,6 +47,7 @@ const KapitalPage: React.FC = () => {
     const { user, login, logout } = useAuthContext();
     const { addToast } = useToast();
     const location = useLocation();
+    useAnalytics(); // Trackea métricas automáticamente en /kapital
 
     // --- UI State ---
     const [isFormOpen, setIsFormOpen] = useState(true);

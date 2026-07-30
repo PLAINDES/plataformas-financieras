@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { IconActionButton } from "../../../../shared/components/ui/IconActionButton";
 import { FormField } from "../../components/FormField";
@@ -26,10 +26,9 @@ export interface ValoraFormPanelProps {
   ) => void;
   onSubmit: (e: React.FormEvent) => void;
   onDownloadTemplate: () => void;
-  onUploadTemplate: () => void;
+  onUploadTemplate: (file: File) => void;
   onSearchSectorBeta?: () => void;
   isSearchingBeta?: boolean;
-  onSearchRate?: (name: keyof FormData) => void;
   loading?: boolean;
   hasCalculated?: boolean;
 }
@@ -55,7 +54,6 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
   onUploadTemplate,
   onSearchSectorBeta,
   isSearchingBeta = false,
-  onSearchRate,
   loading = false,
   hasCalculated = false,
 }) => {
@@ -66,17 +64,19 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
     step4: true,
     step5: true,
   });
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const isSection2Disabled = !fileUploaded;
+  const isFilePresent = fileUploaded || Boolean(formData.fileUsername) || hasCalculated;
+
+  const isSection2Disabled = !hasCalculated && !isFilePresent;
   const isSection2Complete = Boolean(
-    formData.date && formData.sector && formData.instrument && formData.bono
+    hasCalculated ||
+      (formData.date && formData.sector)
   );
-  const isSection3Disabled = !(fileUploaded && isSection2Complete);
-  const isSection4Disabled = !(
-    fileUploaded &&
-    isSection2Complete &&
-    formData.country
-  );
+  const isSection3Disabled =
+    !hasCalculated && !(isFilePresent && isSection2Complete);
+  const isSection4Disabled =
+    !hasCalculated && !(isFilePresent && isSection2Complete && formData.country);
 
   const toggleCollapse = (
     step: "step1" | "step2" | "step3" | "step4" | "step5"
@@ -102,6 +102,24 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
     }
   }, [isSection4Disabled]);
 
+  useEffect(() => {
+    if (fileUploaded && (formData.kd || formData.debt)) {
+      setCollapsed((prev) => ({ ...prev, step4: false }));
+    }
+  }, [fileUploaded, formData.kd, formData.debt]);
+
+  useEffect(() => {
+    if (hasCalculated) {
+      setCollapsed({
+        step1: false,
+        step2: false,
+        step3: false,
+        step4: false,
+        step5: false,
+      });
+    }
+  }, [hasCalculated]);
+
   const kdCurrencyOptions = useMemo(() => {
     const localCode = formData.country
       ? countryLocalCurrencies[formData.country]
@@ -118,9 +136,17 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
     }
   };
 
-  const handleSearchRate = (name: keyof FormData) => {
-    if (onSearchRate) {
-      onSearchRate(name);
+  const handleOpenFilePicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      onUploadTemplate(file);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -154,14 +180,14 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                   <span>Subir Plantilla EEFF</span>
                   <span
                     className={`rounded-full px-2 py-0.5 text-[11px] font-semibold border ${
-                      fileUploaded
+                      fileUploaded || formData.fileUsername || hasCalculated
                         ? "bg-emerald-50 text-green-600 border-green-600"
                         : "bg-amber-50 text-amber-500 border-amber-500"
                     }`}
                   >
-                    {fileUploaded ? "Cargado" : "Pendiente"}
+                    {fileUploaded || formData.fileUsername || hasCalculated ? "Cargado" : "Pendiente"}
                   </span>
-                  {!fileUploaded && (
+                  {!fileUploaded && !formData.fileUsername && !hasCalculated && (
                     <input
                       type="text"
                       name="fileUsername"
@@ -171,40 +197,62 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                     />
                   )}
                 </label>
-                <IconActionButton
-                  iconClassName="fa-solid fa-file-import"
-                  ariaLabel="Subir plantilla"
-                  onClick={onUploadTemplate}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileChange}
                 />
+                {!hasCalculated && (
+                  <IconActionButton
+                    iconClassName="fa-solid fa-file-import"
+                    ariaLabel="Subir plantilla"
+                    onClick={handleOpenFilePicker}
+                  />
+                )}
               </div>
 
-              {fileUploaded && (
-                <div className="rounded border border-green-500/30 bg-green-500/10 p-3">
-                  <div className="flex items-center gap-2 text-green-600">
-                    <i className="fa-regular fa-circle-check text-lg"></i>
-                    <div className="relative w-full flex items-center justify-between gap-2">
-                      <span className="text-sm">
-                        Plantilla cargada: {formData.fileUsername}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        {uploadedFileUrl && (
-                          <a
-                            href={uploadedFileUrl}
-                            download={formData.fileUsername || undefined}
-                            title="Descargar plantilla cargada"
-                            className="text-green-600 hover:text-green-700"
-                          >
-                            <i className="fa-solid fa-file-arrow-down text-lg"></i>
-                          </a>
-                        )}
+              {(fileUploaded || formData.fileUsername || hasCalculated) && (
+                <div className="relative rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50/90 to-teal-50/70 p-3 shadow-sm transition-all">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs">
+                        <i className="fa-solid fa-file-excel text-base"></i>
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-emerald-800 tracking-wider uppercase">
+                            Plantilla cargada
+                          </span>
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        </div>
+                        <span className="text-xs font-semibold text-gray-900 truncate max-w-[170px] sm:max-w-[210px]" title={formData.fileUsername}>
+                          {formData.fileUsername || "PlantillaEEFF.xlsx"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {uploadedFileUrl && (
+                        <a
+                          href={uploadedFileUrl}
+                          download={formData.fileUsername || undefined}
+                          title="Descargar plantilla cargada"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-100/60 hover:text-emerald-900 transition-colors shadow-2xs"
+                        >
+                          <i className="fa-solid fa-download text-xs"></i>
+                        </a>
+                      )}
+                      {!hasCalculated && (
                         <button
                           type="button"
-                          className="rounded w-5 h-5 flex justify-center items-center font-semibold text-white bg-red-500 cursor-pointer hover:bg-red-600 transition-colors"
+                          title="Eliminar plantilla"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-rose-200 text-rose-500 hover:bg-rose-100/60 hover:text-rose-700 transition-colors shadow-2xs cursor-pointer"
                           onClick={onClearUploadedFile}
                         >
-                          <i className="fa-solid fa-trash text-[9px]"></i>
+                          <i className="fa-solid fa-trash-can text-xs"></i>
                         </button>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -220,6 +268,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                 tooltip="Si no se cuenta con el número de acciones, se estimará usando el capital social y un valor nominal de 1 por acción"
                 layout="horizontal"
                 inputClassName="col-span-12"
+                maxDecimals={2}
               />
 
               <FormField
@@ -437,6 +486,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                 value={formData.debt || ""}
                 onChange={onInputChange}
                 suffix="%"
+                tooltip="Pasivo Financiero / (Pasivo Financiero/Patrimonio)"
                 layout="horizontal"
                 showClearButton={false}
                 inputClassName="col-span-8"
@@ -453,6 +503,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                 value={formData.capital || ""}
                 onChange={onInputChange}
                 suffix="%"
+                tooltip="Patrimonio / (Pasivo Financiero/Patrimonio)"
                 layout="horizontal"
                 showClearButton={false}
                 inputClassName="col-span-8"
@@ -477,7 +528,6 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                   suffix="%"
                   value={formData.revenue_forecast_rate || ""}
                   onChange={onInputChange}
-                  onSearchRate={handleSearchRate}
                 />
                 <SensitivityRow
                   label="Tasa Forecast FDC"
@@ -485,7 +535,6 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                   suffix="%"
                   value={formData.fdc_forecast_rate || ""}
                   onChange={onInputChange}
-                  onSearchRate={handleSearchRate}
                 />
                 <SensitivityRow
                   label="Tasa de Crecimiento Perpetuo"
@@ -493,7 +542,6 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                   suffix="%"
                   value={formData.perpetual_growth_rate || ""}
                   onChange={onInputChange}
-                  onSearchRate={handleSearchRate}
                 />
                 <SensitivityRow
                   label="Beta Desapalancado"
@@ -501,7 +549,6 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                   suffix="Coef."
                   value={formData.beta_unlevered_sensitivity || ""}
                   onChange={onInputChange}
-                  onSearchRate={handleSearchRate}
                 />
               </div>
             </FormSection>
@@ -561,7 +608,7 @@ interface SensitivityRowProps {
   onChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => void;
-  onSearchRate: (name: keyof FormData) => void;
+  onSearchRate?: (name: keyof FormData) => void;
 }
 
 const SensitivityRow: React.FC<SensitivityRowProps> = ({
@@ -584,22 +631,24 @@ const SensitivityRow: React.FC<SensitivityRowProps> = ({
       suffix={suffix}
       layout="horizontal"
       showClearButton={false}
-      inputClassName="col-span-9"
+      inputClassName={onSearchRate ? "col-span-9" : "col-span-12"}
       disabled={disabled}
     />
-    <div className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end">
-      <button
-        type="button"
-        onClick={() => onSearchRate(name)}
-        disabled={disabled}
-        className={cn(
-          "text-[10px] w-full h-10 py-0.5 px-1 rounded-sm text-wrap font-bold cursor-pointer flex items-center justify-center text-center leading-tight tracking-wider",
-          "text-valora-primary bg-white border border-valora-primary focus:outline-none",
-          "disabled:cursor-not-allowed disabled:opacity-50"
-        )}
-      >
-        Obtén tu Tasa
-      </button>
-    </div>
+    {onSearchRate && (
+      <div className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end">
+        <button
+          type="button"
+          onClick={() => onSearchRate(name)}
+          disabled={disabled}
+          className={cn(
+            "text-[10px] w-full h-10 py-0.5 px-1 rounded-sm text-wrap font-bold cursor-pointer flex items-center justify-center text-center leading-tight tracking-wider",
+            "text-valora-primary bg-white border border-valora-primary focus:outline-none",
+            "disabled:cursor-not-allowed disabled:opacity-50"
+          )}
+        >
+          Obtén tu Tasa
+        </button>
+      </div>
+    )}
   </div>
 );

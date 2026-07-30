@@ -4,6 +4,7 @@ import { Pencil } from "lucide-react";
 import { EditableText } from "@/shared/components/editable/EditableText";
 import { FooterEditModal } from "./FooterEditModal";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
+import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
 import type { EditableContent } from "@/shared/types/editable.types";
 import { Button } from "@/components/ui/button";
 
@@ -38,6 +39,7 @@ export function LandingFooter({
   //const [email, setEmail] = useState("");
   const [editModalOpen, setEditModalOpen] = useState(false);
   const { isAdmin } = useAuthContext();
+  const { trackEvent } = useAnalytics();
 
   /*const handleSubscription = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -50,6 +52,7 @@ export function LandingFooter({
   };
 
   const handleWhatsAppClick = () => {
+    trackEvent("cta_whatsapp_click", { location: "footer" });
     if (ctaContent?.whatsappNumber) {
       window.open(ctaContent.whatsappNumber, "_blank");
     }

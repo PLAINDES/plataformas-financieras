@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import type { FormData } from "@/shared/types/ValoraTypes";
@@ -70,7 +70,13 @@ export const FormField: React.FC<FormFieldProps> = ({
     const tooltipHideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [tooltipVisible, setTooltipVisible] = useState(false);
     const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
-    const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+    const [dropdownPos, setDropdownPos] = useState({
+        top: 0,
+        left: 0,
+        width: 0,
+        maxHeight: 0,
+        placement: "bottom" as "bottom" | "top",
+    });
 
     const filteredOptions = useMemo(() => {
         const normalizedQuery = query.trim().toLowerCase();
@@ -98,15 +104,60 @@ export const FormField: React.FC<FormFieldProps> = ({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    useEffect(() => {
+    const updateDropdownPosition = () => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const gap = 8;
+        const maxDropdownHeight = 208; // max-h-52
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        const spaceBelow = viewportHeight - rect.bottom - gap;
+        const spaceAbove = rect.top - gap;
+
+        let placement: "bottom" | "top" = "bottom";
+        let top = rect.bottom + gap;
+        let maxHeight = maxDropdownHeight;
+
+        if (spaceBelow >= maxDropdownHeight) {
+            placement = "bottom";
+            top = rect.bottom + gap;
+            maxHeight = Math.min(maxDropdownHeight, spaceBelow);
+        } else if (spaceAbove >= maxDropdownHeight) {
+            placement = "top";
+            top = rect.top - gap - maxDropdownHeight;
+            maxHeight = maxDropdownHeight;
+        } else if (spaceBelow >= spaceAbove) {
+            placement = "bottom";
+            top = rect.bottom + gap;
+            maxHeight = Math.max(96, spaceBelow);
+        } else {
+            placement = "top";
+            maxHeight = Math.max(96, spaceAbove);
+            top = rect.top - gap - maxHeight;
+        }
+
+        let left = rect.left;
+        let width = rect.width;
+        if (left + width > viewportWidth - 16) {
+            left = Math.max(16, viewportWidth - width - 16);
+        }
+        if (left < 16) {
+            left = 16;
+        }
+
+        setDropdownPos({ top, left, width, maxHeight, placement });
+    };
+
+    useLayoutEffect(() => {
         const handleScrollOrResize = () => {
-            if (isOpen && containerRef.current) {
-                const rect = containerRef.current.getBoundingClientRect();
-                setDropdownPos({ top: rect.bottom + 8, left: rect.left, width: rect.width });
+            if (isOpen) {
+                updateDropdownPosition();
             }
         };
 
         if (isOpen) {
+            updateDropdownPosition();
             window.addEventListener("scroll", handleScrollOrResize, true);
             window.addEventListener("resize", handleScrollOrResize);
         }
@@ -238,10 +289,12 @@ export const FormField: React.FC<FormFieldProps> = ({
                                 : "cursor-pointer"
                                 }`}
                             onClick={() => {
-                                setIsOpen((prev) => !prev);
-                                if (!isOpen && containerRef.current) {
-                                    const rect = containerRef.current.getBoundingClientRect();
-                                    setDropdownPos({ top: rect.bottom + 8, left: rect.left, width: rect.width });
+                                const nextOpen = !isOpen;
+                                setIsOpen(nextOpen);
+                                if (nextOpen) {
+                                    requestAnimationFrame(() => {
+                                        updateDropdownPosition();
+                                    });
                                 }
                             }}
                             aria-haspopup="listbox"
@@ -306,7 +359,14 @@ export const FormField: React.FC<FormFieldProps> = ({
                                         placeholder="Buscar..."
                                     />
                                 </div>
-                                <div className="max-h-52 overflow-auto">
+                                <div
+                                    className="overflow-auto"
+                                    style={{
+                                        maxHeight: dropdownPos.maxHeight
+                                            ? `${dropdownPos.maxHeight}px`
+                                            : "13rem",
+                                    }}
+                                >
                                     {filteredOptions.length === 0 ? (
                                         <div className="px-2 py-1.25 text-gray-500">
                                             Sin resultados

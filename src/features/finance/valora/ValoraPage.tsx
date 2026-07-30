@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { FinancePageTemplate } from "../components/MainPage";
-import { UploadTemplateModal } from "./components/UploadTemplateModal";
 import {
   ValoraResults,
   type ValoraResultsSectionKey,
@@ -14,10 +13,12 @@ import { parseFinancialTablesFromFile } from "./types/valoraFileParsing";
 import { NavBar } from "./components/Navbar";
 import { NavigationTabs } from "./components/ValoraNavigationTabs";
 import { ValoraFormPanel } from "./components/ValoraFormPanel";
-import { BetitoRateModal, type RateField } from "./components/BetitoRateModal";
-import { useValoraForm } from "./hooks/useValoraForm";
+import { MainService } from "@/shared/services/main.service";
 
-import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useValoraForm } from "./hooks/useValoraForm";
+import { useValoraCalculation } from "./hooks/useValoraCalculation";
+import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
+
 import {
   INSTRUMENTS,
   BONOS,
@@ -29,6 +30,7 @@ import {
 } from "@/shared/constants/kapital";
 
 const ValoraPage: React.FC = () => {
+  const { user, logout } = useAuthContext();
   const {
     formData,
     setFormData,
@@ -36,29 +38,155 @@ const ValoraPage: React.FC = () => {
     dynamicSectors,
     dynamicDates,
   } = useValoraForm();
+
   const [fileUploaded, setFileUploaded] = useState(false);
   const [isDesktopFormOpen, setIsDesktopFormOpen] = useState(true);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [toasts, setToasts] = useState<
     Array<{ id: string; type: ToastType; message: string }>
   >([]);
   const toastTimeoutsRef = useRef<Map<string, number>>(new Map());
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
-  const [uploadResetKey, setUploadResetKey] = useState(0);
   const [resultsSection, setResultsSection] = useState<ValoraResultsSectionKey>(
     "resultados"
   );
   const [_isResultsSidebarOpen, setIsResultsSidebarOpen] = useState(false);
   const [balanceTable, setBalanceTable] = useState<FinancialTable | null>(null);
   const [resultsTable, setResultsTable] = useState<FinancialTable | null>(null);
-  const [betitoOpen, setBetitoOpen] = useState(false);
-  const [betitoField, setBetitoField] = useState<RateField | null>(null);
-  const [hasCalculated, setHasCalculated] = useState(false);
+  const [hasSensitized] = useState(false);
+
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    const timeoutId = toastTimeoutsRef.current.get(id);
+    if (timeoutId) {
+      window.clearTimeout(timeoutId);
+      toastTimeoutsRef.current.delete(id);
+    }
+  };
+
+  const addToast = (type: ToastType, message: string) => {
+    const id =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    setToasts((prev) => [...prev, { id, type, message }]);
+    const timeoutId = window.setTimeout(() => removeToast(id), 3500);
+    toastTimeoutsRef.current.set(id, timeoutId);
+  };
+
+  const valoraCalc = useValoraCalculation({
+    formData,
+    setFormData,
+    balanceTable,
+    setBalanceTable,
+    resultsTable,
+    setResultsTable,
+    fileUploaded,
+    setFileUploaded,
+    addToast,
+    userId: user?.id,
+    ui: {
+      setShowResults,
+      setIsDesktopFormOpen,
+      setResultsSection: (section) => setResultsSection(section),
+    },
+  });
+
+  useEffect(() => {
+    valoraCalc.loadFromUrl();
+  }, []);
 
   const handleResultsSectionChange = (nextSection: ValoraResultsSectionKey) => {
     setResultsSection(nextSection);
+  };
+
+  const downloadTemplate = async () => {
+    try {
+      const res = await MainService.getValoraTemplate();
+      const templates = res.templates || [];
+      const current = templates.find((t) => t.is_current) || templates[0];
+      if (current) {
+        const link = document.createElement("a");
+        link.href = current.url;
+        link.download = current.original_name || "PlantillaUsuarioValora.xlsx";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        addToast("warn", "No hay plantilla configurada. Contacta al administrador.");
+      }
+    } catch {
+      addToast("error", "No se pudo obtener la plantilla.");
+    }
+  };
+
+  const handleUploadTemplate = (file: File) => {
+    setUploadedFileUrl((prevUrl) => {
+      if (prevUrl) {
+        URL.revokeObjectURL(prevUrl);
+      }
+      return URL.createObjectURL(file);
+    });
+    setFormData((prev) => ({ ...prev, fileUsername: file.name }));
+    setFileUploaded(true);
+    addToast("success", "Plantilla cargada en el formulario.");
+    parseFinancialTables(file);
+  };
+
+  const handleClearUploadedFile = () => {
+    setUploadedFileUrl((prevUrl) => {
+      if (prevUrl) {
+        URL.revokeObjectURL(prevUrl);
+      }
+      return null;
+    });
+    setFormData((prev) => ({ ...prev, fileUsername: "" }));
+    setFileUploaded(false);
+    setBalanceTable(null);
+    setResultsTable(null);
+    addToast("info", "Archivo eliminado del formulario.");
+  };
+
+  const parseFinancialTables = async (file: File) => {
+    try {
+      const { balanceTable: parsedBalance, resultsTable: parsedResults, customInputs } =
+        await parseFinancialTablesFromFile(file);
+
+      setBalanceTable(parsedBalance);
+      setResultsTable(parsedResults);
+
+      if (customInputs) {
+        setFormData((prev) => {
+          const updates = { ...prev };
+
+          // C3 -> Costo de deuda (Section 4)
+          if (customInputs.kd !== undefined && customInputs.kd !== null && customInputs.kd !== "") {
+            updates.kd = customInputs.kd;
+          }
+
+          // C4 -> % de deuda (Section 4) y % de capital automático (100 - debt)
+          if (customInputs.debt !== undefined && customInputs.debt !== null && customInputs.debt !== "") {
+            updates.debt = customInputs.debt;
+            const debtNum = parseFloat(customInputs.debt);
+            if (!isNaN(debtNum) && debtNum >= 0 && debtNum <= 100) {
+              updates.capital = (100 - debtNum).toString();
+            }
+          }
+
+          // C5 -> Número de acciones (Section 1), si está rellenado
+          if (customInputs.shares !== undefined && customInputs.shares !== null && customInputs.shares !== "") {
+            updates.shares = customInputs.shares;
+          }
+
+          return updates;
+        });
+      }
+
+      addToast("success", "Estados financieros parseados correctamente.");
+    } catch {
+      addToast("error", "No se pudo leer las tablas del archivo.");
+    }
   };
 
   const mainContent = showResults ? (
@@ -69,6 +197,8 @@ const ValoraPage: React.FC = () => {
         resultsTable={resultsTable}
         formData={formData}
         onSectionChange={handleResultsSectionChange}
+        onOpenFormPanel={() => setIsDesktopFormOpen(true)}
+        hasSensitized={hasSensitized}
       />
       <MainPageFooter brandName={"Valora"} brandHref={"/valora"} />
     </div>
@@ -82,7 +212,6 @@ const ValoraPage: React.FC = () => {
     />
   );
 
-  // Sample data with dynamic fallback
   const fallbackDates = ["2024-Q1", "2024-Q2", "2024-Q3", "2024-Q4"];
   const fallbackCountries = COUNTRIES;
   const fallbackSectors = [
@@ -100,6 +229,7 @@ const ValoraPage: React.FC = () => {
   const countries =
     dynamicSectors.length > 0 ? fallbackCountries : fallbackCountries;
   const sectors = dynamicSectors.length > 0 ? dynamicSectors : fallbackSectors;
+
   useEffect(
     () => () => {
       toastTimeoutsRef.current.forEach((timeoutId) =>
@@ -125,155 +255,16 @@ const ValoraPage: React.FC = () => {
     }
   }, [showResults]);
 
-  /*const toggleResultsSidebar = () => {
-    setIsResultsSidebarOpen((prev) => !prev);
-  };*/
-
-  const handleOpenBetito = (name: RateField) => {
-    setBetitoField(name);
-    setBetitoOpen(true);
-  };
-
-  const handleInsertBetitoRate = (value: string) => {
-    if (betitoField) {
-      setFormData((prev) => ({ ...prev, [betitoField]: value }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const missingFields: string[] = [];
-
-    if (!formData.date) missingFields.push("Fecha");
-    if (!formData.country) missingFields.push("País");
-    if (!formData.currency) missingFields.push("Moneda");
-    if (!formData.sector) missingFields.push("Sector");
-    if (!fileUploaded) missingFields.push("Plantilla EEFF");
-
-    if (missingFields.length > 0) {
-      addToast("warn", `Completa los campos: ${missingFields.join(", ")}`);
-      return;
-    }
-
-    const isSensitivityRun =
-      hasCalculated &&
-      (formData.revenue_forecast_rate ||
-        formData.fdc_forecast_rate ||
-        formData.perpetual_growth_rate ||
-        formData.beta_unlevered_sensitivity);
-
-    setShowResults(false);
-    setIsLoading(true);
-
-    window.setTimeout(() => {
-      setIsLoading(false);
-      setShowResults(true);
-      setIsResultsSidebarOpen(true);
-      setIsDesktopFormOpen(false);
-
-      if (isSensitivityRun) {
-        setResultsSection("sensibilidad");
-        addToast("success", "Sensibilización calculada correctamente.");
-      } else {
-        setHasCalculated(true);
-        setResultsSection("resultados");
-        addToast("success", "Resultados generados correctamente.");
-      }
-    }, 1000);
-  };
-
-  const downloadTemplate = () => {
-    const link = document.createElement("a");
-    link.href = "/files/PlantillaUsuarioValora.xlsx";
-    link.download = "PlantillaUsuarioValora.xlsx";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const openUploadTemplateModal = () => {
-    setIsUploadModalOpen(true);
-  };
-
-  const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-    const timeoutId = toastTimeoutsRef.current.get(id);
-    if (timeoutId) {
-      window.clearTimeout(timeoutId);
-      toastTimeoutsRef.current.delete(id);
-    }
-  };
-
-  const addToast = (type: ToastType, message: string) => {
-    const id =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-
-    setToasts((prev) => [...prev, { id, type, message }]);
-    const timeoutId = window.setTimeout(() => removeToast(id), 3500);
-    toastTimeoutsRef.current.set(id, timeoutId);
-  };
-
-  const handleUploadTemplate = (file: File) => {
-    setUploadedFileUrl((prevUrl) => {
-      if (prevUrl) {
-        URL.revokeObjectURL(prevUrl);
-      }
-      return URL.createObjectURL(file);
-    });
-    setFormData((prev) => ({ ...prev, fileUsername: file.name }));
-    setFileUploaded(true);
-    setIsUploadModalOpen(false);
-    addToast("success", "Plantilla cargada en el formulario.");
-    parseFinancialTables(file);
-  };
-
-  const handleClearUploadedFile = () => {
-    setUploadedFileUrl((prevUrl) => {
-      if (prevUrl) {
-        URL.revokeObjectURL(prevUrl);
-      }
-      return null;
-    });
-    setFormData((prev) => ({ ...prev, fileUsername: "" }));
-    setFileUploaded(false);
-    setUploadResetKey((prev) => prev + 1);
-    setBalanceTable(null);
-    setResultsTable(null);
-    addToast("info", "Archivo eliminado del formulario.");
-  };
-
-  const parseFinancialTables = async (file: File) => {
-    try {
-      const { balanceTable: parsedBalance, resultsTable: parsedResults } =
-        await parseFinancialTablesFromFile(file);
-
-      setBalanceTable(parsedBalance);
-      setResultsTable(parsedResults);
-
-      if (!parsedBalance && !parsedResults) {
-        addToast("warn", "No se encontraron las tablas en el archivo.");
-      } else if (!parsedBalance) {
-        addToast("warn", "Falta la tabla: Balance General.");
-      } else if (!parsedResults) {
-        addToast("warn", "Falta la tabla: Estado de Resultados.");
-      }
-    } catch (error) {
-      console.error("Error parsing Excel:", error);
-      addToast("error", "No se pudo leer el archivo Excel.");
-    }
-  };
-
   const getSelectedView = (): ValoraResultsSectionKey | "" => {
     if (!showResults) return "";
     return resultsSection;
   };
 
-  const { user } = useAuth();
-
-  const handleLogout = () => {
-    // TODO: Implement logout functionality
+  const handleLogout = async () => {
+    if (logout) {
+      await logout();
+      addToast("info", "Has cerrado sesión exitosamente.");
+    }
   };
 
   return (
@@ -284,6 +275,7 @@ const ValoraPage: React.FC = () => {
         onToggleForm={() => setIsDesktopFormOpen((prev) => !prev)}
         isFormOpen={isDesktopFormOpen}
         hasResults={showResults}
+        hasSensitized={hasSensitized}
         logoHref="/valora"
         logoSrc="/images/logo-valora-small.png"
         logoAlt="Valora Logo"
@@ -296,6 +288,7 @@ const ValoraPage: React.FC = () => {
         selected={getSelectedView()}
         onNavigate={handleResultsSectionChange}
         hasResults={showResults}
+        hasSensitized={hasSensitized}
       />
       <main
         className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} transition-all h-screen duration-300 ${isDesktopFormOpen ? "lg:pl-105" : "lg:pl-0"}`}
@@ -322,38 +315,19 @@ const ValoraPage: React.FC = () => {
             countriesTranslations={COUNTRIES_TRANSLATIONS}
             onClearUploadedFile={handleClearUploadedFile}
             onInputChange={handleInputChange}
-            onSubmit={handleSubmit}
+            onSubmit={valoraCalc.handleSubmit}
             onDownloadTemplate={downloadTemplate}
-            onUploadTemplate={openUploadTemplateModal}
+            onUploadTemplate={handleUploadTemplate}
             onSearchSectorBeta={() => addToast("info", "Buscando beta por subsector...")}
             isSearchingBeta={false}
-            onSearchRate={(name) => handleOpenBetito(name as RateField)}
-            loading={isLoading}
-            hasCalculated={hasCalculated}
+            loading={valoraCalc.isLoading}
+            hasCalculated={valoraCalc.hasCalculated}
           />
         </div>
       </aside>
 
-      <UploadTemplateModal
-        key={uploadResetKey}
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        onDownloadTemplate={downloadTemplate}
-        onUploadTemplate={handleUploadTemplate}
-        onToast={addToast}
-      />
-      <BetitoRateModal
-        isOpen={betitoOpen}
-        field={betitoField}
-        currentValue={betitoField ? formData[betitoField] : ""}
-        onClose={() => {
-          setBetitoOpen(false);
-          setBetitoField(null);
-        }}
-        onInsert={handleInsertBetitoRate}
-      />
       <ToastStack toasts={toasts} onDismiss={removeToast} />
-      {isLoading && <LoadingOverlay />}
+      {valoraCalc.isLoading && <LoadingOverlay />}
     </div>
   );
 };
