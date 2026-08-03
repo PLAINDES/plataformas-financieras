@@ -402,6 +402,7 @@ export const useTemplates = () => {
     setCodesModalComparison,
     codesModalErrors,
     setCodesModalErrors,
+    addToast,
     dismissToast,
     openCreate,
     openEdit,

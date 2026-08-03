@@ -12,6 +12,7 @@ interface NavBarProps {
   onToggleForm: () => void;
   isFormOpen: boolean;
   hasResults: boolean;
+  hasSensitized: boolean;
   logoHref: string;
   logoSrc: string;
   logoAlt: string;
@@ -26,6 +27,7 @@ export const NavBar: React.FC<NavBarProps> = ({
   onToggleForm,
   isFormOpen,
   hasResults,
+  hasSensitized,
   logoHref,
   logoSrc,
   logoAlt,
@@ -36,7 +38,7 @@ export const NavBar: React.FC<NavBarProps> = ({
   const tabs: NavTab[] = useMemo(() => {
     if (!hasResults) return [];
 
-    return [
+    const items: NavTab[] = [
       {
         id: "estados",
         label: "Estados Financieros",
@@ -146,7 +148,10 @@ l347 -2 4 -472 c4 -533 6 -547 78 -696 76 -157 229 -281 404 -327 49 -12 137
           </span>
         ),
       },
-      {
+    ];
+
+    if (hasSensitized) {
+      items.push({
         id: "sensibilidad",
         label: "Sensibilidad",
         icon: (
@@ -170,9 +175,11 @@ l347 -2 4 -472 c4 -533 6 -547 78 -696 76 -157 229 -281 404 -327 49 -12 137
             </svg>
           </span>
         ),
-      },
-    ];
-  }, [hasResults]);
+      });
+    }
+
+    return items;
+  }, [hasResults, hasSensitized, selected]);
 
   return (
     <FinanceNavbar

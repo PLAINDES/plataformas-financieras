@@ -20,6 +20,7 @@ import ProyectosUsuarioPage from "./features/finance/components/ProyectosUsuario
 import { ReporteKapitalEditor } from "./features/admin/components/ReporteKapitalEditor";
 import { KapitalSettingsPage } from "./features/admin/pages/KapitalSettingsPage";
 import { UsersPage } from "./features/admin/pages/UsersPage";
+import AnalyticsPage from "./features/admin/pages/AnalyticsPage";
 import { ToastProvider } from "./shared/components/common/ToastProvider";
 
 const COMPANY = {
@@ -76,6 +77,7 @@ function App() {
           <Route path="/kapital" element={<KapitalPage />} />
           <Route path="/kapital/:code" element={<KapitalPage />} />
           <Route path="/valora" element={<ValoraPage />} />
+          <Route path="/valora/:code" element={<ValoraPage />} />
           <Route
             path="usuario/proyectos"
             element={<ProyectosUsuarioPage onOpenForm={() => { }} />}
@@ -108,6 +110,8 @@ function App() {
             element={<ReporteKapitalEditor />}
           />
           <Route path="usuarios" element={<UsersPage />} />
+          <Route path="metricas" element={<AnalyticsPage />} />
+          <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="configuraciones" element={<ConfiguracionPage />} />
         </Route>
       </Routes>

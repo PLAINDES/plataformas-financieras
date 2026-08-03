@@ -10,7 +10,17 @@ const TABS: { id: TabView; label: string }[] = [
   { id: "comparison", label: "Comparación" },
 ];
 
-export const ValoraSensibilidadSection: React.FC = () => {
+export interface ValoraSensibilidadSectionProps {
+  onOpenFormPanel?: () => void;
+  hasSensitized?: boolean;
+  sector?: string;
+}
+
+export const ValoraSensibilidadSection: React.FC<ValoraSensibilidadSectionProps> = ({
+  onOpenFormPanel,
+  hasSensitized = false,
+  sector,
+}) => {
   const [activeTab, setActiveTab] = useState<TabView>("original");
 
   return (
@@ -21,11 +31,12 @@ export const ValoraSensibilidadSection: React.FC = () => {
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => !((tab.id === "sensibility" || tab.id === "comparison") && !hasSensitized) && setActiveTab(tab.id)}
+              disabled={(tab.id === "sensibility" || tab.id === "comparison") && !hasSensitized}
               className={`px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
                 activeTab === tab.id
                   ? "bg-white text-valora-primary shadow-sm"
-                  : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
+                  : "text-slate-500 hover:text-valora-primary hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
               }`}
             >
               {tab.label}
@@ -35,21 +46,31 @@ export const ValoraSensibilidadSection: React.FC = () => {
       </div>
 
       {activeTab === "original" && (
-        <ValoraGeneralResultsBlock
-          onSensibilidadClick={() => setActiveTab("sensibility")}
-          wacc={14}
-        />
+        <div className="mx-auto w-full max-w-300">
+          <ValoraGeneralResultsBlock
+            onSensibilidadClick={() => setActiveTab("sensibility")}
+            onOpenFormPanel={onOpenFormPanel}
+            wacc={14}
+          />
+        </div>
       )}
 
-      {activeTab === "sensibility" && <ValoraSensibilidadResultsBlock />}
+      {activeTab === "sensibility" && hasSensitized && (
+        <div className="mx-auto w-full max-w-300">
+          <ValoraSensibilidadResultsBlock
+            onOpenFormPanel={onOpenFormPanel}
+            sector={sector}
+          />
+        </div>
+      )}
 
-      {activeTab === "comparison" && (
-        <div className="flex flex-col xl:flex-row gap-6">
-          <div className="flex-1 min-w-0">
+      {activeTab === "comparison" && hasSensitized && (
+        <div className="flex flex-row gap-6 items-start w-full">
+          <div className="min-w-0 flex-1">
             <ValoraGeneralResultsBlock wacc={14} hideButton />
           </div>
-          <div className="flex-1 min-w-0">
-            <ValoraSensibilidadResultsBlock />
+          <div className="min-w-0 flex-1 flex flex-col gap-4">
+            <ValoraSensibilidadResultsBlock sector={sector} />
           </div>
         </div>
       )}

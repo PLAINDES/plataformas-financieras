@@ -1,31 +1,29 @@
-import React from "react";
+import React, { useState } from "react";
 
 export interface TooltipProps {
-    id: string;
+    id?: string;
     content: string;
-    className?: string;
-    contentClassName?: string;
+    children: React.ReactNode;
 }
 
-export const Tooltip: React.FC<React.PropsWithChildren<TooltipProps>> = ({
-    id,
-    content,
-    className,
-    contentClassName,
-    children,
-}) => (
-    <div className={`relative group ${className ?? ""}`}>
-        {children}
-        <div
-            id={id}
-            role="tooltip"
-            className={`pointer-events-none absolute z-[1000] w-72 rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-700 shadow-xl opacity-0 invisible transition-all duration-200 group-hover:visible group-hover:opacity-100 ${contentClassName ?? "right-0 top-full mt-2"}`}
-        >
-            <div className="relative z-[1001]">
-                {content}
+export const Tooltip: React.FC<TooltipProps> = ({ content, children }) => {
+    const [visible, setVisible] = useState(false);
+
+    return (
+        <div className="relative inline-flex items-center">
+            <div
+                onMouseEnter={() => setVisible(true)}
+                onMouseLeave={() => setVisible(false)}
+                className="cursor-help"
+            >
+                {children}
             </div>
-            {/* Arrow */}
-            <div className="absolute -top-1 right-4 w-2 h-2 bg-white border-t border-l border-gray-200 rotate-45"></div>
+            {visible && (
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-700 shadow-xl z-[9999]">
+                    <div className="leading-relaxed">{content}</div>
+                    <div className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-2 h-2 bg-white border-b border-r border-gray-200 rotate-45"></div>
+                </div>
+            )}
         </div>
-    </div>
-);
+    );
+};

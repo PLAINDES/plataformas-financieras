@@ -3,6 +3,7 @@ import { ValoraEstadosSection } from "./ValoraEstadosSection";
 import { ValoraResultadosSection } from "./ValoraResultadosSection";
 import { ValoraSensibilidadSection } from "./ValoraSensibilidadSection";
 import type { FinancialTable, FormData } from "@/shared/types/ValoraTypes";
+import { INDUSTRY_TRANSLATIONS } from "@/shared/constants/kapital";
 
 export type ValoraResultsSectionKey =
   | "estados"
@@ -15,20 +16,30 @@ export interface ValoraResultsProps {
   balanceTable: FinancialTable | null;
   resultsTable: FinancialTable | null;
   onSectionChange?: (section: ValoraResultsSectionKey) => void;
+  onOpenFormPanel?: () => void;
+  hasSensitized?: boolean;
 }
 
 export const ValoraResults: React.FC<ValoraResultsProps> = ({
+  formData,
   section,
   balanceTable,
   resultsTable,
   onSectionChange,
+  onOpenFormPanel,
+  hasSensitized = false,
 }) => {
   const [financialTab, setFinancialTab] = useState<"balance" | "results">(
     "balance"
   );
   const mainLabelsForFinancialTables = [
+    "Total Activos Corrientes",
+    "Total Activos No Corrientes",
     "TOTAL ACTIVOS",
+    "Total Pasivos Corrientes",
+    "Total Pasivos No Corrientes",
     "TOTAL PASIVOS",
+    "TOTAL PATRIMONIO",
     "TOTAL PASIVOS Y PATRIMONIO",
     "Utilidad Bruta",
     "Utilidad Operativa",
@@ -36,11 +47,33 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
     "Utilidad neta",
   ];
 
+  const isMainLabel = (label: string) => {
+    const normLabel = label
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toUpperCase();
+
+    return mainLabelsForFinancialTables.some((main) => {
+      const normMain = main
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toUpperCase();
+      return normLabel === normMain;
+    });
+  };
+
   const formatCell = (value: string | number | null) => {
     if (value === null || value === undefined || value === "") {
       return "-";
     }
     if (typeof value === "number") {
+      if (value < 0) {
+        return `(${Math.abs(value).toLocaleString("es-PE")})`;
+      }
       return value.toLocaleString("es-PE");
     }
     return String(value);
@@ -77,7 +110,7 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
             {table.rows.map((row, rowIndex) => (
               <tr key={`${row.label}-${rowIndex}`}>
                 <td
-                  className={`px-4 py-2 text-left border border-gray-100 ${mainLabelsForFinancialTables.includes(row.label) ? "font-bold bg-blue-600/10 text-blue-600" : "text-gray-700"}`}
+                  className={`px-4 py-2 text-left border border-gray-100 ${isMainLabel(row.label) ? "font-bold bg-blue-600/10 text-blue-600" : "text-gray-700"}`}
                 >
                   {row.label}
                 </td>
@@ -100,14 +133,17 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
   return (
     <div className="flex-12 flex flex-col w-full h-full lg:pb-10 py-10 lg:pt-10 bg-[#f3f6f9] min-h-dvh">
       <div className="flex-1 w-full px-4 sm:px-8">
-        <div className="mx-auto flex w-full max-w-300 flex-col gap-6">
-          {section === "resultados" && (
+        {section === "resultados" && (
+          <div className="mx-auto flex w-full max-w-300 flex-col gap-6">
             <ValoraResultadosSection
               onOpenSensibilidad={() => onSectionChange?.("sensibilidad")}
+              onOpenFormPanel={onOpenFormPanel}
             />
-          )}
+          </div>
+        )}
 
-          {section === "estados" && (
+        {section === "estados" && (
+          <div className="mx-auto flex w-full max-w-300 flex-col gap-6">
             <ValoraEstadosSection
               financialTab={financialTab}
               onTabChange={setFinancialTab}
@@ -115,10 +151,18 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
               balanceTable={balanceTable}
               resultsTable={resultsTable}
             />
-          )}
+          </div>
+        )}
 
-          {section === "sensibilidad" && <ValoraSensibilidadSection />}
-        </div>
+        {section === "sensibilidad" && (
+          <div className="mx-auto flex w-full flex-col gap-6">
+            <ValoraSensibilidadSection
+              onOpenFormPanel={onOpenFormPanel}
+              hasSensitized={hasSensitized}
+              sector={INDUSTRY_TRANSLATIONS[formData.sector] || formData.sector}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

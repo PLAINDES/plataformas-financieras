@@ -7,12 +7,14 @@ interface NavigationTabsProps {
   selected: ValoraResultsSectionKey | "";
   onNavigate: (view: ValoraResultsSectionKey) => void;
   hasResults: boolean;
+  hasSensitized: boolean;
 }
 
 export const NavigationTabs: React.FC<NavigationTabsProps> = ({
   selected,
   onNavigate,
   hasResults,
+  hasSensitized,
 }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -86,13 +88,16 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
           </button>
 
           <button
-            onClick={() => onNavigate("sensibilidad")}
+            onClick={() => hasSensitized && onNavigate("sensibilidad")}
+            disabled={!hasSensitized}
             className={`
               flex flex-row items-center justify-center gap-2 px-3 py-2.5 rounded-lg font-medium text-xs transition-all duration-200 flex-1
               ${
                 selected === "sensibilidad"
                   ? "bg-blue-50 text-blue-600 shadow-sm"
-                  : "text-gray-700 hover:bg-gray-50"
+                  : hasSensitized
+                    ? "text-gray-700 hover:bg-gray-50"
+                    : "text-gray-400 cursor-not-allowed opacity-60"
               }
             `}
           >

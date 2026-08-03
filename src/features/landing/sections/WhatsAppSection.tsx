@@ -9,6 +9,7 @@ import {
 import { EditableText } from "@/shared/components/editable/EditableText";
 import type { EditableContent } from "@/shared/types/editable.types";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
+import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
 
 export const WhatsAppIcon = ({ className }: { className?: string }) => (
     <svg
@@ -54,6 +55,7 @@ export function WhatsAppSection({
     onToggle,
 }: WhatsAppSectionProps) {
     const { isAdmin } = useAuthContext();
+    const { trackEvent } = useAnalytics();
     const [internalIsOpen, setInternalIsOpen] = useState(false);
     const isOpen = controlledIsOpen ?? internalIsOpen;
     const setIsOpen = (val: boolean) => {
@@ -69,22 +71,52 @@ export function WhatsAppSection({
     >(null);
 
     const handleWhatsAppClick = () => {
-        if (content?.whatsappNumber) {
-            const cleanNumber = content.whatsappNumber.replace(/[^0-9]/g, "");
-            // Si el usuario escribió algo, usamos eso. Si no, usamos el defaultMessage.
+        trackEvent("cta_whatsapp_click", { location: "floating_chat" });
+        const rawUrl = content?.whatsappNumber || "";
+        if (!rawUrl) {
+            alert("No hay enlace de WhatsApp configurado.");
+            return;
+        }
+
+        // Parsear la URL base del CMS (ej: https://api.whatsapp.com/send?phone=+51924242220&text=...)
+        let finalUrl: string;
+        try {
+            const url = new URL(rawUrl);
+            // Extraer número del parámetro phone
+            const phoneParam = url.searchParams.get("phone") || "";
+            const cleanNumber = phoneParam.replace(/[^0-9]/g, "");
+
+            if (!cleanNumber) {
+                alert("No se encontró número de teléfono en el enlace de WhatsApp.");
+                return;
+            }
+
+            // Si el usuario escribió algo, reemplazamos el mensaje
             const finalMessage =
                 userMessage.trim() !== ""
                     ? userMessage
-                    : content.defaultMessage ||
+                    : content?.defaultMessage ||
                     "Hola, me gustaría recibir más información.";
 
-            const encodedMessage = encodeURIComponent(finalMessage);
-            window.open(
-                `https://wa.me/${cleanNumber}?text=${encodedMessage}`,
-                "_blank"
-            );
-            setUserMessage(""); // Limpiar después de enviar
+            url.searchParams.set("text", finalMessage);
+            finalUrl = url.toString();
+        } catch {
+            // Fallback: si no es una URL válida, usar como número directo
+            const cleanNumber = rawUrl.replace(/[^0-9]/g, "");
+            if (!cleanNumber) {
+                alert("No hay enlace de WhatsApp configurado.");
+                return;
+            }
+            const finalMessage =
+                userMessage.trim() !== ""
+                    ? userMessage
+                    : content?.defaultMessage ||
+                    "Hola, me gustaría recibir más información.";
+            finalUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(finalMessage)}`;
         }
+
+        window.open(finalUrl, "_blank");
+        setUserMessage(""); // Limpiar después de enviar
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -125,7 +157,7 @@ export function WhatsAppSection({
                     id: "agentAvatar",
                     value: newUrl,
                     type: "text",
-                    section: "whatsapp-home",
+                    section: "cta-home",
                     data: updatedData,
                 });
             }
@@ -206,14 +238,14 @@ export function WhatsAppSection({
                             )}
                         </div>
 
-                        {/* Nombre y Estado Editables */}
+                        {/* Nombre, Estado y Número Editables */}
                         <div className="flex-1 flex flex-col justify-center">
                             <EditableText
                                 content={{
                                     value: content?.agentName || "Asesoría Comercial",
                                     id: "agentName",
                                     type: "text",
-                                    section: "whatsapp-home",
+                                    section: "cta-home",
                                 }}
                                 onSave={onSave}
                                 as="h3"
@@ -224,7 +256,7 @@ export function WhatsAppSection({
                                     value: content?.agentStatus || "en línea",
                                     id: "agentStatus",
                                     type: "text",
-                                    section: "whatsapp-home",
+                                    section: "cta-home",
                                 }}
                                 onSave={onSave}
                                 as="p"
@@ -257,7 +289,7 @@ export function WhatsAppSection({
                                             "¡Hola! ¿En qué te podemos ayudar el día de hoy?",
                                         id: "agentGreetingMessage",
                                         type: "text",
-                                        section: "whatsapp-home",
+                                        section: "cta-home",
                                     }}
                                     onSave={onSave}
                                     as="div"
@@ -276,8 +308,8 @@ export function WhatsAppSection({
                     </div>
 
                     {/* Footer / Input de Envío */}
-                    <div className="bg-[#F0F0F0] px-3 py-3 flex items-center gap-2">
-                        <div className="flex-1 bg-white rounded-full relative shadow-sm overflow-hidden flex items-center">
+                    <div className="bg-[#F0F0F0] px-3 py-3 flex items-center gap-2 pointer-events-auto">
+                        <div className="flex-1 bg-white rounded-full relative shadow-sm overflow-hidden flex items-center pointer-events-auto">
                             <input
                                 type="text"
                                 value={userMessage}
@@ -286,14 +318,14 @@ export function WhatsAppSection({
                                 placeholder={
                                     content?.inputPlaceholder || "Escribe un mensaje..."
                                 }
-                                className="w-full px-4 py-2.5 text-slate-700 text-sm outline-none bg-transparent"
+                                className="w-full px-4 py-2.5 text-slate-700 text-sm outline-none bg-transparent pointer-events-auto"
                             />
                         </div>
 
                         <button
                             onClick={handleWhatsAppClick}
                             title="Abrir chat en WhatsApp"
-                            className="w-11 h-11 bg-[#128C7E] hover:bg-[#075E54] active:scale-95 rounded-full flex items-center justify-center shrink-0 shadow-md transition-all cursor-pointer group"
+                            className="w-11 h-11 bg-[#128C7E] hover:bg-[#075E54] active:scale-95 rounded-full flex items-center justify-center shrink-0 shadow-md transition-all cursor-pointer group pointer-events-auto"
                         >
                             <Send className="w-5 h-5 text-white" />
                         </button>

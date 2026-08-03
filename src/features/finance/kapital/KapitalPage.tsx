@@ -39,13 +39,17 @@ import {
 } from "@/shared/constants/kapital";
 
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
+import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
 import { ReportViewer } from "./components/ReportViewer";
 import { SubsectorModal } from "./components/SubsectorModal";
+
+const KAPITAL_STARTED_SESSION_KEY = "analytics_kapital_calculator_started";
 
 const KapitalPage: React.FC = () => {
     const { user, login, logout } = useAuthContext();
     const { addToast } = useToast();
     const location = useLocation();
+    const { trackEvent } = useAnalytics();
 
     // --- UI State ---
     const [isFormOpen, setIsFormOpen] = useState(true);
@@ -71,6 +75,18 @@ const KapitalPage: React.FC = () => {
 
     const form = useKapitalForm();
     const session = useKapitalSession();
+    const handleTrackedInputChange = useCallback(
+        (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+            if (!sessionStorage.getItem(KAPITAL_STARTED_SESSION_KEY)) {
+                sessionStorage.setItem(KAPITAL_STARTED_SESSION_KEY, "true");
+                void trackEvent("kapital_calculator_started", {
+                    product: "kapital",
+                });
+            }
+            form.handleInputChange(e);
+        },
+        [form.handleInputChange, trackEvent]
+    );
     const data = useKapitalData(
         form.formData.sector,
         subsectorTickersRef,
@@ -83,6 +99,7 @@ const KapitalPage: React.FC = () => {
         prewarmedSessionId: session.prewarmedSessionId,
         setPrewarmedSessionId: session.setPrewarmedSessionId,
         addToast,
+        trackEvent,
         userId: user?.id,
         ui: { setShowResults, setIsFormOpen, setResultsSection, setShowComparison },
     });
@@ -302,7 +319,7 @@ const KapitalPage: React.FC = () => {
                 <div className="h-full w-full max-[540px]:w-screen sm:w-90 border-r border-gray-200 bg-white shadow-sm shrink-0">
                     <FormSidebar
                         formData={form.formData}
-                        onInputChange={form.handleInputChange}
+                        onInputChange={handleTrackedInputChange}
                         onSubmit={(e) => calc.handleSubmit(e, form.formData.beta_unlevered)}
                         loading={calc.isLoading}
                         isWaccCalculated={calc.isWaccCalculated}

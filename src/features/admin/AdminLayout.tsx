@@ -809,6 +809,7 @@ const Sidebar: FC<SidebarProps> = ({
               boxShadow: "0 2px 12px rgba(0,0,0,0.18)",
               color: "#7e8299",
               transition: "box-shadow .2s",
+              zIndex: 9999,
             }}
             onMouseEnter={(e) =>
               (e.currentTarget.style.boxShadow =
