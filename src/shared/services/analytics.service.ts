@@ -41,6 +41,19 @@ export interface DashboardSummary {
   active_sessions: number;
 }
 
+export interface CalculationFunnel {
+  users_started: number;
+  activation_rate: number;
+  started: number;
+  completed: number;
+  completion_rate: number;
+}
+
+export interface RetentionMetrics {
+  new_users: number;
+  recurring_users: number;
+}
+
 export interface DashboardData {
   summary: DashboardSummary;
   devices: TopItem[];
@@ -50,6 +63,8 @@ export interface DashboardData {
   daily_distribution: TopItem[];
   pages: TopItem[];
   sessions_over_time: TimeSeriesItem[];
+  kapital_funnel?: CalculationFunnel;
+  kapital_retention?: RetentionMetrics;
   cta_clicks: number;
   avg_time_on_page: number | null;
 }

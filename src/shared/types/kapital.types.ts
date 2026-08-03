@@ -89,6 +89,7 @@ export interface UseKapitalCalculationProps {
     prewarmedSessionId: string | null;
     setPrewarmedSessionId: React.Dispatch<React.SetStateAction<string | null>>;
     addToast: (message: string, type?: ToastType) => void;
+    trackEvent: (eventName: string, eventMetadata?: Record<string, any>) => Promise<void>;
     userId?: number | string;
     ui: {
         setShowResults: (val: boolean) => void;

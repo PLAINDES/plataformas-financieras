@@ -17,6 +17,11 @@ import {
   MapPin,
   BarChart3,
   Activity,
+  PlayCircle,
+  CheckCircle2,
+  Percent,
+  UserPlus,
+  RefreshCw,
   HelpCircle,
   Download,
 } from "lucide-react";
@@ -215,6 +220,13 @@ const AnalyticsPage: React.FC = () => {
       { Métrica: "Visitantes Únicos", Valor: data.summary.unique_visitors },
       { Métrica: "Sesiones Activas", Valor: data.summary.active_sessions },
       { Métrica: "Eventos Totales", Valor: data.summary.total_events },
+      { Métrica: "Usuarios que inician Kapital", Valor: data.kapital_funnel?.users_started ?? 0 },
+      { Métrica: "Tasa de activación Kapital (%)", Valor: data.kapital_funnel?.activation_rate ?? 0 },
+      { Métrica: "Cálculos Kapital iniciados", Valor: data.kapital_funnel?.started ?? 0 },
+      { Métrica: "Cálculos Kapital completados", Valor: data.kapital_funnel?.completed ?? 0 },
+      { Métrica: "Tasa de finalización Kapital (%)", Valor: data.kapital_funnel?.completion_rate ?? 0 },
+      { Métrica: "Usuarios nuevos en Kapital", Valor: data.kapital_retention?.new_users ?? 0 },
+      { Métrica: "Usuarios recurrentes en Kapital", Valor: data.kapital_retention?.recurring_users ?? 0 },
       { Métrica: "Captaciones WhatsApp (CTA)", Valor: data.cta_clicks },
       { Métrica: "Duración Promedio Sesión (s)", Valor: data.summary.avg_duration_seconds ?? 0 },
       { Métrica: "Tiempo Promedio en Página (s)", Valor: data.avg_time_on_page ?? 0 },
@@ -354,6 +366,81 @@ const AnalyticsPage: React.FC = () => {
                   tooltip="Tiempo medio que un usuario permanece en el sitio por sesión. Si no hay sesiones cerradas, muestra el tiempo promedio en página."
                 />
               </div>
+
+              <section className="space-y-3">
+                <div>
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
+                    Embudo de Kapital
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Uso efectivo de la calculadora en el periodo seleccionado.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                  <MetricCard
+                    title="Usuarios que inician"
+                    value={data.kapital_funnel?.users_started ?? 0}
+                    icon={<Users className="h-5 w-5" />}
+                    subtitle="Primera interacción manual"
+                    tooltip="Sesiones únicas que modificaron al menos un campo de la calculadora Kapital en el periodo seleccionado."
+                  />
+                  <MetricCard
+                    title="Tasa de activación"
+                    value={`${data.kapital_funnel?.activation_rate ?? 0}%`}
+                    icon={<Percent className="h-5 w-5 text-cyan-600" />}
+                    subtitle="Iniciaron entre visitantes"
+                    tooltip="Porcentaje de sesiones únicas que modificaron al menos un campo respecto de las sesiones únicas que visitaron Kapital."
+                  />
+                  <MetricCard
+                    title="Cálculos iniciados"
+                    value={data.kapital_funnel?.started ?? 0}
+                    icon={<PlayCircle className="h-5 w-5" />}
+                    subtitle="Intentos iniciales validados"
+                    tooltip="Cantidad de cálculos iniciales de Kapital enviados después de completar los campos obligatorios. No incluye sensibilizaciones."
+                  />
+                  <MetricCard
+                    title="Cálculos completados"
+                    value={data.kapital_funnel?.completed ?? 0}
+                    icon={<CheckCircle2 className="h-5 w-5 text-emerald-600" />}
+                    subtitle="Resultados generados"
+                    tooltip="Cantidad de intentos iniciales que recibieron resultados válidos. No incluye sensibilizaciones."
+                  />
+                  <MetricCard
+                    title="Tasa de finalización"
+                    value={`${data.kapital_funnel?.completion_rate ?? 0}%`}
+                    icon={<Percent className="h-5 w-5 text-amber-600" />}
+                    subtitle="Completados entre iniciados"
+                    tooltip="Porcentaje de cálculos completados respecto de los cálculos iniciados en el periodo seleccionado."
+                  />
+                </div>
+              </section>
+
+              <section className="space-y-3">
+                <div>
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
+                    Retención de Kapital
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Usuarios autenticados que llegan por primera vez o regresan a Kapital.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <MetricCard
+                    title="Usuarios nuevos"
+                    value={data.kapital_retention?.new_users ?? 0}
+                    icon={<UserPlus className="h-5 w-5 text-blue-600" />}
+                    subtitle="Primera visita a Kapital"
+                    tooltip="Usuarios autenticados cuya primera visita histórica a Kapital ocurrió dentro del periodo seleccionado."
+                  />
+                  <MetricCard
+                    title="Usuarios recurrentes"
+                    value={data.kapital_retention?.recurring_users ?? 0}
+                    icon={<RefreshCw className="h-5 w-5 text-emerald-600" />}
+                    subtitle="Regresaron durante el periodo"
+                    tooltip="Usuarios autenticados que visitaron Kapital en el periodo seleccionado y ya tenían una visita anterior."
+                  />
+                </div>
+              </section>
 
               {/* Chart + Tables */}
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
