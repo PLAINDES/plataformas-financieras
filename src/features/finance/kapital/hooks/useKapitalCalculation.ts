@@ -26,6 +26,7 @@ export function useKapitalCalculation({
   prewarmedSessionId,
   setPrewarmedSessionId,
   addToast,
+  trackEvent,
   userId,
   ui,
 }: UseKapitalCalculationProps) {
@@ -83,6 +84,19 @@ export function useKapitalCalculation({
     const betaUnlevered = toOptionalNumber(dataToSubmit.beta_unlevered);
     const isBetaUpdate =
       isWaccCalculated && currentCalculation && betaUnlevered !== undefined;
+    const attemptId = !isBetaUpdate
+      ? typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+      : null;
+
+    if (attemptId) {
+      void trackEvent("kapital_calculation_started", {
+        product: "kapital",
+        calculation_mode: "initial",
+        attempt_id: attemptId,
+      });
+    }
 
     try {
       let persistedCalculation: Calculation;
@@ -139,6 +153,15 @@ export function useKapitalCalculation({
         persistedCalculation.data
       );
       console.timeEnd("[KAPITAL] extractSensibilizaciones");
+
+      if (attemptId && rebuiltResults) {
+        void trackEvent("kapital_calculation_completed", {
+          product: "kapital",
+          calculation_mode: "initial",
+          attempt_id: attemptId,
+          calculation_code: persistedCalculation.code,
+        });
+      }
 
       setResults(rebuiltResults);
       setShowCompanyCard(hasCompanyData);
