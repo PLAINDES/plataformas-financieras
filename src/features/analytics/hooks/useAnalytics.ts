@@ -39,12 +39,16 @@ function getBrowser(): string {
   const ua = navigator.userAgent;
   // Detect Brave (expone navigator.brave.isBrave)
   if ((navigator as any).brave && typeof (navigator as any).brave.isBrave === "function") return "Brave";
-  if (/Edg/i.test(ua)) return "Edge";
+  if (/EdgA|EdgiOS|Edg\//i.test(ua)) return "Edge";
+  if (/SamsungBrowser/i.test(ua)) return "Samsung Internet";
   if (/OPR|Opera/i.test(ua)) return "Opera";
-  if (/Chrome/i.test(ua)) return "Chrome";
-  if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) return "Safari";
-  if (/Firefox/i.test(ua)) return "Firefox";
-  return "Unknown";
+  if (/Vivaldi/i.test(ua)) return "Vivaldi";
+  if (/YaBrowser/i.test(ua)) return "Yandex";
+  if (/; wv\)|\bwv\b/i.test(ua)) return "Android WebView";
+  if (/CriOS|Chrome|Chromium/i.test(ua)) return "Chrome";
+  if (/FxiOS|Firefox/i.test(ua)) return "Firefox";
+  if (/Safari/i.test(ua)) return "Safari";
+  return "Otro";
 }
 
 function getOrCreateSessionId(): string {
@@ -117,7 +121,7 @@ export function useAnalytics() {
       const payload = {
         session_id: sessionId,
         event_name: eventName,
-        page_path: location.pathname + location.search,
+        page_path: location.pathname || "/",
         user_id: user?.id || null,
         device_type: getDeviceType(),
         os: getOS(),
@@ -132,14 +136,14 @@ export function useAnalytics() {
         // Silenciar errores de tracking
       }
     },
-    [location.pathname, location.search, user]
+    [location.pathname, user]
   );
 
   // Track page view on route change
   useEffect(() => {
-    const pagePath = location.pathname + location.search;
+    const pagePath = location.pathname || "/";
     trackPageView(pagePath);
-  }, [location.pathname, location.search, trackPageView]);
+  }, [location.pathname, trackPageView]);
 
   // End session on unload
   useEffect(() => {
