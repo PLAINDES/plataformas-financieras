@@ -74,10 +74,10 @@ const ProgressBar: React.FC<{ label: string; count: number; percentage: number; 
   percentage,
   color = "bg-blue-500",
 }) => (
-  <div className="mb-3">
-    <div className="mb-1 flex items-center justify-between text-sm">
-      <span className="font-medium text-gray-700">{label}</span>
-      <span className="text-gray-500">
+  <div className="mb-3 min-w-0">
+    <div className="mb-1 flex min-w-0 items-center gap-2 text-sm">
+      <span className="min-w-0 flex-1 truncate font-medium text-gray-700" title={label}>{label}</span>
+      <span className="shrink-0 text-gray-500">
         {count} ({percentage}%)
       </span>
     </div>
@@ -93,7 +93,7 @@ const SectionCard: React.FC<{ title: string; children: React.ReactNode; icon?: R
   icon,
   tooltip,
 }) => (
-  <div className="rounded-xl bg-white p-5 shadow-sm border border-gray-100">
+  <div className="min-w-0 rounded-xl bg-white p-5 shadow-sm border border-gray-100">
     <div className="mb-4 flex items-center gap-2">
       {icon && <span className="text-gray-500">{icon}</span>}
       <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500">{title}</h3>
@@ -220,13 +220,13 @@ const AnalyticsPage: React.FC = () => {
       { Métrica: "Visitantes Únicos", Valor: data.summary.unique_visitors },
       { Métrica: "Sesiones Activas", Valor: data.summary.active_sessions },
       { Métrica: "Eventos Totales", Valor: data.summary.total_events },
-      { Métrica: "Usuarios que inician Kapital", Valor: data.kapital_funnel?.users_started ?? 0 },
+      { Métrica: "Visitantes que inician Kapital", Valor: data.kapital_funnel?.users_started ?? 0 },
       { Métrica: "Tasa de activación Kapital (%)", Valor: data.kapital_funnel?.activation_rate ?? 0 },
       { Métrica: "Cálculos Kapital iniciados", Valor: data.kapital_funnel?.started ?? 0 },
       { Métrica: "Cálculos Kapital completados", Valor: data.kapital_funnel?.completed ?? 0 },
       { Métrica: "Tasa de finalización Kapital (%)", Valor: data.kapital_funnel?.completion_rate ?? 0 },
-      { Métrica: "Usuarios nuevos en Kapital", Valor: data.kapital_retention?.new_users ?? 0 },
-      { Métrica: "Usuarios recurrentes en Kapital", Valor: data.kapital_retention?.recurring_users ?? 0 },
+      { Métrica: "Visitantes nuevos en Kapital", Valor: data.kapital_retention?.new_users ?? 0 },
+      { Métrica: "Visitantes recurrentes en Kapital", Valor: data.kapital_retention?.recurring_users ?? 0 },
       { Métrica: "Captaciones WhatsApp (CTA)", Valor: data.cta_clicks },
       { Métrica: "Duración Promedio Sesión (s)", Valor: data.summary.avg_duration_seconds ?? 0 },
       { Métrica: "Tiempo Promedio en Página (s)", Valor: data.avg_time_on_page ?? 0 },
@@ -245,7 +245,7 @@ const AnalyticsPage: React.FC = () => {
     XLSX.utils.book_append_sheet(wb, wsCities, "Ciudades");
 
     // 4. Navegadores
-    const browsersData = data.browsers.map((b) => ({ Navegador: b.label, Cantidad: b.count, Porcentaje: `${b.percentage}%` }));
+    const browsersData = data.browsers.map((b) => ({ Navegador: b.label === "Unknown" ? "Otro / no identificado" : b.label, Cantidad: b.count, Porcentaje: `${b.percentage}%` }));
     const wsBrowsers = XLSX.utils.json_to_sheet(browsersData);
     XLSX.utils.book_append_sheet(wb, wsBrowsers, "Navegadores");
 
@@ -378,18 +378,18 @@ const AnalyticsPage: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                   <MetricCard
-                    title="Usuarios que inician"
+                    title="Visitantes que inician"
                     value={data.kapital_funnel?.users_started ?? 0}
                     icon={<Users className="h-5 w-5" />}
                     subtitle="Primera interacción manual"
-                    tooltip="Sesiones únicas que modificaron al menos un campo de la calculadora Kapital en el periodo seleccionado."
+                    tooltip="Visitantes únicos, identificados por cuenta o IP, que modificaron al menos un campo de la calculadora Kapital en el periodo seleccionado."
                   />
                   <MetricCard
                     title="Tasa de activación"
                     value={`${data.kapital_funnel?.activation_rate ?? 0}%`}
                     icon={<Percent className="h-5 w-5 text-cyan-600" />}
                     subtitle="Iniciaron entre visitantes"
-                    tooltip="Porcentaje de sesiones únicas que modificaron al menos un campo respecto de las sesiones únicas que visitaron Kapital."
+                    tooltip="Porcentaje de visitantes únicos que modificaron al menos un campo respecto de quienes visitaron Kapital."
                   />
                   <MetricCard
                     title="Cálculos iniciados"
@@ -402,15 +402,15 @@ const AnalyticsPage: React.FC = () => {
                     title="Cálculos completados"
                     value={data.kapital_funnel?.completed ?? 0}
                     icon={<CheckCircle2 className="h-5 w-5 text-emerald-600" />}
-                    subtitle="Resultados generados"
-                    tooltip="Cantidad de intentos iniciales que recibieron resultados válidos. No incluye sensibilizaciones."
+                    subtitle="Sensibilizaciones realizadas"
+                    tooltip="Cantidad de cálculos iniciales que alcanzaron una sensibilización procesada correctamente."
                   />
                   <MetricCard
                     title="Tasa de finalización"
                     value={`${data.kapital_funnel?.completion_rate ?? 0}%`}
                     icon={<Percent className="h-5 w-5 text-amber-600" />}
                     subtitle="Completados entre iniciados"
-                    tooltip="Porcentaje de cálculos completados respecto de los cálculos iniciados en el periodo seleccionado."
+                    tooltip="Porcentaje de cálculos iniciados que alcanzaron una sensibilización procesada correctamente."
                   />
                 </div>
               </section>
@@ -421,23 +421,23 @@ const AnalyticsPage: React.FC = () => {
                     Retención de Kapital
                   </h2>
                   <p className="text-xs text-gray-500">
-                    Usuarios autenticados que llegan por primera vez o regresan a Kapital.
+                    Personas identificadas por su cuenta o IP que llegan por primera vez o regresan a Kapital.
                   </p>
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <MetricCard
-                    title="Usuarios nuevos"
+                    title="Visitantes nuevos"
                     value={data.kapital_retention?.new_users ?? 0}
                     icon={<UserPlus className="h-5 w-5 text-blue-600" />}
                     subtitle="Primera visita a Kapital"
-                    tooltip="Usuarios autenticados cuya primera visita histórica a Kapital ocurrió dentro del periodo seleccionado."
+                    tooltip="Cuentas o direcciones IP cuya primera visita histórica a Kapital ocurrió dentro del periodo seleccionado."
                   />
                   <MetricCard
-                    title="Usuarios recurrentes"
+                    title="Visitantes recurrentes"
                     value={data.kapital_retention?.recurring_users ?? 0}
                     icon={<RefreshCw className="h-5 w-5 text-emerald-600" />}
                     subtitle="Regresaron durante el periodo"
-                    tooltip="Usuarios autenticados que visitaron Kapital en el periodo seleccionado y ya tenían una visita anterior."
+                    tooltip="Cuentas o direcciones IP que visitaron Kapital en el periodo seleccionado y ya tenían una visita anterior."
                   />
                 </div>
               </section>
@@ -494,7 +494,7 @@ const AnalyticsPage: React.FC = () => {
                 {/* Browsers */}
                 <SectionCard title="Navegadores" icon={<Globe className="h-4 w-4" />} tooltip="Desglose de navegadores usados por los visitantes.">
                   {data.browsers.map((b) => (
-                    <ProgressBar key={b.label} label={b.label} count={b.count} percentage={b.percentage} color="bg-cyan-500" />
+                    <ProgressBar key={b.label} label={b.label === "Unknown" ? "Otro / no identificado" : b.label} count={b.count} percentage={b.percentage} color="bg-cyan-500" />
                   ))}
                 </SectionCard>
 

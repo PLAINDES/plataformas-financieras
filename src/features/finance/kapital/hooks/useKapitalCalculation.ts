@@ -20,6 +20,8 @@ import {
   type UseKapitalCalculationProps,
 } from "@/shared/types";
 
+const ACTIVE_KAPITAL_ATTEMPT_KEY = "analytics_kapital_active_attempt_id";
+
 export function useKapitalCalculation({
   formData,
   setFormData,
@@ -91,6 +93,7 @@ export function useKapitalCalculation({
       : null;
 
     if (attemptId) {
+      sessionStorage.setItem(ACTIVE_KAPITAL_ATTEMPT_KEY, attemptId);
       void trackEvent("kapital_calculation_started", {
         product: "kapital",
         calculation_mode: "initial",
@@ -154,15 +157,6 @@ export function useKapitalCalculation({
       );
       console.timeEnd("[KAPITAL] extractSensibilizaciones");
 
-      if (attemptId && rebuiltResults) {
-        void trackEvent("kapital_calculation_completed", {
-          product: "kapital",
-          calculation_mode: "initial",
-          attempt_id: attemptId,
-          calculation_code: persistedCalculation.code,
-        });
-      }
-
       setResults(rebuiltResults);
       setShowCompanyCard(hasCompanyData);
       setCurrentCalculation(persistedCalculation);
@@ -174,6 +168,19 @@ export function useKapitalCalculation({
       ui.setIsFormOpen(false);
 
       if (isBetaUpdate) {
+        const activeAttemptId = sessionStorage.getItem(
+          ACTIVE_KAPITAL_ATTEMPT_KEY
+        );
+        if (activeAttemptId && sensibilizacionData.length > 0) {
+          sessionStorage.removeItem(ACTIVE_KAPITAL_ATTEMPT_KEY);
+          void trackEvent("kapital_calculation_completed", {
+            product: "kapital",
+            calculation_mode: "sensitivity",
+            attempt_id: activeAttemptId,
+            calculation_code: persistedCalculation.code,
+          });
+        }
+
         // Navigate a sensitivity cuando se manda el beta desapalancado para sensibilización
         ui.setResultsSection("sensitivity");
         ui.setShowComparison(false);
