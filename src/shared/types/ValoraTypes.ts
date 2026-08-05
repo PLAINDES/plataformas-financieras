@@ -42,3 +42,24 @@ export interface FinancialTable {
   years: string[];
   rows: FinancialTableRow[];
 }
+
+export interface ValoraMethodResults {
+  activo?: string | number | null;
+  pasivo?: string | number | null;
+  empresa?: string | number | null;
+  patrimonio?: string | number | null;
+  precio_accion?: string | number | null;
+  tasa_forecast?: string | number | null;
+  tasa_perpetua?: string | number | null;
+}
+
+export interface ValoraCalculationResults {
+  wacc?: string | number | null;
+  balance?: {
+    activo?: string | number | null;
+    pasivo?: string | number | null;
+    patrimonio?: string | number | null;
+  };
+  conceptos?: ValoraMethodResults;
+  integrado?: ValoraMethodResults;
+}

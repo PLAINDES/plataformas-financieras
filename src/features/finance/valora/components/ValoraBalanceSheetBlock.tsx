@@ -1,11 +1,15 @@
 export interface ValoraBalanceSheetBlockProps {
-  activo: number;
-  pasivo: number;
-  patrimonio: number;
-  conceptosPatrimonio: number;
-  integradoPatrimonio: number;
-  conceptosEmpresa: number;
-  integradoEmpresa: number;
+  activo: number | null;
+  pasivo: number | null;
+  patrimonio: number | null;
+  conceptosActivo: number | null;
+  conceptosPasivo: number | null;
+  conceptosPatrimonio: number | null;
+  integradoActivo: number | null;
+  integradoPasivo: number | null;
+  integradoPatrimonio: number | null;
+  conceptosEmpresa: number | null;
+  integradoEmpresa: number | null;
   variant?: "default" | "conceptos" | "integrado";
 }
 
@@ -33,11 +37,11 @@ const DefaultBalanceChart = ({
   conceptosPatrimonio,
   integradoPatrimonio,
 }: {
-  activo: number;
-  pasivo: number;
-  patrimonio: number;
-  conceptosPatrimonio: number;
-  integradoPatrimonio: number;
+  activo: number | null;
+  pasivo: number | null;
+  patrimonio: number | null;
+  conceptosPatrimonio: number | null;
+  integradoPatrimonio: number | null;
 }) => {
   return (
     <div className="p-4 flex flex-col justify-end h-full">
@@ -127,11 +131,11 @@ const MethodBalanceChart = ({
   valorFinancieroPatrimonio,
   valorFinancieroEmpresa,
 }: {
-  activo: number;
-  pasivo: number;
-  patrimonio: number;
-  valorFinancieroPatrimonio: number;
-  valorFinancieroEmpresa: number;
+  activo: number | null;
+  pasivo: number | null;
+  patrimonio: number | null;
+  valorFinancieroPatrimonio: number | null;
+  valorFinancieroEmpresa: number | null;
 }) => {
   return (
     <div className="p-4 flex flex-col justify-end h-full">
@@ -210,7 +214,11 @@ export const ValoraBalanceSheetBlock: React.FC<ValoraBalanceSheetBlockProps> = (
   activo,
   pasivo,
   patrimonio,
+  conceptosActivo,
+  conceptosPasivo,
   conceptosPatrimonio,
+  integradoActivo,
+  integradoPasivo,
   integradoPatrimonio,
   conceptosEmpresa,
   integradoEmpresa,
@@ -229,8 +237,8 @@ export const ValoraBalanceSheetBlock: React.FC<ValoraBalanceSheetBlockProps> = (
       )}
         {variant === "conceptos" && (
           <MethodBalanceChart
-            activo={activo}
-            pasivo={pasivo}
+            activo={conceptosActivo}
+            pasivo={conceptosPasivo}
             patrimonio={patrimonio}
             valorFinancieroPatrimonio={conceptosPatrimonio}
             valorFinancieroEmpresa={conceptosEmpresa}
@@ -238,8 +246,8 @@ export const ValoraBalanceSheetBlock: React.FC<ValoraBalanceSheetBlockProps> = (
         )}
         {variant === "integrado" && (
           <MethodBalanceChart
-            activo={activo}
-            pasivo={pasivo}
+            activo={integradoActivo}
+            pasivo={integradoPasivo}
             patrimonio={patrimonio}
             valorFinancieroPatrimonio={integradoPatrimonio}
             valorFinancieroEmpresa={integradoEmpresa}

@@ -1,7 +1,7 @@
 import { Sparkles, ArrowRight } from "lucide-react";
 
 export interface ValoraResultsHeaderProps {
-  wacc: number;
+  wacc: number | null;
   title: string;
   subtitle: string;
   sector?: string;
@@ -43,8 +43,8 @@ export const ValoraResultsHeader: React.FC<ValoraResultsHeaderProps> = ({
       )}
     </div>
 
-    <div className="px-4 py-2 bg-blue-50 text-valora-primary rounded-full text-sm font-bold border border-valora-primary/20 whitespace-nowrap">
-      WACC {wacc}%
+    <div className="px-4 py-2 bg-purple-50 text-purple-700 rounded-full text-sm font-bold border border-purple-200 whitespace-nowrap">
+      WACC {wacc === null ? "-" : `${wacc.toFixed(2)}%`}
     </div>
   </header>
 );

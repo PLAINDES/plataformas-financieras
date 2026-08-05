@@ -4,12 +4,12 @@ import { CheckCircle2, ChevronRight } from "lucide-react";
 export interface ValoraMethodData {
   id: "conceptos" | "integrado";
   headerText: string;
-  empresaValue: number;
-  patrimonioValue: number;
-  accionValue: number;
-  tasaForecast: number;
+  empresaValue: number | null;
+  patrimonioValue: number | null;
+  accionValue: number | null;
+  tasaForecast: number | null;
   tasaForecastLabel: string;
-  tasaPerpetua: number;
+  tasaPerpetua: number | null;
   icon: LucideIcon;
   buttonColor: "orange" | "blue";
 }
@@ -20,11 +20,13 @@ export interface ValoraMethodsToggleCardProps {
   onSelectMethod: (method: "conceptos" | "integrado") => void;
 }
 
-const formatNumber = (value: number, decimals = 0) =>
-  value.toLocaleString("es-PE", {
+const formatNumber = (value: number | null, decimals = 0) => {
+  if (value === null) return "-";
+  return value.toLocaleString("es-PE", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
+};
 
 const BasicDataRows = ({
   method,
@@ -94,7 +96,7 @@ const ExpandedDataRows = ({
         {method.tasaForecastLabel}
       </span>
       <span className="text-sm font-bold text-blue-600">
-        {method.tasaForecast.toFixed(2)}%
+        {method.tasaForecast === null ? "-" : `${method.tasaForecast.toFixed(2)}%`}
       </span>
     </div>
     <div className="flex justify-between items-center py-2">
@@ -102,7 +104,7 @@ const ExpandedDataRows = ({
         Tasa de crecimiento perpetuo
       </span>
       <span className="text-sm font-bold text-red-500">
-        {method.tasaPerpetua.toFixed(0)}%
+        {method.tasaPerpetua === null ? "-" : `${method.tasaPerpetua.toFixed(2)}%`}
       </span>
     </div>
   </div>
