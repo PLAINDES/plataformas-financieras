@@ -6,7 +6,10 @@ import {
 } from "./components/ValoraResults";
 import { LoadingOverlay } from "@/shared/components/common/LoadingOverlay";
 import { ToastStack } from "@/shared/components/common/ToastStack";
-import type { FinancialTable } from "@/shared/types/ValoraTypes";
+import type {
+  FinancialTable,
+  ValoraCalculationResults,
+} from "@/shared/types/ValoraTypes";
 import type { ToastType } from "@/shared/types/toast.types";
 import { MainPageFooter } from "../components/MainPageFooter";
 import { parseFinancialTablesFromFile } from "./types/valoraFileParsing";
@@ -28,6 +31,19 @@ import {
   BONOS_TRANSLATIONS,
   COUNTRIES_TRANSLATIONS,
 } from "@/shared/constants/kapital";
+
+const getValoraCalculationResults = (
+  data: unknown
+): ValoraCalculationResults | undefined => {
+  if (!data || typeof data !== "object") return undefined;
+
+  const results = (data as {
+    resultados?: ValoraCalculationResults | ValoraCalculationResults[];
+  }).resultados;
+
+  if (Array.isArray(results)) return results[0];
+  return results;
+};
 
 const ValoraPage: React.FC = () => {
   const { user, logout } = useAuthContext();
@@ -195,6 +211,9 @@ const ValoraPage: React.FC = () => {
         section={resultsSection}
         balanceTable={balanceTable}
         resultsTable={resultsTable}
+        calculationResults={getValoraCalculationResults(
+          valoraCalc.currentCalculation?.data
+        )}
         formData={formData}
         onSectionChange={handleResultsSectionChange}
         onOpenFormPanel={() => setIsDesktopFormOpen(true)}

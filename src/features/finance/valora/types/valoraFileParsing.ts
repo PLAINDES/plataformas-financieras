@@ -14,6 +14,27 @@ export type ParsedTablesResult = {
   customInputs?: CustomTemplateInputs;
 };
 
+const normalizeThousandsSeparators = (
+  table: FinancialTable | null
+): FinancialTable | null => {
+  if (!table) return table;
+
+  return {
+    ...table,
+    rows: table.rows.map((row) => ({
+      ...row,
+      values: row.values.map((rawValue) => {
+        const value = Number(rawValue);
+        return Number.isFinite(value) &&
+          !Number.isInteger(value) &&
+          Math.abs(value) < 10_000
+          ? Math.round(value * 1_000)
+          : value;
+      }),
+    })),
+  };
+};
+
 const parsePercentageValue = (
   cell: XLSX.CellObject | undefined,
   rawArrayValue: any
@@ -146,8 +167,8 @@ export const parseFinancialTablesFromFile = async (
   }
 
   return {
-    balanceTable: parsedBalance,
-    resultsTable: parsedResults,
+    balanceTable: normalizeThousandsSeparators(parsedBalance),
+    resultsTable: normalizeThousandsSeparators(parsedResults),
     customInputs,
   };
 };

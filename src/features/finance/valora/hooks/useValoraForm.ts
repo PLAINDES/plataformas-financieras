@@ -144,11 +144,13 @@ export function useValoraForm() {
           (item: any) => String(item.fecha) === String(year)
         );
 
-        if (damoMatch && taxMatch) {
+        if (damoMatch) {
           const beta = Number(damoMatch.beta);
           const d_sobre_def = Number(damoMatch.d_sobre_def);
           const e_sobre_de = Number(damoMatch.e_sobre_de);
-          const tax_rate = Number(taxMatch.tax_rate);
+          // Algunas bases locales no tienen complemento "tax", pero
+          // Damodaran ya expone tax_rate por industria y año.
+          const tax_rate = Number(taxMatch?.tax_rate ?? damoMatch.tax_rate);
 
           if (
             !isNaN(beta) &&

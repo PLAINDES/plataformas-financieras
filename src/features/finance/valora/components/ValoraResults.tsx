@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import { ValoraEstadosSection } from "./ValoraEstadosSection";
 import { ValoraResultadosSection } from "./ValoraResultadosSection";
 import { ValoraSensibilidadSection } from "./ValoraSensibilidadSection";
-import type { FinancialTable, FormData } from "@/shared/types/ValoraTypes";
+import type {
+  FinancialTable,
+  FormData,
+  ValoraCalculationResults,
+} from "@/shared/types/ValoraTypes";
 import { INDUSTRY_TRANSLATIONS } from "@/shared/constants/kapital";
 
 export type ValoraResultsSectionKey =
@@ -15,6 +19,7 @@ export interface ValoraResultsProps {
   section: ValoraResultsSectionKey;
   balanceTable: FinancialTable | null;
   resultsTable: FinancialTable | null;
+  calculationResults?: ValoraCalculationResults;
   onSectionChange?: (section: ValoraResultsSectionKey) => void;
   onOpenFormPanel?: () => void;
   hasSensitized?: boolean;
@@ -25,6 +30,7 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
   section,
   balanceTable,
   resultsTable,
+  calculationResults,
   onSectionChange,
   onOpenFormPanel,
   hasSensitized = false,
@@ -138,6 +144,7 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
             <ValoraResultadosSection
               onOpenSensibilidad={() => onSectionChange?.("sensibilidad")}
               onOpenFormPanel={onOpenFormPanel}
+              results={calculationResults}
             />
           </div>
         )}
