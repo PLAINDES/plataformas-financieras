@@ -90,8 +90,8 @@ export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps>
         subtitle="Comparación de resultados"
       />
 
-      <div className="flex flex-col lg:flex-row gap-4 h-[29rem] lg:h-[29rem]">
-        <div className="lg:w-1/3 h-full">
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="lg:w-1/3">
           <ValoraMethodsToggleCard
             methods={methods}
             selectedMethod={chartMode === "default" ? "none" : chartMode}
@@ -99,7 +99,7 @@ export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps>
           />
         </div>
 
-        <div className="lg:w-2/3 h-full">
+        <div className="lg:w-2/3">
           <ValoraBalanceSheetBlock
             activo={parseNumber(results?.balance?.activo)}
             pasivo={parseNumber(results?.balance?.pasivo)}
