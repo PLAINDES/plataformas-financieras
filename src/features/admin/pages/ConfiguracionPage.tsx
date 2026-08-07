@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { BaseFinancialItem, DamodaranItem } from "@/shared/types"; // Fallback import
-import { Upload, Loader2 } from "lucide-react";
+import { Upload } from "lucide-react";
 
 import { RfTable } from "./configuracion-tabs/RfTable";
 import { EmbiTable } from "./configuracion-tabs/EmbiTable";
@@ -216,7 +216,6 @@ export const ConfiguracionPage = () => {
     capitalizacion_bursatil: number | null;
     valor_por_accion: number | null;
   };
-  const [bvlFile, setBvlFile] = useState<File | null>(null);
   const [bvlData, setBvlData] = useState<BvlCotizacionItem[]>([]);
   const [bvlUploading, setBvlUploading] = useState(false);
   const bvlFileInputRef = useRef<HTMLInputElement>(null);

@@ -85,45 +85,6 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
             <span className="text-xs">Resultados</span>
           </button>
 
-          {/* Pestaña de sensibilidad desactivada por ahora */}
-          {false && (
-            <button
-              onClick={() => hasSensitized && onNavigate("sensibilidad")}
-              disabled={!hasSensitized}
-              className={`
-                flex flex-row items-center justify-center gap-2 px-3 py-2.5 rounded-lg font-medium text-xs transition-all duration-200 flex-1
-                ${
-                  selected === "sensibilidad"
-                    ? "bg-blue-50 text-blue-600 shadow-sm"
-                    : hasSensitized
-                      ? "text-gray-700 hover:bg-gray-50"
-                      : "text-gray-400 cursor-not-allowed opacity-60"
-                }
-              `}
-            >
-              <span
-                className={
-                  selected === "sensibilidad" ? "text-blue-600" : "text-gray-400"
-                }
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
-                  />
-                </svg>
-              </span>
-              <span className="text-xs">Sensibilidad</span>
-            </button>
-          )}
-
         </div>
       </div>
     </div>

@@ -195,7 +195,6 @@ export const PlantillasMaestrasPage = () => {
 
   // === TABS STATE ==========================================================
   const [activeTab, setActiveTab] = useState<"master" | "valora" | "valora-copies">("master");
-  const [includeKapitalCopies, setIncludeKapitalCopies] = useState(true);
 
   // === VALORA COPIES DEBUG STATE ===========================================
   type ValoraCopyItem = {
@@ -215,12 +214,11 @@ export const PlantillasMaestrasPage = () => {
   const [selectedValoraCopyIds, setSelectedValoraCopyIds] = useState<Set<string>>(new Set());
   const [deletingValoraCopyId, setDeletingValoraCopyId] = useState<string | null>(null);
   const [deletingValoraCopiesBatch, setDeletingValoraCopiesBatch] = useState(false);
-  const [previewCopyUrl, setPreviewCopyUrl] = useState<string | null>(null);
 
   const fetchValoraCopies = async () => {
     setLoadingValoraCopies(true);
     try {
-      const res = await MainService.getValoraCopies(valoraCopiesEnv, includeKapitalCopies);
+      const res = await MainService.getValoraCopies(valoraCopiesEnv, true);
       setValoraCopies(res.items || []);
       setSelectedValoraCopyIds(new Set());
     } catch (err: any) {
@@ -234,7 +232,7 @@ export const PlantillasMaestrasPage = () => {
     if (activeTab === "valora-copies") {
       fetchValoraCopies();
     }
-  }, [activeTab, valoraCopiesEnv, includeKapitalCopies]);
+  }, [activeTab, valoraCopiesEnv]);
 
   const toggleSelectValoraCopy = (id: string) => {
     setSelectedValoraCopyIds((prev) => {
@@ -285,21 +283,6 @@ export const PlantillasMaestrasPage = () => {
       addToast(err.message || "Error al eliminar copias.", "error");
     } finally {
       setDeletingValoraCopiesBatch(false);
-    }
-  };
-
-  const handlePreviewValoraCopy = async (copy: ValoraCopyItem) => {
-    try {
-      // Preferimos la URL de descarga de OneDrive, que permite abrir con Office Online
-      const url = copy.web_url || copy.download_url;
-      if (!url) {
-        const res = await MainService.getValoraCopyDownloadUrl(copy.id);
-        setPreviewCopyUrl(res.download_url);
-      } else {
-        setPreviewCopyUrl(url);
-      }
-    } catch (err: any) {
-      addToast(err.message || "Error al obtener vista previa.", "error");
     }
   };
 
@@ -577,15 +560,6 @@ export const PlantillasMaestrasPage = () => {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <label className="inline-flex items-center gap-2 text-[11px] text-gray-600">
-                  <input
-                    type="checkbox"
-                    checked={includeKapitalCopies}
-                    onChange={(e) => setIncludeKapitalCopies(e.target.checked)}
-                    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                  />
-                  Incluir Kapital
-                </label>
                 {valoraCopies.length > 0 && (
                   <button
                     onClick={handleDeleteValoraCopiesBatch}
@@ -646,14 +620,6 @@ export const PlantillasMaestrasPage = () => {
                     </div>
                     <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                       <button
-                        onClick={() => handlePreviewValoraCopy(copy)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-md transition-colors"
-                        title="Abrir en Excel Online / OneDrive"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        Ver copia
-                      </button>
-                      <button
                         onClick={() => {
                           const link = document.createElement("a");
                           link.href = copy.download_url || copy.web_url || "#";
@@ -682,43 +648,6 @@ export const PlantillasMaestrasPage = () => {
               </div>
             )}
 
-            {/* Preview modal */}
-            {previewCopyUrl && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setPreviewCopyUrl(null)}>
-                <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                  <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50">
-                    <h3 className="text-sm font-bold text-gray-900">Vista de la copia de trabajo</h3>
-                    <button onClick={() => setPreviewCopyUrl(null)} className="p-1 text-gray-400 hover:text-gray-600">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                  <div className="p-4 h-[70vh]">
-                    <iframe
-                      src={previewCopyUrl}
-                      className="w-full h-full rounded-lg border border-gray-200"
-                      title="Vista previa de copia Valora"
-                    />
-                  </div>
-                  <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex justify-end gap-2">
-                    <button
-                      onClick={() => setPreviewCopyUrl(null)}
-                      className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                    >
-                      Cerrar
-                    </button>
-                    <a
-                      href={previewCopyUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-4 py-2 text-xs font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 inline-flex items-center gap-1"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      Abrir en pestaña
-                    </a>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 

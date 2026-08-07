@@ -13,7 +13,7 @@ type ChartMode = "default" | "conceptos" | "integrado";
 
 export const ValoraSensibilidadResultsBlock: React.FC<
   ValoraSensibilidadResultsBlockProps
-> = ({ onOpenFormPanel, sector }) => {
+> = ({ onOpenFormPanel: _onOpenFormPanel, sector }) => {
   const [chartMode, setChartMode] = useState<ChartMode>("default");
 
   const handleMethodClick = (method: "conceptos" | "integrado") => {
@@ -54,10 +54,6 @@ export const ValoraSensibilidadResultsBlock: React.FC<
         title="Sensibilidad"
         subtitle="Resultados sensibilizados"
         sector={sector}
-        onSensibilidadClick={() => {
-          onOpenFormPanel?.();
-        }}
-        hideButton={!onOpenFormPanel}
       />
 
       <div className="flex flex-col lg:flex-row gap-4 h-[29rem] lg:h-[29rem]">

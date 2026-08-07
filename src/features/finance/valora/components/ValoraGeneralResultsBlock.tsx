@@ -13,7 +13,7 @@ export interface ValoraGeneralResultsBlockProps {
 type ChartMode = "default" | "conceptos" | "integrado";
 
 export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps> = ({
-  onOpenFormPanel,
+  onOpenFormPanel: _onOpenFormPanel,
   results,
 }) => {
   const [chartMode, setChartMode] = useState<ChartMode>("default");

@@ -1,13 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { ValoraEstadosSection } from "./ValoraEstadosSection";
 import { ValoraResultadosSection } from "./ValoraResultadosSection";
-import { ValoraSensibilidadSection } from "./ValoraSensibilidadSection";
 import type {
   FinancialTable,
   FormData,
   ValoraCalculationResults,
 } from "@/shared/types/ValoraTypes";
-import { INDUSTRY_TRANSLATIONS } from "@/shared/constants/kapital";
 
 export type ValoraResultsSectionKey =
   | "estados"
@@ -24,12 +22,11 @@ export interface ValoraResultsProps {
 }
 
 export const ValoraResults: React.FC<ValoraResultsProps> = ({
-  formData,
+  formData: _formData,
   section,
   balanceTable,
   resultsTable,
   calculationResults,
-  onSectionChange,
   onOpenFormPanel,
 }) => {
   const [financialTab, setFinancialTab] = useState<"balance" | "results">(
@@ -153,16 +150,6 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
               renderTable={renderTable}
               balanceTable={balanceTable}
               resultsTable={resultsTable}
-            />
-          </div>
-        )}
-
-        {section === "sensibilidad" && (
-          <div className="mx-auto flex w-full flex-col gap-6">
-            <ValoraSensibilidadSection
-              onOpenFormPanel={onOpenFormPanel}
-              hasSensitized={false}
-              sector={INDUSTRY_TRANSLATIONS[formData.sector] || formData.sector}
             />
           </div>
         )}

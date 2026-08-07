@@ -40,7 +40,7 @@ interface UseValoraCalculationProps {
   ui: {
     setShowResults: (show: boolean) => void;
     setIsDesktopFormOpen: (open: boolean) => void;
-    setResultsSection: (section: "resultados" | "estados" | "sensibilidad") => void;
+    setResultsSection: (section: "resultados" | "estados") => void;
   };
 }
 
