@@ -513,8 +513,8 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
             </div>
           </FormSection>
 
-          {/* Section 5: Sensibilización - visible only after first calculation */}
-          {hasCalculated && (
+          {/* Section 5: Sensibilización - desactivado por ahora */}
+          {false && hasCalculated && (
             <FormSection
               step={5}
               title="Sensibilización"

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { BaseFinancialItem, DamodaranItem } from "@/shared/types"; // Fallback import
-import { Upload } from "lucide-react";
+import { Upload, Loader2 } from "lucide-react";
 
 import { RfTable } from "./configuracion-tabs/RfTable";
 import { EmbiTable } from "./configuracion-tabs/EmbiTable";
@@ -20,6 +20,7 @@ import { TaxTable } from "./configuracion-tabs/TaxTable";
 import { DevaluacionTable } from "./configuracion-tabs/DevaluacionTable";
 import { RiesgoTable } from "./configuracion-tabs/RiesgoTable";
 import { SubsectoresTable } from "./configuracion-tabs/SubsectoresTable";
+import { BvlTable } from "./configuracion-tabs/BvlTable";
 
 // Metodo para excel
 import { parseFinancialExcel } from "../utils/excel-parsers";
@@ -35,7 +36,7 @@ const MOCK_EMBI: BaseFinancialItem[] = [];
 
 export const ConfiguracionPage = () => {
   const [activeFrequency, setActiveFrequency] = useState<
-    "trimestral" | "anual" | "subsectores" | "kapital" | ""
+    "trimestral" | "anual" | "subsectores" | "kapital" | "bvl" | ""
   >("trimestral");
   const [activeTab, setActiveTab] = useState("rf");
   const [isLoading, setIsLoading] = useState(false);
@@ -207,6 +208,19 @@ export const ConfiguracionPage = () => {
   const [taxData, setTaxData] = useState<any[]>([]);
   const [subsectoresData, setSubsectoresData] = useState<any[]>([]);
 
+  // BVL Cotización
+  type BvlCotizacionItem = {
+    empresa: string;
+    id: string;
+    numero_acciones: number | null;
+    capitalizacion_bursatil: number | null;
+    valor_por_accion: number | null;
+  };
+  const [bvlFile, setBvlFile] = useState<File | null>(null);
+  const [bvlData, setBvlData] = useState<BvlCotizacionItem[]>([]);
+  const [bvlUploading, setBvlUploading] = useState(false);
+  const bvlFileInputRef = useRef<HTMLInputElement>(null);
+
   // Kapital sensibilizaciones
   const [maxSensibilidad, setMaxSensibilidad] = useState<number>(3);
   const [loadingSens, setLoadingSens] = useState(true);
@@ -248,10 +262,67 @@ export const ConfiguracionPage = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handleBvlFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (!file) return;
+
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (!["xlsx", "xls", "csv"].includes(ext || "")) {
+      addToast("error", "Solo se permiten archivos Excel o CSV");
+      if (bvlFileInputRef.current) bvlFileInputRef.current.value = "";
+      return;
+    }
+
+    setModalState({
+      isOpen: true,
+      title: "¿Importar Cotización BVL?",
+      description: `Se importará el archivo "${file.name}". Se sobrescribirá la cotización BVL actual (${bvlData.length} empresas registradas).`,
+      confirmText: "Importar",
+      cancelText: "Cancelar",
+      variant: "default",
+      onConfirm: async () => {
+        setModalState((prev) => ({ ...prev, isLoading: true }));
+        await handleBvlUpload(file);
+        setModalState((prev) => ({ ...prev, isLoading: false }));
+        closeModal();
+      },
+    });
+
+    if (bvlFileInputRef.current) bvlFileInputRef.current.value = "";
+  };
+
+  const handleBvlUpload = async (file: File) => {
+    setBvlUploading(true);
+    try {
+      const res = await MainService.uploadBvlCotizacion(file);
+      setBvlData(res.items || []);
+      addToast("success", `Cotización BVL cargada: ${res.items?.length || 0} empresas.`);
+    } catch (err: any) {
+      addToast("error", err.message || "Error al cargar cotización BVL");
+    } finally {
+      setBvlUploading(false);
+    }
+  };
+
+  const loadBvlCotizacion = async () => {
+    try {
+      const res = await MainService.getBvlCotizacion();
+      setBvlData(res.items || []);
+    } catch {
+      // Silenciar
+    }
+  };
+
   // Load Data from API
   useEffect(() => {
     loadData();
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeFrequency === "bvl" && activeTab === "bvl") {
+      loadBvlCotizacion();
+    }
+  }, [activeFrequency, activeTab]);
 
   const loadData = async () => {
     try {
@@ -677,6 +748,19 @@ export const ConfiguracionPage = () => {
             >
               Límite de sensibilizaciones
             </button>
+            <button
+              onClick={() => {
+                setActiveFrequency("bvl");
+                setActiveTab("bvl");
+              }}
+              className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                activeFrequency === "bvl"
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+              }`}
+            >
+              Cotización en la BVL
+            </button>
           </div>
 
           {activeFrequency !== "kapital" && (
@@ -689,13 +773,26 @@ export const ConfiguracionPage = () => {
                 accept=".xlsx, .xls, .csv"
                 disabled={activeFrequency === "subsectores"}
               />
+              <input
+                type="file"
+                ref={bvlFileInputRef}
+                onChange={handleBvlFileSelect}
+                className="hidden"
+                accept=".xlsx,.xls,.csv"
+              />
               <button
-                onClick={handleImportClick}
+                onClick={() => {
+                  if (activeFrequency === "bvl") {
+                    bvlFileInputRef.current?.click();
+                  } else {
+                    handleImportClick();
+                  }
+                }}
                 disabled={activeFrequency === "subsectores"}
                 className="inline-flex items-center px-4 py-2 text-xs sm:text-sm border border-gray-300 shadow-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Importar Excel ({activeTab.toUpperCase()})
+                Importar Excel ({activeFrequency === "bvl" ? "BVL" : activeTab.toUpperCase()})
               </button>
             </div>
           )}
@@ -827,6 +924,44 @@ export const ConfiguracionPage = () => {
                   </Button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === "bvl" && (
+            <div className="w-full rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+              <h2 className="text-[11px] font-bold tracking-widest text-blue-600 uppercase mb-4 border-b border-slate-100">
+                Cotización en la BVL
+              </h2>
+
+              <BvlTable
+                data={bvlUploading ? [] : bvlData}
+                isLoading={bvlUploading}
+                onDelete={(item) =>
+                  setModalState({
+                    isOpen: true,
+                    title: "¿Eliminar empresa?",
+                    description: `Se eliminará "${item.empresa}" de la cotización BVL.`,
+                    confirmText: "Eliminar",
+                    cancelText: "Cancelar",
+                    variant: "destructive",
+                    onConfirm: async () => {
+                      setModalState((prev) => ({ ...prev, isLoading: true }));
+                      try {
+                        const res = await MainService.deleteBvlEmpresa({
+                          empresa: item.empresa,
+                          id: item.id,
+                        });
+                        setBvlData(res.items || []);
+                        addToast("success", `Empresa "${item.empresa}" eliminada.`);
+                      } catch (err: any) {
+                        addToast("error", err.message || "Error al eliminar la empresa.");
+                      } finally {
+                        setModalState({ isOpen: false, title: "" });
+                      }
+                    },
+                  })
+                }
+              />
             </div>
           )}
         </div>

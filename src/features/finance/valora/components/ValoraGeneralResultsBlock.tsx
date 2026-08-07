@@ -6,19 +6,15 @@ import { ValoraMethodsToggleCard } from "./ValoraMethodsToggleCard";
 import type { ValoraCalculationResults } from "@/shared/types/ValoraTypes";
 
 export interface ValoraGeneralResultsBlockProps {
-  onSensibilidadClick?: () => void;
   onOpenFormPanel?: () => void;
   results?: ValoraCalculationResults;
-  hideButton?: boolean;
 }
 
 type ChartMode = "default" | "conceptos" | "integrado";
 
 export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps> = ({
-  onSensibilidadClick: _onSensibilidadClick,
   onOpenFormPanel,
   results,
-  hideButton = false,
 }) => {
   const [chartMode, setChartMode] = useState<ChartMode>("default");
 
@@ -92,10 +88,6 @@ export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps>
         wacc={parsePercentage(results?.wacc)}
         title="Resultados generales"
         subtitle="Comparación de resultados"
-        onSensibilidadClick={() => {
-          onOpenFormPanel?.();
-        }}
-        hideButton={hideButton}
       />
 
       <div className="flex flex-col lg:flex-row gap-4 h-[29rem] lg:h-[29rem]">

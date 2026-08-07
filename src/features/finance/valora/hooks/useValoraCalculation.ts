@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { MainService } from "@/shared/services/main.service";
 import { generateCalculationCode } from "../../kapital/services/kapital.utils";
 import type { Calculation } from "@/shared/types";
@@ -60,6 +60,7 @@ export function useValoraCalculation({
   const [currentCalculation, setCurrentCalculation] = useState<Calculation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
+  const loadFromUrlCalledRef = useRef(false);
 
   const getCodeFromUrl = (): string | null => {
     const pathname = window.location.pathname;
@@ -174,6 +175,8 @@ export function useValoraCalculation({
   };
 
   const loadFromUrl = async () => {
+    if (loadFromUrlCalledRef.current) return;
+    loadFromUrlCalledRef.current = true;
     try {
       const code = getCodeFromUrl();
       if (!code) return;

@@ -69,7 +69,7 @@ const ValoraPage: React.FC = () => {
   const [_isResultsSidebarOpen, setIsResultsSidebarOpen] = useState(false);
   const [balanceTable, setBalanceTable] = useState<FinancialTable | null>(null);
   const [resultsTable, setResultsTable] = useState<FinancialTable | null>(null);
-  const [hasSensitized] = useState(false);
+
 
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
@@ -217,7 +217,6 @@ const ValoraPage: React.FC = () => {
         formData={formData}
         onSectionChange={handleResultsSectionChange}
         onOpenFormPanel={() => setIsDesktopFormOpen(true)}
-        hasSensitized={hasSensitized}
       />
       <MainPageFooter brandName={"Valora"} brandHref={"/valora"} />
     </div>
@@ -294,7 +293,6 @@ const ValoraPage: React.FC = () => {
         onToggleForm={() => setIsDesktopFormOpen((prev) => !prev)}
         isFormOpen={isDesktopFormOpen}
         hasResults={showResults}
-        hasSensitized={hasSensitized}
         logoHref="/valora"
         logoSrc="/images/logo-valora-small.png"
         logoAlt="Valora Logo"
@@ -307,7 +305,6 @@ const ValoraPage: React.FC = () => {
         selected={getSelectedView()}
         onNavigate={handleResultsSectionChange}
         hasResults={showResults}
-        hasSensitized={hasSensitized}
       />
       <main
         className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} transition-all h-screen duration-300 ${isDesktopFormOpen ? "lg:pl-105" : "lg:pl-0"}`}

@@ -11,8 +11,7 @@ import { INDUSTRY_TRANSLATIONS } from "@/shared/constants/kapital";
 
 export type ValoraResultsSectionKey =
   | "estados"
-  | "resultados"
-  | "sensibilidad";
+  | "resultados";
 
 export interface ValoraResultsProps {
   formData: FormData;
@@ -22,7 +21,6 @@ export interface ValoraResultsProps {
   calculationResults?: ValoraCalculationResults;
   onSectionChange?: (section: ValoraResultsSectionKey) => void;
   onOpenFormPanel?: () => void;
-  hasSensitized?: boolean;
 }
 
 export const ValoraResults: React.FC<ValoraResultsProps> = ({
@@ -33,7 +31,6 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
   calculationResults,
   onSectionChange,
   onOpenFormPanel,
-  hasSensitized = false,
 }) => {
   const [financialTab, setFinancialTab] = useState<"balance" | "results">(
     "balance"
@@ -142,7 +139,6 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
         {section === "resultados" && (
           <div className="mx-auto flex w-full max-w-300 flex-col gap-6">
             <ValoraResultadosSection
-              onOpenSensibilidad={() => onSectionChange?.("sensibilidad")}
               onOpenFormPanel={onOpenFormPanel}
               results={calculationResults}
             />
@@ -165,7 +161,7 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
           <div className="mx-auto flex w-full flex-col gap-6">
             <ValoraSensibilidadSection
               onOpenFormPanel={onOpenFormPanel}
-              hasSensitized={hasSensitized}
+              hasSensitized={false}
               sector={INDUSTRY_TRANSLATIONS[formData.sector] || formData.sector}
             />
           </div>
