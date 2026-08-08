@@ -252,19 +252,25 @@ export const KapitalResultadosSection: React.FC<
                 <div className="shrink-0">
                     <BoaIndicator
                         value={
-                            results.boa_sector
-                                ? results.boa_sector.toFixed(2)
-                                : results.boa
-                                    ? results.boa.toFixed(2)
-                                    : "0.00"
+                            mainSubsector
+                                ? results.boa_subsector
+                                    ? results.boa_subsector.toFixed(2)
+                                    : results.boa
+                                        ? results.boa.toFixed(2)
+                                        : "0.00"
+                                : results.boa_sector
+                                    ? results.boa_sector.toFixed(2)
+                                    : results.boa
+                                        ? results.boa.toFixed(2)
+                                        : "0.00"
                         }
                         label="boa"
                         sector={mainIndustry}
                         subsector={mainSubsector}
                         inputs={results.inputs}
-                        showDropdown={results.inputs !== undefined}
-                        mode="sector"
-                    />
+showDropdown={results.inputs !== undefined}
+                            mode={mainSubsector ? "both" : "sector"}
+                        />
                 </div>
 
                     <div className="lg:flex-1 min-w-[340px] max-w-[450px] w-full">
@@ -276,25 +282,6 @@ export const KapitalResultadosSection: React.FC<
                             localCurrency={localCurrency}
                         />
                     </div>
-
-                    {mainSubsector && (
-                        <div className="shrink-0">
-                            <BoaIndicator
-                                value={
-                                    results.boa_subsector
-                                        ? results.boa_subsector.toFixed(2)
-                                        : results.boa
-                                            ? results.boa.toFixed(2)
-                                            : "0.00"
-                                }
-                                label="boa"
-                                sector={mainIndustry}
-                                subsector={mainSubsector}
-                                showDropdown={false}
-                                mode="subsector"
-                            />
-                        </div>
-                    )}
 
                     <div className="lg:flex-1 min-w-[340px] max-w-[450px] w-full">
                         <FinancieraCard

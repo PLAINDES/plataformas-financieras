@@ -163,13 +163,17 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                         type="number"
                                         step="any"
                                         value={formData.beta_subsector || formData.beta_unlevered_industry}
-                                        disabled
                                         onChange={handleCustomInputChange}
                                         suffix="coef."
                                         layout="horizontal"
                                         showClearButton={false}
                                         inputClassName="col-span-9"
                                     />
+                                    {formData.subsector === "Personalizado" && (
+                                        <span className="absolute left-0 -top-2.5 text-[9px] font-black uppercase tracking-wider text-valora-primary bg-white px-1 rounded">
+                                            Personalizado
+                                        </span>
+                                    )}
                                     {
                                         <div
                                             className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end"

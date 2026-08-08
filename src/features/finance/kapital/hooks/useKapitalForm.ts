@@ -121,6 +121,9 @@ export function useKapitalForm() {
 
       // 2. Si hay un subsector restaurado con su propio beta, preservarlo
       // Si el sector cambió respecto al guardado, permitimos recalcular
+      if (formData.subsector === "Personalizado" && formData.beta_subsector) {
+        return;
+      }
       if (formData.subsector && formData.beta_unlevered_industry && !formData.beta_subsector) {
         return;
       }
@@ -256,6 +259,21 @@ export function useKapitalForm() {
 
     setFormData((prev) => {
       const updates = { ...prev, [name]: value };
+
+      // Edición manual del beta del Section 1: el sistema lo interpreta como
+      // un subsector "Personalizado" con el valor ingresado por el usuario.
+      if (name === "beta_unlevered_industry") {
+        const trimmed = value.trim();
+        if (trimmed !== "" && trimmed !== "0") {
+          updates.beta_unlevered_industry = trimmed;
+          updates.beta_subsector = trimmed;
+          updates.subsector = "Personalizado";
+        } else {
+          updates.beta_unlevered_industry = trimmed;
+          updates.beta_subsector = "";
+          updates.subsector = "";
+        }
+      }
 
       if (name === "sector") {
         updates.subsector = "";
