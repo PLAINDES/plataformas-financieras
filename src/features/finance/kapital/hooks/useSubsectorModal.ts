@@ -61,14 +61,13 @@ export function useSubsectorModal({
 
         ref.current[subsectorDetail.subsector] = activeTickers;
 
-        // Siempre actualizamos beta_unlevered_industry y beta_subsector
-        // para que se vea reflejado en el Section 1
+        // Siempre actualizamos beta_subsector para que se vea reflejado en el Section 1
         handleInputChange({
             target: { name: "beta_subsector", value: betaStr },
         } as any);
-        handleInputChange({
-            target: { name: "beta_unlevered_industry", value: betaStr },
-        } as any);
+
+        // NO sobrescribimos beta_unlevered_industry: ese campo conserva el
+        // beta desapalancado del SECTOR (Damodaran) para mostrarlo en resultados.
 
         if (isSens) {
             handleInputChange({

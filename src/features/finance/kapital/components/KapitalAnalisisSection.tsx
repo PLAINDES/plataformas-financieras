@@ -182,6 +182,7 @@ const BoaIndicator = ({
   inputs,
   showDropdown = true,
   mode = "both",
+  emphasis = "sector",
 }: {
   value: number | string;
   label: string;
@@ -190,20 +191,33 @@ const BoaIndicator = ({
   inputs?: any;
   showDropdown?: boolean;
   mode?: "sector" | "subsector" | "both";
+  emphasis?: "sector" | "subsector";
 }) => {
   const isBase = label.toLowerCase().includes("base");
   const translatedSector = translateIndustry(sector);
+  const emphasizeSubsector = emphasis === "subsector";
 
   return (
     <div className="w-[210px] flex flex-col justify-between items-center px-4 py-3 bg-white border border-gray-200/80 rounded-3xl shadow-sm text-center shrink-0 border-t-4 border-t-valora-primary min-h-[130px] overflow-hidden">
       <div className="flex flex-col items-center gap-1 w-full">
-        {(mode === "sector" || mode === "both") && (
+        {(mode === "sector" || mode === "both") && !emphasizeSubsector && (
           <span className="text-[10px] font-black text-gray-900 uppercase leading-tight tracking-wider w-full truncate px-1">
             {translatedSector || "Sector"}
           </span>
         )}
+        {(mode === "sector" || mode === "both") && emphasizeSubsector && (
+          <span className="text-[9px] font-bold text-gray-500 leading-tight w-full truncate px-1">
+            {translatedSector || "Sector"}
+          </span>
+        )}
         {(mode === "subsector" || mode === "both") && subsector && (
-          <span className="text-[9px] font-bold text-gray-500 leading-tight w-full line-clamp-2 px-1">
+          <span
+            className={`leading-tight w-full line-clamp-2 px-1 ${
+              emphasizeSubsector
+                ? "text-[10px] font-black text-gray-900 uppercase tracking-wider"
+                : "text-[9px] font-bold text-gray-500"
+            }`}
+          >
             {subsector}
           </span>
         )}
@@ -243,6 +257,8 @@ export interface KapitalAnalisisSectionProps {
   showCompanyCard: boolean;
   resultCurrency: "pen" | "usd";
   onResultCurrencyChange: (currency: "pen" | "usd") => void;
+  emergentCurrency: "pen" | "usd";
+  onEmergentCurrencyChange: (currency: "pen" | "usd") => void;
   showComparison: boolean;
   onToggleComparison: (show: boolean) => void;
   sensibilizaciones: SensibilizacionEntry[];
@@ -261,6 +277,8 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
   showCompanyCard,
   resultCurrency,
   onResultCurrencyChange,
+  emergentCurrency,
+  onEmergentCurrencyChange,
   showComparison,
   onToggleComparison,
   sensibilizaciones,
@@ -293,11 +311,17 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
   };
 
   // 1. DATOS ORIGINALES
-  const developedData = results.developed;
-  const emergentOriginal = results.emergent;
+  const developedData = results.mercado_desarrollado ?? results.developed;
+
+  const emergentOriginal =
+    emergentCurrency === "usd"
+      ? (results.mercado_emergente_dolares ?? results.emergent)
+      : (results.mercado_emergente_moneda_local ?? results.emergent);
 
   const empresaOriginalBase =
-    resultCurrency === "usd" ? results.empresa_dolares : results.empresa_soles;
+    resultCurrency === "usd"
+      ? results.empresa_dolares
+      : (results.empresa_soles ?? results.empresa_moneda_local);
 
   const secureDEmpresaOrig =
     empresaOriginalBase?.d_empresa ||
@@ -315,13 +339,27 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
       ? (sensibilizaciones[selectedSensIdx] ?? sensibilizaciones[0])
       : null;
 
+  const sensBoaSectorResolved = selectedSens
+    ? resolveSensBoaSector(selectedSens, results)
+    : null;
+
+  const isSameSector = !!selectedSens && selectedSens.industria === mainIndustry;
+
   // Si no hay sensibilización, usamos datos originales
-  const emergentSens = selectedSens?.mercado_emergente || emergentOriginal;
+  const emergentSens = selectedSens
+    ? emergentCurrency === "usd"
+      ? (selectedSens.mercado_emergente_dolares ??
+        selectedSens.mercado_emergente ??
+        emergentOriginal)
+      : (selectedSens.mercado_emergente_moneda_local ??
+        selectedSens.mercado_emergente ??
+        emergentOriginal)
+    : emergentOriginal;
 
   const empresaSensBase = selectedSens
     ? resultCurrency === "usd"
       ? selectedSens.empresa_dolares
-      : selectedSens.empresa_soles
+      : (selectedSens.empresa_soles ?? selectedSens.empresa_moneda_local)
     : empresaOriginalBase;
 
   const secureDEmpresaSens =
@@ -391,8 +429,9 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
           title={`Mercado emergente: ${countryName || results.pais || ""}`}
           data={dataEmergent}
           isEmpresa={false}
-          resultCurrency={resultCurrency}
-          onResultCurrencyChange={onResultCurrencyChange}
+          showCurrencySelect={true}
+          resultCurrency={emergentCurrency}
+          onResultCurrencyChange={onEmergentCurrencyChange}
           compact={false}
           localCurrency={localCurrency}
         />
@@ -577,6 +616,117 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                 </>
               )}
 
+              {/* MISM0 SECTOR: una sola columna con Mercado Desarrollado centrado entre ambos cuadros de sector */}
+              {isSameSector && sensibilizaciones.length > 0 ? (
+                <div className="flex flex-col xl:flex-row items-stretch justify-center gap-6 w-full">
+                  {/* Columna izquierda: BOA base arriba, Mercado Desarrollado al centro, BOA sens abajo */}
+                  <div className="flex flex-col items-center justify-between gap-4 shrink-0">
+                    <BoaIndicator
+                      value={
+                        results.boa_sector
+                          ? results.boa_sector.toFixed(2)
+                          : results.boa
+                            ? results.boa.toFixed(2)
+                            : "0.00"
+                      }
+                      label="base"
+                      sector={mainIndustry}
+                      subsector={mainSubsector}
+                      inputs={results.inputs}
+                      showDropdown={results.inputs !== undefined}
+                      mode={mainSubsector ? "both" : "sector"}
+                    />
+                    <div className="min-w-[300px] max-w-[450px] w-full">
+                      <FinancieraCard
+                        title="Mercado Desarrollado"
+                        data={developedData}
+                        isEmpresa={false}
+                        compact={false}
+                      />
+                    </div>
+                    <BoaIndicator
+                      value={
+                        selectedSens?.boa_subsector
+                          ? selectedSens.boa_subsector.toFixed(2)
+                          : selectedSens?.beta_subsector
+                            ? selectedSens.beta_subsector.toFixed(2)
+                            : sensBoaSectorResolved
+                              ? sensBoaSectorResolved.toFixed(2)
+                              : "0.00"
+                      }
+                      label="sensibilidad"
+                      sector={selectedSens?.industria}
+                      subsector={selectedSens?.subsector}
+                      inputs={selectedSens?.inputs}
+                      showDropdown={selectedSens?.inputs !== undefined}
+                      mode={selectedSens?.subsector ? "both" : "sector"}
+                      emphasis="subsector"
+                    />
+                  </div>
+
+                  {/* Columna derecha: fila original y fila sensibilizada */}
+                  <div className="flex flex-col gap-6 w-full">
+                    {/* Fila Original */}
+                    <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full">
+                      <div className="min-w-[300px] max-w-[450px] w-full">
+                        <FinancieraCard
+                          title={`Mercado emergente: ${results.pais || ""}`}
+                          data={emergentOriginal}
+                          isEmpresa={false}
+                          showCurrencySelect={true}
+                          resultCurrency={emergentCurrency}
+                          onResultCurrencyChange={onEmergentCurrencyChange}
+                          compact={false}
+                          localCurrency={localCurrency}
+                        />
+                      </div>
+                      {showCompanyCard && empresaOriginal && (
+                        <div className="min-w-[300px] max-w-[450px] w-full">
+                          <FinancieraCard
+                            title="Tu empresa"
+                            data={empresaOriginal}
+                            isEmpresa={true}
+                            resultCurrency={resultCurrency}
+                            onResultCurrencyChange={onResultCurrencyChange}
+                            compact={false}
+                            localCurrency={localCurrency}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Fila Sensibilizada */}
+                    <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full">
+                      <div className="min-w-[300px] max-w-[450px] w-full">
+                        <FinancieraCard
+                          title={`Mercado emergente: ${selectedSens?.inputs?.pais || results.pais || ""}`}
+                          data={emergentSens}
+                          isEmpresa={false}
+                          showCurrencySelect={true}
+                          resultCurrency={emergentCurrency}
+                          onResultCurrencyChange={onEmergentCurrencyChange}
+                          compact={false}
+                          localCurrency={localCurrency}
+                        />
+                      </div>
+                      {showCompanyCard && empresaSens && (
+                        <div className="min-w-[300px] max-w-[450px] w-full">
+                          <FinancieraCard
+                            title="Tu empresa"
+                            data={empresaSens}
+                            isEmpresa={true}
+                            resultCurrency={resultCurrency}
+                            onResultCurrencyChange={onResultCurrencyChange}
+                            compact={false}
+                            localCurrency={localCurrency}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
               {/* FILA 1: DATOS ORIGINALES BASE */}
               <div className="flex flex-col xl:flex-row items-center justify-center mt-4 xl:mt-0 gap-4 w-full">
                 <div className="shrink-0">
@@ -629,9 +779,11 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                       title={`Mercado emergente: ${results.pais || ""}`}
                       data={emergentOriginal}
                       isEmpresa={false}
-                      resultCurrency={resultCurrency}
-                      onResultCurrencyChange={onResultCurrencyChange}
+                      showCurrencySelect={true}
+                      resultCurrency={emergentCurrency}
+                      onResultCurrencyChange={onEmergentCurrencyChange}
                       compact={false}
+                      localCurrency={localCurrency}
                     />
                   </div>
                   {showCompanyCard && empresaOriginal && (
@@ -673,18 +825,18 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                         />
                       </div>
                       <section className="flex flex-col md:flex-row items-center justify-center gap-4 w-full">
-                        <div className="min-w-[300px] max-w-[450px] w-full">
-                          <FinancieraCard
-                            title="Mercado Desarrollado"
-                            data={
-                              selectedSens?.mercado_desarrollado || developedData
-                            }
-                            isEmpresa={false}
-                            resultCurrency={resultCurrency}
-                            onResultCurrencyChange={onResultCurrencyChange}
-                            compact={false}
-                          />
-                        </div>
+                        {selectedSens?.industria !== mainIndustry && (
+                          <div className="min-w-[300px] max-w-[450px] w-full">
+                            <FinancieraCard
+                              title="Mercado Desarrollado"
+                              data={
+                                selectedSens?.mercado_desarrollado || developedData
+                              }
+                              isEmpresa={false}
+                              compact={false}
+                            />
+                          </div>
+                        )}
                         {selectedSens?.subsector && (
                           <div className="shrink-0">
                             <BoaIndicator
@@ -710,9 +862,11 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                             title={`Mercado emergente: ${selectedSens?.inputs?.pais || results.pais || ""}`}
                             data={emergentSens}
                             isEmpresa={false}
-                            resultCurrency={resultCurrency}
-                            onResultCurrencyChange={onResultCurrencyChange}
+                            showCurrencySelect={true}
+                            resultCurrency={emergentCurrency}
+                            onResultCurrencyChange={onEmergentCurrencyChange}
                             compact={false}
+                            localCurrency={localCurrency}
                           />
                         </div>
                         {showCompanyCard && empresaSens && (
@@ -737,6 +891,8 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                   No hay datos de sensibilización disponibles. Ingresa un β
                   desapalancado.
                 </div>
+              )}
+              </>
               )}
             </div>
           </div>

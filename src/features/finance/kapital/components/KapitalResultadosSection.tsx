@@ -170,6 +170,8 @@ export interface KapitalResultadosSectionProps {
     showCompanyCard: boolean;
     resultCurrency: "pen" | "usd";
     onResultCurrencyChange: (currency: "pen" | "usd") => void;
+    emergentCurrency: "pen" | "usd";
+    onEmergentCurrencyChange: (currency: "pen" | "usd") => void;
     onOpenReport?: () => void;
     localCurrency?: string;
     chatbotComponent?: React.ReactNode;
@@ -186,6 +188,8 @@ export const KapitalResultadosSection: React.FC<
     showCompanyCard,
     resultCurrency,
     onResultCurrencyChange,
+    emergentCurrency,
+    onEmergentCurrencyChange,
     localCurrency,
     shouldShowChatbot,
     onToggleForm,
@@ -198,7 +202,7 @@ export const KapitalResultadosSection: React.FC<
     // Resolve empresa data with secure d_empresa fallback
     const empresaDataRaw = resultCurrency === "usd"
         ? results.empresa_dolares
-        : results.empresa_soles;
+        : results.empresa_soles ?? results.empresa_moneda_local;
 
     const secureDEmpresa = empresaDataRaw?.d_empresa || results.empresa_dolares?.d_empresa || "0%";
 
@@ -206,6 +210,12 @@ export const KapitalResultadosSection: React.FC<
         ...empresaDataRaw,
         d_empresa: secureDEmpresa
     } : undefined;
+
+    // Resolve mercado emergente por moneda seleccionada
+    const emergentData =
+        emergentCurrency === "usd"
+            ? results.mercado_emergente_dolares ?? results.emergent
+            : results.mercado_emergente_moneda_local ?? results.emergent;
 
     return (
         <>
@@ -260,10 +270,8 @@ export const KapitalResultadosSection: React.FC<
                     <div className="lg:flex-1 min-w-[340px] max-w-[450px] w-full">
                         <FinancieraCard
                             title="Mercado Desarrollado"
-                            data={results.developed}
+                            data={results.mercado_desarrollado ?? results.developed}
                             isEmpresa={false}
-                            resultCurrency={resultCurrency}
-                            onResultCurrencyChange={onResultCurrencyChange}
                             compact={false}
                             localCurrency={localCurrency}
                         />
@@ -291,10 +299,11 @@ export const KapitalResultadosSection: React.FC<
                     <div className="lg:flex-1 min-w-[340px] max-w-[450px] w-full">
                         <FinancieraCard
                             title={`Mercado emergente: ${results.pais || ""}`}
-                            data={results.emergent}
+                            data={emergentData}
                             isEmpresa={false}
-                            resultCurrency={resultCurrency}
-                            onResultCurrencyChange={onResultCurrencyChange}
+                            showCurrencySelect={true}
+                            resultCurrency={emergentCurrency}
+                            onResultCurrencyChange={onEmergentCurrencyChange}
                             compact={false}
                             localCurrency={localCurrency}
                         />

@@ -10,6 +10,7 @@ interface FinancieraCardProps {
   title: string;
   data: MarketResults;
   isEmpresa?: boolean;
+  showCurrencySelect?: boolean;
   resultCurrency?: "pen" | "usd";
   onResultCurrencyChange?: (currency: "pen" | "usd") => void;
   compact?: boolean;
@@ -20,6 +21,7 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
   title,
   data,
   isEmpresa = false,
+  showCurrencySelect = false,
   resultCurrency,
   onResultCurrencyChange,
   compact = false,
@@ -37,7 +39,7 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
                 {title}
               </h2>
 
-              {isEmpresa && onResultCurrencyChange && resultCurrency && (
+              {(isEmpresa || showCurrencySelect) && onResultCurrencyChange && resultCurrency && (
                 <select
                   className={`px-2 py-1 w-1/4 h-fit text-xs font-medium border border-gray-300 rounded focus:ring-2 focus:ring-valora-primary outline-none my-auto transition-colors ${
                     localCurrency === "USD"

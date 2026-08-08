@@ -13,6 +13,8 @@ export interface KapitalResultsProps {
     showCompanyCard: boolean;
     resultCurrency: "pen" | "usd";
     onResultCurrencyChange: (currency: "pen" | "usd") => void;
+    emergentCurrency: "pen" | "usd";
+    onEmergentCurrencyChange: (currency: "pen" | "usd") => void;
     loading: boolean;
     methodologyCategories: MethodologyCategory[];
     showComparison: boolean;
@@ -33,6 +35,8 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
     showCompanyCard,
     resultCurrency,
     onResultCurrencyChange,
+    emergentCurrency,
+    onEmergentCurrencyChange,
     loading,
     showComparison,
     onToggleComparison,
@@ -62,6 +66,8 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
                             showCompanyCard={showCompanyCard}
                             resultCurrency={resultCurrency}
                             onResultCurrencyChange={onResultCurrencyChange}
+                            emergentCurrency={emergentCurrency}
+                            onEmergentCurrencyChange={onEmergentCurrencyChange}
                             onOpenReport={onOpenReport}
                             localCurrency={localCurrency}
                             shouldShowChatbot={shouldShowChatbot}
@@ -76,6 +82,8 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
                             showCompanyCard={showCompanyCard}
                             resultCurrency={resultCurrency}
                             onResultCurrencyChange={onResultCurrencyChange}
+                            emergentCurrency={emergentCurrency}
+                            onEmergentCurrencyChange={onEmergentCurrencyChange}
                             showComparison={showComparison}
                             onToggleComparison={onToggleComparison}
                             sensibilizaciones={sensibilizaciones}
