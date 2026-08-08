@@ -48,8 +48,12 @@ export interface KapitalResults {
     boa_subsector?: number;
     emergent: KapitalMarketResults;
     developed: KapitalMarketResults;
+    mercado_desarrollado: KapitalMarketResults;
+    mercado_emergente_dolares: KapitalMarketResults;
+    mercado_emergente_moneda_local: KapitalMarketResults;
     empresa_dolares: KapitalMarketResults;
     empresa_soles: KapitalMarketResults;
+    empresa_moneda_local: KapitalMarketResults;
     d_empresa: string | number;
     industria?: string;
     subsector?: string;
@@ -65,8 +69,11 @@ export interface SensibilizacionEntry {
     beta_subsector?: number;
     mercado_desarrollado?: KapitalMarketResults;
     mercado_emergente?: KapitalMarketResults;
+    mercado_emergente_dolares?: KapitalMarketResults;
+    mercado_emergente_moneda_local?: KapitalMarketResults;
     empresa_dolares?: KapitalMarketResults;
     empresa_soles?: KapitalMarketResults;
+    empresa_moneda_local?: KapitalMarketResults;
     subsector?: string;
     industria?: string;
     tickers?: string;

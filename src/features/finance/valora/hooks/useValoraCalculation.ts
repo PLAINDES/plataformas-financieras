@@ -1,9 +1,30 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { MainService } from "@/shared/services/main.service";
 import { generateCalculationCode } from "../../kapital/services/kapital.utils";
 import type { Calculation } from "@/shared/types";
 import type { FinancialTable, FormData } from "@/shared/types/ValoraTypes";
 import type { ToastType } from "@/shared/types/toast.types";
+
+const normalizeTableThousandsSeparators = (
+  table: FinancialTable | null
+): FinancialTable | null => {
+  if (!table) return table;
+
+  return {
+    ...table,
+    rows: table.rows.map((row) => ({
+      ...row,
+      values: row.values.map((rawValue) => {
+        const value = Number(rawValue);
+        return Number.isFinite(value) &&
+          !Number.isInteger(value) &&
+          Math.abs(value) < 10_000
+          ? Math.round(value * 1_000)
+          : value;
+      }),
+    })),
+  };
+};
 
 interface UseValoraCalculationProps {
   formData: FormData;
@@ -19,7 +40,7 @@ interface UseValoraCalculationProps {
   ui: {
     setShowResults: (show: boolean) => void;
     setIsDesktopFormOpen: (open: boolean) => void;
-    setResultsSection: (section: "resultados" | "estados" | "sensibilidad") => void;
+    setResultsSection: (section: "resultados" | "estados") => void;
   };
 }
 
@@ -39,6 +60,7 @@ export function useValoraCalculation({
   const [currentCalculation, setCurrentCalculation] = useState<Calculation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
+  const loadFromUrlCalledRef = useRef(false);
 
   const getCodeFromUrl = (): string | null => {
     const pathname = window.location.pathname;
@@ -83,10 +105,27 @@ export function useValoraCalculation({
     ui.setShowResults(false);
     setIsLoading(true);
 
+    const normalizedBalanceTable =
+      normalizeTableThousandsSeparators(balanceTable);
+    const normalizedResultsTable =
+      normalizeTableThousandsSeparators(resultsTable);
+
+    if (normalizedBalanceTable !== balanceTable) {
+      console.info(
+        "[VALORA][UPLOAD] Separadores de miles normalizados en el balance."
+      );
+    }
+
+    if (normalizedResultsTable !== resultsTable) {
+      console.info(
+        "[VALORA][UPLOAD] Separadores de miles normalizados en resultados."
+      );
+    }
+
     const inputPayload = {
       ...formData,
-      balance_table: balanceTable,
-      results_table: resultsTable,
+      balance_table: normalizedBalanceTable,
+      results_table: normalizedResultsTable,
     };
 
     try {
@@ -136,6 +175,8 @@ export function useValoraCalculation({
   };
 
   const loadFromUrl = async () => {
+    if (loadFromUrlCalledRef.current) return;
+    loadFromUrlCalledRef.current = true;
     try {
       const code = getCodeFromUrl();
       if (!code) return;

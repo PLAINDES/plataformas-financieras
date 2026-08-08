@@ -12,7 +12,6 @@ interface NavBarProps {
   onToggleForm: () => void;
   isFormOpen: boolean;
   hasResults: boolean;
-  hasSensitized: boolean;
   logoHref: string;
   logoSrc: string;
   logoAlt: string;
@@ -27,7 +26,6 @@ export const NavBar: React.FC<NavBarProps> = ({
   onToggleForm,
   isFormOpen,
   hasResults,
-  hasSensitized,
   logoHref,
   logoSrc,
   logoAlt,
@@ -150,36 +148,8 @@ l347 -2 4 -472 c4 -533 6 -547 78 -696 76 -157 229 -281 404 -327 49 -12 137
       },
     ];
 
-    if (hasSensitized) {
-      items.push({
-        id: "sensibilidad",
-        label: "Sensibilidad",
-        icon: (
-          <span
-            className={
-              selected === "sensibilidad" ? "text-blue-600" : "text-gray-400"
-            }
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
-              />
-            </svg>
-          </span>
-        ),
-      });
-    }
-
     return items;
-  }, [hasResults, hasSensitized, selected]);
+  }, [hasResults, selected]);
 
   return (
     <FinanceNavbar

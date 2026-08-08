@@ -1,16 +1,54 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FormField } from "../../components/FormField";
 import { ExternalLink, Info } from "lucide-react";
+import { MainService } from "@/shared/services/main.service";
 
-const formatNumber = (value: number, decimals = 2) =>
-  value.toLocaleString("es-PE", {
+const formatNumber = (value: number | null | undefined, decimals = 2) => {
+  if (value == null || isNaN(value)) return "—";
+  return value.toLocaleString("es-PE", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
+};
+
+type BvlCotizacionItem = {
+  empresa: string;
+  id: string;
+  numero_acciones: number | null;
+  capitalizacion_bursatil: number | null;
+  valor_por_accion: number | null;
+};
 
 export const ValoraBVLBox: React.FC = () => {
-  const [selectedCompany, setSelectedCompany] = useState("Alicorp");
-  const companies = ["Alicorp", "Empresa Alfa", "Empresa Beta", "Empresa Gamma"];
+  const [companies, setCompanies] = useState<BvlCotizacionItem[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    MainService.getBvlCotizacion()
+      .then((res) => {
+        if (cancelled) return;
+        const items = res.items || [];
+        setCompanies(items);
+        if (items.length > 0 && !selectedCompany) {
+          setSelectedCompany(items[0].empresa);
+        }
+      })
+      .catch(() => {
+        setCompanies([]);
+      })
+      .finally(() => setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCompany]);
+
+  const selected = useMemo(
+    () => companies.find((c) => c.empresa === selectedCompany),
+    [companies, selectedCompany]
+  );
 
   const handleCompanyChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -35,9 +73,10 @@ export const ValoraBVLBox: React.FC = () => {
             name="currency"
             type="select"
             value={selectedCompany}
-            options={companies}
+            options={companies.map((c) => c.empresa)}
             onChange={handleCompanyChange}
             showClearButton={false}
+            disabled={loading}
           />
         </div>
         <div className="flex flex-col w-full lg:w-2/3 gap-2 justify-center">
@@ -46,7 +85,7 @@ export const ValoraBVLBox: React.FC = () => {
               PRECIO POR ACCIÓN
             </span>
             <span className="text-base font-bold text-green-500">
-              {formatNumber(7.05, 2)}
+              {formatNumber(selected?.valor_por_accion)}
             </span>
           </div>
           <div className="flex justify-between items-center">
@@ -54,7 +93,7 @@ export const ValoraBVLBox: React.FC = () => {
               CAPITALIZACIÓN BURSÁTIL
             </span>
             <span className="text-base font-bold text-blue-500">
-              {formatNumber(5972701703.55, 2)}
+              {formatNumber(selected?.capitalizacion_bursatil)}
             </span>
           </div>
         </div>

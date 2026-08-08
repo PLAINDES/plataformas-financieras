@@ -1,33 +1,33 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { ValoraEstadosSection } from "./ValoraEstadosSection";
 import { ValoraResultadosSection } from "./ValoraResultadosSection";
-import { ValoraSensibilidadSection } from "./ValoraSensibilidadSection";
-import type { FinancialTable, FormData } from "@/shared/types/ValoraTypes";
-import { INDUSTRY_TRANSLATIONS } from "@/shared/constants/kapital";
+import type {
+  FinancialTable,
+  FormData,
+  ValoraCalculationResults,
+} from "@/shared/types/ValoraTypes";
 
 export type ValoraResultsSectionKey =
   | "estados"
-  | "resultados"
-  | "sensibilidad";
+  | "resultados";
 
 export interface ValoraResultsProps {
   formData: FormData;
   section: ValoraResultsSectionKey;
   balanceTable: FinancialTable | null;
   resultsTable: FinancialTable | null;
+  calculationResults?: ValoraCalculationResults;
   onSectionChange?: (section: ValoraResultsSectionKey) => void;
   onOpenFormPanel?: () => void;
-  hasSensitized?: boolean;
 }
 
 export const ValoraResults: React.FC<ValoraResultsProps> = ({
-  formData,
+  formData: _formData,
   section,
   balanceTable,
   resultsTable,
-  onSectionChange,
+  calculationResults,
   onOpenFormPanel,
-  hasSensitized = false,
 }) => {
   const [financialTab, setFinancialTab] = useState<"balance" | "results">(
     "balance"
@@ -136,8 +136,8 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
         {section === "resultados" && (
           <div className="mx-auto flex w-full max-w-300 flex-col gap-6">
             <ValoraResultadosSection
-              onOpenSensibilidad={() => onSectionChange?.("sensibilidad")}
               onOpenFormPanel={onOpenFormPanel}
+              results={calculationResults}
             />
           </div>
         )}
@@ -150,16 +150,6 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
               renderTable={renderTable}
               balanceTable={balanceTable}
               resultsTable={resultsTable}
-            />
-          </div>
-        )}
-
-        {section === "sensibilidad" && (
-          <div className="mx-auto flex w-full flex-col gap-6">
-            <ValoraSensibilidadSection
-              onOpenFormPanel={onOpenFormPanel}
-              hasSensitized={hasSensitized}
-              sector={INDUSTRY_TRANSLATIONS[formData.sector] || formData.sector}
             />
           </div>
         )}

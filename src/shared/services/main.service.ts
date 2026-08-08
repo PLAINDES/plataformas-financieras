@@ -567,6 +567,59 @@ export const MainService = {
     });
   },
 
+  // ==================== VALORA DEBUG COPIES ====================
+
+  getValoraCopies: async (env?: string, includeKapital?: boolean, token?: string): Promise<{
+    items: Array<{
+      id: string;
+      name: string;
+      size?: number;
+      created_at?: string;
+      modified_at?: string;
+      web_url?: string;
+      download_url?: string;
+      env: string;
+      folder?: string;
+    }>;
+    env: string;
+  }> => {
+    const params = new URLSearchParams();
+    if (env) params.append("env", env);
+    params.append("include_kapital", includeKapital ? "true" : "false");
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return api.get<any>(`main/master-templates/valora-copies${queryString}`, {
+      token: getAuthToken(token),
+    });
+  },
+
+  getValoraCopyDownloadUrl: async (itemId: string, token?: string): Promise<{
+    download_url: string;
+    item_id: string;
+  }> => {
+    return api.get<any>(`main/master-templates/valora-copies/${itemId}/download-url`, {
+      token: getAuthToken(token),
+    });
+  },
+
+  deleteValoraCopy: async (itemId: string, token?: string): Promise<{
+    success: boolean;
+    deleted_id: string;
+  }> => {
+    return api.delete<any>(`main/master-templates/valora-copies/${itemId}`, {
+      token: getAuthToken(token),
+    });
+  },
+
+  deleteValoraCopiesBatch: async (ids: string[], token?: string): Promise<{
+    success: boolean;
+    deleted: string[];
+    failed: { id: string; error: string }[];
+  }> => {
+    return api.post<any>("main/master-templates/valora-copies/delete-batch", { ids }, {
+      token: getAuthToken(token),
+    });
+  },
+
   // ==================== VALORA TEMPLATE ====================
 
   getValoraTemplate: async (): Promise<{
@@ -598,7 +651,9 @@ export const MainService = {
   }> => {
     const formData = new FormData();
     formData.append("file", file);
-    return api.postForm("main/valora-template/upload", formData);
+    return api.postForm("main/valora-template/upload", formData, {
+      token: getAuthToken(),
+    });
   },
 
   setValoraTemplateDefault: async (objectKey: string): Promise<{
@@ -612,5 +667,57 @@ export const MainService = {
     }>;
   }> => {
     return api.post("main/valora-template/set-default", { object_key: objectKey });
+  },
+
+  // ==================== BVL COTIZACIÓN ====================
+
+  getBvlCotizacion: async (): Promise<{
+    items: Array<{
+      empresa: string;
+      id: string;
+      numero_acciones: number | null;
+      capitalizacion_bursatil: number | null;
+      valor_por_accion: number | null;
+    }>;
+  }> => {
+    try {
+      return await api.get("main/bvl-cotizacion");
+    } catch {
+      return { items: [] };
+    }
+  },
+
+  uploadBvlCotizacion: async (file: File): Promise<{
+    items: Array<{
+      empresa: string;
+      id: string;
+      numero_acciones: number | null;
+      capitalizacion_bursatil: number | null;
+      valor_por_accion: number | null;
+    }>;
+  }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return api.postForm("main/bvl-cotizacion/upload", formData, {
+      token: getAuthToken(),
+    });
+  },
+
+  deleteBvlEmpresa: async (payload: {
+    empresa: string;
+    id: string;
+  }): Promise<{
+    items: Array<{
+      empresa: string;
+      id: string;
+      numero_acciones: number | null;
+      capitalizacion_bursatil: number | null;
+      valor_por_accion: number | null;
+    }>;
+  }> => {
+    return api.delete("main/bvl-cotizacion/empresa", {
+      token: getAuthToken(),
+      body: payload,
+    });
   },
 };

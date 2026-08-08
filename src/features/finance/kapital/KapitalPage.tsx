@@ -250,6 +250,8 @@ const KapitalPage: React.FC = () => {
                     showCompanyCard={calc.showCompanyCard}
                     resultCurrency={calc.resultCurrency}
                     onResultCurrencyChange={calc.setResultCurrency}
+                    emergentCurrency={calc.emergentCurrency}
+                    onEmergentCurrencyChange={calc.setEmergentCurrency}
                     loading={calc.isLoading}
                     methodologyCategories={METHODOLOGY_CATEGORIES}
                     showComparison={showComparison}

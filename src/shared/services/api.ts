@@ -9,6 +9,7 @@ const API_BASE_URL = import.meta.env.DEV
 interface RequestOptions {
   token?: string;
   params?: Record<string, any>;
+  body?: any;
 }
 
 class APIClient {
@@ -142,6 +143,7 @@ class APIClient {
     const response = await fetch(url, {
       method: "DELETE",
       headers: this.getHeaders(options?.token),
+      body: options?.body ? JSON.stringify(options.body) : undefined,
     });
 
     return this.handleResponse<T>(response);

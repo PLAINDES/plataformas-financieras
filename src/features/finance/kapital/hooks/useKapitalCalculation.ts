@@ -44,6 +44,7 @@ export function useKapitalCalculation({
 
   const [showCompanyCard, setShowCompanyCard] = useState<boolean>(false);
   const [resultCurrency, setResultCurrency] = useState<"pen" | "usd">("pen");
+  const [emergentCurrency, setEmergentCurrency] = useState<"pen" | "usd">("usd");
 
   const handleSubmit = async (e?: React.FormEvent, explicitBeta?: string) => {
     if (e) e.preventDefault();
@@ -262,6 +263,7 @@ export function useKapitalCalculation({
                 (latestInput.beta_unlevered_custom as string) ||
                 "",
               beta_unlevered_industry:
+                (latestInput.beta_unlevered_industry as string) ||
                 (latestInput.beta_desapalancado as string) || "",
               tickers_subsector:
                 (latestInput.tickers_subsector as string) || "",
@@ -341,6 +343,8 @@ export function useKapitalCalculation({
     showCompanyCard,
     resultCurrency,
     setResultCurrency,
+    emergentCurrency,
+    setEmergentCurrency,
     isSessionFresh,
     setIsSessionFresh,
   };

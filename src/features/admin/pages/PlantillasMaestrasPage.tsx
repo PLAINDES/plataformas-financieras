@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   Circle,
   Upload,
+  ExternalLink,
 } from "lucide-react";
 import { useTemplates } from "../hooks/useTemplates";
 import { MainService } from "@/shared/services/main.service";
@@ -193,9 +194,99 @@ export const PlantillasMaestrasPage = () => {
   };
 
   // === TABS STATE ==========================================================
-  const [activeTab, setActiveTab] = useState<"master" | "valora">("master");
+  const [activeTab, setActiveTab] = useState<"master" | "valora" | "valora-copies">("master");
 
-  const renderTabButton = (id: "master" | "valora", label: string) => (
+  // === VALORA COPIES DEBUG STATE ===========================================
+  type ValoraCopyItem = {
+    id: string;
+    name: string;
+    size?: number;
+    created_at?: string;
+    modified_at?: string;
+    web_url?: string;
+    download_url?: string;
+    env: string;
+    folder?: string;
+  };
+  const [valoraCopies, setValoraCopies] = useState<ValoraCopyItem[]>([]);
+  const [valoraCopiesEnv, setValoraCopiesEnv] = useState<"development" | "production" | "test">("development");
+  const [loadingValoraCopies, setLoadingValoraCopies] = useState(false);
+  const [selectedValoraCopyIds, setSelectedValoraCopyIds] = useState<Set<string>>(new Set());
+  const [deletingValoraCopyId, setDeletingValoraCopyId] = useState<string | null>(null);
+  const [deletingValoraCopiesBatch, setDeletingValoraCopiesBatch] = useState(false);
+
+  const fetchValoraCopies = async () => {
+    setLoadingValoraCopies(true);
+    try {
+      const res = await MainService.getValoraCopies(valoraCopiesEnv, true);
+      setValoraCopies(res.items || []);
+      setSelectedValoraCopyIds(new Set());
+    } catch (err: any) {
+      addToast(err.message || "Error al cargar copias de Valora", "error");
+    } finally {
+      setLoadingValoraCopies(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "valora-copies") {
+      fetchValoraCopies();
+    }
+  }, [activeTab, valoraCopiesEnv]);
+
+  const toggleSelectValoraCopy = (id: string) => {
+    setSelectedValoraCopyIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAllValoraCopies = () => {
+    if (selectedValoraCopyIds.size === valoraCopies.length) {
+      setSelectedValoraCopyIds(new Set());
+    } else {
+      setSelectedValoraCopyIds(new Set(valoraCopies.map((c) => c.id)));
+    }
+  };
+
+  const handleDeleteValoraCopy = async (id: string) => {
+    setDeletingValoraCopyId(id);
+    try {
+      await MainService.deleteValoraCopy(id);
+      addToast("Copia eliminada correctamente.", "success");
+      fetchValoraCopies();
+    } catch (err: any) {
+      addToast(err.message || "Error al eliminar la copia.", "error");
+    } finally {
+      setDeletingValoraCopyId(null);
+    }
+  };
+
+  const handleDeleteValoraCopiesBatch = async () => {
+    if (selectedValoraCopyIds.size === 0) return;
+    if (!window.confirm(`¿Eliminar ${selectedValoraCopyIds.size} copias seleccionadas? Esta acción no se puede deshacer.`)) return;
+
+    setDeletingValoraCopiesBatch(true);
+    try {
+      const res = await MainService.deleteValoraCopiesBatch(Array.from(selectedValoraCopyIds));
+      const deletedCount = res.deleted?.length ?? 0;
+      const failedCount = res.failed?.length ?? 0;
+      if (failedCount > 0) {
+        addToast(`Se eliminaron ${deletedCount} copias, ${failedCount} fallaron.`, "warn");
+      } else {
+        addToast(`Se eliminaron ${deletedCount} copias correctamente.`, "success");
+      }
+      fetchValoraCopies();
+    } catch (err: any) {
+      addToast(err.message || "Error al eliminar copias.", "error");
+    } finally {
+      setDeletingValoraCopiesBatch(false);
+    }
+  };
+
+  const renderTabButton = (id: "master" | "valora" | "valora-copies", label: string) => (
     <button
       onClick={() => setActiveTab(id)}
       className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
@@ -229,6 +320,23 @@ export const PlantillasMaestrasPage = () => {
             <Plus className="h-5 w-5" />
           </button>
         )}
+        {activeTab === "valora-copies" && (
+          <button
+            onClick={() => {
+              const cycle: Record<string, "test" | "production" | "development"> = {
+                development: "test",
+                test: "production",
+                production: "development",
+              };
+              setValoraCopiesEnv(cycle[valoraCopiesEnv] || "development");
+            }}
+            className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            title="Cambiar entorno"
+          >
+            <ExternalLink className="h-4 w-4" />
+            {valoraCopiesEnv === "development" ? "DEV" : valoraCopiesEnv === "test" ? "TEST" : "PROD"}
+          </button>
+        )}
       </header>
       <div className="p-6 max-w-7xl mx-auto">
         {/* Feedback */}
@@ -238,6 +346,7 @@ export const PlantillasMaestrasPage = () => {
         <div className="flex gap-2 border-b border-gray-200 mb-6">
           {renderTabButton("master", "Plantillas Maestras")}
           {renderTabButton("valora", "Plantilla Valora")}
+          {renderTabButton("valora-copies", "Copias Valora/Kapital — Debug")}
         </div>
 
         {activeTab === "master" && (
@@ -446,6 +555,109 @@ export const PlantillasMaestrasPage = () => {
         )}
 
         {/* TAB VALORA */}
+        {activeTab === "valora-copies" && (
+          <div className="bg-white shadow-sm rounded-xl border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xs font-bold tracking-wider text-purple-600 uppercase">
+                  Copias de Trabajo — Valora/Kapital ({valoraCopiesEnv})
+                </h2>
+                <p className="text-[11px] text-gray-500 mt-1">
+                  Archivos generados por el motor de cálculo cuando persist_changes=True. Desde aquí puedes inspeccionar el Excel resultante o limpiar copias.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                {valoraCopies.length > 0 && (
+                  <button
+                    onClick={handleDeleteValoraCopiesBatch}
+                    disabled={deletingValoraCopiesBatch || selectedValoraCopyIds.size === 0}
+                    className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-50"
+                  >
+                    {deletingValoraCopiesBatch ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                    Eliminar seleccionados ({selectedValoraCopyIds.size})
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {loadingValoraCopies ? (
+              <div className="flex items-center py-8 text-gray-500">
+                <Loader2 className="animate-spin h-5 w-5 mr-2" />
+                Cargando copias…
+              </div>
+            ) : valoraCopies.length === 0 ? (
+              <div className="rounded-lg border-2 border-dashed border-gray-200 px-6 py-10 text-center text-gray-400">
+                <FileSpreadsheet className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm font-medium">No hay copias de trabajo en {valoraCopiesEnv}</p>
+                <p className="text-xs mt-1">Realiza un cálculo Valora o Kapital para generar una copia.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md">
+                  <input
+                    type="checkbox"
+                    checked={selectedValoraCopyIds.size === valoraCopies.length && valoraCopies.length > 0}
+                    onChange={toggleSelectAllValoraCopies}
+                    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  />
+                  <span className="text-[11px] font-semibold text-gray-500 uppercase">
+                    Seleccionar todas ({valoraCopies.length})
+                  </span>
+                </div>
+
+                {valoraCopies.map((copy) => (
+                  <div
+                    key={copy.id}
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg border border-gray-200 px-4 py-3 gap-3 hover:bg-gray-50/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 w-full">
+                      <input
+                        type="checkbox"
+                        checked={selectedValoraCopyIds.has(copy.id)}
+                        onChange={() => toggleSelectValoraCopy(copy.id)}
+                        className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                      />
+                      <FileSpreadsheet className="w-5 h-5 shrink-0 text-purple-500" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate" title={copy.name}>{copy.name}</p>
+                        <p className="text-[10px] text-gray-500">
+                          {copy.size ? `${(copy.size / 1024).toFixed(1)} KB` : "—"} · Modificado: {copy.modified_at ? formatDate(copy.modified_at) : "—"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                      <button
+                        onClick={() => {
+                          const link = document.createElement("a");
+                          link.href = copy.download_url || copy.web_url || "#";
+                          link.download = copy.name;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
+                        disabled={!copy.download_url && !copy.web_url}
+                        className="inline-flex items-center justify-center p-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors disabled:opacity-50"
+                        title="Descargar copia"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteValoraCopy(copy.id)}
+                        disabled={deletingValoraCopyId === copy.id}
+                        className="inline-flex items-center justify-center p-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors disabled:opacity-50"
+                        title="Eliminar copia"
+                      >
+                        {deletingValoraCopyId === copy.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+          </div>
+        )}
+
         {activeTab === "valora" && (
           <div className="bg-white shadow-sm rounded-xl border border-gray-200 p-6">
             <h2 className="text-xs font-bold tracking-wider text-blue-600 uppercase mb-4">

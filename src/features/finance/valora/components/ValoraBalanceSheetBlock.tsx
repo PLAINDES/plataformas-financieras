@@ -1,11 +1,15 @@
 export interface ValoraBalanceSheetBlockProps {
-  activo: number;
-  pasivo: number;
-  patrimonio: number;
-  conceptosPatrimonio: number;
-  integradoPatrimonio: number;
-  conceptosEmpresa: number;
-  integradoEmpresa: number;
+  activo: number | null;
+  pasivo: number | null;
+  patrimonio: number | null;
+  conceptosActivo: number | null;
+  conceptosPasivo: number | null;
+  conceptosPatrimonio: number | null;
+  integradoActivo: number | null;
+  integradoPasivo: number | null;
+  integradoPatrimonio: number | null;
+  conceptosEmpresa: number | null;
+  integradoEmpresa: number | null;
   variant?: "default" | "conceptos" | "integrado";
 }
 
@@ -33,11 +37,11 @@ const DefaultBalanceChart = ({
   conceptosPatrimonio,
   integradoPatrimonio,
 }: {
-  activo: number;
-  pasivo: number;
-  patrimonio: number;
-  conceptosPatrimonio: number;
-  integradoPatrimonio: number;
+  activo: number | null;
+  pasivo: number | null;
+  patrimonio: number | null;
+  conceptosPatrimonio: number | null;
+  integradoPatrimonio: number | null;
 }) => {
   return (
     <div className="p-4 flex flex-col justify-end h-full">
@@ -127,11 +131,11 @@ const MethodBalanceChart = ({
   valorFinancieroPatrimonio,
   valorFinancieroEmpresa,
 }: {
-  activo: number;
-  pasivo: number;
-  patrimonio: number;
-  valorFinancieroPatrimonio: number;
-  valorFinancieroEmpresa: number;
+  activo: number | null;
+  pasivo: number | null;
+  patrimonio: number | null;
+  valorFinancieroPatrimonio: number | null;
+  valorFinancieroEmpresa: number | null;
 }) => {
   return (
     <div className="p-4 flex flex-col justify-end h-full">
@@ -210,12 +214,18 @@ export const ValoraBalanceSheetBlock: React.FC<ValoraBalanceSheetBlockProps> = (
   activo,
   pasivo,
   patrimonio,
+  conceptosActivo: _conceptosActivo,
+  conceptosPasivo: _conceptosPasivo,
   conceptosPatrimonio,
+  integradoActivo: _integradoActivo,
+  integradoPasivo: _integradoPasivo,
   integradoPatrimonio,
   conceptosEmpresa,
   integradoEmpresa,
   variant = "default",
 }) => {
+  // El Activo, Pasivo y Patrimonio del cuadro general deben mostrarse también
+  // en las variantes de conceptos e integrado para mantener consistencia visual.
   return (
     <div className="flex flex-col rounded-lg shadow bg-white overflow-hidden h-full">
       {variant === "default" && (
@@ -227,24 +237,24 @@ export const ValoraBalanceSheetBlock: React.FC<ValoraBalanceSheetBlockProps> = (
           integradoPatrimonio={integradoPatrimonio}
         />
       )}
-        {variant === "conceptos" && (
-          <MethodBalanceChart
-            activo={activo}
-            pasivo={pasivo}
-            patrimonio={patrimonio}
-            valorFinancieroPatrimonio={conceptosPatrimonio}
-            valorFinancieroEmpresa={conceptosEmpresa}
-          />
-        )}
-        {variant === "integrado" && (
-          <MethodBalanceChart
-            activo={activo}
-            pasivo={pasivo}
-            patrimonio={patrimonio}
-            valorFinancieroPatrimonio={integradoPatrimonio}
-            valorFinancieroEmpresa={integradoEmpresa}
-          />
-        )}
+      {variant === "conceptos" && (
+        <MethodBalanceChart
+          activo={activo}
+          pasivo={pasivo}
+          patrimonio={patrimonio}
+          valorFinancieroPatrimonio={conceptosPatrimonio}
+          valorFinancieroEmpresa={conceptosEmpresa}
+        />
+      )}
+      {variant === "integrado" && (
+        <MethodBalanceChart
+          activo={activo}
+          pasivo={pasivo}
+          patrimonio={patrimonio}
+          valorFinancieroPatrimonio={integradoPatrimonio}
+          valorFinancieroEmpresa={integradoEmpresa}
+        />
+      )}
     </div>
   );
 };

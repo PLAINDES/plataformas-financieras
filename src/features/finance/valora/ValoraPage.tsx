@@ -6,7 +6,10 @@ import {
 } from "./components/ValoraResults";
 import { LoadingOverlay } from "@/shared/components/common/LoadingOverlay";
 import { ToastStack } from "@/shared/components/common/ToastStack";
-import type { FinancialTable } from "@/shared/types/ValoraTypes";
+import type {
+  FinancialTable,
+  ValoraCalculationResults,
+} from "@/shared/types/ValoraTypes";
 import type { ToastType } from "@/shared/types/toast.types";
 import { MainPageFooter } from "../components/MainPageFooter";
 import { parseFinancialTablesFromFile } from "./types/valoraFileParsing";
@@ -28,6 +31,19 @@ import {
   BONOS_TRANSLATIONS,
   COUNTRIES_TRANSLATIONS,
 } from "@/shared/constants/kapital";
+
+const getValoraCalculationResults = (
+  data: unknown
+): ValoraCalculationResults | undefined => {
+  if (!data || typeof data !== "object") return undefined;
+
+  const results = (data as {
+    resultados?: ValoraCalculationResults | ValoraCalculationResults[];
+  }).resultados;
+
+  if (Array.isArray(results)) return results[0];
+  return results;
+};
 
 const ValoraPage: React.FC = () => {
   const { user, logout } = useAuthContext();
@@ -53,7 +69,7 @@ const ValoraPage: React.FC = () => {
   const [_isResultsSidebarOpen, setIsResultsSidebarOpen] = useState(false);
   const [balanceTable, setBalanceTable] = useState<FinancialTable | null>(null);
   const [resultsTable, setResultsTable] = useState<FinancialTable | null>(null);
-  const [hasSensitized] = useState(false);
+
 
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
@@ -195,10 +211,12 @@ const ValoraPage: React.FC = () => {
         section={resultsSection}
         balanceTable={balanceTable}
         resultsTable={resultsTable}
+        calculationResults={getValoraCalculationResults(
+          valoraCalc.currentCalculation?.data
+        )}
         formData={formData}
         onSectionChange={handleResultsSectionChange}
         onOpenFormPanel={() => setIsDesktopFormOpen(true)}
-        hasSensitized={hasSensitized}
       />
       <MainPageFooter brandName={"Valora"} brandHref={"/valora"} />
     </div>
@@ -275,7 +293,6 @@ const ValoraPage: React.FC = () => {
         onToggleForm={() => setIsDesktopFormOpen((prev) => !prev)}
         isFormOpen={isDesktopFormOpen}
         hasResults={showResults}
-        hasSensitized={hasSensitized}
         logoHref="/valora"
         logoSrc="/images/logo-valora-small.png"
         logoAlt="Valora Logo"
@@ -288,7 +305,6 @@ const ValoraPage: React.FC = () => {
         selected={getSelectedView()}
         onNavigate={handleResultsSectionChange}
         hasResults={showResults}
-        hasSensitized={hasSensitized}
       />
       <main
         className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} transition-all h-screen duration-300 ${isDesktopFormOpen ? "lg:pl-105" : "lg:pl-0"}`}

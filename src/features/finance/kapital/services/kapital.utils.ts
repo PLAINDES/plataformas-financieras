@@ -136,20 +136,37 @@ export const computeResultsFromCalculationData = (
   const developedBlock = latestResult
     ? pickBlock(latestResult, ["mercado_desarrollado", "Mercado Desarrollado"])
     : null;
-  const emergentBlock = latestResult
-    ? pickBlock(latestResult, ["mercado_emergente", "Mercado Emergente"])
+  const emergentUsdBlock = latestResult
+    ? pickBlock(latestResult, [
+        "mercado_emergente_dolares",
+        "mercado_emergente",
+        "Mercado Emergente",
+      ])
+    : null;
+  const emergentLocalBlock = latestResult
+    ? pickBlock(latestResult, [
+        "mercado_emergente_moneda_local",
+        "Mercado Emergente Moneda Local",
+      ])
     : null;
   const companyUsdBlock = latestResult
     ? pickBlock(latestResult, ["empresa_dolares", "Empresa Dolares"])
     : null;
-  const companySolesBlock = latestResult
-    ? pickBlock(latestResult, ["empresa_soles", "Empresa Soles"])
+  const companyLocalBlock = latestResult
+    ? pickBlock(latestResult, [
+        "empresa_moneda_local",
+        "empresa_soles",
+        "Empresa Soles",
+      ])
     : null;
 
   const developed = toMarketResults(developedBlock);
-  const emergent = toMarketResults(emergentBlock);
+  const emergentUsd = toMarketResults(emergentUsdBlock);
+  const emergentLocal = toMarketResults(emergentLocalBlock);
   const empresa_dolares = toMarketResults(companyUsdBlock);
-  const empresa_soles = toMarketResults(companySolesBlock);
+  const empresa_moneda_local = toMarketResults(companyLocalBlock);
+  const empresa_soles = empresa_moneda_local;
+  const emergent = emergentUsd;
 
   const showCompanyCard = hasCompanyInputData(source);
 
@@ -158,8 +175,15 @@ export const computeResultsFromCalculationData = (
     toOptionalNumber((latestInput as Record<string, unknown>)?.beta_subsector_custom) ??
     toOptionalNumber((latestInput as Record<string, unknown>)?.beta_unlevered_custom);
 
+  // El β del sector: se toma directo del input beta_unlevered_industry y solo
+  // se cae a boa_sector/boa del backend si ese campo no existe.
+  const boaSectorResolved =
+    toOptionalNumber((latestInput as Record<string, unknown>)?.beta_unlevered_industry) ??
+    toOptionalNumber(latestResult?.boa_sector) ??
+    toOptionalNumber((latestInput as Record<string, unknown>)?.beta_desapalancado);
+
   // Choose which data to show in the top-level results (cppc, kd, ke, koa)
-  const primary = showCompanyCard ? empresa_dolares : emergent;
+  const primary = showCompanyCard ? empresa_dolares : emergentUsd;
 
   return {
     results: {
@@ -169,12 +193,16 @@ export const computeResultsFromCalculationData = (
       koa: primary.koa,
       boa: toOptionalNumber(latestResult?.boa),
       boa_custom: betaSubsector,
-      boa_sector: toOptionalNumber(latestResult?.boa_sector),
+      boa_sector: boaSectorResolved,
       boa_subsector: toOptionalNumber(latestResult?.boa_subsector),
       emergent,
       developed,
+      mercado_desarrollado: developed,
+      mercado_emergente_dolares: emergentUsd,
+      mercado_emergente_moneda_local: emergentLocal,
       empresa_dolares,
       empresa_soles,
+      empresa_moneda_local,
       d_empresa: toRate(latestResult?.d_empresa),
       industria: latestResult?.industria as string | undefined,
       subsector: latestResult?.subsector as string | undefined,
@@ -198,20 +226,53 @@ export const extractSensibilizaciones = (
         toOptionalNumber(inputs?.beta_subsector) ??
         toOptionalNumber(inputs?.beta_subsector_custom) ??
         toOptionalNumber(inputs?.beta_unlevered_custom);
+      const boaSectorResolved =
+        toOptionalNumber(inputs?.beta_unlevered_industry) ??
+        toOptionalNumber(entry.boa_sector) ??
+        toOptionalNumber(inputs?.beta_desapalancado);
       return {
         created_at: entry.created_at as string | undefined,
         boa: toOptionalNumber(entry.boa),
-        boa_sector: toOptionalNumber(entry.boa_sector),
+        boa_sector: boaSectorResolved,
         boa_subsector: toOptionalNumber(entry.boa_subsector),
         beta_subsector: betaSubsectorInput,
         mercado_desarrollado: toMarketResults(
           pickBlock(entry, ["mercado_desarrollado"])
         ),
         mercado_emergente: toMarketResults(
-          pickBlock(entry, ["mercado_emergente"])
+          pickBlock(entry, [
+            "mercado_emergente_dolares",
+            "mercado_emergente",
+          ])
+        ),
+        mercado_emergente_dolares: toMarketResults(
+          pickBlock(entry, [
+            "mercado_emergente_dolares",
+            "mercado_emergente",
+            "Mercado Emergente",
+          ])
+        ),
+        mercado_emergente_moneda_local: toMarketResults(
+          pickBlock(entry, [
+            "mercado_emergente_moneda_local",
+            "Mercado Emergente Moneda Local",
+          ])
         ),
         empresa_dolares: toMarketResults(pickBlock(entry, ["empresa_dolares"])),
-        empresa_soles: toMarketResults(pickBlock(entry, ["empresa_soles"])),
+        empresa_moneda_local: toMarketResults(
+          pickBlock(entry, [
+            "empresa_moneda_local",
+            "empresa_soles",
+            "Empresa Soles",
+          ])
+        ),
+        empresa_soles: toMarketResults(
+          pickBlock(entry, [
+            "empresa_soles",
+            "empresa_moneda_local",
+            "Empresa Soles",
+          ])
+        ),
         subsector: (entry.subsector as string) || undefined,
         industria: (entry.industria as string) || undefined,
         tickers: (entry.tickers_subsector_sensibilizacion as string) || undefined,
@@ -260,9 +321,12 @@ export const enrichCalculationInputPayload = (formData: KapitalFormData) => {
   const betaLevered = toOptionalNumber(formData.beta_levered);
   const betaUnlevered = toOptionalNumber(formData.beta_unlevered);
   const betaSubsector = toOptionalNumber(formData.beta_subsector);
+  const betaSectorUnlevered = toOptionalNumber(formData.beta_unlevered_industry);
 
   if (tax !== undefined) payload.tasa_impositiva = tax;
   if (devaluation !== undefined) payload.devaluacion = devaluation;
+  if (betaSectorUnlevered !== undefined)
+    payload.beta_unlevered_industry = betaSectorUnlevered;
   if (betaUnlevered !== undefined) payload.beta_desapalancado = betaUnlevered;
   if (betaSubsector !== undefined) payload.beta_subsector = betaSubsector;
 

@@ -13,7 +13,7 @@ type ChartMode = "default" | "conceptos" | "integrado";
 
 export const ValoraSensibilidadResultsBlock: React.FC<
   ValoraSensibilidadResultsBlockProps
-> = ({ onOpenFormPanel, sector }) => {
+> = ({ onOpenFormPanel: _onOpenFormPanel, sector }) => {
   const [chartMode, setChartMode] = useState<ChartMode>("default");
 
   const handleMethodClick = (method: "conceptos" | "integrado") => {
@@ -54,14 +54,10 @@ export const ValoraSensibilidadResultsBlock: React.FC<
         title="Sensibilidad"
         subtitle="Resultados sensibilizados"
         sector={sector}
-        onSensibilidadClick={() => {
-          onOpenFormPanel?.();
-        }}
-        hideButton={!onOpenFormPanel}
       />
 
-      <div className="flex flex-col lg:flex-row gap-4 h-[29rem] lg:h-[29rem]">
-        <div className="lg:w-1/3 h-full">
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="lg:w-1/3">
           <ValoraMethodsToggleCard
             methods={methods}
             selectedMethod={chartMode === "default" ? "none" : chartMode}
@@ -69,7 +65,7 @@ export const ValoraSensibilidadResultsBlock: React.FC<
           />
         </div>
 
-        <div className="lg:w-2/3 h-full">
+        <div className="lg:w-2/3">
           <ValoraSensibilidadBalanceSheetBlock
             activo={12231540}
             pasivo={9979152}

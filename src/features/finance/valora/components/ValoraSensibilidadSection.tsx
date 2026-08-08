@@ -48,9 +48,7 @@ export const ValoraSensibilidadSection: React.FC<ValoraSensibilidadSectionProps>
       {activeTab === "original" && (
         <div className="mx-auto w-full max-w-300">
           <ValoraGeneralResultsBlock
-            onSensibilidadClick={() => setActiveTab("sensibility")}
             onOpenFormPanel={onOpenFormPanel}
-            wacc={14}
           />
         </div>
       )}
@@ -67,7 +65,7 @@ export const ValoraSensibilidadSection: React.FC<ValoraSensibilidadSectionProps>
       {activeTab === "comparison" && hasSensitized && (
         <div className="flex flex-row gap-6 items-start w-full">
           <div className="min-w-0 flex-1">
-            <ValoraGeneralResultsBlock wacc={14} hideButton />
+            <ValoraGeneralResultsBlock />
           </div>
           <div className="min-w-0 flex-1 flex flex-col gap-4">
             <ValoraSensibilidadResultsBlock sector={sector} />
