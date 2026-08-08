@@ -371,6 +371,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
 
   // Sección de vista simple (sin comparación lado a lado)
   const renderSingleView = (
+    dataDeveloped: KapitalMarketResults,
     dataEmergent: KapitalMarketResults,
     dataEmpresa?: KapitalMarketResults,
     boaInputs?: any,
@@ -397,7 +398,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
       <div className="lg:flex-1 min-w-[340px] max-w-[450px] w-full">
         <FinancieraCard
           title="Mercado Desarrollado"
-          data={developedData}
+          data={dataDeveloped}
           isEmpresa={false}
           resultCurrency={resultCurrency}
           onResultCurrencyChange={onResultCurrencyChange}
@@ -765,6 +766,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                   results.inputs?.beta_subsector
                 );
                 return renderSingleView(
+                  developedData,
                   emergentOriginal,
                   empresaOriginal,
                   results.inputs,
@@ -802,6 +804,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                   selectedSens?.beta_subsector
                 );
                 return renderSingleView(
+                  selectedSens?.mercado_desarrollado || developedData,
                   emergentSens,
                   empresaSens,
                   selectedSens?.inputs,
