@@ -26,7 +26,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
 }) => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isPaid, setIsPaid] = useState(false);
+  const [paymentLink, setPaymentLink] = useState<string | null>(null);
   const [loaderState, setLoaderState] = useState<ReportLoaderState>("idle");
 
   useEffect(() => {
@@ -43,32 +43,19 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
             Number(calculationId),
             prewarmedSessionId
           );
-          if (!ignore) {
-            // Notificamos al padre que la sesión ya está fresca para evitar futuros refreshes
-            setIsSessionFresh(true);
-          }
+          if (!ignore) setIsSessionFresh(true);
         }
 
-        if (!ignore) {
-          // Si viene de darle al botón de pagar, mantenemos el loader en "payment" un segundo más
-          // Si es flujo normal, pasa a "generating"
-          setLoaderState((prev) =>
-            prev === "payment" ? "generating" : "generating"
-          );
-        }
+        if (!ignore) setLoaderState("generating");
 
-        // Si isPaid es false, pide vista previa (true). Si isPaid es true, pide documento completo (false).
-        const isPreviewMode = !isPaid;
-        const blob = await MainService.generateReportPdf(
-          reportProductId,
-          calculationId!,
-          isPreviewMode
-        );
+        const [report, blob] = await Promise.all([
+          MainService.getReport(Number(reportProductId)),
+          MainService.generateReportPdf(reportProductId, calculationId!, true),
+        ]);
 
         if (!ignore) {
+          setPaymentLink(report.link_pago || null);
           localGeneratedUrl = URL.createObjectURL(blob);
-
-          // Libera la memoria de la URL anterior antes de asignar la nueva
           setPdfUrl((prevUrl) => {
             if (prevUrl) URL.revokeObjectURL(prevUrl);
             return localGeneratedUrl;
@@ -88,34 +75,33 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
     };
 
     if (isOpen && calculationId && reportProductId) {
-      // Retraso para simular transición si viene de pago
-      if (loaderState === "payment") {
-        setTimeout(() => {
-          if (!ignore) loadPdf();
-        }, 800);
-      } else {
-        loadPdf();
-      }
-    } else {
-      if (!isOpen) {
-        setPdfUrl(null);
-        setError(null);
-        setIsPaid(false);
-        setLoaderState("idle");
-      }
+      loadPdf();
+    } else if (!isOpen) {
+      setPdfUrl(null);
+      setError(null);
+      setPaymentLink(null);
+      setLoaderState("idle");
     }
 
     return () => {
       ignore = true;
-      if (localGeneratedUrl) {
-        URL.revokeObjectURL(localGeneratedUrl);
-      }
+      if (localGeneratedUrl) URL.revokeObjectURL(localGeneratedUrl);
     };
-  }, [isOpen, calculationId, reportProductId, isPaid]);
+  }, [
+    isOpen,
+    calculationId,
+    reportProductId,
+    isSessionFresh,
+    prewarmedSessionId,
+    setIsSessionFresh,
+  ]);
 
   const handleIzipayPayment = () => {
-    setLoaderState("payment");
-    setTimeout(() => setIsPaid(true), 1500);
+    if (!paymentLink) {
+      setError("Este reporte aun no tiene link de pago configurado.");
+      return;
+    }
+    window.open(paymentLink, "_blank", "noopener,noreferrer");
   };
 
   if (!isOpen) return null;
@@ -125,7 +111,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
       <div className="w-full max-w-7xl rounded-lg border border-gray-200 bg-white shadow">
         <div className="flex flex-col sm:flex-row items-center justify-between border-b border-gray-200 px-4 py-3 gap-4">
           <h4 className="text-sm font-semibold text-gray-800 uppercase">
-            {isPaid ? "REPORTE COMPLETO" : "VISTA PREVIA DEL REPORTE"}
+            VISTA PREVIA DEL REPORTE
           </h4>
 
           <div className="flex items-center gap-2">
@@ -137,38 +123,18 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
               Cerrar
             </button>
 
-            {isPaid ? (
-              <a
-                href={pdfUrl || "#"}
-                download={`Reporte-${reportProductId}.pdf`}
-                className="rounded bg-green-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-green-700 flex items-center gap-2 transition-colors"
-              >
-                <i className="fa-solid fa-download"></i> Descargar Reporte
-              </a>
-            ) : (
-              <button
-                onClick={handleIzipayPayment}
-                disabled={!pdfUrl}
-                className="rounded bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
-              >
-                <i className="fa-solid fa-credit-card"></i> Pagar y Descargar
-              </button>
-            )}
+            <button
+              onClick={handleIzipayPayment}
+              disabled={!pdfUrl}
+              className="rounded bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
+            >
+              <i className="fa-solid fa-credit-card"></i> Pagar y Descargar
+            </button>
           </div>
         </div>
 
         <div className="h-[70vh] w-full bg-gray-100 flex items-center justify-center relative">
-          {/*isLoading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-10 backdrop-blur-sm">
-              <i className="fa-solid fa-circle-notch fa-spin text-4xl text-blue-600 mb-4"></i>
-              <p className="text-sm font-medium text-gray-600">
-                {isPaid
-                  ? "Desbloqueando documento completo..."
-                  : "Generando documento..."}
-              </p>
-            </div>
-          )*/}
-          <ReportLoader state={loaderState} isPaid={isPaid} />
+          <ReportLoader state={loaderState} isPaid={false} />
           {error && (
             <div className="text-center p-6">
               <i className="fa-solid fa-triangle-exclamation text-3xl text-red-500 mb-2"></i>
