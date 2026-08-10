@@ -1,10 +1,11 @@
 // src/features/landing/LandingPage.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { HeroSection } from "./sections/HeroSection";
 import { PlatformCardsSection } from "./sections/PlatformCardsSection";
 import { WhatsAppSection } from "./sections/WhatsAppSection";
 import { CTASection } from "./sections/CTASection";
 import TeamSection from "./sections/TeamSection";
+import { ProductsSection } from "./sections/ProductsSection";
 import { LandingHeader } from "./layout/LandingHeader";
 import { LandingFooter } from "./layout/LandingFooter";
 import { ScrollTop } from "@/shared/components/layout/ScrollTop";
@@ -15,6 +16,7 @@ import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
 import type { Company } from "@/shared/types";
 import type { User } from "@/shared/types/user.types";
 import type { LoginCredentials, RegisterData } from "../auth/types/user.types";
+import { MainService } from "@/shared/services/main.service";
 
 const COMPANY: Company = {
     id: 1,
@@ -58,6 +60,21 @@ export function LandingPage({
     } = useLandingCMS(data, updateContentLocally, findContent);
 
     const [whatsappOpen, setWhatsappOpen] = useState(false);
+    const [hasActiveReports, setHasActiveReports] = useState(false);
+
+    useEffect(() => {
+        let ignore = false;
+        MainService.getReports({ activo: true })
+            .then((reports) => {
+                if (!ignore) setHasActiveReports(reports.length > 0);
+            })
+            .catch(() => {
+                if (!ignore) setHasActiveReports(false);
+            });
+        return () => {
+            ignore = true;
+        };
+    }, []);
 
     if (loading)
         return (
@@ -110,11 +127,13 @@ export function LandingPage({
         content={getContentData("benefits-home")}
         onSave={handleSaveContent}
       />*/}
-            {/*<ProductsSection
-        content={getContentData("products")}
-        onSave={handleSaveContent}
-        onSaveCollection={handleSaveCollection}
-      />*/}
+            {hasActiveReports && (
+                <ProductsSection
+                    content={getContentData("products")}
+                    onSave={handleSaveContent}
+                    onSaveCollection={handleSaveCollection}
+                />
+            )}
             <TeamSection
                 content={getContentData("team")}
                 onSave={handleSaveContent}

@@ -135,47 +135,32 @@ export const MainService = {
   },
 
   getCalculation: async (id: number): Promise<Calculation> => {
-    console.time(`[API] getCalculation ${id}`);
-    const res = await api.get<Calculation>(`main/calculations/${id}`);
-    console.timeEnd(`[API] getCalculation ${id}`);
-    return res;
+    return api.get<Calculation>(`main/calculations/${id}`);
   },
 
   getCalculationByCode: async (code: string): Promise<Calculation> => {
-    console.time(`[API] getCalculationByCode ${code}`);
-    const res = await api.get<Calculation>(`main/calculations/by-code/${code}`);
-    console.timeEnd(`[API] getCalculationByCode ${code}`);
-    return res;
+    return api.get<Calculation>(`main/calculations/by-code/${code}`);
   },
 
   createCalculation: async (data: CalculationCreate): Promise<Calculation> => {
-    console.time("[API] createCalculation");
-    const res = await api.post<Calculation>("main/calculations", data);
-    console.timeEnd("[API] createCalculation");
-    return res;
+    return api.post<Calculation>("main/calculations", data);
   },
 
   updateCalculation: async (
     id: number,
     data: CalculationUpdate
   ): Promise<Calculation> => {
-    console.time(`[API] updateCalculation ${id}`);
-    const res = await api.put<Calculation>(`main/calculations/${id}`, data);
-    console.timeEnd(`[API] updateCalculation ${id}`);
-    return res;
+    return api.put<Calculation>(`main/calculations/${id}`, data);
   },
 
   refreshCalculation: async (
     id: number,
     prewarmedSessionId?: string | null
   ): Promise<Calculation> => {
-    console.time(`[API] refreshCalculation ${id}`);
     const payload = prewarmedSessionId
       ? { prewarmed_session_id: prewarmedSessionId }
       : {};
-    const res = await api.post<Calculation>(`main/calculations/${id}/refresh`, payload);
-    console.timeEnd(`[API] refreshCalculation ${id}`);
-    return res;
+    return api.post<Calculation>(`main/calculations/${id}/refresh`, payload);
   },
 
   deleteCalculation: async (id: number): Promise<void> => {
@@ -198,6 +183,8 @@ export const MainService = {
     search?: string;
     type?: string;
     activo?: boolean;
+    sector_empresa?: string;
+    bono_ajustado?: string;
   }): Promise<Report[]> => {
     return api.get<Report[]>("main/reports", { params });
   },
@@ -240,9 +227,10 @@ export const MainService = {
     const baseUrl = `${rawApiUrl.replace(/\/api\/v1\/?$/, "").replace(/\/$/, "")}/api/v1`;
 
     const timestamp = new Date().getTime();
+    const url = `${baseUrl}/main/reports/${reportId}/generate?calculation_id=${calculationId}&is_preview=${isPreview}&_t=${timestamp}`;
 
     const response = await fetch(
-      `${baseUrl}/main/reports/${reportId}/generate?calculation_id=${calculationId}&is_preview=${isPreview}&_t=${timestamp}`,
+      url,
       {
         method: "GET",
         headers: {
@@ -260,7 +248,8 @@ export const MainService = {
       );
     }
 
-    return await response.blob();
+    const blob = await response.blob();
+    return blob;
   },
 
   // ==================== MASTER TEMPLATES ====================

@@ -211,7 +211,8 @@ export function useReportEditor(id?: string) {
         await generateAndUploadReportPdf(
           reportId,
           finalHtmlForPdf,
-          editorContent
+          editorContent,
+          selectedCoverUrl
         );
       }
       return true; // Retorna verdadero si tiene éxito
@@ -230,7 +231,7 @@ export function useReportEditor(id?: string) {
         editorContent,
         templateCodes
       );
-      await previewReportPdf(finalHtmlForPdf);
+      await previewReportPdf(finalHtmlForPdf, selectedCoverUrl, false);
     } catch (err) {
       console.error(err);
     } finally {

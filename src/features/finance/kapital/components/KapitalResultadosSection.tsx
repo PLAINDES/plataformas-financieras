@@ -1,5 +1,6 @@
 // features/finance/kapital/components/KapitalResultadosSection.tsx
 import { FinancieraCard } from "./FinancieraCard";
+import { Book } from "./Book";
 import type { KapitalResults } from "@/shared/types";
 import { ArrowRight, Sparkles, ChevronDown } from "lucide-react";
 import { INDUSTRY_TRANSLATIONS } from "@/shared/constants/kapital";
@@ -193,7 +194,7 @@ export const KapitalResultadosSection: React.FC<
     localCurrency,
     shouldShowChatbot,
     onToggleForm,
-    //onOpenReport,
+    onOpenReport,
 }) => {
 
     const mainIndustry = results.industria || selectedSector;
@@ -220,6 +221,29 @@ export const KapitalResultadosSection: React.FC<
     return (
         <>
             <header className="flex flex-col xl:flex-row mt-0 lg:mt-0 justify-between items-center w-full gap-2 px-4">
+                {onOpenReport && (
+                    <div className="xl:w-1/3 flex justify-center xl:justify-end w-full">
+                        <section className="flex flex-col items-center justify-center rounded-[24px] max-w-105 w-full xl:w-fit overflow-visible mx-auto">
+                            <div onClick={onOpenReport} className="w-fit h-fit cursor-pointer">
+                                <Book
+                                    href="/images/portada-kapital-less.webp"
+                                    width={110}
+                                    height={150}
+                                    interactive={true}
+                                />
+                            </div>
+                            <div className="flex flex-col justify-center gap-2 flex-1">
+                                <button
+                                    type="button"
+                                    onClick={onOpenReport}
+                                    className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer"
+                                >
+                                    Reporte de Costo de Capital
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                )}
                 {shouldShowChatbot && (
                     <button
                         type="button"

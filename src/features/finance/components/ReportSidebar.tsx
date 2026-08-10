@@ -3,6 +3,7 @@ import { MainService } from "@/shared/services/main.service";
 import { ReportCheckbox } from "./ReportCheckbox";
 import { ReportProductCard } from "./ReportProductCard";
 import { ReportQuoteModal } from "./ReportQuoteModal";
+import type { Report } from "@/shared/types";
 
 export type ReportProduct = {
   id: string;
@@ -17,6 +18,55 @@ export type ReportSidebarProps = {
   selectedReportProductId: string;
   onSelectReportProduct: (id: string) => void;
   onOpenReportViewer: () => void;
+  reportScope?: "empresa" | "sectorial";
+  rateScope?: "bonos" | "ajustado";
+};
+
+const normalizeScope = (value?: string | null) =>
+  (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+
+const hasRecognizedSectorScope = (value: string) =>
+  ["empresa", "company", "sector", "sectorial"].some((token) =>
+    value.includes(token)
+  );
+
+const hasRecognizedRateScope = (value: string) =>
+  ["bono", "bonos", "eeuu", "ee.uu", "tesoro", "ajust"].some((token) =>
+    value.includes(token)
+  );
+
+const reportMatchesScope = (
+  report: Report,
+  reportScope?: "empresa" | "sectorial",
+  rateScope?: "bonos" | "ajustado"
+) => {
+  const reportSectorScope = normalizeScope(report.sector_empresa);
+  const reportRateScope = normalizeScope(report.bono_ajustado);
+
+  const sectorOk =
+    !reportScope ||
+    !reportSectorScope ||
+    !hasRecognizedSectorScope(reportSectorScope) ||
+    reportSectorScope.includes(reportScope) ||
+    (reportScope === "empresa" && reportSectorScope.includes("company")) ||
+    (reportScope === "sectorial" && reportSectorScope.includes("sector"));
+
+  const rateOk =
+    !rateScope ||
+    !reportRateScope ||
+    !hasRecognizedRateScope(reportRateScope) ||
+    reportRateScope.includes(rateScope) ||
+    (rateScope === "bonos" && reportRateScope.includes("bono")) ||
+    (rateScope === "bonos" && reportRateScope.includes("eeuu")) ||
+    (rateScope === "bonos" && reportRateScope.includes("ee.uu")) ||
+    (rateScope === "bonos" && reportRateScope.includes("tesoro")) ||
+    (rateScope === "ajustado" && reportRateScope.includes("ajust"));
+
+  return sectorOk && rateOk;
 };
 
 export const ReportSidebar: React.FC<ReportSidebarProps> = ({
@@ -25,12 +75,14 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
   selectedReportProductId,
   onSelectReportProduct,
   onOpenReportViewer,
+  reportScope,
+  rateScope,
 }) => {
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const [quoteEmail, setQuoteEmail] = useState("");
   const [quotePhone, setQuotePhone] = useState("");
   const [quoteMessage, setQuoteMessage] = useState("");
-  const [apiReports, setApiReports] = useState<any[]>([]);
+  const [apiReports, setApiReports] = useState<Report[]>([]);
   //const [isLoading, setIsLoading] = useState(false);
 
   // Refs para controlar el drag-to-scroll sin provocar re-renders
@@ -51,11 +103,20 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
             type: "kapital",
             activo: true,
           });
-          setApiReports(data);
+          const matchingReports = data.filter((report) =>
+            reportMatchesScope(report, reportScope, rateScope)
+          );
+          setApiReports(matchingReports);
 
           // Auto-seleccionar el primer reporte si no hay ninguno seleccionado
-          if (data.length > 0 && !selectedReportProductId) {
-            onSelectReportProduct(data[0].id.toString());
+          const selectedStillExists = matchingReports.some(
+            (report) => report.id.toString() === selectedReportProductId
+          );
+          if (matchingReports.length > 0 && !selectedStillExists) {
+            onSelectReportProduct(matchingReports[0].id.toString());
+          }
+          if (matchingReports.length === 0 && selectedReportProductId) {
+            onSelectReportProduct("");
           }
         } catch (error) {
           console.error("Error al obtener los reportes", error);
@@ -66,7 +127,7 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
 
       fetchReports();
     }
-  }, [isOpen, selectedReportProductId, onSelectReportProduct]);
+  }, [isOpen, selectedReportProductId, onSelectReportProduct, reportScope, rateScope]);
 
   const handleQuoteSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -160,10 +221,10 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
                         //iconClassName={product.iconClassName}
                         title={product.nombre}
                         iconClassName="fa-solid fa-laptop text-2xl text-gray-400"
-                        selected={selectedReportProductId === product.id}
+                        selected={selectedReportProductId === product.id.toString()}
                         onSelect={() => {
                           if (!hasDragged.current) {
-                            onSelectReportProduct(product.id);
+                            onSelectReportProduct(product.id.toString());
                           }
                         }}
                       />
@@ -193,8 +254,9 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
               <div className="sticky bottom-0 bg-white px-10 pb-6 pt-4">
                 <button
                   type="button"
-                  className="bg-blue-600 hover:bg-blue-700 transition-colors px-4 py-2 rounded text-white uppercase font-medium w-full text-sm cursor-pointer"
+                  className="bg-blue-600 hover:bg-blue-700 transition-colors px-4 py-2 rounded text-white uppercase font-medium w-full text-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                   onClick={onOpenReportViewer}
+                  disabled={!selectedReportProductId || apiReports.length === 0}
                 >
                   Generar reporte
                 </button>
