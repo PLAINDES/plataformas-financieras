@@ -275,6 +275,31 @@ export const KapitalResultadosSection: React.FC<
             </section>
           </div>
         )}
+        {/*
+        {onOpenReport && (
+          <div className="flex justify-end items-end">
+            <section className="flex flex-col items-center justify-center rounded-[24px] max-w-105 w-full xl:w-fit overflow-visible">
+              <div onClick={onOpenReport} className="w-fit h-fit cursor-pointer">
+                <Book
+                  href="/images/portada-kapital-less.webp"
+                  width={110}
+                  height={150}
+                  interactive={true}
+                />
+              </div>
+              <div className="flex flex-col justify-center gap-2 flex-1 mt-2">
+                <button
+                  type="button"
+                  onClick={onOpenReport}
+                  className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer"
+                >
+                  Reporte de Costo de Capital
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
+        */}
       </header>
       <section className="flex flex-col lg:flex-row justify-center items-center w-full gap-3 mt-2 mx-auto px-4 max-w-none">
         <div className="shrink-0">
