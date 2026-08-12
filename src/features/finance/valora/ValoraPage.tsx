@@ -329,7 +329,6 @@ const ValoraPage: React.FC = () => {
             industryTranslations={INDUSTRY_TRANSLATIONS}
             bonosTranslations={BONOS_TRANSLATIONS}
             countriesTranslations={COUNTRIES_TRANSLATIONS}
-            onClearUploadedFile={handleClearUploadedFile}
             onInputChange={handleInputChange}
             onSubmit={valoraCalc.handleSubmit}
             onDownloadTemplate={downloadTemplate}
