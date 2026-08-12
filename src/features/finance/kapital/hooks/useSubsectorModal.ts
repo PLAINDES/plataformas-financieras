@@ -96,6 +96,7 @@ export function useSubsectorModal({
     }, [detailTickers, inactiveTickers, subsectorDetail]);
 
     const openSubsectorModal = () => {
+        if (!isWaccCalculated) return;
         // Si ya se calculó el WACC, cualquier subsector seleccionado posteriormente
         // se destina exclusivamente a la sensibilización, no a resultados generales.
         setSubsectorModalMode(

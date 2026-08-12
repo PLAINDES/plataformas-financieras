@@ -90,7 +90,7 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
-  const hasDragged = useRef(false); // Diferencia entre clic normal y arrastre
+  const hasDragged = useRef(false);
 
   // --- FETCH DE REPORTES ---
   useEffect(() => {
@@ -182,7 +182,7 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
             </button>
           </div>
           <div className="flex flex-1 justify-center w-full overflow-hidden">
-            <div className="flex h-full w-full flex-col lg:p-6 lg:px-10 p-4">
+            <div className="flex h-full min-h-[calc(100dvh-4rem)] w-full flex-col lg:p-6 lg:px-10 p-4 pt-8">
               <div className="mb-10 flex flex-col gap-2">
                 <h3 className="text-xl font-bold">
                   Genera un reporte con tus datos
@@ -192,33 +192,29 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
                   proyecto o inversion.
                 </p>
               </div>
-              <div className="flex-1 overflow-y-auto pr-2">
-                <h4 className="text-lg font-bold">
+              <div className="flex-1 overflow-y-auto pr-2 pb-2">
+                <h4 className="mt-2 text-lg font-bold text-center">
                   Seleccione el producto de su preferencia:
                 </h4>
-                {/* Contenedor del Drag-to-Scroll */}
                 <div
                   ref={scrollRef}
                   onMouseDown={handleMouseDown}
                   onMouseLeave={handleMouseLeave}
                   onMouseUp={handleMouseUp}
                   onMouseMove={handleMouseMove}
-                  className="flex gap-4 my-6 lg:justify-start justify-start overflow-x-auto cursor-grab active:cursor-grabbing select-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] w-full"
+                  className={`my-8 flex w-full gap-4 select-none overflow-x-auto cursor-grab active:cursor-grabbing [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${apiReports.length === 1 ? "justify-center" : "justify-start"}`}
                 >
                   {apiReports.map((product) => (
                     <div
                       key={product.id}
                       className="shrink-0"
                       onClickCapture={(e) => {
-                        // Si el usuario arrastró, evitamos que el clic seleccione la tarjeta
                         if (hasDragged.current) {
                           e.stopPropagation();
                         }
                       }}
                     >
                       <ReportProductCard
-                        //title={product.title}
-                        //iconClassName={product.iconClassName}
                         title={product.nombre}
                         iconClassName="fa-solid fa-laptop text-2xl text-gray-400"
                         selected={selectedReportProductId === product.id.toString()}
@@ -231,27 +227,8 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
                     </div>
                   ))}
                 </div>
-                <h4 className="text-lg font-bold">Contenido:</h4>
-                <div className="flex flex-col gap-3 p-10 py-8">
-                  <ReportCheckbox
-                    name="contenido-1"
-                    label="Costo de capital del sector"
-                  />
-                  <ReportCheckbox
-                    name="contenido-2"
-                    label="Costo de capital de la empresa"
-                  />
-                  <ReportCheckbox
-                    name="contenido-3"
-                    label="Metodologia explicada"
-                  />
-                  <ReportCheckbox
-                    name="contenido-4"
-                    label="1 hora de consultoria"
-                  />
-                </div>
               </div>
-              <div className="sticky bottom-0 bg-white px-10 pb-6 pt-4">
+              <div className="mt-auto bg-white px-12 pt-12">
                 <button
                   type="button"
                   className="bg-blue-600 hover:bg-blue-700 transition-colors px-4 py-2 rounded text-white uppercase font-medium w-full text-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
@@ -265,9 +242,19 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
                   className="bg-gray-200 hover:bg-gray-300 transition-colors px-4 py-2 rounded text-gray-700 uppercase font-medium w-full mt-2 text-sm cursor-pointer"
                   onClick={() => setIsQuoteModalOpen(true)}
                 >
-                  Cotizar consultoria
+                  Cotizar consultoría
                 </button>
-              </div>
+                <p className="mx-auto mt-3 max-w-[26rem] text-center text-[12px] leading-5 text-gray-600">
+                  Al generar su reporte de costo, usted estará aceptando de manera inmediata nuestros{" "}
+                  <a href="/terminos-y-condiciones" className="font-semibold text-blue-600 hover:underline">
+                    Términos y Condiciones
+                  </a>
+                  {" "}y{" "}
+                  <a href="/politicas-de-privacidad" className="font-semibold text-blue-600 hover:underline">
+                    Políticas de Privacidad
+                  </a>.
+                </p>
+              </div>              
             </div>
           </div>
         </div>

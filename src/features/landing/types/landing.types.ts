@@ -126,6 +126,7 @@ export interface PlatformCardItem {
   video: VideoData;
   hoverVideo?: VideoData;
   ctaLink?: LinkData;
+  capitationLink?: LinkData;
   libraryLink?: LinkData;
   ribbon?: string;
 }

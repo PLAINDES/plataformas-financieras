@@ -156,49 +156,47 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     inputClassName="col-span-18"
                                     required
                                 />
-                                <div className="relative w-full border border-transparent">
+                                  <div className="relative w-full border border-transparent">
                                     <FormField
-                                        label="Beta desapalancado"
-                                        name="beta_unlevered_industry"
-                                        type="number"
-                                        step="any"
-                                        value={formData.beta_subsector || formData.beta_unlevered_industry}
-                                        onChange={handleCustomInputChange}
-                                        suffix="coef."
-                                        layout="horizontal"
-                                        showClearButton={false}
-                                        inputClassName="col-span-9"
+                                      label="Beta desapalancado"
+                                      name="beta_unlevered_industry"
+                                      type="number"
+                                      step="any"
+                                      value={formData.beta_subsector || formData.beta_unlevered_industry}
+                                      onChange={handleCustomInputChange}
+                                      suffix="coef."
+                                      layout="horizontal"
+                                      showClearButton={false}
+                                      inputClassName="col-span-9"
+                                      disabled
                                     />
+
                                     {formData.subsector === "Personalizado" && (
-                                        <span className="absolute left-0 -top-2.5 text-[9px] font-black uppercase tracking-wider text-valora-primary bg-white px-1 rounded">
-                                            Personalizado
-                                        </span>
+                                      <span className="absolute left-0 -top-2.5 text-[9px] font-black uppercase tracking-wider text-valora-primary bg-white px-1 rounded">
+                                        Personalizado
+                                      </span>
                                     )}
-                                    {
-                                        <div
-                                            className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end"
-                                            onMouseEnter={handleBetaButtonEnter}
-                                            onMouseLeave={handleBetaButtonLeave}
+
+                                    {isWaccCalculated && canSensibilizeBeta && (
+                                      <div className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setBetaInfoVisible(false);
+                                            onSearchSectorBeta();
+                                          }}
+                                          disabled={isSearchingBeta || !formData.sector}
+                                          className={cn(
+                                            "text-[10px] w-full h-10 py-0.5 px-1 rounded-sm text-wrap font-bold cursor-pointer flex items-center justify-center text-center leading-tight tracking-wider",
+                                            "text-valora-primary bg-white border border-valora-primary focus:outline-none",
+                                            "disabled:cursor-not-allowed disabled:opacity-50"
+                                          )}
                                         >
-                                            <button
-                                                ref={betaButtonRef}
-                                                type="button"
-                                                onClick={() => {
-                                                    setBetaInfoVisible(false);
-                                                    onSearchSectorBeta();
-                                                }}
-                                                disabled={isSearchingBeta || !formData.sector}
-                                                className={cn(
-                                                    "text-[10px] w-full h-10 py-0.5 px-1 rounded-sm text-wrap font-bold cursor-pointer flex items-center justify-center text-center leading-tight tracking-wider",
-                                                    "text-valora-primary bg-white border border-valora-primary focus:outline-none",
-                                                    "disabled:cursor-not-allowed disabled:opacity-50"
-                                                )}
-                                            >
-                                                {isSearchingBeta ? "Buscando..." : "Obtén Tu Beta Por Subsector"}
-                                            </button>
-                                        </div>
-                                    }
-                                </div>
+                                          {isSearchingBeta ? "Buscando..." : "Obtén Tu Beta Por Subsector"}
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
                                 <FormField
                                     label="Tasa libre de riesgo"
                                     name="instrument"
@@ -211,7 +209,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     required
                                 />
                                 <FormField
-                                    label="Año del bono"
+                                    label="Duración"
                                     name="bono"
                                     type="select"
                                     value={formData.bono}
