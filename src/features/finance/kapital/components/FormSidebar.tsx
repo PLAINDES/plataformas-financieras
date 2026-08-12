@@ -67,22 +67,6 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
     const [betaInfoPos, setBetaInfoPos] = useState({ top: 0, left: 0 });
     const betaHideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const handleBetaButtonEnter = () => {
-        if (betaHideTimeout.current) clearTimeout(betaHideTimeout.current);
-        if (betaButtonRef.current) {
-            const rect = betaButtonRef.current.getBoundingClientRect();
-            const viewportWidth = window.innerWidth;
-            const tooltipWidth = Math.min(288, viewportWidth - 32);
-            const left = Math.max(16, Math.min(rect.right - tooltipWidth, viewportWidth - tooltipWidth - 16));
-            setBetaInfoPos({ top: rect.top - 8, left });
-        }
-        setBetaInfoVisible(true);
-    };
-
-    const handleBetaButtonLeave = () => {
-        betaHideTimeout.current = setTimeout(() => setBetaInfoVisible(false), 120);
-    };
-
     const handleBetaPanelEnter = () => {
         if (betaHideTimeout.current) clearTimeout(betaHideTimeout.current);
     };

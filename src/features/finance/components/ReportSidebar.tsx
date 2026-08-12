@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { MainService } from "@/shared/services/main.service";
-import { ReportCheckbox } from "./ReportCheckbox";
 import { ReportProductCard } from "./ReportProductCard";
 import { ReportQuoteModal } from "./ReportQuoteModal";
 import type { Report } from "@/shared/types";
