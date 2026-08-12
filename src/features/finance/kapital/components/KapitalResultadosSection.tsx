@@ -3,7 +3,7 @@ import { FinancieraCard } from "./FinancieraCard";
 import type { KapitalResults } from "@/shared/types";
 import { ArrowRight, Sparkles, ChevronDown } from "lucide-react";
 import { INDUSTRY_TRANSLATIONS } from "@/shared/constants/kapital";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const translateIndustry = (industry?: string | null) => {
   if (!industry) return industry;
@@ -217,10 +217,21 @@ export const KapitalResultadosSection: React.FC<
           ? results.mercado_emergente_dolares ?? results.emergent
           : results.mercado_emergente_moneda_local ?? results.emergent;
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const raf = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(raf);
+  }, []);
+
+  const cardMotion =
+    mounted
+      ? "opacity-100 translate-y-0"
+      : "opacity-0 translate-y-6";
+
   return (
     <>
-      <header className="flex flex-row mt-0 lg:mt-0 justify-between items-center w-full gap-2 px-4 py-4">
-        <div className="flex items-center self-end">
+      <header className="flex flex-col gap-4 w-full px-4 py-4">
+        <div className="flex justify-start items-center w-full">
           {shouldShowChatbot && (
             <button
               type="button"
@@ -237,7 +248,7 @@ export const KapitalResultadosSection: React.FC<
           )}
         </div>
 
-        <div className="flex flex-row items-end justify-center self-end gap-4">
+        <div className="flex flex-row items-end justify-center gap-4 w-full">
           <div className="flex flex-col text-center">
             <h1 className="text-xl font-bold text-gray-900 whitespace-nowrap">
                             Resultados generales
@@ -277,8 +288,11 @@ export const KapitalResultadosSection: React.FC<
         )}
         */}
       </header>
-      <section className="flex flex-col lg:flex-row justify-center items-center w-full gap-3 mt-2 mx-auto px-4 max-w-none">
-        <div className="shrink-0">
+      <section className="flex flex-col lg:flex-row justify-center items-center w-full gap-4 mt-2 mx-auto px-4 max-w-none min-h-[calc(100dvh-14rem)]">
+        <div
+          className={`shrink-0 transform-gpu transition-all ease-out duration-700 will-change-transform ${cardMotion}`}
+          style={{ transitionDelay: mounted ? "0ms" : "0ms" }}
+        >
           <BoaIndicator
             value={
               mainSubsector
@@ -302,7 +316,10 @@ export const KapitalResultadosSection: React.FC<
           />
         </div>
 
-        <div className="lg:flex-1 min-w-[340px] max-w-[450px] w-full">
+        <div
+          className={`lg:flex-1 min-w-[340px] max-w-[450px] w-full transform-gpu transition-all ease-out duration-700 will-change-transform ${cardMotion}`}
+          style={{ transitionDelay: mounted ? "140ms" : "0ms" }}
+        >
           <FinancieraCard
             title="Mercado Desarrollado"
             data={results.mercado_desarrollado ?? results.developed}
@@ -312,7 +329,10 @@ export const KapitalResultadosSection: React.FC<
           />
         </div>
 
-        <div className="lg:flex-1 min-w-[340px] max-w-[450px] w-full">
+        <div
+          className={`lg:flex-1 min-w-[340px] max-w-[450px] w-full transform-gpu transition-all ease-out duration-700 will-change-transform ${cardMotion}`}
+          style={{ transitionDelay: mounted ? "280ms" : "0ms" }}
+        >
           <FinancieraCard
             title={`Mercado emergente: ${results.pais || ""}`}
             data={emergentData}
@@ -326,7 +346,10 @@ export const KapitalResultadosSection: React.FC<
         </div>
 
         {showCompanyCard && empresaData && (
-          <div className="lg:flex-1 min-w-[340px] max-w-[450px] w-full">
+          <div
+            className={`lg:flex-1 min-w-[340px] max-w-[450px] w-full transform-gpu transition-all ease-out duration-700 will-change-transform ${cardMotion}`}
+            style={{ transitionDelay: mounted ? "420ms" : "0ms" }}
+          >
             <FinancieraCard
               title="Tu empresa"
               data={empresaData}
