@@ -170,19 +170,9 @@ export function OccupationOnboardingModal() {
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-4 sm:px-10 sm:pb-8 sm:pt-6">
-            <div className="flex items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={goBackToAudience}
-                className="rounded-md border border-gray-200 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 transition hover:bg-gray-50"
-              >
-                Volver
-              </button>
-              <p className="flex-1 text-center text-sm font-semibold text-gray-800 sm:text-xl">
-                Elige la opción más alineada a ti.
-              </p>
-              <span className="w-[52px]" aria-hidden="true" />
-            </div>
+            <p className="shrink-0 text-center text-sm font-semibold text-gray-800 sm:text-xl">
+              Elige la opción más alineada a ti.
+            </p>
 
             <div className="mt-3 min-h-0 flex-1 overflow-y-auto pr-1 sm:mt-5">
               <div className="space-y-1">
@@ -217,14 +207,23 @@ export function OccupationOnboardingModal() {
               </div>
             </div>
 
-            <button
-              type="button"
-              disabled={!canFinishRole}
-              onClick={() => void finish()}
-              className="mx-auto mt-3 w-full max-w-31 shrink-0 rounded-lg bg-blue-600 px-5 py-3 font-mono text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-200 sm:mt-5"
-            >
-              Continuar
-            </button>
+            <div className="mt-3 flex items-center justify-center gap-3 sm:mt-5">
+              <button
+                type="button"
+                onClick={goBackToAudience}
+                className="rounded-md border border-gray-200 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 transition hover:bg-gray-50"
+              >
+                Volver
+              </button>
+              <button
+                type="button"
+                disabled={!canFinishRole}
+                onClick={() => void finish()}
+                className="w-full max-w-31 rounded-lg bg-blue-600 px-5 py-3 font-mono text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-200"
+              >
+                Continuar
+              </button>
+            </div>
           </div>
         )}
       </DialogContent>
