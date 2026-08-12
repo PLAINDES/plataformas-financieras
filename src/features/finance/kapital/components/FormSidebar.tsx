@@ -62,7 +62,6 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
     const isSection2Disabled = !isSection1Complete;
     const isSection3Disabled = !(isSection1Complete && isSection2Complete);
 
-    const betaButtonRef = useRef<HTMLButtonElement>(null);
     const [betaInfoVisible, setBetaInfoVisible] = useState(false);
     const [betaInfoPos, setBetaInfoPos] = useState({ top: 0, left: 0 });
     const betaHideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
