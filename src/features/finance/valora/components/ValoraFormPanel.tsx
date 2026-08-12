@@ -21,7 +21,6 @@ export interface ValoraFormPanelProps {
   industryTranslations?: Record<string, string>;
   bonosTranslations?: Record<string, string>;
   countriesTranslations?: Record<string, string>;
-  onClearUploadedFile: () => void;
   onInputChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => void;
@@ -48,7 +47,6 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
   industryTranslations,
   bonosTranslations,
   countriesTranslations,
-  onClearUploadedFile,
   onInputChange,
   onSubmit,
   onDownloadTemplate,
