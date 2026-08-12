@@ -172,6 +172,7 @@ export interface KapitalResultadosSectionProps {
     onResultCurrencyChange: (currency: "pen" | "usd") => void;
     emergentCurrency: "pen" | "usd";
     onEmergentCurrencyChange: (currency: "pen" | "usd") => void;
+    // onOpenReport?: () => void;
     localCurrency?: string;
     chatbotComponent?: React.ReactNode;
     shouldShowChatbot: boolean;
@@ -189,6 +190,7 @@ export const KapitalResultadosSection: React.FC<
   onResultCurrencyChange,
   emergentCurrency,
   onEmergentCurrencyChange,
+  // onOpenReport,
   localCurrency,
   shouldShowChatbot,
   onToggleForm,

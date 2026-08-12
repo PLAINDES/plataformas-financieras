@@ -68,7 +68,6 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
                             onResultCurrencyChange={onResultCurrencyChange}
                             emergentCurrency={emergentCurrency}
                             onEmergentCurrencyChange={onEmergentCurrencyChange}
-                            onOpenReport={onOpenReport}
                             localCurrency={localCurrency}
                             shouldShowChatbot={shouldShowChatbot}
                             onToggleForm={onToggleForm}
