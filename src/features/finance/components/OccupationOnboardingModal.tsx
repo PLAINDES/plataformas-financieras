@@ -211,7 +211,7 @@ export function OccupationOnboardingModal() {
               <button
                 type="button"
                 onClick={goBackToAudience}
-                className="rounded-md border border-gray-200 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600 transition hover:bg-gray-50"
+                className="w-full max-w-31 rounded-md border border-gray-200 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-gray-600 transition hover:bg-gray-50"
               >
                 Volver
               </button>
