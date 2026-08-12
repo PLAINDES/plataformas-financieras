@@ -139,13 +139,13 @@ const OccupationProfileBreakdown: React.FC<{ data: OccupationProfileMetrics }> =
         />
 
         {item.label === "Especialistas" && data.specialist_roles.length > 0 && (
-          <div className="mb-4 ml-2 rounded-lg border-l-2 border-blue-200 bg-slate-50 p-3 pl-4">
+          <div className="mb-4 ml-0 rounded-lg border-l-2 border-blue-200 bg-slate-50 p-3 pl-3 sm:ml-2 sm:pl-4">
             <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
               Especialistas por cargo
             </p>
             {data.specialist_roles.map((role) => (
               <div key={role.label} className="mb-3 min-w-0 last:mb-0">
-                <div className="mb-1 flex items-start gap-2 text-xs">
+                <div className="mb-1 flex flex-wrap items-start gap-2 text-xs">
                   <span className="min-w-0 flex-1 break-words font-medium leading-tight text-gray-700">
                     {role.label}
                   </span>
