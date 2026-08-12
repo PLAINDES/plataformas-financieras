@@ -11,8 +11,6 @@ import {
 
 const ONBOARDING_COMPLETED_KEY = "finance_occupation_onboarding_completed";
 const DEVICE_ID_KEY = "analytics_device_id";
-const AUDIENCE_KEY = "finance_occupation_onboarding_audience";
-const ROLE_KEY = "finance_occupation_onboarding_role";
 
 const FINANCIAL_ROLES = [
   "CFO / Director(a) de Finanzas",
@@ -49,18 +47,13 @@ export function OccupationOnboardingModal() {
   const { trackEvent } = useAnalytics();
   const isCalculationEntry = pathname === "/kapital";
   const deviceKey = `${ONBOARDING_COMPLETED_KEY}:${getOrCreateDeviceId()}`;
-  const audienceKey = `${AUDIENCE_KEY}:${getOrCreateDeviceId()}`;
-  const roleKey = `${ROLE_KEY}:${getOrCreateDeviceId()}`;
   const [isOpen, setIsOpen] = useState(() => {
     if (!isCalculationEntry) return false;
     return localStorage.getItem(deviceKey) !== "true";
   });
   const [step, setStep] = useState<Step>("audience");
-  const [audience, setAudience] = useState<Audience | null>(() => {
-    const saved = localStorage.getItem(audienceKey);
-    return saved === "specialist" || saved === "student" ? saved : null;
-  });
-  const [role, setRole] = useState(() => localStorage.getItem(roleKey) || "");
+  const [audience, setAudience] = useState<Audience | null>(null);
+  const [role, setRole] = useState("");
   const [otherRole, setOtherRole] = useState("");
 
   const showStepBar = audience === "specialist" && step === "role";
@@ -70,27 +63,19 @@ export function OccupationOnboardingModal() {
 
     const shouldOpen = localStorage.getItem(deviceKey) !== "true";
     if (shouldOpen) {
-      setStep(localStorage.getItem(audienceKey) === "specialist" ? "role" : "audience");
-      setAudience((current) => {
-        const saved = localStorage.getItem(audienceKey);
-        if (saved === "specialist" || saved === "student") return saved;
-        return current;
-      });
-      setRole(localStorage.getItem(roleKey) || "");
+      setStep("audience");
+      setAudience(null);
+      setRole("");
       setOtherRole("");
       setIsOpen(true);
     }
-  }, [audienceKey, deviceKey, isCalculationEntry, pathname, roleKey]);
+  }, [deviceKey, isCalculationEntry, pathname]);
 
   if (!isCalculationEntry) return null;
 
   const finish = async () => {
     if (!audience) return;
 
-    localStorage.setItem(audienceKey, audience);
-    if (audience === "specialist") {
-      localStorage.setItem(roleKey, role);
-    }
     await trackEvent("occupation_profile_completed", {
       audience,
       role: audience === "specialist" ? role : null,
@@ -101,11 +86,16 @@ export function OccupationOnboardingModal() {
 
   const continueFromAudience = () => {
     if (audience === "specialist") {
-      localStorage.setItem(audienceKey, "specialist");
       setStep("role");
       return;
     }
     if (audience === "student") void finish();
+  };
+
+  const goBackToAudience = () => {
+    setStep("audience");
+    setRole("");
+    setOtherRole("");
   };
 
   const canFinishRole = Boolean(role && (role !== "Otro" || otherRole.trim()));
@@ -196,10 +186,9 @@ export function OccupationOnboardingModal() {
                       name="financial-role"
                       value={item}
                       checked={role === item}
-              onChange={() => {
-                setRole(item);
-                localStorage.setItem(roleKey, item);
-              }}
+                      onChange={() => {
+                        setRole(item);
+                      }}
                       className="size-4 shrink-0 accent-blue-600 sm:size-5"
                     />
                     <span>{item}</span>
@@ -218,14 +207,23 @@ export function OccupationOnboardingModal() {
               </div>
             </div>
 
-            <button
-              type="button"
-              disabled={!canFinishRole}
-              onClick={() => void finish()}
-              className="mx-auto mt-3 w-full max-w-31 shrink-0 rounded-lg bg-blue-600 px-5 py-3 font-mono text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-200 sm:mt-5"
-            >
-              Continuar
-            </button>
+            <div className="mt-3 flex items-center justify-center gap-3 sm:mt-5">
+              <button
+                type="button"
+                onClick={goBackToAudience}
+                className="w-full max-w-31 rounded-md border border-gray-200 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-gray-600 transition hover:bg-gray-50"
+              >
+                Volver
+              </button>
+              <button
+                type="button"
+                disabled={!canFinishRole}
+                onClick={() => void finish()}
+                className="w-full max-w-31 rounded-lg bg-blue-600 px-5 py-3 font-mono text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-200"
+              >
+                Continuar
+              </button>
+            </div>
           </div>
         )}
       </DialogContent>

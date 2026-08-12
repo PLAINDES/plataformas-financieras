@@ -252,6 +252,7 @@ export const KapitalResultadosSection: React.FC<
           </div>
         </div>
 
+        {/*
         {onOpenReport && (
           <div className="flex justify-end items-end">
             <section className="flex flex-col items-center justify-center rounded-[24px] max-w-105 w-full xl:w-fit overflow-visible">
@@ -269,12 +270,13 @@ export const KapitalResultadosSection: React.FC<
                   onClick={onOpenReport}
                   className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer"
                 >
-                                    Reporte de Costo de Capital
+                  Reporte de Costo de Capital
                 </button>
               </div>
             </section>
           </div>
         )}
+        */}
       </header>
       <section className="flex flex-col lg:flex-row justify-center items-center w-full gap-3 mt-2 mx-auto px-4 max-w-none">
         <div className="shrink-0">
