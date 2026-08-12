@@ -54,6 +54,12 @@ export interface RetentionMetrics {
   recurring_users: number;
 }
 
+export interface OccupationProfileMetrics {
+  total_devices: number;
+  audiences: TopItem[];
+  specialist_roles: TopItem[];
+}
+
 export interface DashboardData {
   summary: DashboardSummary;
   devices: TopItem[];
@@ -65,6 +71,7 @@ export interface DashboardData {
   sessions_over_time: TimeSeriesItem[];
   kapital_funnel?: CalculationFunnel;
   kapital_retention?: RetentionMetrics;
+  occupation_profiles?: OccupationProfileMetrics;
   cta_clicks: number;
   avg_time_on_page: number | null;
 }

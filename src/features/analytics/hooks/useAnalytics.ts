@@ -7,6 +7,7 @@ const SESSION_KEY = "analytics_session_id";
 const SESSION_START_KEY = "analytics_session_start";
 const LAST_PAGE_KEY = "analytics_last_page";
 const LAST_PAGE_TIME_KEY = "analytics_last_page_time";
+const DEVICE_ID_KEY = "analytics_device_id";
 
 // Variables globales a nivel de módulo para dedup global entre múltiples componentes que usan useAnalytics()
 let globalLastTrackedPath: string | null = null;
@@ -14,6 +15,18 @@ let globalLastTrackedTime = 0;
 
 function generateSessionId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+function getOrCreateDeviceId(): string {
+  let deviceId = localStorage.getItem(DEVICE_ID_KEY);
+  if (!deviceId) {
+    deviceId =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `device-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+    localStorage.setItem(DEVICE_ID_KEY, deviceId);
+  }
+  return deviceId;
 }
 
 function getDeviceType(): string {
@@ -127,7 +140,10 @@ export function useAnalytics() {
         os: getOS(),
         browser: getBrowser(),
         referrer: document.referrer || undefined,
-        event_metadata: eventMetadata,
+        event_metadata: {
+          ...eventMetadata,
+          device_id: getOrCreateDeviceId(),
+        },
       };
 
       try {

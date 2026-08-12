@@ -22,6 +22,7 @@ interface PlatformCardItem extends CollectionItem {
     videoUrl: string;
     hoverVideoUrl?: string;
     ctaUrl?: string;
+    capitationUrl?: string;
     libraryUrl?: string;
     isImplemented?: boolean;
 }
@@ -39,6 +40,7 @@ interface PlatformCardsSectionProps {
             videoUrl: string;
             hoverVideoUrl?: string;
             ctaUrl?: string;
+            capitationUrl?: string;
             libraryUrl?: string;
             isImplemented?: boolean;
         }>;
@@ -226,6 +228,7 @@ export function PlatformCardsSection({
         videoUrl: "",
         hoverVideoUrl: "",
         ctaUrl: "https://example.com/curso",
+        capitationUrl: "https://example.com/capacitacion",
         libraryUrl: "https://example.com/biblioteca",
     });
 
@@ -400,10 +403,10 @@ function PlatformCard({
             </div>
 
             <div className="card-actions">
-                {card.ctaUrl ? (
+                {card.ctaUrl || card.capitationUrl ? (
                     <>
                         <a
-                            href={isAvailable ? card.ctaUrl : "#"}
+                            href={isAvailable ? (card.capitationUrl || card.ctaUrl) : "#"}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="card-btn"
@@ -428,9 +431,9 @@ function PlatformCard({
                 ) : (
                     <>
                         <button className="card-btn">
-                            <span>Curso de Capacitación</span>
-                            <ChevronRight size={16} />
-                        </button>
+                    <span>Curso de Capacitación</span>
+                    <ChevronRight size={16} />
+                </button>
                         <button className="card-btn">
                             <span>Biblioteca</span>
                             <BookOpen size={16} />
@@ -513,7 +516,7 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
                         className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm resize-y"
                     />
                 </div>
-                {(["imageUrl", "videoUrl", "ctaUrl", "libraryUrl"] as const).map(
+                {(["imageUrl", "videoUrl", "ctaUrl", "capitationUrl", "libraryUrl"] as const).map(
                     (field) => (
                         <div key={field}>
                             <label className="block text-xs mb-1 font-medium">
@@ -523,7 +526,9 @@ function CardEditor({ card, onSave, onCancel }: CardEditorProps) {
                                         ? "Video URL"
                                         : field === "ctaUrl"
                                             ? "CTA URL (opcional)"
-                                            : "Library URL (opcional)"}
+                                            : field === "capitationUrl"
+                                                ? "Capacitation URL (opcional)"
+                                                : "Library URL (opcional)"}
                             </label>
                             <input
                                 type="url"

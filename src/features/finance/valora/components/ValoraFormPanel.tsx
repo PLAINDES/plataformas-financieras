@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { IconActionButton } from "../../../../shared/components/ui/IconActionButton";
+import { Tooltip } from "@/shared/components/common/Tooltip";
 import { FormField } from "../../components/FormField";
 import { FormSection } from "../../components/FormSection";
 import { cn } from "@/lib/utils";
@@ -65,6 +66,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
     step5: true,
   });
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const pdfInputRef = useRef<HTMLInputElement | null>(null);
 
   const isFilePresent = fileUploaded || Boolean(formData.fileUsername) || hasCalculated;
 
@@ -140,6 +142,10 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
     fileInputRef.current?.click();
   };
 
+  const handleOpenPdfPicker = () => {
+    pdfInputRef.current?.click();
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -200,6 +206,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                 <input
                   ref={fileInputRef}
                   type="file"
+                  accept=".xlsx,.xls"
                   className="hidden"
                   onChange={handleFileChange}
                 />
@@ -212,11 +219,49 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                 )}
               </div>
 
+                <div className="flex items-center justify-between gap-4">
+                  <label className="text-sm text-gray-600 font-semibold flex items-center gap-2 min-w-0">
+                    <span>Subir EEFF.pdf</span>
+                  </label>
+                  <div className="flex items-center gap-1.5 shrink-0 self-center">
+                    <button
+                      type="button"
+                      onClick={handleOpenPdfPicker}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-500 transition-colors hover:bg-red-100 shrink-0"
+                      aria-label="Subir EEFF PDF"
+                    >
+                      <i className="fa-solid fa-file-pdf text-sm"></i>
+                    </button>
+                    <Tooltip content="El EEFF debe incluir la nota de depreciación acumulada correspondiente a todos los períodos reportados, así como las notas de las cuentas por cobrar corrientes y cuentas por pagar corrientes. La IA identificará y clasificará las cuentas para convertir automáticamente la información al formato de plantilla Excel utilizado por la plataforma.">
+                      <span
+                        className="flex h-5 w-5 items-center justify-center rounded-full bg-valora-primary/5 text-[11px] font-bold text-valora-primary cursor-pointer select-none shrink-0"
+                        aria-label="Ver ayuda de EEFF PDF"
+                      >
+                        <svg className="h-3 w-3 text-valora-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2.5}
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </span>
+                    </Tooltip>
+                  </div>
+                  <input
+                    ref={pdfInputRef}
+                    type="file"
+                    accept=".pdf"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </div>
+
               {(fileUploaded || formData.fileUsername || hasCalculated) && (
                 <div className="relative rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50/90 to-teal-50/70 p-3 shadow-sm transition-all">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1 self-center">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs self-center">
                         <i className="fa-solid fa-file-excel text-base"></i>
                       </div>
                       <div className="flex flex-col min-w-0">
@@ -239,18 +284,18 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                           download={formData.fileUsername || undefined}
                           title="Descargar plantilla cargada"
                           className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-100/60 hover:text-emerald-900 transition-colors shadow-2xs"
-                        >
-                          <i className="fa-solid fa-download text-xs"></i>
-                        </a>
+                          >
+                            <i className="fa-solid fa-download text-xs"></i>
+                          </a>
                       )}
                       {!hasCalculated && (
                         <button
                           type="button"
-                          title="Eliminar plantilla"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-rose-200 text-rose-500 hover:bg-rose-100/60 hover:text-rose-700 transition-colors shadow-2xs cursor-pointer"
-                          onClick={onClearUploadedFile}
+                          title="Importar otro archivo"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors shadow-2xs cursor-pointer"
+                          onClick={handleOpenFilePicker}
                         >
-                          <i className="fa-solid fa-trash-can text-xs"></i>
+                          <i className="fa-solid fa-file-arrow-up text-xs"></i>
                         </button>
                       )}
                     </div>
@@ -272,7 +317,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
               />
 
               <FormField
-                label="Moneda"
+                label="Moneda de EEFF"
                 name="currency"
                 type="select"
                 value={formData.currency}
@@ -368,7 +413,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                 disabled={isSection2Disabled}
               />
               <FormField
-                label="Año del bono"
+                label="Duración"
                 name="bono"
                 type="select"
                 value={formData.bono || ""}
