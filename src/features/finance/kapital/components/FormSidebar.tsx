@@ -63,7 +63,6 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
     const isSection3Disabled = !(isSection1Complete && isSection2Complete);
 
     const [betaInfoVisible, setBetaInfoVisible] = useState(false);
-    const [betaInfoPos, setBetaInfoPos] = useState({ top: 0, left: 0 });
     const betaHideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const handleBetaPanelEnter = () => {
@@ -422,8 +421,8 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                     onMouseLeave={handleBetaPanelLeave}
                     style={{
                         position: "fixed",
-                        top: betaInfoPos.top,
-                        left: betaInfoPos.left,
+                        top: 0,
+                        left: 0,
                         zIndex: 99999,
                         transform: betaInfoVisible ? "translateY(-100%) translateY(-0px) scale(1)" : "translateY(-100%) translateY(6px) scale(0.97)",
                         opacity: betaInfoVisible ? 1 : 0,

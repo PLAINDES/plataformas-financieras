@@ -150,20 +150,6 @@ const ValoraPage: React.FC = () => {
     parseFinancialTables(file);
   };
 
-  const handleClearUploadedFile = () => {
-    setUploadedFileUrl((prevUrl) => {
-      if (prevUrl) {
-        URL.revokeObjectURL(prevUrl);
-      }
-      return null;
-    });
-    setFormData((prev) => ({ ...prev, fileUsername: "" }));
-    setFileUploaded(false);
-    setBalanceTable(null);
-    setResultsTable(null);
-    addToast("info", "Archivo eliminado del formulario.");
-  };
-
   const parseFinancialTables = async (file: File) => {
     try {
       const { balanceTable: parsedBalance, resultsTable: parsedResults, customInputs } =
