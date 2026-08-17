@@ -469,11 +469,7 @@ export const MainService = {
   uploadSubsectoresBoa: async (file: File): Promise<any> => {
     const formData = new FormData();
     formData.append("file", file);
-    return api.post<any>("chatbot/calculate-subsectores-boa/upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    return api.post<any>("chatbot/calculate-subsectores-boa/upload", formData);
   },
 
   getBoaProgress: async (jobId: string): Promise<any> => {
