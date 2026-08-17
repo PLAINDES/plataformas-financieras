@@ -16,6 +16,7 @@ export interface User {
   email: string;
   name: string;
   lastname?: string;
+  phone_number?: string | null;
   role: "admin" | "master" | "user";
   is_active: boolean;
   avatar: string | null;
@@ -47,6 +48,7 @@ export interface LoginCredentials {
 export interface RegisterData {
   name: string;
   lastname: string;
+  phone_number: string;
   email: string;
   password: string;
 }
@@ -70,6 +72,7 @@ export interface UserResponse {
   email: string;
   name: string;
   lastname: string | null;
+  phone_number: string | null;
   role: "admin" | "master" | "user";
   is_active: boolean;
   avatar: string | null;
@@ -92,6 +95,7 @@ export interface UserCreate {
   email: string;
   name: string;
   lastname?: string;
+  phone_number: string;
   password: string;
   role?: "admin" | "master" | "user";
 }
@@ -102,6 +106,7 @@ export interface UserCreate {
 export interface UserUpdate {
   name?: string;
   lastname?: string;
+  phone_number?: string | null;
   email?: string;
   avatar?: string;
 }
@@ -109,6 +114,7 @@ export interface UserUpdate {
 export interface UserAdminUpdate {
   name?: string;
   lastname?: string;
+  phone_number?: string | null;
   email?: string;
   role?: "admin" | "master" | "user";
   is_active?: boolean;
@@ -134,6 +140,7 @@ export function mapUserResponseToUser(userResponse: UserResponse): User {
     email: userResponse.email,
     name: userResponse.name,
     lastname: userResponse.lastname ?? undefined, // Asegurar compatibilidad string | undefined
+    phone_number: userResponse.phone_number,
     role: userResponse.role,
     is_active: userResponse.is_active,
     avatar: userResponse.avatar,

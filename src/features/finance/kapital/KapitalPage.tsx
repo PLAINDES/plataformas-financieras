@@ -80,7 +80,6 @@ const KapitalPage: React.FC = () => {
     const [isReportViewerOpen, setIsReportViewerOpen] = useState(false);
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [selectedReportProductId, setSelectedReportProductId] = useState("");
-    const [hasMatchingReports, setHasMatchingReports] = useState(false);
     const [betaInput, setBetaInput] = useState("");
     const isSearchingBeta = false;
     const [modalData, setModalData] = useState<YahooFinanceData | null>(null);
@@ -199,10 +198,9 @@ const KapitalPage: React.FC = () => {
     }, [isReportViewerOpen, isReportSidebarOpen]);
 
     const handleReportSidebarOpen = useCallback(() => {
-        if (!hasMatchingReports) return;
         setIsReportSidebarOpen(true);
         if (isFormOpen) setIsFormOpen(false);
-    }, [hasMatchingReports, isFormOpen]);
+    }, [isFormOpen]);
 
     const handleReportViewerOpen = useCallback(() => {
         if (!selectedReportProductId) return;
@@ -243,7 +241,6 @@ const KapitalPage: React.FC = () => {
 
     useEffect(() => {
         if (!showResults) {
-            setHasMatchingReports(false);
             setSelectedReportProductId("");
             return;
         }
@@ -277,7 +274,6 @@ const KapitalPage: React.FC = () => {
                 });
 
                 if (ignore) return;
-                setHasMatchingReports(matching.length > 0);
                 setSelectedReportProductId((current) => {
                     if (matching.some((report) => report.id.toString() === current)) {
                         return current;
@@ -290,7 +286,6 @@ const KapitalPage: React.FC = () => {
                 }
             } catch {
                 if (!ignore) {
-                    setHasMatchingReports(false);
                     setSelectedReportProductId("");
                 }
             }
@@ -350,7 +345,7 @@ const KapitalPage: React.FC = () => {
                     showComparison={showComparison}
                     onToggleComparison={setShowComparison}
                     sensibilizaciones={calc.sensibilizaciones}
-                    onOpenReport={hasMatchingReports ? handleReportSidebarOpen : undefined}
+                    onOpenReport={handleReportSidebarOpen}
                     localCurrency={activeSavedCurrency}
                     shouldShowChatbot={shouldShowChatbot}
                     onToggleForm={() => setIsFormOpen((prev) => !prev)}
@@ -384,7 +379,7 @@ const KapitalPage: React.FC = () => {
                 onLoginClick={() => setIsLoginModalOpen(true)}
                 selected={getSelectedView()}
                 onNavigate={handleResultsSectionChange}
-                onOpenReport={hasMatchingReports ? handleReportSidebarOpen : undefined}
+                onOpenReport={handleReportSidebarOpen}
                 hasSensibilizaciones={calc.sensibilizaciones.length > 0}
             />
 
