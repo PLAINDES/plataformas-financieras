@@ -42,6 +42,10 @@ export const ConfiguracionPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [boaProgressText, setBoaProgressText] = useState<string | null>(null);
+  const [boaProgressResult, setBoaProgressResult] = useState<any | null>(null);
+  const [boaDebugRows, setBoaDebugRows] = useState<any[]>([]);
+  const [boaModalView, setBoaModalView] = useState<"summary" | "table" | "diagnostic" | "symbols">("summary");
+  const [boaDiagnosticFilter, setBoaDiagnosticFilter] = useState<"all" | "market_cap" | "debt" | "beta" | "derived" | "source">("all");
   const resolveBoaRef = useRef<((v: boolean) => void) | null>(null);
   const boaPollingRef = useRef(false);
   const parsedDataRef = useRef<any[] | null>(null);
@@ -68,13 +72,24 @@ export const ConfiguracionPage = () => {
           continue;
         }
 
+        const stopReason = progress.result?.stop_reason || progress.result?.status_reason || null;
+        const isDone = progress.status === "completed" || progress.status === "error";
+        const fullyProcessed = (progress.processed + progress.failed) >= total;
+        const finalLabel =
+          isDone && fullyProcessed
+            ? "Cálculo finalizado"
+            : stopReason === "cancelado"
+            ? "Cálculo cancelado"
+            : stopReason === "abortado_por_proteccion_interna"
+            ? "Cálculo abortado por protección interna"
+            : "Cálculo interrumpido";
+
         setBoaProgressText(
-          progress.status === "completed"
-            ? `Cálculo finalizado: ${progress.processed}/${total} empresas procesadas (${progress.failed} errores).`
-            : progress.status === "error"
-            ? `Error: ${progress.result?.error || "desconocido"}`
+          isDone
+            ? `${finalLabel}: ${progress.processed}/${total} empresas procesadas (${progress.failed} errores).`
             : `Procesando ${progress.processed + progress.failed}/${total} empresas\n• Correctos: ${progress.processed}\n• Errores: ${progress.failed}\n\nPuede continuar navegando, la operación sigue en segundo plano.`
         );
+        setBoaProgressResult(progress.result || null);
         setActiveBoaJob((prev) => {
           if (!prev) return prev;
           return { ...prev, processed: progress.processed, failed: progress.failed };
@@ -117,13 +132,13 @@ export const ConfiguracionPage = () => {
 
         if (progress.status === "completed") {
           setActiveBoaJob(null);
+          setBoaProgressResult(progress.result || null);
           return progress.result;
         }
         if (progress.status === "error") {
           setActiveBoaJob(null);
-          throw new Error(
-            progress.result?.error || "Error desconocido en el cálculo BOA"
-          );
+          setBoaProgressResult(progress.result || null);
+          throw new Error(progress.result?.error || `Error desconocido en el cálculo BOA (${stopReason || "sin razón"})`);
         }
 
         await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -181,6 +196,10 @@ export const ConfiguracionPage = () => {
       resolveBoaRef.current = null;
     }
     setModalState((prev) => ({ ...prev, isOpen: false }));
+    setBoaDebugRows([]);
+    setBoaProgressResult(null);
+    setBoaModalView("summary");
+    setBoaDiagnosticFilter("all");
   };
 
   const addToast = (type: any, message: string) => {
@@ -493,6 +512,12 @@ export const ConfiguracionPage = () => {
 
   const doImport = async (parsedData: any[], boaResult: any, tab: string) => {
     try {
+      if (tab === "subsectores") {
+        addToast("success", `Se procesaron ${parsedData.length} registros de subsectores.`);
+        loadData();
+        return;
+      }
+
       await MainService.createTemplateComplement({
         nombre: tab,
         fecha: new Date().toISOString(),
@@ -517,6 +542,45 @@ export const ConfiguracionPage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (activeTab === "subsectores") {
+      try {
+        const boaResult = await MainService.uploadSubsectoresBoa(file);
+
+        if (boaResult?.message) {
+          addToast("info", boaResult.message);
+        }
+
+        setBoaDebugRows([]);
+        setBoaProgressResult(boaResult?.result || null);
+        if (boaResult?.job_id) {
+          setActiveBoaJob({
+            jobId: boaResult.job_id,
+            total: boaResult.total || 0,
+            processed: boaResult.processed || 0,
+            failed: boaResult.failed || 0,
+          });
+          startBoaPolling(boaResult.job_id, boaResult.total || 0).catch(() => {});
+        }
+
+        setModalState({
+          isOpen: true,
+          title: "BOA de depuración listo",
+          description: `Se calcularon ${boaResult?.processed || 0} empresas de prueba.\n\nLos resultados no se guardaron en la base de datos. Solo se muestran en este modal.`,
+          confirmText: "Cerrar",
+          cancelText: "Cerrar",
+          variant: "default",
+          onConfirm: closeModal,
+        });
+      } catch (err) {
+        console.warn("Error obteniendo BOA de depuración, se continuará sin BOA:", err);
+        setBoaDebugRows([]);
+        addToast("error", "Error al procesar el archivo Excel. Asegúrese de que el formato sea correcto.");
+      } finally {
+        e.target.value = "";
+      }
+      return;
+    }
+
     try {
       const parsedData = await parseFinancialExcel(
         file,
@@ -527,6 +591,48 @@ export const ConfiguracionPage = () => {
       let boaResult: any = null;
 
       if (activeTab === "subsectores") {
+        try {
+          boaResult = await MainService.uploadSubsectoresBoa(file);
+
+          if (boaResult?.message) {
+            addToast("info", boaResult.message);
+          }
+
+          const debugRows = (boaResult?.valid_companies || []).slice(0, 5);
+          setBoaDebugRows(debugRows);
+
+          const boaMap: Record<string, number> = {};
+          debugRows.forEach((c: any) => {
+            boaMap[c.ticker] = c.beta_unlevered;
+          });
+
+          parsedData.forEach((item: any) => {
+            item.empresas_boa = item.empresas_boa || {};
+            (item.empresas || []).forEach((emp: string) => {
+              if (boaMap[emp] !== undefined) {
+                item.empresas_boa[emp] = boaMap[emp];
+              }
+            });
+          });
+
+          setModalState({
+            isOpen: true,
+            title: "BOA de depuración listo",
+            description: `Se calcularon ${boaResult?.processed || 0} empresas de prueba.\n\nLos resultados no se guardaron en la base de datos. Solo se muestran en este modal.`,
+            confirmText: "Cerrar",
+            cancelText: "Cerrar",
+            variant: "default",
+            onConfirm: closeModal,
+          });
+
+          return;
+        } catch (err) {
+          console.warn("Error obteniendo BOA de depuración, se continuará sin BOA:", err);
+          setBoaDebugRows([]);
+          return;
+        }
+
+        /*
         const tickers = Array.from(
           new Set(
             parsedData.flatMap(
@@ -605,19 +711,17 @@ export const ConfiguracionPage = () => {
                 console.warn("Error obteniendo BOA, se continuará sin BOA:", err);
               }
             }
-          } else {
-            // Si el usuario omite el cálculo de BOA, importa los datos directamente.
-            await doImport(parsedData, null, activeTab);
-            return;
-          }
+        } else {
+          // Si el usuario omite el cálculo de BOA, importa los datos directamente.
+          await doImport(parsedData, null, activeTab);
+          return;
         }
+        */
       }
 
       // Importar los datos finales solo si hubo un resultado de BOA
       // o si no se trataba de una importación de subsectores.
-      if (activeTab !== 'subsectores' || boaResult) {
-        await doImport(parsedData, boaResult, activeTab);
-      }
+      await doImport(parsedData, boaResult, activeTab);
     } catch (err: any) {
       console.error("Error processing Excel file", err);
       addToast(
@@ -673,6 +777,420 @@ export const ConfiguracionPage = () => {
           {boaProgressText && (
             <div key={boaProgressText} className="text-sm text-gray-500 whitespace-pre-wrap">
               {boaProgressText}
+            </div>
+          )}
+          {boaProgressResult && (
+            <div className="mt-4 max-h-[45vh] overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 space-y-3">
+              {boaProgressResult.stop_reason && (
+                <div>
+                  <div className="font-semibold text-gray-900">ESTADO DEL PROCESO</div>
+                  <div className="mt-1 text-xs text-gray-600">
+                    {boaProgressResult.stop_reason}
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBoaModalView("summary")}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium border ${
+                    boaModalView === "summary"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  Resumen
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBoaModalView("table")}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium border ${
+                    boaModalView === "table"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  Tabla de Tickers
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBoaModalView("diagnostic")}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium border ${
+                    boaModalView === "diagnostic"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  Diagnóstico
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBoaModalView("symbols")}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium border ${
+                    boaModalView === "symbols"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  Símbolos
+                </button>
+              </div>
+              <div>
+                <div className="font-semibold text-gray-900">TICKERS COMPLETOS</div>
+                <div>{boaProgressResult.complete_count ?? 0}</div>
+                {(boaProgressResult.complete_tickers || []).length > 0 && (
+                  <div className="mt-1 text-xs text-gray-600">
+                    {(boaProgressResult.complete_tickers || []).join(", ")}
+                  </div>
+                )}
+              </div>
+              <div>
+                <div className="font-semibold text-gray-900">TICKERS CON VALORES FALTANTES</div>
+                <div>{boaProgressResult.incomplete_count ?? 0}</div>
+                {(boaProgressResult.incomplete_tickers || []).length > 0 && (
+                  <div className="mt-1 text-xs text-gray-600">
+                    {(boaProgressResult.incomplete_tickers || []).join(", ")}
+                  </div>
+                )}
+              </div>
+              {boaProgressResult.missing_field_counts && (
+                <div>
+                  <div className="font-semibold text-gray-900">CONTEO DE DATOS NO REGISTRADOS</div>
+                  <div className="mt-1 text-xs text-gray-600">
+                    {Object.entries(boaProgressResult.missing_field_counts)
+                      .filter(([, value]) => Number(value) > 0)
+                      .map(([key, value]) => `${key}: ${value}`)
+                      .join(" | ") || "sin faltantes"}
+                  </div>
+                </div>
+              )}
+              {(boaProgressResult.empty_batch_tickers || []).length > 0 && (
+                <div>
+                  <div className="font-semibold text-gray-900">TICKERS DE LOTES VACÍOS</div>
+                  <div className="mt-1 text-xs text-gray-600 break-words">
+                    {(boaProgressResult.empty_batch_tickers || []).join(", ")}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {boaModalView === "table" && (boaProgressResult?.ticker_rows?.length > 0 || boaDebugRows.length > 0) && (
+            <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/35 px-2 sm:px-3">
+              <div className="relative w-[calc(100vw-1rem)] max-w-none rounded-xl border border-gray-200 bg-white shadow-2xl">
+                <button
+                  type="button"
+                  onClick={() => setBoaModalView("summary")}
+                  className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                  aria-label="Cerrar tabla"
+                >
+                  ×
+                </button>
+                <div className="p-4 sm:p-6">
+                  <div className="mb-4 pr-10">
+                    <div className="text-lg font-semibold text-gray-900">Tabla de Tickers</div>
+                    <div className="text-xs text-gray-500">
+                      Se muestran todos los registros procesados en tiempo real, completos o no.
+                    </div>
+                  </div>
+                  <div className="overflow-auto max-h-[80vh] rounded-lg border border-gray-200">
+                    <table className="min-w-[1700px] text-[11px] text-left">
+                      <thead className="sticky top-0 bg-slate-50 text-slate-700 uppercase tracking-wide">
+                        <tr>
+                          <th className="px-3 py-2">Ticker</th>
+                          <th className="px-3 py-2">Subsector</th>
+                          <th className="px-3 py-2">Moneda cotización</th>
+                          <th className="px-3 py-2">Moneda EE.FF</th>
+                          <th className="px-3 py-2">FX (→ USD)</th>
+                          <th className="px-3 py-2">Deuda LP (USD)</th>
+                          <th className="px-3 py-2">Deuda CP (USD)</th>
+                          <th className="px-3 py-2">Deuda Total (USD)</th>
+                          <th className="px-3 py-2">Equity (USD)</th>
+                          <th className="px-3 py-2">Total Activos (USD)</th>
+                          <th className="px-3 py-2">D/C Ratio</th>
+                          <th className="px-3 py-2">%Deuda</th>
+                          <th className="px-3 py-2">%Equity</th>
+                          <th className="px-3 py-2">Beta Levered</th>
+                          <th className="px-3 py-2">Beta Unlevered</th>
+                          <th className="px-3 py-2">Market Cap</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 bg-white">
+                        {(boaProgressResult?.ticker_rows?.length > 0 ? boaProgressResult.ticker_rows : boaDebugRows).map((row: any, idx: number) => (
+                          <tr key={`${row.ticker || idx}`} className="align-top">
+                            <td className="px-3 py-2 font-medium text-slate-900">{row.ticker ?? "-"}</td>
+                            <td className="px-3 py-2">{row.subsector ?? row.sub_sector ?? "-"}</td>
+                            <td className="px-3 py-2">{row.listing_currency ?? "-"}</td>
+                            <td className="px-3 py-2">{row.reporting_currency ?? "-"}</td>
+                            <td className="px-3 py-2">{row.fx_rate ?? "-"}</td>
+                            <td className="px-3 py-2">{row.debt_lt ?? "-"}</td>
+                            <td className="px-3 py-2">{row.debt_st ?? "-"}</td>
+                            <td className="px-3 py-2">{row.debt_value ?? "-"}</td>
+                            <td className="px-3 py-2">{row.equity_value ?? "-"}</td>
+                            <td className="px-3 py-2">{row.total_assets ?? "-"}</td>
+                            <td className="px-3 py-2">{row.dc_ratio ?? "-"}</td>
+                            <td className="px-3 py-2">{row.pct_debt ?? "-"}</td>
+                            <td className="px-3 py-2">{row.pct_equity ?? "-"}</td>
+                            <td className="px-3 py-2">{row.beta_levered ?? "-"}</td>
+                            <td className="px-3 py-2 font-semibold text-blue-600">{row.beta_unlevered ?? "-"}</td>
+                            <td className="px-3 py-2">{row.market_cap ?? "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {boaModalView === "diagnostic" && (boaProgressResult?.ticker_rows?.length > 0 || boaDebugRows.length > 0) && (
+            <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 px-2 sm:px-3">
+              <div className="relative w-[calc(100vw-1rem)] max-w-none rounded-xl border border-gray-200 bg-white shadow-2xl">
+                <button
+                  type="button"
+                  onClick={() => setBoaModalView("summary")}
+                  className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                  aria-label="Cerrar diagnóstico"
+                >
+                  ×
+                </button>
+                <div className="p-4 sm:p-6">
+                  <div className="mb-4 pr-10">
+                    <div className="text-lg font-semibold text-gray-900">Diagnóstico por ticker</div>
+                    <div className="text-xs text-gray-500">
+                      Fuente, causa del fallo, valores vacíos y alternativa sugerida.
+                    </div>
+                  </div>
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    {[
+                      ["all", "Todos"],
+                      ["market_cap", "Market Cap"],
+                      ["debt", "Deuda"],
+                      ["beta", "Beta"],
+                      ["derived", "Derivados"],
+                      ["source", "Fuente"],
+                    ].map(([key, label]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setBoaDiagnosticFilter(key as any)}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium border ${
+                          boaDiagnosticFilter === key
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="overflow-auto max-h-[80vh] rounded-lg border border-gray-200">
+                    <table className="min-w-[2200px] text-[11px] text-left">
+                      <thead className="sticky top-0 bg-slate-50 text-slate-700 uppercase tracking-wide">
+                        <tr>
+                          <th className="px-3 py-2">Ticker</th>
+                          <th className="px-3 py-2">Subsector</th>
+                          <th className="px-3 py-2">Valores vacíos</th>
+                          <th className="px-3 py-2">Error / razón</th>
+                          <th className="px-3 py-2">Fuente usada</th>
+                          <th className="px-3 py-2">Fallo real</th>
+                          <th className="px-3 py-2">Alternativa a intentar</th>
+                          <th className="px-3 py-2">Market Cap src</th>
+                          <th className="px-3 py-2">Market Cap fallback</th>
+                          <th className="px-3 py-2">Balance Sheet</th>
+                          <th className="px-3 py-2">Financials</th>
+                          <th className="px-3 py-2">Beta src</th>
+                          <th className="px-3 py-2">Deuda LP src</th>
+                          <th className="px-3 py-2">Deuda CP src</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 bg-white">
+                        {(boaProgressResult?.ticker_rows?.length > 0 ? boaProgressResult.ticker_rows : boaDebugRows)
+                          .filter((row: any) => {
+                            const missing = row.missing_fields || [];
+                            const isProblematic =
+                              missing.length > 0 ||
+                              row.diagnostic_reason === "datos_incompletos" ||
+                              row.diagnostic_reason === "missing" ||
+                              row.status === "missing" ||
+                              row.status === "error" ||
+                              row.status === "rate_limit" ||
+                              row.status === "other_error" ||
+                              row.status === "upstream_unavailable" ||
+                              row.error_message;
+                            if (!isProblematic) return false;
+                            return true;
+                          })
+                          .filter((row: any) => {
+                            if (boaDiagnosticFilter === "all") return true;
+                            const missing = row.missing_fields || [];
+                            if (boaDiagnosticFilter === "market_cap") return missing.includes("market_cap");
+                            if (boaDiagnosticFilter === "debt") return missing.includes("debt_lt") || missing.includes("debt_st") || missing.includes("debt_value");
+                            if (boaDiagnosticFilter === "beta") return missing.includes("beta_levered") || missing.includes("beta_unlevered");
+                            if (boaDiagnosticFilter === "derived") {
+                              return missing.includes("equity_value") || missing.includes("total_assets") || missing.includes("dc_ratio") || missing.includes("beta_unlevered");
+                            }
+                            if (boaDiagnosticFilter === "source") {
+                              return (
+                                row.market_cap_source === "no_disponible" ||
+                                row.market_cap_failure_reason === "sin_price_y_shares" ||
+                                row.market_cap_failure_reason === "sin_price" ||
+                                row.market_cap_failure_reason === "sin_shares" ||
+                                row.balance_sheet_source === "balance_sheet_vacio" ||
+                                row.financials_source === "financials_vacio"
+                              );
+                            }
+                            return true;
+                          })
+                          .map((row: any, idx: number) => (
+                          <tr key={`${row.ticker || idx}`} className="align-top">
+                            <td className="px-3 py-2 font-medium text-slate-900">{row.ticker ?? "-"}</td>
+                            <td className="px-3 py-2">{row.subsector ?? row.sub_sector ?? "-"}</td>
+                            <td className="px-3 py-2">{(row.missing_fields || []).join(", ") || "sin vacíos"}</td>
+                            <td className="px-3 py-2">{row.error_reason ?? row.diagnostic_reason ?? row.status ?? "-"}</td>
+                            <td className="px-3 py-2">
+                              {row.market_cap_source !== "no_disponible"
+                                ? row.market_cap_source
+                                : row.debt_source !== "no_disponible"
+                                  ? row.debt_source
+                                  : row.beta_source ?? "-"}
+                            </td>
+                            <td className="px-3 py-2">
+                              {row.error_message
+                                ? row.error_message
+                                : row.debt_st_failure_reason && row.debt_st_failure_reason !== "none"
+                                  ? `Deuda CP no reportada por yfinance en balance anual ni trimestral. Se usó 0 solo para continuar el cálculo (${row.debt_st_failure_reason}).`
+                                : row.debt_lt_failure_reason && row.debt_lt_failure_reason !== "none"
+                                  ? `Deuda LP no reportada por yfinance en balance anual ni trimestral. Se usó 0 solo para continuar el cálculo (${row.debt_lt_failure_reason}).`
+                                : (row.missing_fields || []).length > 0
+                                  ? (row.missing_fields || []).join(", ")
+                                  : "ninguno"}
+                            </td>
+                            <td className="px-3 py-2">
+                              {row.market_cap_fallback_used ? "precio × sharesOutstanding" : "balance_sheet / info.beta / revisar etiquetas"}
+                            </td>
+                            <td className="px-3 py-2">{row.market_cap_source ?? "-"}</td>
+                            <td className="px-3 py-2">{row.market_cap_fallback_used ? "sí" : "no"}</td>
+                            <td className="px-3 py-2">{row.balance_sheet_source ?? "-"}</td>
+                            <td className="px-3 py-2">{row.financials_source ?? "-"}</td>
+                            <td className="px-3 py-2">{row.beta_source ?? "-"}</td>
+                            <td className="px-3 py-2">{row.debt_lt_source ?? "-"}</td>
+                            <td className="px-3 py-2">{row.debt_st_source ?? "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {boaModalView === "symbols" && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-2 sm:px-3">
+              <div className="relative w-[calc(100vw-1rem)] max-w-none rounded-xl border border-gray-200 bg-white shadow-2xl">
+                <button
+                  type="button"
+                  onClick={() => setBoaModalView("summary")}
+                  className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                  aria-label="Cerrar resolución de símbolos"
+                >
+                  ×
+                </button>
+                <div className="p-4 sm:p-6">
+                  <div className="mb-4 pr-10">
+                    <div className="text-lg font-semibold text-gray-900">Resolución de símbolos</div>
+                    <div className="text-xs text-gray-500">
+                      Tickers antiguos, símbolo vigente detectado, evidencia y candidatos alternativos.
+                    </div>
+                  </div>
+                  {(() => {
+                    const rows = (boaProgressResult?.ticker_rows?.length > 0
+                      ? boaProgressResult.ticker_rows
+                      : boaDebugRows
+                    ).filter((row: any) =>
+                      row.ticker_resolved ||
+                      row.ticker_resolution_status === "requires_review" ||
+                      row.ticker_resolution_status === "search_failed" ||
+                      row.ticker_resolution_status === "not_found"
+                    );
+
+                    if (rows.length === 0) {
+                      return (
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-600">
+                          Todavía no se detectaron cambios de símbolo ni tickers que requieran revisión.
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="overflow-auto max-h-[80vh] rounded-lg border border-gray-200">
+                        <table className="min-w-[1900px] text-[11px] text-left">
+                          <thead className="sticky top-0 bg-slate-50 text-slate-700 uppercase tracking-wide">
+                            <tr>
+                              <th className="px-3 py-2">Ticker original</th>
+                              <th className="px-3 py-2">Ticker actual</th>
+                              <th className="px-3 py-2">Empresa</th>
+                              <th className="px-3 py-2">Subsector</th>
+                              <th className="px-3 py-2">Estado</th>
+                              <th className="px-3 py-2">Motivo</th>
+                              <th className="px-3 py-2">Fuente</th>
+                              <th className="px-3 py-2">Confianza</th>
+                              <th className="px-3 py-2">Fecha efectiva</th>
+                              <th className="px-3 py-2">Candidatos</th>
+                              <th className="px-3 py-2">Evidencia</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100 bg-white">
+                            {rows.map((row: any, idx: number) => {
+                              const details = row.ticker_resolution_details || {};
+                              const candidates = row.ticker_resolution_candidates || [];
+                              return (
+                                <tr key={`${row.ticker_original || row.ticker || idx}-symbol`} className="align-top">
+                                  <td className="px-3 py-2 font-semibold text-slate-900">
+                                    {row.ticker_original ?? row.ticker ?? "-"}
+                                  </td>
+                                  <td className="px-3 py-2 font-semibold text-blue-600">
+                                    {row.ticker_resolved ?? "Requiere revisión"}
+                                  </td>
+                                  <td className="px-3 py-2">{row.company_name ?? details.company_name ?? "-"}</td>
+                                  <td className="px-3 py-2">{row.subsector ?? row.sub_sector ?? "-"}</td>
+                                  <td className="px-3 py-2">{row.ticker_resolution_status ?? "-"}</td>
+                                  <td className="px-3 py-2">{row.ticker_resolution_reason ?? "-"}</td>
+                                  <td className="px-3 py-2">{row.ticker_resolution_source ?? "-"}</td>
+                                  <td className="px-3 py-2">
+                                    {row.ticker_resolution_confidence != null
+                                      ? `${Math.round(Number(row.ticker_resolution_confidence) * 100)}%`
+                                      : "-"}
+                                  </td>
+                                  <td className="px-3 py-2">{details.effective_date ?? "-"}</td>
+                                  <td className="px-3 py-2">
+                                    {candidates.length > 0
+                                      ? candidates.map((candidate: any) =>
+                                          `${candidate.ticker}${candidate.company_name ? ` (${candidate.company_name})` : ""}`
+                                        ).join(", ")
+                                      : "-"}
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    {details.source_url ? (
+                                      <a
+                                        href={details.source_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="font-medium text-blue-600 hover:underline"
+                                      >
+                                        Ver fuente
+                                      </a>
+                                    ) : details.error ?? "-"}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
             </div>
           )}
           {activeBoaJob && !modalState.title.includes("Completado") && !modalState.title.includes("Error") && (
@@ -770,7 +1288,7 @@ export const ConfiguracionPage = () => {
                 onChange={(e) => processExcel(e, activeTab)}
                 className="hidden"
                 accept=".xlsx, .xls, .csv"
-                disabled={activeFrequency === "subsectores"}
+                disabled={false}
               />
               <input
                 type="file"
@@ -787,7 +1305,7 @@ export const ConfiguracionPage = () => {
                     handleImportClick();
                   }
                 }}
-                disabled={activeFrequency === "subsectores"}
+                disabled={false}
                 className="inline-flex items-center px-4 py-2 text-xs sm:text-sm border border-gray-300 shadow-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
               >
                 <Upload className="h-4 w-4 mr-2" />

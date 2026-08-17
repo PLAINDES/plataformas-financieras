@@ -346,6 +346,28 @@ export const UsersPage = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Teléfono
+                  </label>
+                  <input
+                    type="tel"
+                    value={form.phone_number}
+                    minLength={editingId === null ? 7 : undefined}
+                    maxLength={30}
+                    autoComplete="tel"
+                    placeholder="Ej. 999999999"
+                    required={editingId === null}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        phone_number: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     {editingId === null
                       ? "Contraseña"
                       : "Nueva Contraseña (opcional)"}

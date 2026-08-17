@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { MainService } from "@/shared/services/main.service";
-import type { UserResponse } from "@/shared/types";
+import type { UserAdminUpdate, UserResponse } from "@/shared/types";
 
 export interface Toast {
   id: string;
@@ -11,6 +11,7 @@ export interface Toast {
 interface UserFormState {
   name: string;
   lastname: string;
+  phone_number: string;
   email: string;
   password?: string;
   role: "admin" | "master" | "user";
@@ -20,6 +21,7 @@ interface UserFormState {
 const defaultForm: UserFormState = {
   name: "",
   lastname: "",
+  phone_number: "",
   email: "",
   password: "",
   role: "user",
@@ -134,6 +136,7 @@ export const useUsers = () => {
     setForm({
       name: user.name,
       lastname: user.lastname || "",
+      phone_number: user.phone_number || "",
       email: user.email,
       password: "", // Vacío intencionalmente por seguridad
       role: user.role,
@@ -157,6 +160,11 @@ export const useUsers = () => {
     setSaving(true);
     try {
       if (editingId === null) {
+        if (form.phone_number.trim().length < 7) {
+          addToast("El teléfono debe tener al menos 7 caracteres", "error");
+          setSaving(false);
+          return;
+        }
         if (!form.password || form.password.length < 6) {
           addToast("La contraseña debe tener al menos 6 caracteres", "error");
           setSaving(false);
@@ -165,15 +173,17 @@ export const useUsers = () => {
         await MainService.createUser({
           name: form.name,
           lastname: form.lastname,
+          phone_number: form.phone_number.trim(),
           email: form.email,
           password: form.password,
           role: form.role,
         });
         addToast("Usuario creado correctamente", "success");
       } else {
-        const payload: any = {
+        const payload: UserAdminUpdate = {
           name: form.name,
           lastname: form.lastname,
+          phone_number: form.phone_number.trim() || null,
           email: form.email,
           role: form.role,
           is_active: form.is_active,

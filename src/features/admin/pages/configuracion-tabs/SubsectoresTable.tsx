@@ -3,14 +3,28 @@ import { SimpleTable } from "@/shared/components/ui/SimpleTable";
 import { useClientPagination } from "@/features/admin/hooks/useClientPagination";
 import { INDUSTRY_TRANSLATIONS } from "@/shared/constants/kapital";
 
+interface SubsectorRow {
+  sector: string;
+  subsector: string;
+  empresas?: string[];
+  empresas_boa?: Record<string, number | string | null | undefined>;
+}
+
 interface SubsectoresTableProps {
-  data: any[];
+  data: SubsectorRow[];
   isLoading: boolean;
-  onDelete: (item: any) => void;
+  onDelete: (item: SubsectorRow) => void;
 }
 
 const translateSector = (sector: string): string =>
   INDUSTRY_TRANSLATIONS[sector] || sector;
+
+const formatBoa = (value: unknown): string | null => {
+  if (value === null || value === undefined || value === "") return null;
+
+  const numericValue = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numericValue) ? numericValue.toFixed(4) : null;
+};
 
 export const SubsectoresTable = ({
   data,
@@ -52,24 +66,27 @@ export const SubsectoresTable = ({
           accessorKey: "empresas",
           cell: (item) => (
             <div className="flex flex-wrap gap-1">
-              {Array.isArray(item.empresas) && item.empresas.length > 0
-                ? item.empresas.map((emp: string, i: number) => {
-                    const boa = item.empresas_boa?.[emp];
-                    return (
-                      <span
-                        key={i}
-                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200"
-                      >
-                        {emp}
-                        {boa !== undefined && (
-                          <span className="text-blue-400 font-mono">
-                            {boa.toFixed(4)}
-                          </span>
-                        )}
-                      </span>
-                    );
-                  })
-                : <span className="text-gray-400">-</span>}
+              {Array.isArray(item.empresas) && item.empresas.length > 0 ? (
+                item.empresas.map((emp: string, i: number) => {
+                  const boa = item.empresas_boa?.[emp];
+                  const formattedBoa = formatBoa(boa);
+                  return (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200"
+                    >
+                      {emp}
+                      {formattedBoa !== null && (
+                        <span className="text-blue-400 font-mono">
+                          {formattedBoa}
+                        </span>
+                      )}
+                    </span>
+                  );
+                })
+              ) : (
+                <span className="text-gray-400">-</span>
+              )}
             </div>
           ),
         },
