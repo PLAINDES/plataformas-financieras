@@ -556,8 +556,8 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
             </div>
           </FormSection>
 
-          {/* Section 5: Sensibilización - desactivado por ahora */}
-          {false && hasCalculated && (
+          {/* Section 5: Sensibilización */}
+          {hasCalculated && (
             <FormSection
               step={5}
               title="Sensibilización"
@@ -584,13 +584,6 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                   name="perpetual_growth_rate"
                   suffix="%"
                   value={formData.perpetual_growth_rate || ""}
-                  onChange={onInputChange}
-                />
-                <SensitivityRow
-                  label="Beta Desapalancado"
-                  name="beta_unlevered_sensitivity"
-                  suffix="Coef."
-                  value={formData.beta_unlevered_sensitivity || ""}
                   onChange={onInputChange}
                 />
               </div>
