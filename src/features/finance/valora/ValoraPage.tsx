@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FinancePageTemplate } from "../components/MainPage";
 import {
   ValoraResults,
@@ -17,6 +17,8 @@ import { NavBar } from "./components/Navbar";
 import { NavigationTabs } from "./components/ValoraNavigationTabs";
 import { ValoraFormPanel } from "./components/ValoraFormPanel";
 import { MainService } from "@/shared/services/main.service";
+import { SubsectorModal } from "../kapital/components/SubsectorModal";
+import { useKapitalData } from "../kapital/hooks/useKapitalData";
 
 import { useValoraForm } from "./hooks/useValoraForm";
 import { useValoraCalculation } from "./hooks/useValoraCalculation";
@@ -69,6 +71,95 @@ const ValoraPage: React.FC = () => {
   const [_isResultsSidebarOpen, setIsResultsSidebarOpen] = useState(false);
   const [balanceTable, setBalanceTable] = useState<FinancialTable | null>(null);
   const [resultsTable, setResultsTable] = useState<FinancialTable | null>(null);
+  const subsectorTickersRef = useRef<Record<string, string[]>>({});
+  const subsectorSensibilizacionTickersRef = useRef<Record<string, string[]>>({});
+  const [subsectorModalOpen, setSubsectorModalOpen] = useState(false);
+  const [subsectorDetail, setSubsectorDetail] = useState<any>(null);
+  const [detailTickers, setDetailTickers] = useState<string[]>([]);
+  const [inactiveTickers, setInactiveTickers] = useState<string[]>([]);
+
+  const subsectorData = useKapitalData(
+    formData.sector,
+    subsectorTickersRef,
+    subsectorSensibilizacionTickersRef
+  );
+
+  useEffect(() => {
+    subsectorData.syncTickersFromUrl(
+      "tickers_subsector",
+      "subsector",
+      formData.tickers_subsector || "",
+      formData.subsector
+    );
+  }, [formData.tickers_subsector, formData.subsector]);
+
+  const openSubsectorModal = () => {
+    setSubsectorModalOpen(true);
+    setSubsectorDetail(null);
+  };
+
+  const closeSubsectorModal = () => {
+    setSubsectorModalOpen(false);
+    setSubsectorDetail(null);
+  };
+
+  const openSubsectorDetail = (
+    subsector: any,
+    allTickers: string[],
+    savedTickers?: string[]
+  ) => {
+    setSubsectorDetail(subsector);
+    setDetailTickers(allTickers);
+    if (savedTickers) {
+      const savedSet = new Set(savedTickers);
+      setInactiveTickers(allTickers.filter((ticker) => !savedSet.has(ticker)));
+      return;
+    }
+    setInactiveTickers([]);
+  };
+
+  const toggleSubsectorTicker = (ticker: string) => {
+    setInactiveTickers((current) =>
+      current.includes(ticker)
+        ? current.filter((item) => item !== ticker)
+        : [...current, ticker]
+    );
+  };
+
+  const detailBoa = useMemo(() => {
+    if (!subsectorDetail) return null;
+    const activeTickers = detailTickers.filter(
+      (ticker) => !inactiveTickers.includes(ticker)
+    );
+    const boas = activeTickers
+      .map((ticker) => Number(subsectorDetail.empresas_boa?.[ticker]))
+      .filter(Number.isFinite);
+    if (boas.length === 0) return null;
+    return boas.reduce((sum, boa) => sum + boa, 0) / boas.length;
+  }, [detailTickers, inactiveTickers, subsectorDetail]);
+
+  const applySubsectorBeta = () => {
+    if (!subsectorDetail || detailBoa === null) return;
+    const activeTickers = detailTickers.filter(
+      (ticker) => !inactiveTickers.includes(ticker)
+    );
+    const beta = detailBoa.toFixed(2);
+    const subsector = String(subsectorDetail.subsector || "");
+
+    subsectorTickersRef.current[subsector] = activeTickers;
+    setFormData((current) => ({
+      ...current,
+      subsector,
+      tickers_subsector: JSON.stringify(activeTickers),
+      beta_subsector: beta,
+      beta_unlevered_sensitivity: beta,
+    }));
+    closeSubsectorModal();
+    addToast(
+      "success",
+      `Subsector ${subsector} seleccionado con BOA ${beta}.`
+    );
+  };
 
 
   const removeToast = (id: string) => {
@@ -298,9 +389,9 @@ const ValoraPage: React.FC = () => {
         {mainContent}
       </main>
       <aside
-        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-105 border-r border-gray-200 bg-white shadow-sm transition-transform duration-200 ${isDesktopFormOpen ? "translate-x-0" : "-translate-x-105"}`}
+        className={`fixed left-0 top-16 z-40 flex h-[calc(100dvh-4rem)] bg-transparent transition-transform duration-200 ${isDesktopFormOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <div className="h-full overflow-y-auto p-4">
+        <div className="h-full w-105 shrink-0 overflow-y-auto border-r border-gray-200 bg-white p-4 shadow-sm">
           <ValoraFormPanel
             formData={formData}
             dates={dates}
@@ -319,13 +410,66 @@ const ValoraPage: React.FC = () => {
             onSubmit={valoraCalc.handleSubmit}
             onDownloadTemplate={downloadTemplate}
             onUploadTemplate={handleUploadTemplate}
-            onSearchSectorBeta={() => addToast("info", "Buscando beta por subsector...")}
+            onSearchSectorBeta={openSubsectorModal}
             isSearchingBeta={false}
             loading={valoraCalc.isLoading}
             hasCalculated={valoraCalc.hasCalculated}
           />
         </div>
+        {subsectorModalOpen && (
+          <div className="mt-4 ml-4 hidden h-[calc(100dvh-8rem)] max-h-[calc(100dvh-8rem)] w-96 shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-xl lg:flex xl:w-125">
+            <SubsectorModal
+              subsectorDetail={subsectorDetail}
+              detailTickers={detailTickers}
+              inactiveTickers={inactiveTickers}
+              subsectorModalMode="sensibilizacion"
+              isWaccCalculated={false}
+              formDataSubsector=""
+              formDataSubsectorSensibilizacion={formData.subsector}
+              selectedSubsector={formData.subsector || null}
+              filteredSubsectores={subsectorData.filteredSubsectores}
+              subsectoresFecha={subsectorData.subsectoresFecha}
+              detailBoa={detailBoa}
+              onSetSubsectorDetail={setSubsectorDetail}
+              onCloseModal={closeSubsectorModal}
+              onOpenDetail={openSubsectorDetail}
+              onToggleTicker={toggleSubsectorTicker}
+              onCalculateDetail={applySubsectorBeta}
+              onSetSubsectorModalMode={() => undefined}
+              subsectorTickersRef={subsectorTickersRef}
+              subsectorSensibilizacionTickersRef={subsectorSensibilizacionTickersRef}
+            />
+          </div>
+        )}
       </aside>
+
+      {subsectorModalOpen && (
+        <div className="fixed inset-0 z-120 flex items-start justify-center overflow-y-auto bg-gray-900/40 p-2 backdrop-blur-sm lg:hidden sm:p-4">
+          <div className="flex h-[calc(100dvh-1rem)] w-[96dvw] max-w-2xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl sm:h-[85dvh]">
+            <SubsectorModal
+              subsectorDetail={subsectorDetail}
+              detailTickers={detailTickers}
+              inactiveTickers={inactiveTickers}
+              subsectorModalMode="sensibilizacion"
+              isWaccCalculated={false}
+              formDataSubsector=""
+              formDataSubsectorSensibilizacion={formData.subsector}
+              selectedSubsector={formData.subsector || null}
+              filteredSubsectores={subsectorData.filteredSubsectores}
+              subsectoresFecha={subsectorData.subsectoresFecha}
+              detailBoa={detailBoa}
+              onSetSubsectorDetail={setSubsectorDetail}
+              onCloseModal={closeSubsectorModal}
+              onOpenDetail={openSubsectorDetail}
+              onToggleTicker={toggleSubsectorTicker}
+              onCalculateDetail={applySubsectorBeta}
+              onSetSubsectorModalMode={() => undefined}
+              subsectorTickersRef={subsectorTickersRef}
+              subsectorSensibilizacionTickersRef={subsectorSensibilizacionTickersRef}
+            />
+          </div>
+        </div>
+      )}
 
       <ToastStack toasts={toasts} onDismiss={removeToast} />
       {valoraCalc.isLoading && <LoadingOverlay />}

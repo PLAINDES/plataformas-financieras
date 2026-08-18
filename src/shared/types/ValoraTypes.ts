@@ -55,6 +55,11 @@ export interface ValoraMethodResults {
 
 export interface ValoraCalculationResults {
   wacc?: string | number | null;
+  source_currency?: string | null;
+  fx_to_usd?: number | null;
+  inputs?: {
+    moneda?: string | null;
+  };
   balance?: {
     activo?: string | number | null;
     pasivo?: string | number | null;
