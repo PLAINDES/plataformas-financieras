@@ -21,6 +21,7 @@ export function RegisterModal({
   const [formData, setFormData] = useState<RegisterData>({
     name: "",
     lastname: "",
+    phone_number: "",
     email: "",
     password: "",
   });
@@ -39,11 +40,24 @@ export function RegisterModal({
       setError("El nombre y apellido son requeridos");
       return;
     }
+    if (formData.phone_number.trim().length < 7) {
+      setError("El teléfono debe tener al menos 7 caracteres");
+      return;
+    }
 
     setLoading(true);
     try {
-      await onRegister(formData);
-      setFormData({ name: "", lastname: "", email: "", password: "" });
+      await onRegister({
+        ...formData,
+        phone_number: formData.phone_number.trim(),
+      });
+      setFormData({
+        name: "",
+        lastname: "",
+        phone_number: "",
+        email: "",
+        password: "",
+      });
       onClose();
     } catch (err: any) {
       setError(err.message || "Error al crear la cuenta. Intenta nuevamente.");
@@ -58,7 +72,13 @@ export function RegisterModal({
 
   const handleClose = () => {
     if (!loading) {
-      setFormData({ name: "", lastname: "", email: "", password: "" });
+      setFormData({
+        name: "",
+        lastname: "",
+        phone_number: "",
+        email: "",
+        password: "",
+      });
       setError(null);
       onClose();
     }
@@ -142,6 +162,19 @@ export function RegisterModal({
                   placeholder="Correo electrónico"
                   value={formData.email}
                   onChange={(e) => handleChange("email", e.target.value)}
+                  disabled={loading}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
+                />
+
+                <input
+                  type="tel"
+                  placeholder="Teléfono"
+                  value={formData.phone_number}
+                  onChange={(e) => handleChange("phone_number", e.target.value)}
+                  minLength={7}
+                  maxLength={30}
+                  autoComplete="tel"
+                  required
                   disabled={loading}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
                 />

@@ -42,11 +42,14 @@ export const ConfiguracionPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [boaProgressText, setBoaProgressText] = useState<string | null>(null);
+
   const resolveBoaRef = useRef<((v: boolean) => void) | null>(null);
   const boaPollingRef = useRef(false);
   const parsedDataRef = useRef<any[] | null>(null);
   const boaTabRef = useRef<string | null>(null);
   const activeTabRef = useRef("rf");
+
+
 
   type BoaJob = { jobId: string; total: number; processed: number; failed: number };
   const [activeBoaJob, setActiveBoaJob] = useState<BoaJob | null>(null);
@@ -68,11 +71,21 @@ export const ConfiguracionPage = () => {
           continue;
         }
 
+        const stopReason = progress.result?.stop_reason || progress.result?.status_reason || null;
+        const isDone = progress.status === "completed" || progress.status === "error";
+        const fullyProcessed = (progress.processed + progress.failed) >= total;
+        const finalLabel =
+          isDone && fullyProcessed
+            ? "Cálculo finalizado"
+            : stopReason === "cancelado"
+            ? "Cálculo cancelado"
+            : stopReason === "abortado_por_proteccion_interna"
+            ? "Cálculo abortado por protección interna"
+            : "Cálculo interrumpido";
+
         setBoaProgressText(
-          progress.status === "completed"
-            ? `Cálculo finalizado: ${progress.processed}/${total} empresas procesadas (${progress.failed} errores).`
-            : progress.status === "error"
-            ? `Error: ${progress.result?.error || "desconocido"}`
+          isDone
+            ? `${finalLabel}: ${progress.processed}/${total} empresas procesadas (${progress.failed} errores).`
             : `Procesando ${progress.processed + progress.failed}/${total} empresas\n• Correctos: ${progress.processed}\n• Errores: ${progress.failed}\n\nPuede continuar navegando, la operación sigue en segundo plano.`
         );
         setActiveBoaJob((prev) => {
@@ -88,14 +101,27 @@ export const ConfiguracionPage = () => {
           lastSavedCompanies = currentCompanies;
           try {
             const boaMap: Record<string, number> = {};
+            const tickerInfoMap: Record<string, any> = {};
             progress.result.valid_companies.forEach((c: any) => {
               boaMap[c.ticker] = c.beta_unlevered;
+              tickerInfoMap[c.ticker] = {
+                name: c.company_name || c.ticker,
+                beta_desapalancado: c.beta_unlevered ?? null,
+                market_cap: c.market_cap ?? null,
+                beta_apalancado: c.beta_levered ?? null,
+                total_activos: c.total_assets ?? null,
+                fx: c.fx_rate ?? null,
+              };
             });
             pData.forEach((item: any) => {
               item.empresas_boa = item.empresas_boa || {};
+              item.ticker_info = item.ticker_info || {};
               (item.empresas || []).forEach((emp: string) => {
                 if (boaMap[emp] !== undefined) {
                   item.empresas_boa[emp] = boaMap[emp];
+                }
+                if (tickerInfoMap[emp]) {
+                  item.ticker_info[emp] = tickerInfoMap[emp];
                 }
               });
             });
@@ -121,9 +147,7 @@ export const ConfiguracionPage = () => {
         }
         if (progress.status === "error") {
           setActiveBoaJob(null);
-          throw new Error(
-            progress.result?.error || "Error desconocido en el cálculo BOA"
-          );
+          throw new Error(progress.result?.error || `Error desconocido en el cálculo BOA (${stopReason || "sin razón"})`);
         }
 
         await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -481,7 +505,7 @@ export const ConfiguracionPage = () => {
 
     setModalState({
       isOpen: true,
-      title: isComplete ? "BOA Completado" : "Calculando BOA...",
+      title: isComplete ? "BOA en proceso" : "BOA en proceso",
       description: undefined,
       confirmText: isComplete ? "Cerrar" : "Cerrar y seguir",
       variant: "default",
@@ -493,6 +517,12 @@ export const ConfiguracionPage = () => {
 
   const doImport = async (parsedData: any[], boaResult: any, tab: string) => {
     try {
+      if (tab === "subsectores") {
+        addToast("success", `Se procesaron ${parsedData.length} registros de subsectores.`);
+        loadData();
+        return;
+      }
+
       await MainService.createTemplateComplement({
         nombre: tab,
         fecha: new Date().toISOString(),
@@ -517,6 +547,42 @@ export const ConfiguracionPage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (activeTab === "subsectores") {
+      try {
+        const boaResult = await MainService.uploadSubsectoresBoa(file);
+
+        if (boaResult?.message) {
+          addToast("info", boaResult.message);
+        }
+
+        if (boaResult?.job_id) {
+          setActiveBoaJob({
+            jobId: boaResult.job_id,
+            total: boaResult.total || 0,
+            processed: boaResult.processed || 0,
+            failed: boaResult.failed || 0,
+          });
+          startBoaPolling(boaResult.job_id, boaResult.total || 0).catch(() => {});
+        }
+
+        setModalState({
+          isOpen: true,
+          title: "BOA en proceso",
+          description: `Se calcularon ${boaResult?.processed || 0} empresas de prueba.\n\nLos resultados no se guardaron en la base de datos. Solo se muestran en este modal.`,
+          confirmText: "Cerrar",
+          cancelText: "Cerrar",
+          variant: "default",
+          onConfirm: closeModal,
+        });
+      } catch (err) {
+        console.warn("Error obteniendo BOA de depuración, se continuará sin BOA:", err);
+        addToast("error", "Error al procesar el archivo Excel. Asegúrese de que el formato sea correcto.");
+      } finally {
+        e.target.value = "";
+      }
+      return;
+    }
+
     try {
       const parsedData = await parseFinancialExcel(
         file,
@@ -527,6 +593,59 @@ export const ConfiguracionPage = () => {
       let boaResult: any = null;
 
       if (activeTab === "subsectores") {
+        try {
+          boaResult = await MainService.uploadSubsectoresBoa(file);
+
+          if (boaResult?.message) {
+            addToast("info", boaResult.message);
+          }
+
+          const debugRows = (boaResult?.valid_companies || []).slice(0, 5);
+
+          const boaMap: Record<string, number> = {};
+          const tickerInfoMap: Record<string, any> = {};
+          debugRows.forEach((c: any) => {
+            boaMap[c.ticker] = c.beta_unlevered;
+            tickerInfoMap[c.ticker] = {
+              name: c.company_name || c.ticker,
+              beta_desapalancado: c.beta_unlevered ?? null,
+              market_cap: c.market_cap ?? null,
+              beta_apalancado: c.beta_levered ?? null,
+              total_activos: c.total_assets ?? null,
+              fx: c.fx_rate ?? null,
+            };
+          });
+
+          parsedData.forEach((item: any) => {
+            item.empresas_boa = item.empresas_boa || {};
+            item.ticker_info = item.ticker_info || {};
+            (item.empresas || []).forEach((emp: string) => {
+              if (boaMap[emp] !== undefined) {
+                item.empresas_boa[emp] = boaMap[emp];
+              }
+              if (tickerInfoMap[emp]) {
+                item.ticker_info[emp] = tickerInfoMap[emp];
+              }
+            });
+          });
+
+          setModalState({
+            isOpen: true,
+            title: "BOA en proceso",
+            description: `Se calcularon ${boaResult?.processed || 0} empresas de prueba.\n\nLos resultados no se guardaron en la base de datos. Solo se muestran en este modal.`,
+            confirmText: "Cerrar",
+            cancelText: "Cerrar",
+            variant: "default",
+            onConfirm: closeModal,
+          });
+
+          return;
+        } catch (err) {
+          console.warn("Error obteniendo BOA de depuración, se continuará sin BOA:", err);
+          return;
+        }
+
+        /*
         const tickers = Array.from(
           new Set(
             parsedData.flatMap(
@@ -572,7 +691,7 @@ export const ConfiguracionPage = () => {
               setBoaProgressText(`Iniciando cálculo para ${total} empresas...`);
               setModalState({
                 isOpen: true,
-                title: "Calculando BOA...",
+                title: "BOA en proceso",
                 description: undefined,
                 confirmText: "Cerrar y seguir en segundo plano",
                 variant: "default",
@@ -586,15 +705,28 @@ export const ConfiguracionPage = () => {
                 setBoaProgressText(null);
 
                 const boaMap: Record<string, number> = {};
+                const tickerInfoMap: Record<string, any> = {};
                 (boaResult?.valid_companies || []).forEach((c: any) => {
                   boaMap[c.ticker] = c.beta_unlevered;
+                  tickerInfoMap[c.ticker] = {
+                    name: c.company_name || c.ticker,
+                    beta_desapalancado: c.beta_unlevered ?? null,
+                    market_cap: c.market_cap ?? null,
+                    beta_apalancado: c.beta_levered ?? null,
+                    total_activos: c.total_assets ?? null,
+                    fx: c.fx_rate ?? null,
+                  };
                 });
 
                 parsedData.forEach((item: any) => {
                   item.empresas_boa = item.empresas_boa || {};
+                  item.ticker_info = item.ticker_info || {};
                   (item.empresas || []).forEach((emp: string) => {
                     if (boaMap[emp] !== undefined) {
                       item.empresas_boa[emp] = boaMap[emp];
+                    }
+                    if (tickerInfoMap[emp]) {
+                      item.ticker_info[emp] = tickerInfoMap[emp];
                     }
                   });
                 });
@@ -605,19 +737,17 @@ export const ConfiguracionPage = () => {
                 console.warn("Error obteniendo BOA, se continuará sin BOA:", err);
               }
             }
-          } else {
-            // Si el usuario omite el cálculo de BOA, importa los datos directamente.
-            await doImport(parsedData, null, activeTab);
-            return;
-          }
+        } else {
+          // Si el usuario omite el cálculo de BOA, importa los datos directamente.
+          await doImport(parsedData, null, activeTab);
+          return;
         }
+        */
       }
 
       // Importar los datos finales solo si hubo un resultado de BOA
       // o si no se trataba de una importación de subsectores.
-      if (activeTab !== 'subsectores' || boaResult) {
-        await doImport(parsedData, boaResult, activeTab);
-      }
+      await doImport(parsedData, boaResult, activeTab);
     } catch (err: any) {
       console.error("Error processing Excel file", err);
       addToast(
@@ -675,19 +805,30 @@ export const ConfiguracionPage = () => {
               {boaProgressText}
             </div>
           )}
+
           {activeBoaJob && !modalState.title.includes("Completado") && !modalState.title.includes("Error") && (
-            <button
-              onClick={async () => {
-                await MainService.cancelBoaJob(activeBoaJob.jobId);
-                await MainService.deleteBoaJob(activeBoaJob.jobId);
-                setActiveBoaJob(null);
-                setBoaProgressText("Cálculo cancelado.");
-                closeModal();
-              }}
-              className="mt-3 w-full px-3 py-2 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 transition-colors"
-            >
-              Cancelar cálculo
-            </button>
+            <div className="mt-3 space-y-2">
+              <button
+                onClick={async () => {
+                  await MainService.cancelBoaJob(activeBoaJob.jobId);
+                  await MainService.deleteBoaJob(activeBoaJob.jobId);
+                  setActiveBoaJob(null);
+                  setBoaProgressText("Cálculo cancelado.");
+                  closeModal();
+                }}
+                className="w-full px-3 py-2 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 transition-colors"
+              >
+                Cancelar cálculo
+              </button>
+              <button
+                onClick={() => {
+                  closeModal();
+                }}
+                className="w-full px-3 py-2 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
+              >
+                Correr en segundo plano
+              </button>
+            </div>
           )}
         </ConfirmationModal>
         <ToastStack toasts={toasts} onDismiss={removeToast} />
@@ -770,7 +911,7 @@ export const ConfiguracionPage = () => {
                 onChange={(e) => processExcel(e, activeTab)}
                 className="hidden"
                 accept=".xlsx, .xls, .csv"
-                disabled={activeFrequency === "subsectores"}
+                disabled={false}
               />
               <input
                 type="file"
@@ -787,7 +928,7 @@ export const ConfiguracionPage = () => {
                     handleImportClick();
                   }
                 }}
-                disabled={activeFrequency === "subsectores"}
+                disabled={false}
                 className="inline-flex items-center px-4 py-2 text-xs sm:text-sm border border-gray-300 shadow-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
               >
                 <Upload className="h-4 w-4 mr-2" />

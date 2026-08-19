@@ -17,6 +17,107 @@ import Superscript from "@tiptap/extension-superscript";
 import { useState, useCallback, useRef } from "react";
 import { Separator } from "@/components/ui/separator";
 import { FontSize, FontFamilyExtension } from "./ConfigTextEditor";
+import { sanitizeOfficePaste } from "@/shared/utils/officePasteSanitizer";
+
+const StyledTableCell = TableCell.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      backgroundColor: {
+        default: null,
+        parseHTML: (element) =>
+          (element as HTMLElement).style.backgroundColor || null,
+        renderHTML: (attributes) => {
+          if (!attributes.backgroundColor) return {};
+          return {
+            style: `background-color: ${attributes.backgroundColor}`,
+          };
+        },
+      },
+      width: {
+        default: null,
+        parseHTML: (element) => (element as HTMLElement).style.width || null,
+        renderHTML: (attributes) => {
+          if (!attributes.width) return {};
+          return {
+            style: `width: ${attributes.width}`,
+          };
+        },
+      },
+      verticalAlign: {
+        default: null,
+        parseHTML: (element) =>
+          (element as HTMLElement).style.verticalAlign || null,
+        renderHTML: (attributes) => {
+          if (!attributes.verticalAlign) return {};
+          return {
+            style: `vertical-align: ${attributes.verticalAlign}`,
+          };
+        },
+      },
+      border: {
+        default: null,
+        parseHTML: (element) => (element as HTMLElement).style.border || null,
+        renderHTML: (attributes) => {
+          if (!attributes.border) return {};
+          return {
+            style: `border: ${attributes.border}`,
+          };
+        },
+      },
+    };
+  },
+});
+
+const StyledTableHeader = TableHeader.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      backgroundColor: {
+        default: null,
+        parseHTML: (element) =>
+          (element as HTMLElement).style.backgroundColor || null,
+        renderHTML: (attributes) => {
+          if (!attributes.backgroundColor) return {};
+          return {
+            style: `background-color: ${attributes.backgroundColor}`,
+          };
+        },
+      },
+      width: {
+        default: null,
+        parseHTML: (element) => (element as HTMLElement).style.width || null,
+        renderHTML: (attributes) => {
+          if (!attributes.width) return {};
+          return {
+            style: `width: ${attributes.width}`,
+          };
+        },
+      },
+      verticalAlign: {
+        default: null,
+        parseHTML: (element) =>
+          (element as HTMLElement).style.verticalAlign || null,
+        renderHTML: (attributes) => {
+          if (!attributes.verticalAlign) return {};
+          return {
+            style: `vertical-align: ${attributes.verticalAlign}`,
+          };
+        },
+      },
+      border: {
+        default: null,
+        parseHTML: (element) => (element as HTMLElement).style.border || null,
+        renderHTML: (attributes) => {
+          if (!attributes.border) return {};
+          return {
+            style: `border: ${attributes.border}`,
+          };
+        },
+      },
+    };
+  },
+});
 
 interface ToolbarButtonProps {
   onClick: () => void;
@@ -171,13 +272,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       FontFamilyExtension,
       Color,
       Highlight.configure({ multicolor: true }),
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      TextAlign.configure({
+        types: ["heading", "paragraph", "tableCell", "tableHeader"],
+      }),
       Link.configure({ openOnClick: false }),
       Image,
       Table.configure({ resizable: true }),
       TableRow,
-      TableHeader,
-      TableCell,
+      StyledTableHeader,
+      StyledTableCell,
       Subscript,
       Superscript,
     ],
@@ -208,6 +311,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       attributes: {
         class:
           "prose prose-sm max-w-none focus:outline-none min-h-[400px] px-6 py-5 text-slate-800 leading-relaxed",
+      },
+      transformPastedHTML(html) {
+        return sanitizeOfficePaste(html);
       },
       handleDrop(view, event, _slice, moved) {
         if (moved) return false;

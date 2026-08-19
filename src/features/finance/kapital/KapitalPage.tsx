@@ -42,8 +42,29 @@ import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
 import { ReportViewer } from "./components/ReportViewer";
 import { SubsectorModal } from "./components/SubsectorModal";
+import { OccupationOnboardingModal } from "../components/OccupationOnboardingModal";
 
 const KAPITAL_STARTED_SESSION_KEY = "analytics_kapital_calculator_started";
+
+const normalizeScope = (value?: string | null) =>
+    (value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
+
+const inferRateScope = (instrument?: string | null): "bonos" | "ajustado" => {
+    const normalizedInstrument = normalizeScope(instrument);
+    return normalizedInstrument.includes("ajust") ? "ajustado" : "bonos";
+};
+
+const hasRecognizedSectorScope = (value: string) =>
+    ["empresa", "company", "sector", "sectorial"].some((token) => value.includes(token));
+
+const hasRecognizedRateScope = (value: string) =>
+    ["bono", "bonos", "eeuu", "ee.uu", "tesoro", "ajust"].some((token) => value.includes(token));
+
+const hasValue = (value: unknown) => String(value ?? "").trim() !== "";
 
 const KapitalPage: React.FC = () => {
     const { user, login, logout } = useAuthContext();
@@ -182,9 +203,10 @@ const KapitalPage: React.FC = () => {
     }, [isFormOpen]);
 
     const handleReportViewerOpen = useCallback(() => {
+        if (!selectedReportProductId) return;
         setIsReportViewerOpen(true);
         setIsReportSidebarOpen(false);
-    }, []);
+    }, [selectedReportProductId]);
 
     const handleLogout = useCallback(async () => {
         await logout();
@@ -208,6 +230,72 @@ const KapitalPage: React.FC = () => {
     const activeSavedCurrency = form.formData.country
         ? COUNTRY_LOCAL_CURRENCIES[form.formData.country] || "Moneda Local"
         : "Moneda Local";
+
+    const hasCompanyInputs = Boolean(
+        hasValue(form.formData.kd) &&
+        hasValue(form.formData.debt) &&
+        hasValue(form.formData.capital)
+    );
+    const reportScope: "empresa" | "sectorial" = hasCompanyInputs ? "empresa" : "sectorial";
+    const rateScope = inferRateScope(form.formData.instrument);
+
+    useEffect(() => {
+        if (!showResults) {
+            setSelectedReportProductId("");
+            return;
+        }
+
+        let ignore = false;
+        const loadMatchingReports = async () => {
+            try {
+                const reports = await MainService.getReports({
+                    type: "kapital",
+                    activo: true,
+                });
+                const matching = reports.filter((report) => {
+                    const reportSectorScope = normalizeScope(report.sector_empresa);
+                    const reportRateScope = normalizeScope(report.bono_ajustado);
+                    const sectorOk =
+                        !reportSectorScope ||
+                        !hasRecognizedSectorScope(reportSectorScope) ||
+                        reportSectorScope.includes(reportScope) ||
+                        (reportScope === "empresa" && reportSectorScope.includes("company")) ||
+                        (reportScope === "sectorial" && reportSectorScope.includes("sector"));
+                    const rateOk =
+                        !reportRateScope ||
+                        !hasRecognizedRateScope(reportRateScope) ||
+                        reportRateScope.includes(rateScope) ||
+                        (rateScope === "bonos" && reportRateScope.includes("bono")) ||
+                        (rateScope === "bonos" && reportRateScope.includes("eeuu")) ||
+                        (rateScope === "bonos" && reportRateScope.includes("ee.uu")) ||
+                        (rateScope === "bonos" && reportRateScope.includes("tesoro")) ||
+                        (rateScope === "ajustado" && reportRateScope.includes("ajust"));
+                    return sectorOk && rateOk;
+                });
+
+                if (ignore) return;
+                setSelectedReportProductId((current) => {
+                    if (matching.some((report) => report.id.toString() === current)) {
+                        return current;
+                    }
+                    return matching[0]?.id.toString() || "";
+                });
+                if (matching.length === 0) {
+                    setIsReportSidebarOpen(false);
+                    setIsReportViewerOpen(false);
+                }
+            } catch {
+                if (!ignore) {
+                    setSelectedReportProductId("");
+                }
+            }
+        };
+
+        loadMatchingReports();
+        return () => {
+            ignore = true;
+        };
+    }, [showResults, reportScope, rateScope]);
 
     const chatbotComponent = shouldShowChatbot ? (
         <Chatbot
@@ -277,6 +365,7 @@ const KapitalPage: React.FC = () => {
 
     return (
         <div className="min-h-dvh bg-gray-50">
+            <OccupationOnboardingModal />
             <NavBar
                 user={user}
                 onLogout={handleLogout}
@@ -375,6 +464,8 @@ const KapitalPage: React.FC = () => {
                 selectedReportProductId={selectedReportProductId}
                 onSelectReportProduct={setSelectedReportProductId}
                 onOpenReportViewer={handleReportViewerOpen}
+                reportScope={reportScope}
+                rateScope={rateScope}
             />
 
             {/* Mobile/Tablet Modal */}

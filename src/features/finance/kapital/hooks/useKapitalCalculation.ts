@@ -22,6 +22,9 @@ import {
 
 const ACTIVE_KAPITAL_ATTEMPT_KEY = "analytics_kapital_active_attempt_id";
 
+const asInputString = (value: unknown, fallback = "") =>
+  value === null || value === undefined ? fallback : String(value);
+
 export function useKapitalCalculation({
   formData,
   setFormData,
@@ -82,7 +85,6 @@ export function useKapitalCalculation({
 
     ui.setShowResults(false);
     setIsLoading(true);
-    console.time("[KAPITAL] Total calculation");
 
     const betaUnlevered = toOptionalNumber(dataToSubmit.beta_unlevered);
     const isBetaUpdate =
@@ -106,7 +108,6 @@ export function useKapitalCalculation({
       let persistedCalculation: Calculation;
       // Si ya hay un cálculo actual, SIEMPRE hacemos PUT
       if (currentCalculation) {
-        console.time("[KAPITAL] updateCalculation API");
         persistedCalculation = await MainService.updateCalculation(
           currentCalculation!.id,
           {
@@ -116,10 +117,8 @@ export function useKapitalCalculation({
             },
           }
         );
-        console.timeEnd("[KAPITAL] updateCalculation API");
       } else {
         // CREATE new calculation
-        console.time("[KAPITAL] createCalculation API");
         persistedCalculation = await MainService.createCalculation({
           calculation_file_id: null,
           user_id: currentUserId ? Number(currentUserId) : null,
@@ -131,7 +130,6 @@ export function useKapitalCalculation({
             prewarmed_session_id: prewarmedSessionId,
           },
         });
-        console.timeEnd("[KAPITAL] createCalculation API");
 
         window.history.pushState(
           {},
@@ -147,16 +145,12 @@ export function useKapitalCalculation({
         setPrewarmedSessionId(newSessionId);
       }
 
-      console.time("[KAPITAL] computeResultsFromCalculationData");
       const { results: rebuiltResults, showCompanyCard: hasCompanyData } =
         computeResultsFromCalculationData(persistedCalculation.data);
-      console.timeEnd("[KAPITAL] computeResultsFromCalculationData");
 
-      console.time("[KAPITAL] extractSensibilizaciones");
       const sensibilizacionData = extractSensibilizaciones(
         persistedCalculation.data
       );
-      console.timeEnd("[KAPITAL] extractSensibilizaciones");
 
       setResults(rebuiltResults);
       setShowCompanyCard(hasCompanyData);
@@ -195,10 +189,8 @@ export function useKapitalCalculation({
       }
 
       setIsSessionFresh(true); // El excel ya se actualizado con los datos del form
-      console.timeEnd("[KAPITAL] Total calculation");
     } catch (error) {
       console.error("Error in Kapital calculation", error);
-      console.timeEnd("[KAPITAL] Total calculation");
       addToast("No se pudo guardar el cálculo. Intenta nuevamente.", "error");
     } finally {
       setIsLoading(false);
@@ -212,25 +204,18 @@ export function useKapitalCalculation({
 
     if (code && code !== "kapital" && code !== "") {
       try {
-        console.time("[KAPITAL] loadFromUrl total");
-        console.time("[KAPITAL] getCalculationByCode API");
         const calculationData = await MainService.getCalculationByCode(code);
-        console.timeEnd("[KAPITAL] getCalculationByCode API");
 
         if (calculationData) {
           setCurrentCalculation(calculationData);
 
           // Reconstruir resultados y sensibilizaciones
-          console.time("[KAPITAL] computeResultsFromCalculationData (URL)");
           const { results: rebuiltResults, showCompanyCard: hasCompanyData } =
             computeResultsFromCalculationData(calculationData.data);
-          console.timeEnd("[KAPITAL] computeResultsFromCalculationData (URL)");
 
-          console.time("[KAPITAL] extractSensibilizaciones (URL)");
           const sensibilizacionData = extractSensibilizaciones(
             calculationData.data
           );
-          console.timeEnd("[KAPITAL] extractSensibilizaciones (URL)");
 
           // Reconstruir el formData con el último input guardado
           const dataObj = calculationData.data as { inputs?: any[] };
@@ -241,36 +226,39 @@ export function useKapitalCalculation({
           if (latestInput) {
             setFormData((prev) => ({
               ...prev,
-              date: (latestInput.fecha as string) || "",
-              sector: (latestInput.industria as string) || "",
-              subsector: (latestInput.subsector as string) || "",
-              instrument: (latestInput.tasa_libre_riesgo as string) || "",
-              bono: (latestInput.anio_bono as string) || "",
-              country: (latestInput.pais as string) || "",
-              currency: (latestInput.moneda as string) || "USD",
-              tax: (latestInput.tasa_impositiva as string) || "",
-              kd: (latestInput.costo_deuda as string) || "",
-              debt: (latestInput.porcentaje_deuda as string) || "",
-              capital: (latestInput.porcentaje_capital as string) || "",
-              dc_ratio: (latestInput.dc_ratio as string) || "",
-              effective_tax_rate:
-                (latestInput.tasa_efectiva_impuesto as string) || "",
-              beta_levered: (latestInput.beta_apalancado as string) || "",
-              beta_unlevered: (latestInput.beta_desapalancado as string) || "",
-              beta_subsector:
-                (latestInput.beta_subsector as string) ||
-                (latestInput.beta_subsector_custom as string) ||
-                (latestInput.beta_unlevered_custom as string) ||
-                "",
-              beta_unlevered_industry:
-                (latestInput.beta_unlevered_industry as string) ||
-                (latestInput.beta_desapalancado as string) || "",
-              tickers_subsector:
-                (latestInput.tickers_subsector as string) || "",
-              subsector_sensibilizacion:
-                (latestInput.subsector_sensibilizacion as string) || "",
-              tickers_subsector_sensibilizacion:
-                (latestInput.tickers_subsector_sensibilizacion as string) || "",
+              date: asInputString(latestInput.fecha),
+              sector: asInputString(latestInput.industria),
+              subsector: asInputString(latestInput.subsector),
+              instrument: asInputString(latestInput.tasa_libre_riesgo),
+              bono: asInputString(latestInput.anio_bono),
+              country: asInputString(latestInput.pais),
+              currency: asInputString(latestInput.moneda, "USD"),
+              tax: asInputString(latestInput.tasa_impositiva),
+              kd: asInputString(latestInput.costo_deuda),
+              debt: asInputString(latestInput.porcentaje_deuda),
+              capital: asInputString(latestInput.porcentaje_capital),
+              dc_ratio: asInputString(latestInput.dc_ratio),
+              effective_tax_rate: asInputString(
+                latestInput.tasa_efectiva_impuesto
+              ),
+              beta_levered: asInputString(latestInput.beta_apalancado),
+              beta_unlevered: asInputString(latestInput.beta_desapalancado),
+              beta_subsector: asInputString(
+                latestInput.beta_subsector ??
+                  latestInput.beta_subsector_custom ??
+                  latestInput.beta_unlevered_custom
+              ),
+              beta_unlevered_industry: asInputString(
+                latestInput.beta_unlevered_industry ??
+                  latestInput.beta_desapalancado
+              ),
+              tickers_subsector: asInputString(latestInput.tickers_subsector),
+              subsector_sensibilizacion: asInputString(
+                latestInput.subsector_sensibilizacion
+              ),
+              tickers_subsector_sensibilizacion: asInputString(
+                latestInput.tickers_subsector_sensibilizacion
+              ),
               typeId: !!(
                 latestInput.costo_deuda || latestInput.porcentaje_deuda
               ),
@@ -311,10 +299,8 @@ export function useKapitalCalculation({
           ui.setIsFormOpen(false);
           setIsSessionFresh(false); // El front tiene datos pero el excel aún no se ha refrescado
         }
-        console.timeEnd("[KAPITAL] loadFromUrl total");
       } catch (error) {
         console.error("No se encontró el cálculo en la URL", error);
-        console.timeEnd("[KAPITAL] loadFromUrl total");
       }
     }
   };

@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AnalyticsService } from "@shared/services/analytics.service";
-import type { DashboardData } from "@shared/services/analytics.service";
+import type {
+  DashboardData,
+  OccupationProfileMetrics,
+} from "@shared/services/analytics.service";
 import { Tooltip } from "@shared/components/common/Tooltip";
 import * as XLSX from "xlsx";
 import {
@@ -39,6 +42,13 @@ const daysOptions = [
   { label: "30 días", value: 30 },
   { label: "90 días", value: 90 },
 ];
+
+const formatPageLabel = (path: string) => {
+  if (path === "/") return "Landing Page";
+  if (path === "/kapital") return "Kapital";
+  if (path === "/valora") return "Valora";
+  return path;
+};
 
 const MetricCard: React.FC<{
   title: string;
@@ -104,6 +114,57 @@ const SectionCard: React.FC<{ title: string; children: React.ReactNode; icon?: R
       )}
     </div>
     {children}
+  </div>
+);
+
+const OccupationProfileBreakdown: React.FC<{ data: OccupationProfileMetrics }> = ({ data }) => (
+  <div className="min-w-0">
+    <div className="mb-4 flex items-end justify-between gap-3">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          Distribución general
+        </p>
+        <p className="mt-1 text-2xl font-bold text-gray-900">{data.total_devices}</p>
+      </div>
+      <span className="text-xs text-gray-400">dispositivos</span>
+    </div>
+
+    {data.audiences.map((item, index) => (
+      <div key={item.label}>
+        <ProgressBar
+          label={item.label}
+          count={item.count}
+          percentage={item.percentage}
+          color={index === 0 ? "bg-blue-600" : "bg-emerald-500"}
+        />
+
+        {item.label === "Especialistas" && data.specialist_roles.length > 0 && (
+          <div className="mb-4 ml-0 rounded-lg border-l-2 border-blue-200 bg-slate-50 p-3 pl-3 sm:ml-2 sm:pl-4">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+              Especialistas por cargo
+            </p>
+            {data.specialist_roles.map((role) => (
+              <div key={role.label} className="mb-3 min-w-0 last:mb-0">
+                <div className="mb-1 flex flex-wrap items-start gap-2 text-xs">
+                  <span className="min-w-0 flex-1 break-words font-medium leading-tight text-gray-700">
+                    {role.label}
+                  </span>
+                  <span className="shrink-0 text-gray-500">
+                    {role.count} ({role.percentage}%)
+                  </span>
+                </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                  <div
+                    className="h-full rounded-full bg-cyan-500"
+                    style={{ width: `${Math.min(role.percentage, 100)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    ))}
   </div>
 );
 
@@ -249,8 +310,24 @@ const AnalyticsPage: React.FC = () => {
     const wsBrowsers = XLSX.utils.json_to_sheet(browsersData);
     XLSX.utils.book_append_sheet(wb, wsBrowsers, "Navegadores");
 
+    const profileData = (data.occupation_profiles?.audiences ?? []).map((item) => ({
+      Perfil: item.label,
+      Dispositivos: item.count,
+      Porcentaje: `${item.percentage}%`,
+    }));
+    const wsProfiles = XLSX.utils.json_to_sheet(profileData);
+    XLSX.utils.book_append_sheet(wb, wsProfiles, "Perfiles de Usuario");
+
+    const specialistRolesData = (data.occupation_profiles?.specialist_roles ?? []).map((item) => ({
+      Cargo: item.label,
+      Especialistas: item.count,
+      Porcentaje: `${item.percentage}%`,
+    }));
+    const wsSpecialistRoles = XLSX.utils.json_to_sheet(specialistRolesData);
+    XLSX.utils.book_append_sheet(wb, wsSpecialistRoles, "Cargos Especialistas");
+
     // 5. Páginas más vistas
-    const pagesData = data.pages.map((p) => ({ Página: p.label, Vistas: p.count, Porcentaje: `${p.percentage}%` }));
+    const pagesData = data.pages.map((p) => ({ Página: formatPageLabel(p.label), Vistas: p.count, Porcentaje: `${p.percentage}%` }));
     const wsPages = XLSX.utils.json_to_sheet(pagesData);
     XLSX.utils.book_append_sheet(wb, wsPages, "Páginas Más Vistas");
 
@@ -415,32 +492,56 @@ const AnalyticsPage: React.FC = () => {
                 </div>
               </section>
 
-              <section className="space-y-3">
+              <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+                <section className="space-y-3 lg:col-span-2">
+                  <div>
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
+                      Retención de Kapital
+                    </h2>
+                    <p className="text-xs text-gray-500">
+                      Personas identificadas por su cuenta o IP que llegan por primera vez o regresan a Kapital.
+                    </p>
+                  </div>
+                  <div className="space-y-4">
+                    <MetricCard
+                      title="Visitantes nuevos"
+                      value={data.kapital_retention?.new_users ?? 0}
+                      icon={<UserPlus className="h-5 w-5 text-blue-600" />}
+                      subtitle="Primera visita a Kapital"
+                      tooltip="Cuentas o direcciones IP cuya primera visita histórica a Kapital ocurrió dentro del periodo seleccionado."
+                    />
+                    <MetricCard
+                      title="Visitantes recurrentes"
+                      value={data.kapital_retention?.recurring_users ?? 0}
+                      icon={<RefreshCw className="h-5 w-5 text-emerald-600" />}
+                      subtitle="Regresaron durante el periodo"
+                      tooltip="Cuentas o direcciones IP que visitaron Kapital en el periodo seleccionado y ya tenían una visita anterior."
+                    />
+                  </div>
+                </section>
+
+                <section className="min-w-0 space-y-3">
                 <div>
                   <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
-                    Retención de Kapital
+                    Perfil de usuarios
                   </h2>
                   <p className="text-xs text-gray-500">
-                    Personas identificadas por su cuenta o IP que llegan por primera vez o regresan a Kapital.
+                    Elección más reciente por dispositivo que completó el formulario de Kapital.
                   </p>
                 </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <MetricCard
-                    title="Visitantes nuevos"
-                    value={data.kapital_retention?.new_users ?? 0}
-                    icon={<UserPlus className="h-5 w-5 text-blue-600" />}
-                    subtitle="Primera visita a Kapital"
-                    tooltip="Cuentas o direcciones IP cuya primera visita histórica a Kapital ocurrió dentro del periodo seleccionado."
-                  />
-                  <MetricCard
-                    title="Visitantes recurrentes"
-                    value={data.kapital_retention?.recurring_users ?? 0}
-                    icon={<RefreshCw className="h-5 w-5 text-emerald-600" />}
-                    subtitle="Regresaron durante el periodo"
-                    tooltip="Cuentas o direcciones IP que visitaron Kapital en el periodo seleccionado y ya tenían una visita anterior."
-                  />
-                </div>
-              </section>
+                <SectionCard
+                  title="Ocupación declarada"
+                  icon={<Users className="h-4 w-4" />}
+                  tooltip="Cada dispositivo se cuenta una sola vez según su elección más reciente dentro del periodo seleccionado."
+                >
+                  {!data.occupation_profiles || data.occupation_profiles.total_devices === 0 ? (
+                    <p className="text-sm text-gray-400">Aún no hay perfiles registrados</p>
+                  ) : (
+                    <OccupationProfileBreakdown data={data.occupation_profiles} />
+                  )}
+                </SectionCard>
+                </section>
+              </div>
 
               {/* Chart + Tables */}
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -501,7 +602,7 @@ const AnalyticsPage: React.FC = () => {
                 {/* Pages */}
                 <SectionCard title="Páginas más vistas" icon={<BarChart3 className="h-4 w-4" />} tooltip="Páginas con mayor cantidad de vistas. Muestra qué contenido atrae más tráfico (/kapital, landing, etc.).">
                   {data.pages.map((p) => (
-                    <ProgressBar key={p.label} label={p.label} count={p.count} percentage={p.percentage} color="bg-violet-500" />
+                    <ProgressBar key={p.label} label={formatPageLabel(p.label)} count={p.count} percentage={p.percentage} color="bg-violet-500" />
                   ))}
                 </SectionCard>
               </div>

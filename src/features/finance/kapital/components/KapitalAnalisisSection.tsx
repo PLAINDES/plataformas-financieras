@@ -282,6 +282,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
   showComparison,
   onToggleComparison,
   sensibilizaciones,
+  onOpenReport,
   localCurrency,
   shouldShowChatbot,
   onToggleForm,
@@ -507,6 +508,15 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
             )}
           </div>
         </div>
+        {onOpenReport && (
+          <button
+            type="button"
+            onClick={onOpenReport}
+            className="w-full sm:w-auto bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer"
+          >
+            Reporte de Costo de Capital
+          </button>
+        )}
       </header>
 
 
