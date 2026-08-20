@@ -6,7 +6,7 @@ import { FormField } from "../../components/FormField";
 import { FormSection } from "../../components/FormSection";
 import { cn } from "@/lib/utils";
 import type { FormData } from "@/shared/types/ValoraTypes";
-import type { ValoraAiAnalysis } from "../../ValoraPage";
+import type { ValoraAiAnalysis } from "../ValoraPage";
 
 import "../ValoraPage.css";
 
