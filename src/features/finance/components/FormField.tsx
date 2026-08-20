@@ -489,7 +489,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                         }}
                         className="max-w-[min(256px,calc(100vw-32px))] w-auto min-w-[180px] rounded-lg bg-white p-3 text-[11px] text-gray-600 shadow-2xl"
                     >
-                        <p className="leading-relaxed">{tooltip}</p>
+                        <p className="leading-relaxed whitespace-pre-line">{tooltip}</p>
                     </div>,
                     document.body
                 )}

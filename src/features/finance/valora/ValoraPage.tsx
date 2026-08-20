@@ -47,6 +47,20 @@ const getValoraCalculationResults = (
   return results;
 };
 
+export interface ValoraRateAnalysis {
+  explanation?: string;
+  suggested_range?: { min?: number; max?: number };
+  outlier?: boolean;
+  outlier_reason?: string;
+}
+
+export interface ValoraAiAnalysis {
+  model_used?: string;
+  analysis?: {
+    rates?: Record<string, ValoraRateAnalysis>;
+  };
+}
+
 const ValoraPage: React.FC = () => {
   const { user, logout } = useAuthContext();
   const {
@@ -160,6 +174,10 @@ const ValoraPage: React.FC = () => {
       `Subsector ${subsector} seleccionado con BOA ${beta}.`
     );
   };
+
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<ValoraAiAnalysis | null>(null);
+  const [rateSources, setRateSources] = useState<Record<string, string>>({});
 
 
   const removeToast = (id: string) => {
@@ -355,6 +373,88 @@ const ValoraPage: React.FC = () => {
     return resultsSection;
   };
 
+  const handleGetAIRecommendations = async () => {
+    if (!valoraCalc.currentCalculation?.id) {
+      addToast("warn", "Primero guarda el cálculo para obtener recomendaciones.");
+      return;
+    }
+
+    setIsLoadingAI(true);
+    console.info("[VALORA FRONTEND] Solicitando recomendaciones IA...");
+
+    try {
+      const recommendations = await MainService.getValoraRecommendations(
+        valoraCalc.currentCalculation.id
+      );
+
+      const rates = recommendations?.rates;
+      if (rates) {
+        console.info("[VALORA FRONTEND] Rates recibidos del backend:", JSON.stringify(rates, null, 2));
+
+        setRateSources({
+          forecast_ingresos_1er_periodo: rates.forecast_ingresos_1er_periodo?.recommendation_source,
+          forecast_fde_1er_periodo: rates.forecast_fde_1er_periodo?.recommendation_source,
+          crecimiento_perpetuo: rates.crecimiento_perpetuo?.recommendation_source,
+        });
+
+        const ai = recommendations?.ai_analysis as ValoraAiAnalysis | undefined;
+        if (ai?.analysis?.rates) {
+          setAiAnalysis(ai);
+          const withAI = Object.keys(ai.analysis.rates).filter(
+            (k) => ai.analysis?.rates?.[k]?.explanation
+          ).length;
+          console.info("[VALORA FRONTEND] Análisis IA con explicaciones:", withAI);
+        } else {
+          setAiAnalysis(null);
+          console.info("[VALORA FRONTEND] Sin análisis IA en la respuesta (Gemini omitido o falló).");
+        }
+
+        setFormData((prev) => {
+          const updates = { ...prev };
+
+          const ing = rates.forecast_ingresos_1er_periodo?.recommendation;
+          console.info("[VALORA FRONTEND] Ingresos recommendation:", ing, "tipo:", typeof ing);
+          if (ing !== undefined && ing !== null && !Number.isNaN(Number(ing))) {
+            updates.revenue_forecast_rate = String(Number(ing) * 100);
+            console.info("[VALORA FRONTEND] revenue_forecast_rate actualizado a:", updates.revenue_forecast_rate);
+          } else {
+            console.warn("[VALORA FRONTEND] Ingresos recommendation inválida o vacía:", ing);
+          }
+
+          const fde = rates.forecast_fde_1er_periodo?.recommendation;
+          console.info("[VALORA FRONTEND] FDE recommendation:", fde, "tipo:", typeof fde);
+          if (fde !== undefined && fde !== null && !Number.isNaN(Number(fde))) {
+            updates.fdc_forecast_rate = String(Number(fde) * 100);
+            console.info("[VALORA FRONTEND] fdc_forecast_rate actualizado a:", updates.fdc_forecast_rate);
+          } else {
+            console.warn("[VALORA FRONTEND] FDE recommendation inválida o vacía:", fde);
+          }
+
+          const perp = rates.crecimiento_perpetuo?.recommendation;
+          console.info("[VALORA FRONTEND] Perpetuo recommendation:", perp, "tipo:", typeof perp);
+          if (perp !== undefined && perp !== null && !Number.isNaN(Number(perp))) {
+            updates.perpetual_growth_rate = String(Number(perp) * 100);
+            console.info("[VALORA FRONTEND] perpetual_growth_rate actualizado a:", updates.perpetual_growth_rate);
+          } else {
+            console.warn("[VALORA FRONTEND] Perpetuo recommendation inválida o vacía:", perp);
+          }
+
+          return updates;
+        });
+
+        addToast("success", "Recomendaciones IA aplicadas a los inputs de sensibilidad.");
+        console.info("[VALORA FRONTEND] Recomendaciones aplicadas:", rates);
+      } else {
+        addToast("warn", "No se encontraron recomendaciones en la respuesta.");
+      }
+    } catch (error) {
+      console.error("[VALORA FRONTEND] Error obteniendo recomendaciones:", error);
+      addToast("error", "No se pudieron obtener las recomendaciones IA. Intenta nuevamente.");
+    } finally {
+      setIsLoadingAI(false);
+    }
+  };
+
   const handleLogout = async () => {
     if (logout) {
       await logout();
@@ -414,7 +514,12 @@ const ValoraPage: React.FC = () => {
             isSearchingBeta={false}
             loading={valoraCalc.isLoading}
             hasCalculated={valoraCalc.hasCalculated}
-          />
+            currentCalculationId={valoraCalc.currentCalculation?.id ?? null}
+isLoadingAI={isLoadingAI}
+        onGetAIRecommendations={handleGetAIRecommendations}
+        aiAnalysis={aiAnalysis}
+        rateSources={rateSources}
+      />
         </div>
         {subsectorModalOpen && (
           <div className="mt-4 ml-4 hidden h-[calc(100dvh-8rem)] max-h-[calc(100dvh-8rem)] w-96 shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-xl lg:flex xl:w-125">

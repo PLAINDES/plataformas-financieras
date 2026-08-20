@@ -6,6 +6,9 @@ import { FormField } from "../../components/FormField";
 import { FormSection } from "../../components/FormSection";
 import { cn } from "@/lib/utils";
 import type { FormData } from "@/shared/types/ValoraTypes";
+import type { ValoraAiAnalysis } from "../../ValoraPage";
+
+import "../ValoraPage.css";
 
 export interface ValoraFormPanelProps {
   formData: FormData;
@@ -31,6 +34,11 @@ export interface ValoraFormPanelProps {
   isSearchingBeta?: boolean;
   loading?: boolean;
   hasCalculated?: boolean;
+  currentCalculationId?: number | null;
+  isLoadingAI?: boolean;
+  onGetAIRecommendations?: () => void;
+  aiAnalysis?: ValoraAiAnalysis | null;
+  rateSources?: Record<string, string>;
 }
 
 export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
@@ -55,6 +63,11 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
   isSearchingBeta = false,
   loading = false,
   hasCalculated = false,
+  currentCalculationId,
+  isLoadingAI = false,
+  onGetAIRecommendations,
+  aiAnalysis = null,
+  rateSources = {},
 }) => {
   const [collapsed, setCollapsed] = useState({
     step1: false,
@@ -195,7 +208,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                     <input
                       type="text"
                       name="fileUsername"
-                      value=""
+                      defaultValue=""
                       className="hidden"
                       required
                     />
@@ -564,28 +577,96 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
               isCollapsed={collapsed.step5}
               onToggleCollapse={() => toggleCollapse("step5")}
             >
-              <div className="flex flex-col gap-2">
-                <SensitivityRow
-                  label="Tasa Forecast Ingresos"
-                  name="revenue_forecast_rate"
-                  suffix="%"
-                  value={formData.revenue_forecast_rate || ""}
-                  onChange={onInputChange}
-                />
-                <SensitivityRow
-                  label="Tasa Forecast FDC"
-                  name="fdc_forecast_rate"
-                  suffix="%"
-                  value={formData.fdc_forecast_rate || ""}
-                  onChange={onInputChange}
-                />
-                <SensitivityRow
-                  label="Tasa de Crecimiento Perpetuo"
-                  name="perpetual_growth_rate"
-                  suffix="%"
-                  value={formData.perpetual_growth_rate || ""}
-                  onChange={onInputChange}
-                />
+              <div className="flex flex-col gap-3">
+                {/* Header con descripción y botón IA */}
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-1">
+                  <p className="text-sm text-gray-600 pt-1">
+                    Ajusta las tasas para ver el impacto en la valoración
+                  </p>
+
+                  {onGetAIRecommendations && (
+                    <div className="flex flex-col items-end gap-1.5 relative">
+                      <button
+                        type="button"
+                        onClick={onGetAIRecommendations}
+                        disabled={isLoadingAI || !currentCalculationId}
+                        className={cn(
+                          "btn-ai-mesh px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-semibold text-xs relative z-10",
+                          "disabled:cursor-not-allowed"
+                        )}
+                      >
+                        {isLoadingAI ? (
+                          <span key="loading" className="ai-fade-up">
+                            <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                            Analizando...
+                          </span>
+                        ) : (
+                          <span key="idle" className="ai-fade-up">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M10 3L12 8L17 10L12 12L10 17L8 12L3 10L8 8L10 3Z" fill="currentColor"/>
+                              <path d="M18 16L19 19L22 20L19 21L18 24L17 21L14 20L17 19L18 16Z" fill="currentColor"/>
+                            </svg>
+                            Recomendar con IA
+                          </span>
+                        )}
+                      </button>
+
+                      {/* Indicador Thinking */}
+                      {isLoadingAI && (
+                        <div className="ai-thinking-indicator">
+                          <div className="ai-thinking-dot" />
+                          <span>Thinking...</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Inputs de sensibilidad */}
+                <div className="space-y-4 pt-1">
+                  <SensitivityRow
+                    label="Tasa Forecast Ingresos"
+                    name="revenue_forecast_rate"
+                    suffix="%"
+                    value={formData.revenue_forecast_rate || ""}
+                    onChange={onInputChange}
+                    isLoadingAI={isLoadingAI}
+                    aiTooltip={buildAiTooltip(
+                      aiAnalysis,
+                      "forecast_ingresos_1er_periodo",
+                      rateSources.forecast_ingresos_1er_periodo
+                    )}
+                  />
+                  <SensitivityRow
+                    label="Tasa Forecast FDC"
+                    name="fdc_forecast_rate"
+                    suffix="%"
+                    value={formData.fdc_forecast_rate || ""}
+                    onChange={onInputChange}
+                    isLoadingAI={isLoadingAI}
+                    aiTooltip={buildAiTooltip(
+                      aiAnalysis,
+                      "forecast_fde_1er_periodo",
+                      rateSources.forecast_fde_1er_periodo
+                    )}
+                  />
+                  <SensitivityRow
+                    label="Tasa de Crecimiento Perpetuo"
+                    name="perpetual_growth_rate"
+                    suffix="%"
+                    value={formData.perpetual_growth_rate || ""}
+                    onChange={onInputChange}
+                    isLoadingAI={isLoadingAI}
+                    aiTooltip={buildAiTooltip(
+                      aiAnalysis,
+                      "crecimiento_perpetuo",
+                      rateSources.crecimiento_perpetuo
+                    )}
+                  />
+                </div>
               </div>
             </FormSection>
           )}
@@ -635,6 +716,50 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
   );
 };
 
+const SOURCE_LABELS: Record<string, string> = {
+  excel_cache: "Leído de la plantilla Excel",
+  financial_data_cagr: "CAGR de tus estados financieros",
+  historical_mean: "Media histórica de la plantilla",
+  inflation_driver: "Inflación del driver",
+  "default_2.5%": "Valor por defecto conservador (2.5%)",
+  empty: "Sin dato disponible (revisión manual)",
+};
+
+const buildAiTooltip = (
+  aiAnalysis: ValoraAiAnalysis | null,
+  rateKey: string,
+  source?: string | null
+): string | null => {
+  const rate = aiAnalysis?.analysis?.rates?.[rateKey];
+  const sourceLabel = source ? SOURCE_LABELS[source] ?? source : null;
+
+  const parts: string[] = [];
+
+  if (rate?.outlier) {
+    parts.push(
+      `⚠️ Valor atípico: ${rate.outlier_reason || "revisa este valor manualmente."}`
+    );
+  }
+
+  if (rate?.explanation) {
+    parts.push(rate.explanation);
+  } else if (sourceLabel) {
+    parts.push(`No hay explicación IA disponible para esta tasa.`);
+  }
+
+  if (sourceLabel) {
+    parts.push(`Fuente: ${sourceLabel}`);
+  }
+
+  const { min, max } = rate?.suggested_range ?? {};
+  if (typeof min === "number" && typeof max === "number") {
+    const fmt = (n: number) => `${(n * 100).toFixed(1).replace(/\.0$/, "")}%`;
+    parts.push(`Rango sugerido: ${fmt(min)} – ${fmt(max)}`);
+  }
+
+  return parts.length ? parts.join("\n\n") : null;
+};
+
 interface SensitivityRowProps {
   label: string;
   name: keyof FormData;
@@ -645,6 +770,8 @@ interface SensitivityRowProps {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => void;
   onSearchRate?: (name: keyof FormData) => void;
+  isLoadingAI?: boolean;
+  aiTooltip?: string | null;
 }
 
 const SensitivityRow: React.FC<SensitivityRowProps> = ({
@@ -655,36 +782,56 @@ const SensitivityRow: React.FC<SensitivityRowProps> = ({
   disabled,
   onChange,
   onSearchRate,
-}) => (
-  <div className="relative w-full border border-transparent">
-    <FormField
-      label={label}
-      name={name}
-      type="number"
-      step="any"
-      value={value}
-      onChange={onChange}
-      suffix={suffix}
-      layout="horizontal"
-      showClearButton={false}
-      inputClassName={onSearchRate ? "col-span-9" : "col-span-12"}
-      disabled={disabled}
-    />
-    {onSearchRate && (
-      <div className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end">
-        <button
-          type="button"
-          onClick={() => onSearchRate(name)}
-          disabled={disabled}
-          className={cn(
-            "text-[10px] w-full h-10 py-0.5 px-1 rounded-sm text-wrap font-bold cursor-pointer flex items-center justify-center text-center leading-tight tracking-wider",
-            "text-valora-primary bg-white border border-valora-primary focus:outline-none",
-            "disabled:cursor-not-allowed disabled:opacity-50"
+  isLoadingAI = false,
+  aiTooltip = null,
+}) => {
+  // Defensiva: asegurar que value siempre sea string
+  const safeValue = typeof value === "string" ? value : typeof value === "number" ? String(value) : "";
+  if (typeof value !== "string" && typeof value !== "number") {
+    console.warn(`[VALORA FORM] SensitivityRow '${name}' recibió valor no-string:`, value);
+  }
+
+  return (
+    <div className={cn(
+      "relative w-full transition-all duration-300",
+      isLoadingAI && "opacity-80"
+    )}>
+        <FormField
+          label={label}
+          name={name}
+          type="number"
+          step="any"
+          value={safeValue}
+          onChange={onChange}
+          suffix={suffix}
+          layout="horizontal"
+          showClearButton={false}
+          tooltip={aiTooltip || undefined}
+          inputClassName={cn(
+            "sens-input",
+            onSearchRate ? "col-span-9" : "col-span-12",
+            isLoadingAI && "ai-input-glow"
           )}
-        >
-          Obtén tu Tasa
-        </button>
-      </div>
-    )}
-  </div>
-);
+          disabled={disabled || isLoadingAI}
+        />
+
+      {onSearchRate && (
+        <div className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end pr-1">
+          <button
+            type="button"
+            onClick={() => onSearchRate(name)}
+            disabled={disabled || isLoadingAI}
+            className={cn(
+              "text-[10px] w-full h-9 py-0.5 px-1 rounded-md text-wrap font-bold cursor-pointer flex items-center justify-center text-center leading-tight tracking-wider transition-all",
+              "text-valora-primary bg-white/90 border border-valora-primary/80 focus:outline-none",
+              "hover:bg-valora-primary/5 hover:border-valora-primary",
+              "disabled:cursor-not-allowed disabled:opacity-40"
+            )}
+          >
+            Obtén tu Tasa
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
