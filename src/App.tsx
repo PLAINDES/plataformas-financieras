@@ -22,6 +22,7 @@ import { KapitalSettingsPage } from "./features/admin/pages/KapitalSettingsPage"
 import { UsersPage } from "./features/admin/pages/UsersPage";
 import AnalyticsPage from "./features/admin/pages/AnalyticsPage";
 import { ToastProvider } from "./shared/components/common/ToastProvider";
+import { PaymentLauncherPage } from "./features/payments/pages/PaymentLauncherPage";
 
 const COMPANY = {
   id: 1,
@@ -56,6 +57,8 @@ function App() {
   return (
     <ToastProvider>
       <Routes>
+        <Route path="/payment/launcher" element={<PaymentLauncherPage />} />
+
         {/* Rutas públicas */}
         <Route element={<PublicLayout />}>
           <Route

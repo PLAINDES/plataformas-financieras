@@ -1,19 +1,5 @@
-const formatNumber = (value: number | null) => {
-  if (value === null || value === undefined) {
-    return "-";
-  }
-  return value.toLocaleString("es-PE", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-};
-
-const DoubleConnection = () => (
-  <div className="relative h-full w-full">
-    <div className="absolute top-0 left-0 right-0 border-t-2 border-dashed border-gray-400"></div>
-    <div className="absolute bottom-0 left-0 right-0 border-t-2 border-dashed border-gray-400"></div>
-  </div>
-);
+import { useRef } from "react";
+import { formatNumber, getSensibilidadEmpresaRowSpan, getSensibilidadPatrimonioRowSpan, DynamicConnector } from "./ValoraChartUtils";
 
 export interface ValoraSensibilidadBalanceSheetBlockProps {
   activo: number;
@@ -27,7 +13,11 @@ export interface ValoraSensibilidadBalanceSheetBlockProps {
   conceptosEmpresaSensibilizado: number;
   integradoEmpresaEsperado: number;
   integradoEmpresaSensibilizado: number;
+  currency: string;
+  availableCurrencies: string[];
+  onCurrencyChange: (currency: string) => void;
   variant?: "default" | "conceptos" | "integrado";
+  companyType?: "empresa" | "emergente";
 }
 
 const DefaultSensibilidadChart = ({
@@ -36,24 +26,49 @@ const DefaultSensibilidadChart = ({
   patrimonio,
   conceptosPatrimonioSensibilizado,
   integradoPatrimonioSensibilizado,
+  companyType,
 }: {
   activo: number;
   pasivo: number;
   patrimonio: number;
   conceptosPatrimonioSensibilizado: number;
   integradoPatrimonioSensibilizado: number;
+  companyType: "empresa" | "emergente";
 }) => {
+  const TOTAL_ROWS = 9;
+  const isEmergente = companyType === "emergente";
+  const conceptosPatRowSpan = getSensibilidadPatrimonioRowSpan(conceptosPatrimonioSensibilizado, patrimonio, isEmergente);
+  const integradoPatRowSpan = getSensibilidadPatrimonioRowSpan(integradoPatrimonioSensibilizado, patrimonio, isEmergente);
+
+  const gridRef = useRef<HTMLDivElement>(null);
+  const patrimonioRef = useRef<HTMLDivElement>(null);
+  const conceptosRef = useRef<HTMLDivElement>(null);
+  const integradoRef = useRef<HTMLDivElement>(null);
+
   return (
     <div className="p-4 flex flex-col justify-end h-full">
       <div
-        className="grid gap-0 flex-1 min-h-0"
+        ref={gridRef}
+        className="relative grid gap-0 flex-1 min-h-0"
         style={{
           gridTemplateColumns: "repeat(18, minmax(0, 1fr))",
-          gridTemplateRows: "repeat(9, minmax(0, 1fr))",
+          gridTemplateRows: `repeat(${TOTAL_ROWS}, minmax(0, 1fr))`,
         }}
       >
-        {/* Activo */}
-        <div className="col-span-4 row-span-9 border-[3px] border-purple-800 rounded-l-xl relative flex flex-col items-center justify-center">
+        <DynamicConnector
+          containerRef={gridRef}
+          lines={[
+            { fromRef: patrimonioRef, fromCorner: "top-right", toRef: conceptosRef, toCorner: "top-left" },
+            { fromRef: conceptosRef, fromCorner: "top-right", toRef: integradoRef, toCorner: "top-left" },
+          ]}
+        />
+        {/* Bottom dashed line - STATIC */}
+        <svg aria-hidden="true" className="pointer-events-none absolute inset-0 z-20 h-full w-full" style={{ overflow: "visible" }}>
+          <line x1="22.2%" y1="99.5%" x2="100%" y2="99.5%" stroke="#9ca3af" strokeWidth="1.5" strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />
+        </svg>
+
+        {/* Activo - REFERENCIA FIJA */}
+        <div className="col-span-4 row-span-9 row-start-1 mr-[3px] border-[3px] border-[#a62cad] rounded-l-xl relative flex flex-col items-center justify-center">
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Activo
           </span>
@@ -62,8 +77,8 @@ const DefaultSensibilidadChart = ({
           </span>
         </div>
 
-        {/* Pasivo */}
-        <div className="col-span-4 row-span-6 col-start-5 border-[3px] border-green-600 rounded-tr-xl relative flex flex-col items-center justify-center">
+        {/* Pasivo - REFERENCIA FIJA */}
+        <div className="col-span-4 row-span-6 col-start-5 row-start-1 mb-[3px] border-[3px] border-green-600 rounded-tr-xl relative flex flex-col items-center justify-center">
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Pasivo
           </span>
@@ -72,30 +87,8 @@ const DefaultSensibilidadChart = ({
           </span>
         </div>
 
-        {/* Texto Conceptos Sensibilizado */}
-        <div className="col-span-4 row-span-1 col-start-10 row-start-6 flex flex-col items-center justify-end pb-1">
-          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">
-            Valor Financiero del Patrimonio
-          </span>
-          <span className="text-sm font-black text-center text-gray-900 leading-tight">
-            Método Por Conceptos Sensibilizado
-          </span>
-        </div>
-
-        {/* Conexión Patrimonio - Conceptos */}
-        <div className="col-span-1 row-span-3 col-start-9 row-start-7 flex items-center justify-center">
-          <DoubleConnection />
-        </div>
-
-        {/* Valor Financiero Patrimonio - Conceptos Sensibilizado */}
-        <div className="col-span-4 row-span-3 col-start-10 row-start-7 border-[3px] border-orange-500 rounded-br-xl relative flex flex-col items-center justify-center p-2">
-          <span className="text-lg font-bold text-gray-800">
-            {formatNumber(conceptosPatrimonioSensibilizado)}
-          </span>
-        </div>
-
-        {/* Patrimonio */}
-        <div className="col-span-4 row-span-3 col-start-5 row-start-7 border-[3px] border-blue-400 rounded-br-xl relative flex flex-col items-center justify-center">
+        {/* Patrimonio - REFERENCIA FIJA */}
+        <div ref={patrimonioRef} className="col-span-4 row-span-3 col-start-5 row-start-7 border-[3px] border-blue-400 rounded-br-xl relative flex flex-col items-center justify-center">
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Patrimonio
           </span>
@@ -104,23 +97,41 @@ const DefaultSensibilidadChart = ({
           </span>
         </div>
 
-        {/* Texto Integrado Sensibilizado */}
-        <div className="col-span-4 row-span-1 col-start-15 row-start-5 flex flex-col items-center justify-end pb-1">
-          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">
+        {/* Conceptos Sensibilizado - DINÁMICO (NARANJA) */}
+        <div
+          ref={conceptosRef}
+          className="z-10 col-span-4 border-[3px] border-orange-400 rounded-br-xl relative flex flex-col items-center justify-center p-2 col-start-10"
+          style={{ gridRowStart: TOTAL_ROWS - conceptosPatRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+        >
+          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight mb-1">
             Valor Financiero del Patrimonio
           </span>
-          <span className="text-sm font-black text-center text-gray-900 leading-tight">
-            Método Integrado Sensibilizado
+          <span className="text-sm font-black text-center text-gray-900 leading-tight mb-1">
+            Método Por Conceptos
+          </span>
+          <span className="text-[11px] font-black text-center text-gray-900 leading-tight mb-1">
+            Sensibilizado
+          </span>
+          <span className="text-lg font-bold text-gray-800">
+            {formatNumber(conceptosPatrimonioSensibilizado)}
           </span>
         </div>
 
-        {/* Conexión Conceptos - Integrado */}
-        <div className="col-span-1 row-span-3 col-start-14 row-start-7 flex items-center justify-center">
-          <DoubleConnection />
-        </div>
-
-        {/* Valor Financiero Patrimonio - Integrado Sensibilizado */}
-        <div className="col-span-4 row-span-4 col-start-15 row-start-6 border-[3px] border-blue-600 rounded-br-xl relative flex flex-col items-center justify-center p-2">
+        {/* Integrado Sensibilizado - DINÁMICO (AZUL) */}
+        <div
+          ref={integradoRef}
+          className="z-10 col-span-4 border-[3px] border-[#0101ff] rounded-br-xl relative flex flex-col items-center justify-center p-2 col-start-15"
+          style={{ gridRowStart: TOTAL_ROWS - integradoPatRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+        >
+          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight mb-1">
+            Valor Financiero del Patrimonio
+          </span>
+          <span className="text-sm font-black text-center text-gray-900 leading-tight mb-1">
+            Método Integrado
+          </span>
+          <span className="text-[11px] font-black text-center text-gray-900 leading-tight mb-1">
+            Sensibilizado
+          </span>
           <span className="text-lg font-bold text-gray-800">
             {formatNumber(integradoPatrimonioSensibilizado)}
           </span>
@@ -138,6 +149,7 @@ const MethodSensibilidadChart = ({
   empresaSensibilizado,
   patrimonioEsperado,
   patrimonioSensibilizado,
+  companyType,
 }: {
   activo: number;
   pasivo: number;
@@ -146,61 +158,50 @@ const MethodSensibilidadChart = ({
   empresaSensibilizado: number;
   patrimonioEsperado: number;
   patrimonioSensibilizado: number;
+  companyType: "empresa" | "emergente";
 }) => {
-  const patrimonioSensibilizadoEsMayor =
-    patrimonioSensibilizado >= patrimonioEsperado;
+  const TOTAL_ROWS = 9;
+  const isEmergente = companyType === "emergente";
+  const empresaRowSpan = getSensibilidadEmpresaRowSpan(empresaSensibilizado, activo, isEmergente);
+  const patrimonioRowSpan = getSensibilidadPatrimonioRowSpan(patrimonioSensibilizado, patrimonio, isEmergente);
+
+  const gridRef = useRef<HTMLDivElement>(null);
+  const empresaRef = useRef<HTMLDivElement>(null);
+  const activoRef = useRef<HTMLDivElement>(null);
+  const patrimonioRef = useRef<HTMLDivElement>(null);
+  const patrimonioDynRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="p-4 flex flex-col justify-end h-full">
-      <div
-        className="grid gap-0 flex-1 min-h-0"
-        style={{
-          gridTemplateColumns: "repeat(28, minmax(0, 1fr))",
-          gridTemplateRows: "repeat(12, minmax(0, 1fr))",
-        }}
-      >
-        {/* Valor Sensibilizado - Empresa */}
-        <div className="col-span-4 row-span-12 col-start-1 row-start-1 border-[3px] border-green-600 rounded-l-xl rounded-r-xl relative flex flex-col items-center p-3">
+      <div ref={gridRef} className="relative grid gap-0 flex-1 min-h-0" style={{ gridTemplateColumns: "repeat(18, minmax(0, 1fr))", gridTemplateRows: `repeat(${TOTAL_ROWS}, minmax(0, 1fr))` }}>
+        <DynamicConnector
+          containerRef={gridRef}
+          lines={[
+            { fromRef: empresaRef, fromCorner: "top-right" as const, toRef: activoRef, toCorner: "top-left" as const },
+            { fromRef: patrimonioRef, fromCorner: "top-right" as const, toRef: patrimonioDynRef, toCorner: "top-left" as const },
+          ]}
+        />
+        {/* Bottom dashed line - STATIC */}
+        <svg aria-hidden="true" className="pointer-events-none absolute inset-0 z-20 h-full w-full" style={{ overflow: "visible" }}>
+          <line x1="22.2%" y1="99.5%" x2="100%" y2="99.5%" stroke="#9ca3af" strokeWidth="1.5" strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />
+        </svg>
+
+        {/* Valor Sensibilizado - Empresa (VERDE, IZQUIERDA, bottom-aligned) */}
+        <div
+          ref={empresaRef}
+          className="z-10 col-span-4 border-[3px] border-[#92d050] bg-white rounded-l-xl relative flex flex-col items-center justify-center p-2 col-start-1"
+          style={{ gridRowStart: TOTAL_ROWS - empresaRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+        >
           <span className="text-sm font-bold text-center text-gray-800 leading-tight">
-            Valor
+            Valor Sensibilizado
           </span>
-          <span className="text-sm font-bold text-center text-gray-800 leading-tight">
-            Sensibilizado
+          <span className="text-lg font-bold text-gray-800">
+            {formatNumber(empresaSensibilizado)}
           </span>
-          <div className="flex-1 flex items-center justify-center w-full">
-            <span className="text-lg font-bold text-gray-800 text-center px-2">
-              {formatNumber(empresaSensibilizado)}
-            </span>
-          </div>
         </div>
 
-        {/* Conexión entre Valores de Empresa */}
-        <div className="col-span-1 row-span-12 col-start-5 row-start-1 flex items-center justify-center">
-          <DoubleConnection />
-        </div>
-
-        {/* Valor Esperado - Empresa */}
-        <div className="col-span-4 row-span-11 col-start-6 row-start-2 border-[3px] border-green-400 rounded-l-xl rounded-r-xl relative flex flex-col items-center p-3">
-          <span className="text-sm font-bold text-center text-gray-800 leading-tight">
-            Valor
-          </span>
-          <span className="text-sm font-bold text-center text-gray-800 leading-tight">
-            Esperado
-          </span>
-          <div className="flex-1 flex items-center justify-center w-full">
-            <span className="text-lg font-bold text-gray-800 text-center px-2">
-              {formatNumber(empresaEsperado)}
-            </span>
-          </div>
-        </div>
-
-        {/* Conexión Empresa - Activo */}
-        <div className="col-span-1 row-span-11 col-start-10 row-start-2 flex items-center justify-center">
-          <DoubleConnection />
-        </div>
-
-        {/* Activo */}
-        <div className="col-span-4 row-span-10 col-start-11 row-start-3 border-[3px] border-blue-500 rounded-xl relative flex flex-col items-center justify-center">
+        {/* Activo - REFERENCIA FIJA */}
+        <div ref={activoRef} className="z-10 col-span-4 row-span-8 col-start-6 row-start-2 mr-[3px] border-[3px] border-blue-500 bg-white rounded-xl relative flex flex-col items-center justify-center">
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Activo
           </span>
@@ -209,8 +210,8 @@ const MethodSensibilidadChart = ({
           </span>
         </div>
 
-        {/* Pasivo */}
-        <div className="col-span-4 row-span-6 col-start-15 row-start-3 border-[3px] border-blue-500 rounded-tr-xl relative flex flex-col items-center justify-center">
+        {/* Pasivo - REFERENCIA FIJA */}
+        <div className="z-10 col-span-4 row-span-5 col-start-10 row-start-2 mb-[3px] border-[3px] border-blue-500 bg-white rounded-t-xl relative flex flex-col items-center justify-center">
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Pasivo
           </span>
@@ -219,8 +220,8 @@ const MethodSensibilidadChart = ({
           </span>
         </div>
 
-        {/* Patrimonio */}
-        <div className="col-span-4 row-span-4 col-start-15 row-start-9 border-[3px] border-blue-500 rounded-br-xl relative flex flex-col items-center justify-center">
+        {/* Patrimonio - REFERENCIA FIJA */}
+        <div ref={patrimonioRef} className="z-10 col-span-4 row-span-3 col-start-10 row-start-7 border-[3px] border-blue-500 bg-white rounded-br-xl relative flex flex-col items-center justify-center">
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Patrimonio
           </span>
@@ -229,44 +230,16 @@ const MethodSensibilidadChart = ({
           </span>
         </div>
 
-        {/* Conexión Patrimonio - Valor Esperado Patrimonio */}
-        <div className="col-span-1 row-span-4 col-start-19 row-start-9 flex items-center justify-center">
-          <DoubleConnection />
-        </div>
-
-        {/* Valor Esperado - Patrimonio */}
+        {/* Valor Sensibilizado - Patrimonio (MORADO, DERECHA, bottom-aligned) */}
         <div
-          className={`col-span-4 ${
-            patrimonioSensibilizadoEsMayor
-              ? "row-span-3 row-start-10"
-              : "row-span-5 row-start-8"
-          } col-start-20 border-[3px] border-purple-400 rounded-t-xl rounded-bl-xl relative flex flex-col items-center justify-center p-2`}
-        >
-          <span className="text-sm font-bold text-center text-gray-800 leading-tight">
-            Valor Esperado
-          </span>
-          <span className="text-lg font-bold text-gray-800 mt-2">
-            {formatNumber(patrimonioEsperado)}
-          </span>
-        </div>
-
-        {/* Conexión entre Valores de Patrimonio */}
-        <div className="col-span-1 row-span-4 col-start-24 row-start-9 flex items-center justify-center">
-          <DoubleConnection />
-        </div>
-
-        {/* Valor Sensibilizado - Patrimonio */}
-        <div
-          className={`col-span-4 ${
-            patrimonioSensibilizadoEsMayor
-              ? "row-span-5 row-start-8"
-              : "row-span-3 row-start-10"
-          } col-start-25 border-[3px] border-purple-800 rounded-t-xl rounded-r-xl relative flex flex-col items-center justify-center p-2`}
+          ref={patrimonioDynRef}
+          className="z-10 col-span-4 border-[3px] border-purple-600 bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 col-start-15"
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
         >
           <span className="text-sm font-bold text-center text-gray-800 leading-tight">
             Valor Sensibilizado
           </span>
-          <span className="text-lg font-bold text-gray-800 mt-2">
+          <span className="text-lg font-bold text-gray-800">
             {formatNumber(patrimonioSensibilizado)}
           </span>
         </div>
@@ -289,10 +262,27 @@ export const ValoraSensibilidadBalanceSheetBlock: React.FC<
   conceptosEmpresaSensibilizado,
   integradoEmpresaEsperado,
   integradoEmpresaSensibilizado,
+  currency,
+  availableCurrencies,
+  onCurrencyChange,
   variant = "default",
+  companyType = "empresa",
 }) => {
   return (
-    <div className="flex flex-col rounded-lg shadow bg-white overflow-hidden h-full">
+    <div className="relative flex h-[480px] min-h-[480px] flex-col rounded-lg bg-white pt-10 shadow overflow-hidden">
+      <select
+        value={currency}
+        onChange={(event) => onCurrencyChange(event.target.value)}
+        className="absolute right-6 top-6 z-10 min-w-24 rounded-md border border-gray-300 bg-white px-3.5 py-1.5 text-sm font-semibold text-gray-800 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+        aria-label="Moneda de resultados"
+      >
+        {availableCurrencies.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+
       {variant === "default" && (
         <DefaultSensibilidadChart
           activo={activo}
@@ -300,6 +290,7 @@ export const ValoraSensibilidadBalanceSheetBlock: React.FC<
           patrimonio={patrimonio}
           conceptosPatrimonioSensibilizado={conceptosPatrimonioSensibilizado}
           integradoPatrimonioSensibilizado={integradoPatrimonioSensibilizado}
+          companyType={companyType}
         />
       )}
       {variant === "conceptos" && (
@@ -311,6 +302,7 @@ export const ValoraSensibilidadBalanceSheetBlock: React.FC<
           empresaSensibilizado={conceptosEmpresaSensibilizado}
           patrimonioEsperado={conceptosPatrimonioEsperado}
           patrimonioSensibilizado={conceptosPatrimonioSensibilizado}
+          companyType={companyType}
         />
       )}
       {variant === "integrado" && (
@@ -322,6 +314,7 @@ export const ValoraSensibilidadBalanceSheetBlock: React.FC<
           empresaSensibilizado={integradoEmpresaSensibilizado}
           patrimonioEsperado={integradoPatrimonioEsperado}
           patrimonioSensibilizado={integradoPatrimonioSensibilizado}
+          companyType={companyType}
         />
       )}
     </div>

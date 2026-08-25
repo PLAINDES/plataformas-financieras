@@ -1,3 +1,6 @@
+import { useRef } from "react";
+import { formatNumber, getEmpresaRowSpan, getPatrimonioRowSpan, DynamicConnector } from "./ValoraChartUtils";
+
 export interface ValoraBalanceSheetBlockProps {
   activo: number | null;
   pasivo: number | null;
@@ -16,63 +19,6 @@ export interface ValoraBalanceSheetBlockProps {
   variant?: "default" | "conceptos" | "integrado";
 }
 
-const formatNumber = (value: number | null) => {
-  if (value === null || value === undefined) {
-    return "-";
-  }
-  return value.toLocaleString("es-PE", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-};
-
-const ConnectorLine = ({
-  x1,
-  y1,
-  x2,
-  y2,
-}: {
-  x1: string;
-  y1: string;
-  x2: string;
-  y2: string;
-}) => (
-  <line
-    x1={x1}
-    y1={y1}
-    x2={x2}
-    y2={y2}
-    stroke="#9ca3af"
-    strokeWidth="1.5"
-    strokeDasharray="5 4"
-    vectorEffect="non-scaling-stroke"
-  />
-);
-
-const DefaultConnections = () => (
-  <svg
-    aria-hidden="true"
-    className="pointer-events-none absolute inset-0 h-full w-full"
-    preserveAspectRatio="none"
-  >
-    <ConnectorLine x1="44.4%" y1="77%" x2="50%" y2="66.7%" />
-    <ConnectorLine x1="44.4%" y1="99.5%" x2="100%" y2="99.5%" />
-    <ConnectorLine x1="72.2%" y1="68%" x2="77.8%" y2="55.6%" />
-  </svg>
-);
-
-const MethodConnections = () => (
-  <svg
-    aria-hidden="true"
-    className="pointer-events-none absolute inset-0 h-full w-full"
-    preserveAspectRatio="none"
-  >
-    <ConnectorLine x1="22.2%" y1="0.5%" x2="27.8%" y2="11.1%" />
-    <ConnectorLine x1="22.2%" y1="99.5%" x2="100%" y2="99.5%" />
-    <ConnectorLine x1="72.2%" y1="76%" x2="77.8%" y2="66.7%" />
-  </svg>
-);
-
 const DefaultBalanceChart = ({
   activo,
   pasivo,
@@ -86,11 +32,30 @@ const DefaultBalanceChart = ({
   conceptosPatrimonio: number | null;
   integradoPatrimonio: number | null;
 }) => {
+  const TOTAL_ROWS = 9;
+  const conceptosPatRowSpan = getPatrimonioRowSpan(conceptosPatrimonio, patrimonio);
+  const integradoPatRowSpan = getPatrimonioRowSpan(integradoPatrimonio, patrimonio);
+
+  const gridRef = useRef<HTMLDivElement>(null);
+  const patrimonioRef = useRef<HTMLDivElement>(null);
+  const conceptosRef = useRef<HTMLDivElement>(null);
+  const integradoRef = useRef<HTMLDivElement>(null);
+
   return (
     <div className="p-4 flex flex-col justify-end h-full">
-      <div className="relative grid gap-0 flex-1 min-h-0" style={{ gridTemplateColumns: "repeat(18, minmax(0, 1fr))", gridTemplateRows: "repeat(9, minmax(0, 1fr))" }}>
-        <DefaultConnections />
-        {/* Activo */}
+      <div ref={gridRef} className="relative grid gap-0 flex-1 min-h-0" style={{ gridTemplateColumns: "repeat(18, minmax(0, 1fr))", gridTemplateRows: `repeat(${TOTAL_ROWS}, minmax(0, 1fr))` }}>
+        <DynamicConnector
+          containerRef={gridRef}
+          lines={[
+            { fromRef: patrimonioRef, fromCorner: "top-right" as const, toRef: conceptosRef, toCorner: "top-left" as const },
+            { fromRef: conceptosRef, fromCorner: "top-right" as const, toRef: integradoRef, toCorner: "top-left" as const },
+          ]}
+        />
+        {/* Bottom straight line - STATIC */}
+        <svg aria-hidden="true" className="pointer-events-none absolute inset-0 z-20 h-full w-full" style={{ overflow: "visible" }}>
+          <line x1="22.2%" y1="99.5%" x2="100%" y2="99.5%" stroke="#9ca3af" strokeWidth="1.5" strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />
+        </svg>
+        {/* Activo - REFERENCIA FIJA */}
         <div className="z-10 col-span-4 row-span-9 mr-[3px] border-[3px] border-[#a62cad] bg-white rounded-l-xl relative flex flex-col items-center justify-center">
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Activo
@@ -100,7 +65,7 @@ const DefaultBalanceChart = ({
           </span>
         </div>
 
-        {/* Pasivo */}
+        {/* Pasivo - REFERENCIA FIJA */}
         <div className="z-10 col-span-4 row-span-6 col-start-5 mb-[3px] border-[3px] border-green-600 bg-white rounded-tr-xl relative flex flex-col items-center justify-center">
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Pasivo
@@ -110,25 +75,8 @@ const DefaultBalanceChart = ({
           </span>
         </div>
 
-        {/* Texto Conceptos */}
-        <div className="z-10 col-span-4 row-span-1 col-start-10 row-start-6 flex flex-col items-center justify-end bg-white pb-1">
-          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">
-            Valor Financiero del Patrimonio
-          </span>
-          <span className="text-sm font-black text-center text-gray-900 leading-tight">
-            Método Por Conceptos
-          </span>
-        </div>
-
-        {/* Valor Financiero Patrimonio - Conceptos */}
-        <div className="z-10 col-span-4 row-span-3 col-start-10 row-start-7 border-[3px] border-orange-500 bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2">
-          <span className="text-lg font-bold text-gray-800">
-            {formatNumber(conceptosPatrimonio)}
-          </span>
-        </div>
-
-        {/* Patrimonio */}
-        <div className="z-10 col-span-4 row-span-3 col-start-5 row-start-7 border-[3px] border-blue-400 bg-white rounded-br-xl relative flex flex-col items-center justify-center">
+        {/* Patrimonio - REFERENCIA FIJA */}
+        <div ref={patrimonioRef} className="z-10 col-span-4 row-span-3 col-start-5 row-start-7 border-[3px] border-blue-400 bg-white rounded-br-xl relative flex flex-col items-center justify-center">
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Patrimonio
           </span>
@@ -137,18 +85,35 @@ const DefaultBalanceChart = ({
           </span>
         </div>
 
-        {/* Texto Integrado */}
-        <div className="z-10 col-span-4 row-span-1 col-start-15 row-start-5 flex flex-col items-center justify-end bg-white pb-1">
-          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">
+        {/* Conceptos Patrimonio - DINÁMICO (NARANJA) */}
+        <div
+          ref={conceptosRef}
+          className="z-10 col-span-4 border-[3px] border-orange-500 bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 col-start-10"
+          style={{ gridRowStart: TOTAL_ROWS - conceptosPatRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+        >
+          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight mb-1">
             Valor Financiero del Patrimonio
           </span>
-          <span className="text-sm font-black text-center text-gray-900 leading-tight">
-            Método Integrado
+          <span className="text-sm font-black text-center text-gray-900 leading-tight mb-1">
+            Método Por Conceptos
+          </span>
+          <span className="text-lg font-bold text-gray-800">
+            {formatNumber(conceptosPatrimonio)}
           </span>
         </div>
 
-        {/* Valor Financiero Patrimonio - Integrado */}
-        <div className="z-10 col-span-4 row-span-4 col-start-15 row-start-6 border-[3px] border-blue-600 bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2">
+        {/* Integrado Patrimonio - DINÁMICO (AZUL) */}
+        <div
+          ref={integradoRef}
+          className="z-10 col-span-4 border-[3px] border-blue-600 bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 col-start-15"
+          style={{ gridRowStart: TOTAL_ROWS - integradoPatRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+        >
+          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight mb-1">
+            Valor Financiero del Patrimonio
+          </span>
+          <span className="text-sm font-black text-center text-gray-900 leading-tight mb-1">
+            Método Integrado
+          </span>
           <span className="text-lg font-bold text-gray-800">
             {formatNumber(integradoPatrimonio)}
           </span>
@@ -171,24 +136,46 @@ const MethodBalanceChart = ({
   valorFinancieroPatrimonio: number | null;
   valorFinancieroEmpresa: number | null;
 }) => {
+  const TOTAL_ROWS = 9;
+  const empresaRowSpan = getEmpresaRowSpan(valorFinancieroEmpresa, activo);
+  const patrimonioRowSpan = getPatrimonioRowSpan(valorFinancieroPatrimonio, patrimonio, activo);
+
+  const gridRef = useRef<HTMLDivElement>(null);
+  const empresaRef = useRef<HTMLDivElement>(null);
+  const activoRef = useRef<HTMLDivElement>(null);
+  const patrimonioRef = useRef<HTMLDivElement>(null);
+  const patrimonioDynRef = useRef<HTMLDivElement>(null);
+
   return (
     <div className="p-4 flex flex-col justify-end h-full">
-      <div className="relative grid gap-0 flex-1 min-h-0" style={{ gridTemplateColumns: "repeat(18, minmax(0, 1fr))", gridTemplateRows: "repeat(9, minmax(0, 1fr))" }}>
-        <MethodConnections />
-        {/* Valor Financiero de la Empresa */}
-        <div className="z-10 col-span-4 row-span-9 border-[3px] border-[#a62cad] bg-white rounded-l-xl relative flex flex-col items-center p-4">
+      <div ref={gridRef} className="relative grid gap-0 flex-1 min-h-0" style={{ gridTemplateColumns: "repeat(18, minmax(0, 1fr))", gridTemplateRows: `repeat(${TOTAL_ROWS}, minmax(0, 1fr))` }}>
+        <DynamicConnector
+          containerRef={gridRef}
+          lines={[
+            { fromRef: empresaRef, fromCorner: "top-right" as const, toRef: activoRef, toCorner: "top-left" as const },
+            { fromRef: patrimonioRef, fromCorner: "top-right" as const, toRef: patrimonioDynRef, toCorner: "top-left" as const },
+          ]}
+        />
+        {/* Bottom straight line - STATIC */}
+        <svg aria-hidden="true" className="pointer-events-none absolute inset-0 z-20 h-full w-full" style={{ overflow: "visible" }}>
+          <line x1="22.2%" y1="99.5%" x2="100%" y2="99.5%" stroke="#9ca3af" strokeWidth="1.5" strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />
+        </svg>
+        {/* Empresa - DINÁMICO (VERDE, IZQUIERDA) */}
+        <div
+          ref={empresaRef}
+          className="z-10 col-span-4 border-[3px] border-[#a12d94] bg-white rounded-l-xl relative flex flex-col items-center justify-center p-2 col-start-1"
+          style={{ gridRowStart: TOTAL_ROWS - empresaRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+        >
           <span className="text-sm font-bold text-center text-gray-800 leading-tight">
             Valor Financiero de la Empresa
           </span>
-          <div className="flex-1 flex items-center justify-center w-full">
-            <span className="text-lg font-bold text-gray-800">
-              {formatNumber(valorFinancieroEmpresa)}
-            </span>
-          </div>
+          <span className="text-lg font-bold text-gray-800">
+            {formatNumber(valorFinancieroEmpresa)}
+          </span>
         </div>
 
-        {/* Activo */}
-        <div className="z-10 col-span-4 row-span-8 col-start-6 row-start-2 mr-[3px] border-[3px] border-blue-500 bg-white rounded-xl relative flex flex-col items-center justify-center">
+        {/* Activo - REFERENCIA FIJA */}
+        <div ref={activoRef} className="z-10 col-span-4 row-span-8 col-start-6 row-start-2 mr-[3px] border-[3px] border-blue-500 bg-white rounded-xl relative flex flex-col items-center justify-center">
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Activo
           </span>
@@ -197,7 +184,7 @@ const MethodBalanceChart = ({
           </span>
         </div>
 
-        {/* Pasivo */}
+        {/* Pasivo - REFERENCIA FIJA */}
         <div className="z-10 col-span-4 row-span-5 col-start-10 row-start-2 mb-[3px] border-[3px] border-blue-500 bg-white rounded-t-xl relative flex flex-col items-center justify-center">
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Pasivo
@@ -207,8 +194,8 @@ const MethodBalanceChart = ({
           </span>
         </div>
 
-        {/* Patrimonio */}
-        <div className="z-10 col-span-4 row-span-3 col-start-10 row-start-7 border-[3px] border-blue-500 bg-white rounded-br-xl relative flex flex-col items-center justify-center">
+        {/* Patrimonio - REFERENCIA FIJA */}
+        <div ref={patrimonioRef} className="z-10 col-span-4 row-span-3 col-start-10 row-start-7 border-[3px] border-blue-500 bg-white rounded-br-xl relative flex flex-col items-center justify-center">
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Patrimonio
           </span>
@@ -217,15 +204,15 @@ const MethodBalanceChart = ({
           </span>
         </div>
 
-        {/* Label Valor Financiero del Patrimonio */}
-        <div className="z-10 col-span-4 row-span-1 col-start-15 row-start-6 flex flex-col items-center justify-end bg-white pb-1">
-          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">
+        {/* Patrimonio - DINÁMICO (MORADO, DERECHA) */}
+        <div
+          ref={patrimonioDynRef}
+          className="z-10 col-span-4 border-[3px] border-[#00b050] bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 col-start-15"
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+        >
+          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight mb-1">
             Valor Financiero del Patrimonio
           </span>
-        </div>
-
-        {/* Valor Financiero del Patrimonio */}
-        <div className="z-10 col-span-4 row-span-3 col-start-15 row-start-7 border-[3px] border-green-600 bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2">
           <span className="text-lg font-bold text-gray-800">
             {formatNumber(valorFinancieroPatrimonio)}
           </span>
@@ -252,14 +239,12 @@ export const ValoraBalanceSheetBlock: React.FC<ValoraBalanceSheetBlockProps> = (
   onCurrencyChange,
   variant = "default",
 }) => {
-  // El Activo, Pasivo y Patrimonio del cuadro general deben mostrarse también
-  // en las variantes de conceptos e integrado para mantener consistencia visual.
   return (
-    <div className="relative flex h-[420px] min-h-[420px] flex-col overflow-hidden rounded-lg bg-white pt-10 shadow">
+    <div className="relative flex h-[480px] min-h-[480px] flex-col overflow-hidden rounded-lg bg-white pt-10 shadow">
       <select
         value={currency}
         onChange={(event) => onCurrencyChange(event.target.value)}
-        className="absolute right-4 top-3 z-10 min-w-20 rounded-md border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-800 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+        className="absolute right-6 top-6 z-10 min-w-24 rounded-md border border-gray-300 bg-white px-3.5 py-1.5 text-sm font-semibold text-gray-800 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
         aria-label="Moneda de resultados"
       >
         {availableCurrencies.map((option) => (

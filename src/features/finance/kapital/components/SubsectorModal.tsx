@@ -83,23 +83,40 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                             </span>
                         </div>
                         <div className="flex-1 overflow-y-auto min-h-0">
+                            {/* Table header */}
+                            <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                                <span>Empresa</span>
+                                <span className="text-right min-w-[100px]">Activo de Mercado</span>
+                                <span className="text-right min-w-[70px]">BOA</span>
+                                <span className="w-8" />
+                            </div>
                             <div className="divide-y divide-gray-100">
                                 {detailTickers.length > 0 ? (
                                     [...detailTickers].sort().map((emp: string, i: number) => {
                                         const boa = subsectorDetail.empresas_boa[emp];
+                                        const info = subsectorDetail.ticker_info?.[emp];
                                         const isInactive = inactiveTickers.includes(emp);
+                                        const activoMercado = info?.activo_mercado ?? info?.total_activos ?? null;
                                         return (
-                                            <div key={i} className={`flex items-center justify-between px-4 py-2.5 transition-colors ${isInactive ? "opacity-40 hover:opacity-60" : "hover:bg-gray-50/50"}`}>
-                                                <div className="flex items-center gap-2 min-w-0">
-                                                    <span className={`text-xs font-bold min-w-[60px] ${isInactive ? "text-gray-400 line-through" : "text-blue-600"}`}>{emp}</span>
-                                                    <span className={`text-xs font-mono font-bold ${isInactive ? "text-gray-400" : "text-gray-800"}`}>
-                                                        {boa !== undefined ? boa.toFixed(4) : "N/A"}
-                                                    </span>
-                                                </div>
+                                            <div
+                                                key={i}
+                                                className={`grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 px-4 py-2.5 transition-colors ${
+                                                    isInactive ? "opacity-40 hover:opacity-60" : "hover:bg-gray-50/50"
+                                                }`}
+                                            >
+                                                <span className={`text-xs font-bold truncate ${isInactive ? "text-gray-400 line-through" : "text-blue-600"}`}>
+                                                    {emp}
+                                                </span>
+                                                <span className={`text-xs font-mono text-right min-w-[100px] ${isInactive ? "text-gray-400" : "text-gray-700"}`}>
+                                                    {activoMercado != null ? Number(activoMercado).toLocaleString("en-US") : "N/A"}
+                                                </span>
+                                                <span className={`text-xs font-mono font-bold text-right min-w-[70px] ${isInactive ? "text-gray-400" : "text-gray-800"}`}>
+                                                    {boa != null ? Number(boa).toFixed(4) : "N/A"}
+                                                </span>
                                                 <button
                                                     type="button"
                                                     onClick={() => onToggleTicker(emp)}
-                                                    className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+                                                    className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors cursor-pointer ${
                                                         isInactive
                                                             ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
                                                             : "text-red-400 hover:bg-red-50 hover:text-red-600"
@@ -129,7 +146,7 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                         {detailBoa !== null && (
                             <div className="sticky bottom-0 bg-white z-10 border-t border-valora-primary/10 rounded-b-xl">
                                 <div className="flex items-center justify-between px-4 py-2.5 bg-valora-primary/5">
-                                    <span className="text-[10px] font-bold text-blue-700 uppercase">BOA Promedio</span>
+                                    <span className="text-[10px] font-bold text-blue-700 uppercase">BOA Ponderado</span>
                                     <span className="text-lg font-black text-valora-primary leading-none">{detailBoa.toFixed(2)}</span>
                                 </div>
                             </div>
@@ -205,11 +222,16 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                     const savedTickers = subsectorTickersRef.current[formDataSubsector || ""] || [];
                     const allTickersConBoa = Array.isArray(sub?.empresas) ? sub.empresas : [];
                     const tickersParaBoa = savedTickers.length > 0 ? savedTickers : allTickersConBoa;
-                    const boas: number[] = tickersParaBoa
-                        .map((emp: string) => Number(sub?.empresas_boa?.[emp]))
-                        .filter((v: number) => !isNaN(v));
-                    const avgBoa = boas.length > 0
-                        ? (boas.reduce((sum: number, v: number) => sum + v, 0) / boas.length).toFixed(2)
+                    const activosTotal = tickersParaBoa.reduce((sum: number, emp: string) => {
+                        const activos = Number(sub?.ticker_info?.[emp]?.total_activos) || 0;
+                        return sum + activos;
+                    }, 0);
+                    const avgBoa = activosTotal > 0
+                        ? tickersParaBoa.reduce((sum: number, emp: string) => {
+                            const boa = Number(sub?.empresas_boa?.[emp]) || 0;
+                            const activos = Number(sub?.ticker_info?.[emp]?.total_activos) || 0;
+                            return sum + (activos / activosTotal) * boa;
+                        }, 0).toFixed(2)
                         : null;
 
                     return (
@@ -230,7 +252,7 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                             {avgBoa && (
                                                 <>
                                                     <span className="text-gray-300">|</span>
-                                                    <span className="font-bold text-valora-primary">BOA {avgBoa}</span>
+                                                     <span className="font-bold text-valora-primary">BOA P. {avgBoa}</span>
                                                 </>
                                             )}
                                         </div>
@@ -269,11 +291,17 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                     ? subsectorSensibilizacionTickersRef.current[sub.subsector]
                                     : subsectorTickersRef.current[sub.subsector];
                                 const tickersParaBoa = savedTickers || allTickersConBoa;
-                                const boas: number[] = tickersParaBoa
-                                    .map((emp: string) => Number(sub.empresas_boa?.[emp]))
-                                    .filter((v: number) => !isNaN(v));
-                                const avgBoa = boas.length > 0
-                                    ? boas.reduce((sum, v) => sum + v, 0) / boas.length
+                                // BOA Ponderado: Σ(Wi% × beta_unlevered) usando total_activos como peso
+                                const activosTotal = tickersParaBoa.reduce((sum: number, emp: string) => {
+                                    const activos = Number(sub.ticker_info?.[emp]?.total_activos) || 0;
+                                    return sum + activos;
+                                }, 0);
+                                const avgBoa = activosTotal > 0
+                                    ? tickersParaBoa.reduce((sum: number, emp: string) => {
+                                        const boa = Number(sub.empresas_boa?.[emp]) || 0;
+                                        const activos = Number(sub.ticker_info?.[emp]?.total_activos) || 0;
+                                        return sum + (activos / activosTotal) * boa;
+                                    }, 0)
                                     : null;
 
                                 return (
@@ -320,7 +348,7 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                             {avgBoa !== null && (
                                                 <div className="flex items-center gap-1.5">
                                                     <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wide hidden sm:inline">
-                                                        BOA
+                                                        BOA P.
                                                     </span>
                                                     <span className="text-lg font-black text-valora-primary leading-none">
                                                         {avgBoa.toFixed(2)}
