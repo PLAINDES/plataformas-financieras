@@ -145,18 +145,14 @@ const MethodSensibilidadChart = ({
   activo,
   pasivo,
   patrimonio,
-  empresaEsperado,
   empresaSensibilizado,
-  patrimonioEsperado,
   patrimonioSensibilizado,
   companyType,
 }: {
   activo: number;
   pasivo: number;
   patrimonio: number;
-  empresaEsperado: number;
   empresaSensibilizado: number;
-  patrimonioEsperado: number;
   patrimonioSensibilizado: number;
   companyType: "empresa" | "emergente";
 }) => {
@@ -298,9 +294,7 @@ export const ValoraSensibilidadBalanceSheetBlock: React.FC<
           activo={activo}
           pasivo={pasivo}
           patrimonio={patrimonio}
-          empresaEsperado={conceptosEmpresaEsperado}
           empresaSensibilizado={conceptosEmpresaSensibilizado}
-          patrimonioEsperado={conceptosPatrimonioEsperado}
           patrimonioSensibilizado={conceptosPatrimonioSensibilizado}
           companyType={companyType}
         />
@@ -310,9 +304,7 @@ export const ValoraSensibilidadBalanceSheetBlock: React.FC<
           activo={activo}
           pasivo={pasivo}
           patrimonio={patrimonio}
-          empresaEsperado={integradoEmpresaEsperado}
           empresaSensibilizado={integradoEmpresaSensibilizado}
-          patrimonioEsperado={integradoPatrimonioEsperado}
           patrimonioSensibilizado={integradoPatrimonioSensibilizado}
           companyType={companyType}
         />
