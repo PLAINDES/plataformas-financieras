@@ -5,6 +5,8 @@ import type { Calculation } from "@/shared/types";
 import type { FinancialTable, FormData } from "@/shared/types/ValoraTypes";
 import type { ToastType } from "@/shared/types/toast.types";
 
+export type ValoraResultView = "original" | "sensibilidad" | "comparacion";
+
 const normalizeTableThousandsSeparators = (
   table: FinancialTable | null
 ): FinancialTable | null => {
@@ -60,6 +62,7 @@ export function useValoraCalculation({
   const [currentCalculation, setCurrentCalculation] = useState<Calculation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
+  const [resultView, setResultView] = useState<ValoraResultView>("original");
   const loadFromUrlCalledRef = useRef(false);
 
   const getCodeFromUrl = (): string | null => {
@@ -130,7 +133,6 @@ export function useValoraCalculation({
 
     try {
       let persistedCalculation: Calculation;
-
       if (currentCalculation) {
         persistedCalculation = await MainService.updateCalculation(
           currentCalculation.id,
@@ -160,6 +162,11 @@ export function useValoraCalculation({
 
       setCurrentCalculation(persistedCalculation);
       setHasCalculated(true);
+
+      const hasSensitivity = Boolean(
+        (persistedCalculation.data as any)?.sensibilizacion?.length
+      );
+      setResultView(hasSensitivity ? "sensibilidad" : "original");
 
       ui.setShowResults(true);
       ui.setIsDesktopFormOpen(false);
@@ -207,6 +214,10 @@ export function useValoraCalculation({
           }
 
           setHasCalculated(true);
+          const hasSavedSensitivity =
+            Boolean((calculationData.data as any)?.sensibilizacion?.length) ||
+            Boolean((calculationData.data as any)?.sensibilidad?.length);
+          setResultView(hasSavedSensitivity ? "sensibilidad" : "original");
           ui.setShowResults(true);
           ui.setIsDesktopFormOpen(false);
           addToast("info", `Cálculo Valora (${code}) cargado correctamente.`);
@@ -221,6 +232,8 @@ export function useValoraCalculation({
     currentCalculation,
     isLoading,
     hasCalculated,
+    resultView,
+    setResultView,
     handleSubmit,
     loadFromUrl,
   };

@@ -664,6 +664,20 @@ export const MainService = {
     return api.post("main/valora-template/set-default", { object_key: objectKey });
   },
 
+  // ==================== VALORA RECOMMENDATIONS ====================
+
+  getValoraRecommendations: async (calculationId: number): Promise<any> => {
+    console.info(`[VALORA FRONTEND] Fetching recommendations for calculationId=${calculationId}`);
+    try {
+      const result = await api.get<any>(`analytics/valora-recommendations/${calculationId}`);
+      console.info("[VALORA FRONTEND] Recommendations received:", result);
+      return result;
+    } catch (error) {
+      console.error("[VALORA FRONTEND] Error fetching recommendations:", error);
+      throw error;
+    }
+  },
+
   // ==================== BVL COTIZACIÓN ====================
 
   getBvlCotizacion: async (): Promise<{

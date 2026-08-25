@@ -10,6 +10,7 @@ import type {
 import { formatToPeruTime } from "../services/kapital.utils";
 import { ArrowRight, Sparkles, ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { INDUSTRY_TRANSLATIONS } from "@/shared/constants/kapital";
+import { Book } from "./Book";
 
 const translateIndustry = (industry?: string | null) => {
   if (!industry) return industry;
@@ -438,15 +439,14 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
   );
 
   return (
-    <>
-      <header className="flex flex-col xl:flex-row mt-0 lg:mt-0 justify-between items-center w-full gap-2 px-4">
-        {/* Izquierda: Chatbot y Tabs */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
+    <div className="flex min-h-full w-full flex-col justify-center gap-7 px-4 py-6 lg:gap-9 lg:px-6">
+      <header className="mx-auto grid w-full max-w-[1600px] grid-cols-1 items-center gap-5 xl:grid-cols-[1fr_auto_1fr]">
+        <div className="flex w-full min-w-0 items-center justify-center xl:justify-start">
           {shouldShowChatbot && (
             <button
               type="button"
               onClick={onToggleForm}
-              className="px-4 py-2 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100"
+              className="px-4 py-2 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100 min-w-0"
             >
               <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
                 <Sparkles className="h-5 w-5 shrink-0" />
@@ -458,9 +458,31 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
               <ArrowRight className="h-5 w-5 shrink-0" />
             </button>
           )}
+        </div>
 
-          {/* Switch de Vistas */}
-          <div className="flex flex-col items-center sm:items-start justify-center">
+        <div className="flex w-full flex-col items-center justify-center gap-3 xl:w-auto">
+          <div className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row sm:items-end">
+            <div className="flex flex-col text-center">
+              <h1 className="text-xl font-bold text-gray-900 whitespace-nowrap">
+                Resultados generales
+              </h1>
+              <p className="text-gray-600 text-[11px]">Comparación de resultados</p>
+            </div>
+            {activeTab === "sensibility" ? (
+              selectedSens?.subsector?.trim() ? (
+                <SectorBadge subsector={selectedSens.subsector} />
+              ) : selectedSens?.industria ? (
+                <SectorBadge sector={selectedSens.industria} />
+              ) : (
+                <SectorBadge sector={mainIndustry} subsector={mainSubsector} />
+              )
+            ) : activeTab === "comparison" ? (
+              <SectorBadge sector={mainIndustry} subsector={mainSubsector || selectedSens?.subsector} />
+            ) : (
+              <SectorBadge sector={mainIndustry} />
+            )}
+          </div>
+          <div className="flex flex-col items-center justify-center">
             <div className="flex gap-1 bg-slate-200/70 p-1 rounded-xl shadow-inner border border-slate-200">
               <button
                 type="button"
@@ -508,14 +530,29 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
             )}
           </div>
         </div>
+
         {onOpenReport && (
-          <button
-            type="button"
-            onClick={onOpenReport}
-            className="w-full sm:w-auto bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer"
-          >
-            Reporte de Costo de Capital
-          </button>
+          <div className="flex min-h-[190px] w-full items-center justify-center xl:justify-end">
+            <section className="flex w-full max-w-105 flex-col items-center justify-center overflow-visible rounded-[24px] xl:w-fit">
+              <div onClick={onOpenReport} className="w-fit h-fit cursor-pointer">
+                <Book
+                  href="/images/portada-kapital-less.webp"
+                  width={95}
+                  height={130}
+                  interactive={true}
+                />
+              </div>
+              <div className="flex flex-col justify-center gap-2 flex-1 mt-2">
+                <button
+                  type="button"
+                  onClick={onOpenReport}
+                  className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer"
+                >
+                  Reporte de Costo de Capital
+                </button>
+              </div>
+            </section>
+          </div>
         )}
       </header>
 
@@ -756,17 +793,6 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
           </div>
         ) : activeTab === "original" ? (
           <div className="flex flex-col items-center justify-center gap-2 w-full max-w-none mx-auto px-4">
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="flex flex-col text-center sm:text-left">
-                <h1 className="text-xl font-bold text-gray-900 whitespace-nowrap">
-                  Resultados generales
-                </h1>
-                <p className="text-gray-600 text-[11px]">
-                  Comparación de resultados
-                </p>
-              </div>
-              <SectorBadge sector={mainIndustry} subsector={mainSubsector} />
-            </div>
             <div className="w-full">
               {(() => {
                 const boaDisplay = resolveBoaDisplay(
@@ -791,20 +817,6 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-2 w-full max-w-none mx-auto px-4">
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="flex flex-col text-center sm:text-left">
-                <h1 className="text-xl font-bold text-gray-900 whitespace-nowrap">
-                  Resultados generales
-                </h1>
-                <p className="text-gray-600 text-[11px]">
-                  Comparación de resultados
-                </p>
-              </div>
-              <SectorBadge
-                sector={selectedSens?.industria}
-                subsector={selectedSens?.subsector}
-              />
-            </div>
             <div className="w-full">
               {(() => {
                 const sensBoaDisplay = resolveBoaDisplay(
@@ -829,6 +841,6 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
           </div>
         )}
       </main>
-    </>
+    </div>
   );
 };

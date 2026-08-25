@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Lock } from "lucide-react";
 import { PaymentService } from "@/features/payments/api/payment.service";
 import type { PaymentDiagnosticState } from "@/features/payments/types/payment.types";
 import {
@@ -6,6 +7,8 @@ import {
   type ReportLoaderState,
 } from "@/shared/components/common/Loader";
 import { MainService } from "@/shared/services/main.service";
+import { LoginModal } from "@/features/auth/components/LoginModal";
+import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 
 export type ReportViewerProps = {
   isOpen: boolean;
@@ -32,8 +35,16 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
     useState<PaymentDiagnosticState>("idle");
   const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
   const [loaderState, setLoaderState] = useState<ReportLoaderState>("idle");
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const { user, login } = useAuthContext();
+  const isAuthenticated = !!user;
   const paymentWindowRef = useRef<Window | null>(null);
   const paymentWindowTimerRef = useRef<number | null>(null);
+
+  const buildLauncherUrl = (checkoutUrl: string) => {
+    const params = new URLSearchParams({ checkout: checkoutUrl });
+    return `${window.location.origin}/payment/launcher?${params.toString()}`;
+  };
 
   const stopPaymentWindowWatch = () => {
     if (paymentWindowTimerRef.current !== null) {
@@ -133,7 +144,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
     const paymentWindow = window.open(
       "about:blank",
       "certprox-payment",
-      `popup=yes,width=${popupWidth},height=${popupHeight},left=${popupLeft},top=${popupTop}`
+      `popup=yes,location=no,toolbar=no,menubar=no,status=no,scrollbars=no,resizable=yes,width=${popupWidth},height=${popupHeight},left=${popupLeft},top=${popupTop}`
     );
     if (!paymentWindow) {
       setPaymentState("error");
@@ -143,9 +154,6 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
       return;
     }
 
-    paymentWindow.document.title = "Preparando pago...";
-    paymentWindow.document.body.innerHTML =
-      "<p style='font-family:sans-serif;text-align:center;margin-top:48px'>Preparando pago seguro...</p>";
     paymentWindowRef.current = paymentWindow;
     setPaymentState("validating");
     setPaymentMessage("Creando la sesion segura de pago...");
@@ -155,7 +163,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
         report_id: reportId,
         calculation_id: currentCalculationId,
       });
-      paymentWindow.location.replace(session.checkout_url);
+      paymentWindow.location.replace(buildLauncherUrl(session.checkout_url));
       setPaymentState("waiting");
       setPaymentMessage("Procediendo con el pago...");
       stopPaymentWindowWatch();
@@ -225,20 +233,81 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
           </div>
         )}
 
-        <div className="h-[70vh] w-full bg-gray-100 flex items-center justify-center relative">
+        <div className="h-[70vh] w-full bg-gray-100 relative overflow-hidden">
           <ReportLoader state={loaderState} isPaid={false} />
           {error && (
-            <div className="text-center p-6">
-              <i className="fa-solid fa-triangle-exclamation text-3xl text-red-500 mb-2" />
-              <p className="text-red-600 font-medium">{error}</p>
+            <div className="absolute inset-0 flex items-center justify-center p-6">
+              <div className="text-center">
+                <i className="fa-solid fa-triangle-exclamation text-3xl text-red-500 mb-2" />
+                <p className="text-red-600 font-medium">{error}</p>
+              </div>
             </div>
           )}
           {pdfUrl && !error && (
-            <iframe
-              title="Reporte de capital"
-              src={pdfUrl}
-              className="h-full w-full border-0"
-            />
+            <>
+              <div className="h-full w-full overflow-auto">
+                <iframe
+                  title="Reporte de capital"
+                  src={pdfUrl}
+                  className="h-[140vh] w-full border-0 pointer-events-auto"
+                />
+              </div>
+              <div className="absolute inset-0 z-10 flex items-center justify-center p-4 bg-white/35 backdrop-blur-[8px] pointer-events-none">
+                <div className="relative w-[420px] max-w-[90vw] rounded-2xl bg-white shadow-xl border border-gray-100 px-8 py-8 text-center font-sans pointer-events-auto">
+                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-gray-50">
+                    <Lock className="h-6 w-6 text-gray-900" />
+                  </div>
+                  <h2 className="mx-auto max-w-[360px] text-[22px] font-bold leading-[1.15] tracking-[-0.02em] text-gray-900">
+                    Desbloquea el Informe Completo
+                  </h2>
+                  <p className="mx-auto mt-3 max-w-[360px] text-[13px] leading-relaxed text-gray-500">
+                    Obtén acceso exclusivo a nuestro análisis detallado, previsiones fiscales y datos específicos del sector. Información de nivel institucional diseñada para profesionales serios.
+                  </p>
+                  <div className="mt-6 space-y-3 text-left">
+                    {[
+                      "Análisis detallado en PDF de 45 páginas",
+                      "Datos brutos descargables (XLSX/CSV)",
+                      "Plantillas de modelos de previsión trimestral",
+                    ].map((label) => (
+                      <div key={label} className="flex items-center gap-3">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-blue-600 bg-white text-blue-600">
+                          <span className="text-[11px] font-bold leading-none">✓</span>
+                        </span>
+                        <span className="text-sm font-medium text-gray-700">{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-7 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={handleCulqiPayment}
+                      disabled={paymentInProgress}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      <i className="fa-solid fa-credit-card text-sm" />
+                      Pagar y desbloquear
+                    </button>
+                  </div>
+                  {!isAuthenticated && (
+                    <p className="mt-4 text-center text-xs text-gray-500">
+                      ¿Ya tienes una cuenta?{" "}
+                      <button
+                        type="button"
+                        onClick={() => setIsLoginModalOpen(true)}
+                        className="font-bold text-blue-600 hover:text-blue-700 hover:underline underline-offset-2"
+                      >
+                        Inicia sesión aquí
+                      </button>
+                    </p>
+                  )}
+                  {isAuthenticated && (
+                    <p className="mt-3 text-center text-xs text-gray-400">
+                      El pago habilita el acceso completo al reporte.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -261,6 +330,13 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
           </div>
         </div>
       )}
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLogin={login}
+        onSwitchToRegister={() => setIsLoginModalOpen(false)}
+      />
     </section>
   );
 };
