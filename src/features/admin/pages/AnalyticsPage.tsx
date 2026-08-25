@@ -27,6 +27,7 @@ import {
   RefreshCw,
   HelpCircle,
   Download,
+  ChevronDown,
 } from "lucide-react";
 
 declare global {
@@ -117,56 +118,109 @@ const SectionCard: React.FC<{ title: string; children: React.ReactNode; icon?: R
   </div>
 );
 
-const OccupationProfileBreakdown: React.FC<{ data: OccupationProfileMetrics }> = ({ data }) => (
-  <div className="min-w-0">
-    <div className="mb-4 flex items-end justify-between gap-3">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-          Distribución general
-        </p>
-        <p className="mt-1 text-2xl font-bold text-gray-900">{data.total_devices}</p>
+const OccupationProfileBreakdown: React.FC<{ data: OccupationProfileMetrics }> = ({ data }) => {
+  const [rolesOpen, setRolesOpen] = useState(false);
+  const [companiesOpen, setCompaniesOpen] = useState(false);
+
+  return (
+    <div className="min-w-0">
+      <div className="mb-4 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            Distribución general
+          </p>
+          <p className="mt-1 text-2xl font-bold text-gray-900">{data.total_devices}</p>
+        </div>
+        <span className="text-xs text-gray-400">dispositivos</span>
       </div>
-      <span className="text-xs text-gray-400">dispositivos</span>
+
+      {data.audiences.map((item, index) => (
+        <div key={item.label}>
+          <ProgressBar
+            label={item.label}
+            count={item.count}
+            percentage={item.percentage}
+            color={index === 0 ? "bg-blue-600" : "bg-emerald-500"}
+          />
+
+          {item.label === "Especialistas" && data.specialist_roles.length > 0 && (
+            <div className="mb-4 ml-0 rounded-lg border-l-2 border-blue-200 bg-slate-50 p-3 pl-3 sm:ml-2 sm:pl-4">
+              <button
+                type="button"
+                onClick={() => setRolesOpen((value) => !value)}
+                className="mb-3 flex w-full items-center justify-between gap-3 text-left"
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                  Especialistas por cargo
+                </p>
+                <ChevronDown
+                  className={`h-4 w-4 shrink-0 transition-transform duration-200 ${rolesOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {data.specialist_roles
+                .slice(0, rolesOpen ? data.specialist_roles.length : 2)
+                .map((role) => (
+                  <div key={role.label} className="mb-3 min-w-0 last:mb-0">
+                    <div className="mb-1 flex flex-wrap items-start gap-2 text-xs">
+                      <span className="min-w-0 flex-1 break-words font-medium leading-tight text-gray-700">
+                        {role.label}
+                      </span>
+                      <span className="shrink-0 text-gray-500">
+                        {role.count} ({role.percentage}%)
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                      <div
+                        className="h-full rounded-full bg-cyan-500"
+                        style={{ width: `${Math.min(role.percentage, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+
+          {item.label === "Empresas" && data.company_names.length > 0 && (
+            <div className="mb-4 ml-0 rounded-lg border-l-2 border-emerald-200 bg-emerald-50 p-3 pl-3 sm:ml-2 sm:pl-4">
+              <button
+                type="button"
+                onClick={() => setCompaniesOpen((value) => !value)}
+                className="mb-3 flex w-full items-center justify-between gap-3 text-left"
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                  Empresas registradas
+                </p>
+                <ChevronDown
+                  className={`h-4 w-4 shrink-0 transition-transform duration-200 ${companiesOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {data.company_names
+                .slice(0, companiesOpen ? data.company_names.length : 2)
+                .map((company) => (
+                  <div key={company.label} className="mb-3 min-w-0 last:mb-0">
+                    <div className="mb-1 flex flex-wrap items-start gap-2 text-xs">
+                      <span className="min-w-0 flex-1 break-words font-medium leading-tight text-gray-700">
+                        {company.label}
+                      </span>
+                      <span className="shrink-0 text-gray-500">
+                        {company.count} ({company.percentage}%)
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                      <div
+                        className="h-full rounded-full bg-emerald-500"
+                        style={{ width: `${Math.min(company.percentage, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
-
-    {data.audiences.map((item, index) => (
-      <div key={item.label}>
-        <ProgressBar
-          label={item.label}
-          count={item.count}
-          percentage={item.percentage}
-          color={index === 0 ? "bg-blue-600" : "bg-emerald-500"}
-        />
-
-        {item.label === "Especialistas" && data.specialist_roles.length > 0 && (
-          <div className="mb-4 ml-0 rounded-lg border-l-2 border-blue-200 bg-slate-50 p-3 pl-3 sm:ml-2 sm:pl-4">
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-              Especialistas por cargo
-            </p>
-            {data.specialist_roles.map((role) => (
-              <div key={role.label} className="mb-3 min-w-0 last:mb-0">
-                <div className="mb-1 flex flex-wrap items-start gap-2 text-xs">
-                  <span className="min-w-0 flex-1 break-words font-medium leading-tight text-gray-700">
-                    {role.label}
-                  </span>
-                  <span className="shrink-0 text-gray-500">
-                    {role.count} ({role.percentage}%)
-                  </span>
-                </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-                  <div
-                    className="h-full rounded-full bg-cyan-500"
-                    style={{ width: `${Math.min(role.percentage, 100)}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    ))}
-  </div>
-);
+  );
+};
 
 const SessionsChart: React.FC<{ data: { date: string; count: number }[] }> = ({ data }) => {
   const chartDiv = useRef<HTMLDivElement>(null);
@@ -325,6 +379,14 @@ const AnalyticsPage: React.FC = () => {
     }));
     const wsSpecialistRoles = XLSX.utils.json_to_sheet(specialistRolesData);
     XLSX.utils.book_append_sheet(wb, wsSpecialistRoles, "Cargos Especialistas");
+
+    const companyNamesData = (data.occupation_profiles?.company_names ?? []).map((item) => ({
+      Empresa: item.label,
+      Registros: item.count,
+      Porcentaje: `${item.percentage}%`,
+    }));
+    const wsCompanyNames = XLSX.utils.json_to_sheet(companyNamesData);
+    XLSX.utils.book_append_sheet(wb, wsCompanyNames, "Empresas Registradas");
 
     // 5. Páginas más vistas
     const pagesData = data.pages.map((p) => ({ Página: formatPageLabel(p.label), Vistas: p.count, Porcentaje: `${p.percentage}%` }));

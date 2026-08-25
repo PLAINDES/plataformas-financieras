@@ -58,6 +58,7 @@ export interface OccupationProfileMetrics {
   total_devices: number;
   audiences: TopItem[];
   specialist_roles: TopItem[];
+  company_names: TopItem[];
 }
 
 export interface DashboardData {

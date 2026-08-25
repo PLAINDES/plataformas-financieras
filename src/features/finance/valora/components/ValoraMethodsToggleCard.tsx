@@ -142,8 +142,8 @@ export const ValoraMethodsToggleCard: React.FC<ValoraMethodsToggleCardProps> = (
   };
 
   return (
-    <div className="flex flex-col rounded-2xl shadow-sm border border-gray-100 bg-white overflow-hidden h-full">
-      <div className="p-5 flex flex-col gap-3 h-full">
+    <div className="flex w-full flex-col rounded-2xl shadow-sm border border-gray-100 bg-white overflow-hidden">
+      <div className="p-5 flex flex-col gap-3">
         {orderedMethods.map((method) => {
           const isSelected = selectedMethod === method.id;
           const isCollapsed = selectedMethod !== "none" && !isSelected;

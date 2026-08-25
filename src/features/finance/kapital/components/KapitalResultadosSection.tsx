@@ -59,7 +59,7 @@ const InputsDropdown = ({ inputs, label }: { inputs: any; label?: string }) => {
             />
             {inputs.damodaran?.beta && (
               <InputDetail
-                label="Beta (Damo)"
+                label="Beta"
                 value={inputs.damodaran.beta.toFixed(3)}
               />
             )}

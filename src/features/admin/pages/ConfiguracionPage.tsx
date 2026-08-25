@@ -111,6 +111,20 @@ export const ConfiguracionPage = () => {
                 beta_apalancado: c.beta_levered ?? null,
                 total_activos: c.total_assets ?? null,
                 fx: c.fx_rate ?? null,
+                activo_mercado: c.total_assets ?? null,
+                sector: c.sector ?? null,
+                subsector: c.subsector ?? null,
+                country: c.country ?? null,
+                listing_currency: c.listing_currency ?? null,
+                reporting_currency: c.reporting_currency ?? null,
+                debt_lt: c.debt_lt ?? null,
+                debt_st: c.debt_st ?? null,
+                debt_value: c.debt_value ?? null,
+                equity_value: c.equity_value ?? null,
+                dc_ratio: c.dc_ratio ?? null,
+                effective_tax_rate: c.effective_tax_rate ?? null,
+                pct_debt: c.pct_debt ?? null,
+                pct_equity: c.pct_equity ?? null,
               };
             });
             pData.forEach((item: any) => {
@@ -613,6 +627,20 @@ export const ConfiguracionPage = () => {
               beta_apalancado: c.beta_levered ?? null,
               total_activos: c.total_assets ?? null,
               fx: c.fx_rate ?? null,
+              activo_mercado: c.total_assets ?? null,
+              sector: c.sector ?? null,
+              subsector: c.subsector ?? null,
+              country: c.country ?? null,
+              listing_currency: c.listing_currency ?? null,
+              reporting_currency: c.reporting_currency ?? null,
+              debt_lt: c.debt_lt ?? null,
+              debt_st: c.debt_st ?? null,
+              debt_value: c.debt_value ?? null,
+              equity_value: c.equity_value ?? null,
+              dc_ratio: c.dc_ratio ?? null,
+              effective_tax_rate: c.effective_tax_rate ?? null,
+              pct_debt: c.pct_debt ?? null,
+              pct_equity: c.pct_equity ?? null,
             };
           });
 

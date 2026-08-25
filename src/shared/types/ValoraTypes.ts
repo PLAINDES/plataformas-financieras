@@ -55,6 +55,7 @@ export interface ValoraMethodResults {
 
 export interface ValoraCalculationResults {
   wacc?: string | number | null;
+  wacc_emergente?: string | number | null;
   source_currency?: string | null;
   fx_to_usd?: number | null;
   inputs?: {
@@ -67,4 +68,6 @@ export interface ValoraCalculationResults {
   };
   conceptos?: ValoraMethodResults;
   integrado?: ValoraMethodResults;
+  conceptos_emergente?: ValoraMethodResults;
+  integrado_emergente?: ValoraMethodResults;
 }

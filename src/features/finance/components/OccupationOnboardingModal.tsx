@@ -1,5 +1,5 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { BriefcaseBusiness, GraduationCap } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { BriefcaseBusiness, Building2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
 import {
@@ -24,11 +24,7 @@ const FINANCIAL_ROLES = [
   "Inversiones / Asset Management",
   "Banca / Servicios Financieros",
   "Consultoría Financiera",
-  "Otro",
 ] as const;
-
-type Audience = "specialist" | "student";
-type Step = "audience" | "role";
 
 function getOrCreateDeviceId(): string {
   let deviceId = localStorage.getItem(DEVICE_ID_KEY);
@@ -51,224 +47,174 @@ export function OccupationOnboardingModal() {
     if (!isCalculationEntry) return false;
     return localStorage.getItem(deviceKey) !== "true";
   });
-  const [step, setStep] = useState<Step>("audience");
-  const [audience, setAudience] = useState<Audience | null>(null);
-  const [role, setRole] = useState("");
-  const [otherRole, setOtherRole] = useState("");
+  const [roleInput, setRoleInput] = useState("");
+  const [companyInput, setCompanyInput] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [inputActivated, setInputActivated] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const showStepBar = audience === "specialist" && step === "role";
+  const filteredRoles = roleInput.trim()
+    ? FINANCIAL_ROLES.filter((r) =>
+        r.toLowerCase().includes(roleInput.trim().toLowerCase())
+      )
+    : [...FINANCIAL_ROLES];
 
   useEffect(() => {
     if (!isCalculationEntry) return;
 
     const shouldOpen = localStorage.getItem(deviceKey) !== "true";
     if (shouldOpen) {
-      setStep("audience");
-      setAudience(null);
-      setRole("");
-      setOtherRole("");
+      setRoleInput("");
+      setCompanyInput("");
+      setInputActivated(false);
+      setShowDropdown(false);
       setIsOpen(true);
     }
   }, [deviceKey, isCalculationEntry, pathname]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   if (!isCalculationEntry) return null;
 
   const finish = async () => {
-    if (!audience) return;
-
     await trackEvent("occupation_profile_completed", {
-      audience,
-      role: audience === "specialist" ? role : null,
+      audience: "specialist",
+      role: roleInput.trim() || null,
+      company: companyInput.trim() || null,
     });
     localStorage.setItem(deviceKey, "true");
     setIsOpen(false);
   };
 
-  const continueFromAudience = () => {
-    if (audience === "specialist") {
-      setStep("role");
-      return;
-    }
-    if (audience === "student") void finish();
-  };
-
-  const goBackToAudience = () => {
-    setStep("audience");
-    setRole("");
-    setOtherRole("");
-  };
-
-  const canFinishRole = Boolean(role && (role !== "Otro" || otherRole.trim()));
-  const stepNumber = step === "audience" ? 1 : 2;
+  const canSubmit = roleInput.trim().length > 0 && companyInput.trim().length > 0;
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => undefined}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) setIsOpen(false);
+      }}
+    >
       <DialogContent
-        showCloseButton={false}
+        showCloseButton
         onEscapeKeyDown={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => event.preventDefault()}
         onInteractOutside={(event) => event.preventDefault()}
-        className="flex max-h-[90dvh] w-[min(96vw,520px)] max-w-none flex-col overflow-hidden rounded-2xl border border-gray-300 bg-white p-0 font-sans shadow-2xl sm:max-h-[92dvh] sm:w-[min(94vw,520px)]"
+        className="flex max-h-[90dvh] w-[min(96vw,520px)] max-w-none flex-col overflow-visible rounded-2xl border border-gray-300 bg-white p-0 font-sans shadow-2xl sm:max-h-[92dvh] sm:w-[min(94vw,520px)]"
       >
         <DialogTitle className="sr-only">Cuéntanos tu ocupación</DialogTitle>
         <DialogDescription className="sr-only">
-          Selecciona tu perfil para continuar a la calculadora.
+          Ingresa tu perfil para continuar a la calculadora.
         </DialogDescription>
 
-        <div
-          className={`shrink-0 px-4 pt-4 transition-all duration-300 sm:px-8 sm:pt-7 ${
-            showStepBar ? "opacity-100 translate-y-0" : "pointer-events-none max-h-0 overflow-hidden py-0 opacity-0 -translate-y-2"
-          }`}
-        >
-          <div className="flex items-center justify-between font-mono text-[9px] tracking-[0.08em] text-gray-600 sm:text-[10px]">
-            <span>PASO {stepNumber} DE 2</span>
-            <span>Configuración del perfil</span>
-          </div>
-          <div className="mt-2 h-[3px] overflow-hidden rounded-full bg-gray-200">
-            <div
-              className={`h-full bg-blue-600 transition-[width] duration-300 ${
-                step === "audience" ? "w-1/2" : "w-full"
-              }`}
-            />
-          </div>
-        </div>
+        <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-4 sm:min-h-[min(72dvh,555px)] sm:px-8 sm:pb-8 sm:pt-8">
+          <h2 className="mx-auto max-w-[450px] text-center text-[22px] font-bold leading-[1.08] tracking-[-0.02em] text-gray-950 sm:text-[38px]">
+            Para ofrecerle las herramientas financieras adecuadas, cuéntenos
+            su ocupación profesional.
+          </h2>
+          <p className="mt-2 text-center text-xs text-gray-600 sm:mt-4 sm:text-base">
+            Seleccione un rol o escriba el suyo.
+          </p>
 
-        {step === "audience" ? (
-          <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-4 sm:min-h-[min(72dvh,555px)] sm:px-8 sm:pb-8 sm:pt-8">
-            <h2 className="mx-auto max-w-[450px] text-center text-[22px] font-bold leading-[1.08] tracking-[-0.02em] text-gray-950 sm:text-[38px]">
-              Para ofrecerte las herramientas financieras adecuadas, cuéntanos tu rol actual.
-            </h2>
-            <p className="mt-2 text-center text-xs text-gray-600 sm:mt-4 sm:text-base">
-              Selecciona la opción que mejor te describa.
-            </p>
-
-            <div className="mt-4 grid grid-cols-1 gap-2.5 sm:mt-11 sm:grid-cols-2 sm:gap-3">
-              <AudienceCard
-                selected={audience === "specialist"}
-                onClick={() => setAudience("specialist")}
-                icon={<BriefcaseBusiness className="size-5" />}
-                title="Soy un Especialista Financiero"
-                description="Gestión de activos, asesoría o finanzas institucionales"
+          <div className="mt-4 sm:mt-6">
+            <label
+              htmlFor="role-input"
+              className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-gray-800 sm:text-[15px]"
+            >
+              <BriefcaseBusiness className="size-4 shrink-0 text-gray-500" />
+              Cargo profesional
+            </label>
+            <div className="relative">
+              <input
+                ref={inputRef}
+                id="role-input"
+                type="text"
+                value={roleInput}
+                onChange={(event) => {
+                  const nextValue = event.target.value;
+                  setRoleInput(nextValue);
+                  setShowDropdown(inputActivated);
+                }}
+                onFocus={() => undefined}
+                onClick={() => {
+                  setInputActivated(true);
+                  setShowDropdown(true);
+                }}
+                placeholder="Ej: Analista Financiero, CFO, Contador..."
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 sm:py-3.5 sm:text-base"
               />
-              <AudienceCard
-                selected={audience === "student"}
-                onClick={() => setAudience("student")}
-                icon={<GraduationCap className="size-5" />}
-                title="Soy un Estudiante"
-                description="Aprendiendo las bases, investigación académica o interés personal"
-              />
+              {inputActivated && showDropdown && filteredRoles.length > 0 && (
+                <div
+                  ref={dropdownRef}
+                  className="absolute left-0 top-full z-[99999] mt-2 max-h-56 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white py-1 shadow-lg [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                  {filteredRoles.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                      }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setRoleInput(item);
+                        setShowDropdown(false);
+                      }}
+                      className="flex w-full items-center px-4 py-2.5 text-left text-sm text-gray-700 transition hover:bg-blue-50 hover:text-blue-700 sm:text-base"
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+            {roleInput.trim().length > 0 && (
+              <div className="mt-4">
+                <label
+                  htmlFor="company-input"
+                  className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-gray-800 sm:text-[15px]"
+                >
+                  <Building2 className="size-4 shrink-0 text-gray-500" />
+                  Empresa
+                </label>
+                <input
+                  id="company-input"
+                  type="text"
+                  value={companyInput}
+                  onChange={(event) => setCompanyInput(event.target.value)}
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 sm:py-3.5 sm:text-base"
+                />
+              </div>
+            )}
+          </div>
 
+          <div className="mt-auto pt-4 flex justify-center">
             <button
               type="button"
-              disabled={!audience}
-              onClick={continueFromAudience}
-              className="mx-auto mt-4 w-full max-w-31 rounded-lg bg-blue-600 px-5 py-3 font-mono text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-200 sm:mt-auto"
+              disabled={!canSubmit}
+              onClick={finish}
+              className="rounded-lg bg-blue-600 px-8 py-3 font-mono text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-200 sm:py-3.5 sm:text-sm"
             >
-              Continuar
+              Ingresar
             </button>
           </div>
-        ) : (
-          <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-4 sm:px-10 sm:pb-8 sm:pt-6">
-            <p className="shrink-0 text-center text-sm font-semibold text-gray-800 sm:text-xl">
-              Elige la opción más alineada a ti.
-            </p>
-
-            <div className="mt-3 min-h-0 flex-1 overflow-y-auto pr-1 sm:mt-5">
-              <div className="space-y-1">
-                {FINANCIAL_ROLES.map((item) => (
-                  <label
-                    key={item}
-                    className="flex min-h-9 cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.25 text-sm text-gray-700 transition hover:bg-blue-50 sm:min-h-10 sm:gap-3 sm:px-2 sm:py-1.5 sm:text-lg"
-                  >
-                    <input
-                      type="radio"
-                      name="financial-role"
-                      value={item}
-                      checked={role === item}
-                      onChange={() => {
-                        setRole(item);
-                      }}
-                      className="size-4 shrink-0 accent-blue-600 sm:size-5"
-                    />
-                    <span>{item}</span>
-                    {item === "Otro" && role === "Otro" && (
-                      <input
-                        autoFocus
-                        value={otherRole}
-                        onChange={(event) => setOtherRole(event.target.value)}
-                        onClick={(event) => event.stopPropagation()}
-                        placeholder="Detallar"
-                        className="ml-2 min-w-0 flex-1 border-0 border-b border-gray-500 bg-transparent px-1 py-1 italic outline-none focus:border-blue-600"
-                      />
-                    )}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-3 flex items-center justify-center gap-3 sm:mt-5">
-              <button
-                type="button"
-                onClick={goBackToAudience}
-                className="w-full max-w-31 rounded-md border border-gray-200 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-gray-600 transition hover:bg-gray-50"
-              >
-                Volver
-              </button>
-              <button
-                type="button"
-                disabled={!canFinishRole}
-                onClick={() => void finish()}
-                className="w-full max-w-31 rounded-lg bg-blue-600 px-5 py-3 font-mono text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-200"
-              >
-                Continuar
-              </button>
-            </div>
-          </div>
-        )}
+        </div>
       </DialogContent>
-    </Dialog>
-  );
-}
 
-function AudienceCard({
-  selected,
-  onClick,
-  icon,
-  title,
-  description,
-}: {
-  selected: boolean;
-  onClick: () => void;
-  icon: ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={selected}
-      className={`relative min-h-36 rounded-xl border p-3 text-left transition sm:min-h-42 sm:rounded-sm sm:p-4 ${
-        selected
-          ? "border-blue-600 bg-blue-50/40"
-          : "border-gray-300 bg-white hover:border-gray-500"
-      }`}
-    >
-      <span className="flex size-8 items-center justify-center rounded-md bg-gray-100 text-gray-700 sm:size-9 sm:rounded-sm">
-        {icon}
-      </span>
-      <span
-        className={`absolute right-3 top-3 size-3.5 rounded-full border sm:right-4 sm:top-4 sm:size-4 ${
-          selected ? "border-blue-600 bg-blue-600" : "border-gray-300"
-        }`}
-      />
-      <strong className="mt-2.5 block text-sm leading-tight text-gray-950 sm:mt-3 sm:text-lg">
-        {title}
-      </strong>
-      <span className="mt-1.5 block text-[11px] leading-snug text-gray-600 sm:text-xs">
-        {description}
-      </span>
-    </button>
+    </Dialog>
   );
 }

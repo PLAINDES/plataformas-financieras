@@ -618,7 +618,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                       {isLoadingAI && (
                         <div className="ai-thinking-indicator">
                           <div className="ai-thinking-dot" />
-                          <span>Thinking...</span>
+                          <span>Pensando...</span>
                         </div>
                       )}
                     </div>
@@ -717,6 +717,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
 };
 
 const SOURCE_LABELS: Record<string, string> = {
+  ai_estimation: "Estimación con IA",
   excel_cache: "Leído de la plantilla Excel",
   financial_data_cagr: "CAGR de tus estados financieros",
   historical_mean: "Media histórica de la plantilla",

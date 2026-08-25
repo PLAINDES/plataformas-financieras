@@ -35,13 +35,18 @@ import {
 } from "@/shared/constants/kapital";
 
 const getValoraCalculationResults = (
-  data: unknown
+  data: unknown,
+  key: "resultados" | "sensibilizacion" = "resultados"
 ): ValoraCalculationResults | undefined => {
   if (!data || typeof data !== "object") return undefined;
 
-  const results = (data as {
-    resultados?: ValoraCalculationResults | ValoraCalculationResults[];
-  }).resultados;
+  const calculationData = data as Record<
+    "resultados" | "sensibilizacion",
+    ValoraCalculationResults | ValoraCalculationResults[] | undefined
+  > & { sensibilidad?: ValoraCalculationResults | ValoraCalculationResults[] };
+  const results = calculationData[key] ?? (
+    key === "sensibilizacion" ? calculationData.sensibilidad : undefined
+  );
 
   if (Array.isArray(results)) return results[0];
   return results;
@@ -218,6 +223,65 @@ const ValoraPage: React.FC = () => {
     },
   });
 
+  const handleOpenFormPanel = () => {
+    const willOpen = !isDesktopFormOpen;
+    setIsDesktopFormOpen((prev) => !prev);
+    if (willOpen) {
+      const rawData = valoraCalc.currentCalculation?.data as any;
+      let resultados: any = null;
+      if (Array.isArray(rawData?.resultados)) {
+        resultados = rawData.resultados[0];
+      } else if (rawData?.resultados) {
+        resultados = rawData.resultados;
+      } else if (rawData && typeof rawData === "object") {
+        resultados = rawData;
+      }
+      if (resultados) {
+        const parseRate = (val: any): string | null => {
+          if (val == null || val === "") return null;
+          const str = String(val).trim().replace("%", "").replace(",", ".");
+          const num = Number(str);
+          if (!Number.isFinite(num)) return null;
+          const pct = Math.abs(num) < 1 && num !== 0 ? Math.round(num * 10000) / 100 : num;
+          return String(pct);
+        };
+        const ing =
+          resultados?.conceptos?.tasa_forecast ??
+          resultados?.forecast_ingresos ??
+          resultados?.tasa_forecast ??
+          (rawData as any)?.inputs?.[0]?.revenue_forecast_rate;
+        const fde =
+          resultados?.integrado?.tasa_forecast ??
+          resultados?.forecast_fde ??
+          resultados?.tasa_fde ??
+          (rawData as any)?.inputs?.[0]?.fdc_forecast_rate;
+        const perp =
+          resultados?.conceptos?.tasa_perpetua ??
+          resultados?.integrado?.tasa_perpetua ??
+          resultados?.crecimiento_perpetuo ??
+          resultados?.tasa_perpetua ??
+          resultados?.perpetual_growth_rate ??
+          (rawData as any)?.inputs?.[0]?.perpetual_growth_rate;
+        setFormData((prev) => {
+          const updates: Partial<typeof prev> = {};
+          if (!prev.revenue_forecast_rate && ing != null && String(ing).trim() !== "") {
+            const v = parseRate(ing);
+            if (v) updates.revenue_forecast_rate = v;
+          }
+          if (!prev.fdc_forecast_rate && fde != null && String(fde).trim() !== "") {
+            const v = parseRate(fde);
+            if (v) updates.fdc_forecast_rate = v;
+          }
+          if (!prev.perpetual_growth_rate && perp != null && String(perp).trim() !== "") {
+            const v = parseRate(perp);
+            if (v) updates.perpetual_growth_rate = v;
+          }
+          return Object.keys(updates).length ? { ...prev, ...updates } : prev;
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     valoraCalc.loadFromUrl();
   }, []);
@@ -309,9 +373,19 @@ const ValoraPage: React.FC = () => {
         calculationResults={getValoraCalculationResults(
           valoraCalc.currentCalculation?.data
         )}
+        sensitizedResults={getValoraCalculationResults(
+          valoraCalc.currentCalculation?.data,
+          "sensibilizacion"
+        )}
         formData={formData}
+        resultView={valoraCalc.resultView}
+        hasSensitized={Boolean(getValoraCalculationResults(
+          valoraCalc.currentCalculation?.data,
+          "sensibilizacion"
+        ))}
+        onResultViewChange={valoraCalc.setResultView}
         onSectionChange={handleResultsSectionChange}
-        onOpenFormPanel={() => setIsDesktopFormOpen(true)}
+        onOpenFormPanel={handleOpenFormPanel}
       />
       <MainPageFooter brandName={"Valora"} brandHref={"/valora"} />
     </div>
@@ -321,7 +395,7 @@ const ValoraPage: React.FC = () => {
       brandHref="/kapital"
       heroTitle="Bienvenido a Valora"
       btnText="Valora"
-      onOpenForm={() => setIsDesktopFormOpen((prev) => !prev)}
+      onOpenForm={handleOpenFormPanel}
     />
   );
 
@@ -415,7 +489,7 @@ const ValoraPage: React.FC = () => {
           const ing = rates.forecast_ingresos_1er_periodo?.recommendation;
           console.info("[VALORA FRONTEND] Ingresos recommendation:", ing, "tipo:", typeof ing);
           if (ing !== undefined && ing !== null && !Number.isNaN(Number(ing))) {
-            updates.revenue_forecast_rate = String(Number(ing) * 100);
+            updates.revenue_forecast_rate = String(Math.round(Number(ing) * 10000) / 100);
             console.info("[VALORA FRONTEND] revenue_forecast_rate actualizado a:", updates.revenue_forecast_rate);
           } else {
             console.warn("[VALORA FRONTEND] Ingresos recommendation inválida o vacía:", ing);
@@ -424,7 +498,7 @@ const ValoraPage: React.FC = () => {
           const fde = rates.forecast_fde_1er_periodo?.recommendation;
           console.info("[VALORA FRONTEND] FDE recommendation:", fde, "tipo:", typeof fde);
           if (fde !== undefined && fde !== null && !Number.isNaN(Number(fde))) {
-            updates.fdc_forecast_rate = String(Number(fde) * 100);
+            updates.fdc_forecast_rate = String(Math.round(Number(fde) * 10000) / 100);
             console.info("[VALORA FRONTEND] fdc_forecast_rate actualizado a:", updates.fdc_forecast_rate);
           } else {
             console.warn("[VALORA FRONTEND] FDE recommendation inválida o vacía:", fde);
@@ -433,7 +507,7 @@ const ValoraPage: React.FC = () => {
           const perp = rates.crecimiento_perpetuo?.recommendation;
           console.info("[VALORA FRONTEND] Perpetuo recommendation:", perp, "tipo:", typeof perp);
           if (perp !== undefined && perp !== null && !Number.isNaN(Number(perp))) {
-            updates.perpetual_growth_rate = String(Number(perp) * 100);
+            updates.perpetual_growth_rate = String(Math.round(Number(perp) * 10000) / 100);
             console.info("[VALORA FRONTEND] perpetual_growth_rate actualizado a:", updates.perpetual_growth_rate);
           } else {
             console.warn("[VALORA FRONTEND] Perpetuo recommendation inválida o vacía:", perp);
@@ -522,7 +596,7 @@ isLoadingAI={isLoadingAI}
       />
         </div>
         {subsectorModalOpen && (
-          <div className="mt-4 ml-4 hidden h-[calc(100dvh-8rem)] max-h-[calc(100dvh-8rem)] w-96 shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-xl lg:flex xl:w-125">
+          <div className="hidden lg:flex w-96 xl:w-125 h-[calc(100dvh-16rem)] max-h-[calc(100dvh-16rem)] bg-white border border-gray-200/80 rounded-xl flex-col shrink-0 animate-in slide-in-from-left-8 duration-300 ml-4 overflow-hidden self-start mt-4">
             <SubsectorModal
               subsectorDetail={subsectorDetail}
               detailTickers={detailTickers}

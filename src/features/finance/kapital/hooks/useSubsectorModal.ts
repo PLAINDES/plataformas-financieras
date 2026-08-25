@@ -47,12 +47,22 @@ export function useSubsectorModal({
     const handleCalculateDetail = useCallback(() => {
         if (!subsectorDetail) return;
         const activeTickers = detailTickers.filter((t) => !inactiveTickers.includes(t));
-        const boas: number[] = activeTickers
-            .map((emp) => Number(subsectorDetail.empresas_boa?.[emp]))
-            .filter((v) => !isNaN(v));
-        if (boas.length === 0) return;
-        const avgBoa = boas.reduce((sum, v) => sum + v, 0) / boas.length;
-        const betaStr = avgBoa.toFixed(2);
+
+        // BOA Ponderado: Σ(Wi% × beta_unlevered) donde Wi% = total_activos_i / Σtotal_activos
+        const activosTotal = activeTickers.reduce((sum, emp) => {
+            const activos = Number(subsectorDetail.ticker_info?.[emp]?.total_activos) || 0;
+            return sum + activos;
+        }, 0);
+        if (activosTotal === 0) return;
+
+        let boaPonderado = 0;
+        for (const emp of activeTickers) {
+            const boa = Number(subsectorDetail.empresas_boa?.[emp]) || 0;
+            const activos = Number(subsectorDetail.ticker_info?.[emp]?.total_activos) || 0;
+            const wi = activos / activosTotal;
+            boaPonderado += wi * boa;
+        }
+        const betaStr = boaPonderado.toFixed(2);
 
         const isSens = subsectorModalMode === "sensibilizacion";
         const subsectorKey = isSens ? "subsector_sensibilizacion" : "subsector";
@@ -61,13 +71,9 @@ export function useSubsectorModal({
 
         ref.current[subsectorDetail.subsector] = activeTickers;
 
-        // Siempre actualizamos beta_subsector para que se vea reflejado en el Section 1
         handleInputChange({
             target: { name: "beta_subsector", value: betaStr },
         } as any);
-
-        // NO sobrescribimos beta_unlevered_industry: ese campo conserva el
-        // beta desapalancado del SECTOR (Damodaran) para mostrarlo en resultados.
 
         if (isSens) {
             handleInputChange({
@@ -88,11 +94,22 @@ export function useSubsectorModal({
     const detailBoa = useMemo(() => {
         const activeTickers = detailTickers.filter((t) => !inactiveTickers.includes(t));
         if (activeTickers.length === 0 || !subsectorDetail) return null;
-        const boas: number[] = activeTickers
-            .map((emp) => Number(subsectorDetail.empresas_boa?.[emp]))
-            .filter((v) => !isNaN(v));
-        if (boas.length === 0) return null;
-        return boas.reduce((sum, v) => sum + v, 0) / boas.length;
+
+        // BOA Ponderado: Σ(Wi% × beta_unlevered)
+        const activosTotal = activeTickers.reduce((sum, emp) => {
+            const activos = Number(subsectorDetail.ticker_info?.[emp]?.total_activos) || 0;
+            return sum + activos;
+        }, 0);
+        if (activosTotal === 0) return null;
+
+        let boaPonderado = 0;
+        for (const emp of activeTickers) {
+            const boa = Number(subsectorDetail.empresas_boa?.[emp]) || 0;
+            const activos = Number(subsectorDetail.ticker_info?.[emp]?.total_activos) || 0;
+            const wi = activos / activosTotal;
+            boaPonderado += wi * boa;
+        }
+        return boaPonderado;
     }, [detailTickers, inactiveTickers, subsectorDetail]);
 
     const openSubsectorModal = () => {

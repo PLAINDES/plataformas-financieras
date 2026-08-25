@@ -7,16 +7,21 @@ import type { ValoraCalculationResults } from "@/shared/types/ValoraTypes";
 
 export interface ValoraGeneralResultsBlockProps {
   onOpenFormPanel?: () => void;
+  showPromptButton?: boolean;
   results?: ValoraCalculationResults;
+  toolbar?: React.ReactNode;
 }
 
 type ChartMode = "default" | "conceptos" | "integrado";
 
 export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps> = ({
   onOpenFormPanel,
+  showPromptButton = true,
   results,
+  toolbar,
 }) => {
   const [chartMode, setChartMode] = useState<ChartMode>("default");
+  const [companyType, setCompanyType] = useState<"empresa" | "emergente">("empresa");
   const sourceCurrency = (results?.source_currency ?? results?.inputs?.moneda ?? "USD").toUpperCase();
   const [resultCurrency, setResultCurrency] = useState(sourceCurrency);
   const fxToUsd = sourceCurrency === "USD" ? 1 : results?.fx_to_usd;
@@ -58,7 +63,7 @@ export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps>
   const parsePercentage = (value: string | number | null | undefined) => {
     const parsed = parseNumber(value);
     if (parsed === null) return null;
-    return typeof value === "string" && value.includes("%") ? parsed : Math.abs(parsed) <= 1 ? parsed * 100 : parsed;
+    return typeof value === "string" && value.includes("%") ? parsed : Math.abs(parsed) <= 1 ? Math.round(parsed * 10000) / 100 : parsed;
   };
 
   const parseMoney = (value: string | number | null | undefined) => {
@@ -69,15 +74,19 @@ export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps>
       : parsed;
   };
 
+  const conceptosSource = companyType === "emergente" ? results?.conceptos_emergente : results?.conceptos;
+  const integradoSource = companyType === "emergente" ? results?.integrado_emergente : results?.integrado;
+  const currentWacc = companyType === "emergente" ? results?.wacc_emergente : results?.wacc;
+
   const methods = [
     {
       id: "conceptos" as const,
       headerText: "Método por Conceptos",
-      activoValue: parseMoney(results?.conceptos?.activo),
-      pasivoValue: parseMoney(results?.conceptos?.pasivo),
-      empresaValue: parseMoney(results?.conceptos?.empresa),
-      patrimonioValue: parseMoney(results?.conceptos?.patrimonio),
-      accionValue: parseMoney(results?.conceptos?.precio_accion),
+      activoValue: parseMoney(conceptosSource?.activo),
+      pasivoValue: parseMoney(conceptosSource?.pasivo),
+      empresaValue: parseMoney(conceptosSource?.empresa),
+      patrimonioValue: parseMoney(conceptosSource?.patrimonio),
+      accionValue: parseMoney(conceptosSource?.precio_accion),
       tasaForecast: parsePercentage(results?.conceptos?.tasa_forecast),
       tasaForecastLabel: "Tasa de crecimiento ingresos forecast primer periodo",
       tasaPerpetua: parsePercentage(results?.conceptos?.tasa_perpetua),
@@ -87,11 +96,11 @@ export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps>
     {
       id: "integrado" as const,
       headerText: "Método Integrado",
-      activoValue: parseMoney(results?.integrado?.activo),
-      pasivoValue: parseMoney(results?.integrado?.pasivo),
-      empresaValue: parseMoney(results?.integrado?.empresa),
-      patrimonioValue: parseMoney(results?.integrado?.patrimonio),
-      accionValue: parseMoney(results?.integrado?.precio_accion),
+      activoValue: parseMoney(integradoSource?.activo),
+      pasivoValue: parseMoney(integradoSource?.pasivo),
+      empresaValue: parseMoney(integradoSource?.empresa),
+      patrimonioValue: parseMoney(integradoSource?.patrimonio),
+      accionValue: parseMoney(integradoSource?.precio_accion),
       tasaForecast: parsePercentage(results?.integrado?.tasa_forecast),
       tasaForecastLabel: "Tasa de crecimiento FCE forecast primer periodo",
       tasaPerpetua: parsePercentage(results?.integrado?.tasa_perpetua),
@@ -103,12 +112,16 @@ export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps>
   return (
     <div className="flex flex-col gap-4">
       <ValoraResultsHeader
-        wacc={parsePercentage(results?.wacc)}
+        wacc={parsePercentage(currentWacc)}
         title="Resultados generales"
         subtitle="Comparación de resultados"
+        companyType={companyType}
+        onCompanyTypeChange={setCompanyType}
       />
 
-      {onOpenFormPanel && (
+      {toolbar}
+
+      {onOpenFormPanel && showPromptButton && (
         <div className="flex justify-center lg:justify-start">
           <button
             type="button"
@@ -125,7 +138,7 @@ export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps>
       )}
 
       <div className="flex flex-col lg:flex-row gap-4">
-        <div className="lg:w-1/3">
+        <div className="lg:flex lg:w-1/3 lg:items-center">
           <ValoraMethodsToggleCard
             methods={methods}
             selectedMethod={chartMode === "default" ? "none" : chartMode}
