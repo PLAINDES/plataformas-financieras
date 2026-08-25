@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { BarChart3, CheckCircle2, ChevronRight, PieChart } from "lucide-react";
 import { ValoraResultsHeader } from "./ValoraResultsHeader";
 import type { ValoraCalculationResults } from "@/shared/types/ValoraTypes";
-import { getComparisonEmpresaRowSpan, getComparisonPatrimonioRowSpan, getEmpresaRowSpan, DynamicConnector } from "./ValoraChartUtils";
+import { getComparisonPatrimonioRowSpan, getEmpresaRowSpan, DynamicConnector } from "./ValoraChartUtils";
 
 type ComparisonMethodId = "conceptos" | "integrado";
 type ComparisonView = ComparisonMethodId | "none";
@@ -331,7 +331,6 @@ const GeneralComparisonChart = ({
     const ratio = Math.abs(pasivo) / Math.abs(activo);
     return Math.max(2, Math.min(7, Math.round(ratio * TOTAL_ROWS)));
   })();
-  const patrimonioRefRowSpan = TOTAL_ROWS - pasivoRowSpan;
   const conceptosEspRowSpan = getComparisonPatrimonioRowSpan(conceptosPatrimonioEsperado, patrimonio, isEmergente);
   const conceptosSensRowSpan = getComparisonPatrimonioRowSpan(conceptosPatrimonioSensibilizado, patrimonio, isEmergente);
   const integradoEspRowSpan = getComparisonPatrimonioRowSpan(integradoPatrimonioEsperado, patrimonio, isEmergente);
