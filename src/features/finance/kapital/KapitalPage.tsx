@@ -43,6 +43,7 @@ import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
 import { ReportViewer } from "./components/ReportViewer";
 import { SubsectorModal } from "./components/SubsectorModal";
 import { OccupationOnboardingModal } from "../components/OccupationOnboardingModal";
+import { KapitalOnboardingWalkthrough } from "./components/KapitalOnboardingWalkthrough";
 
 const KAPITAL_STARTED_SESSION_KEY = "analytics_kapital_calculator_started";
 
@@ -366,6 +367,11 @@ const KapitalPage: React.FC = () => {
     return (
         <div className="min-h-dvh bg-gray-50">
             <OccupationOnboardingModal />
+            <KapitalOnboardingWalkthrough
+                isFormOpen={isFormOpen}
+                setIsFormOpen={setIsFormOpen}
+                showResults={showResults}
+            />
             <NavBar
                 user={user}
                 onLogout={handleLogout}

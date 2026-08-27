@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { formatNumber, getSensibilidadEmpresaRowSpan, getSensibilidadPatrimonioRowSpan, DynamicConnector } from "./ValoraChartUtils";
+import { formatNumber, getMaxAbs, getProportionalRowSpan, DynamicConnector } from "./ValoraChartUtils";
 
 export interface ValoraSensibilidadBalanceSheetBlockProps {
   activo: number;
@@ -26,7 +26,7 @@ const DefaultSensibilidadChart = ({
   patrimonio,
   conceptosPatrimonioSensibilizado,
   integradoPatrimonioSensibilizado,
-  companyType,
+  companyType: _companyType,
 }: {
   activo: number;
   pasivo: number;
@@ -35,10 +35,16 @@ const DefaultSensibilidadChart = ({
   integradoPatrimonioSensibilizado: number;
   companyType: "empresa" | "emergente";
 }) => {
-  const TOTAL_ROWS = 9;
-  const isEmergente = companyType === "emergente";
-  const conceptosPatRowSpan = getSensibilidadPatrimonioRowSpan(conceptosPatrimonioSensibilizado, patrimonio, isEmergente);
-  const integradoPatRowSpan = getSensibilidadPatrimonioRowSpan(integradoPatrimonioSensibilizado, patrimonio, isEmergente);
+  const TOTAL_ROWS = 240;
+  // mismo anclaje que GeneralComparison: balance no comprimido por outlier sensibilizado
+  const maxBalance = getMaxAbs(activo, pasivo, patrimonio);
+  const maxOverall = getMaxAbs(activo, pasivo, patrimonio, conceptosPatrimonioSensibilizado, integradoPatrimonioSensibilizado);
+  const activoRowSpan = getProportionalRowSpan(activo, maxBalance, TOTAL_ROWS);
+  const sumPP = Math.abs(pasivo) + Math.abs(patrimonio);
+  const pasivoRowSpan = sumPP > 0 ? Math.max(4, Math.round((activoRowSpan * Math.abs(pasivo)) / sumPP)) : Math.round(activoRowSpan / 2);
+  const patrimonioContableRowSpan = activoRowSpan - pasivoRowSpan;
+  const conceptosPatRowSpan = getProportionalRowSpan(conceptosPatrimonioSensibilizado, maxBalance, TOTAL_ROWS);
+  const integradoPatRowSpan = getProportionalRowSpan(integradoPatrimonioSensibilizado, maxOverall, TOTAL_ROWS);
 
   const gridRef = useRef<HTMLDivElement>(null);
   const patrimonioRef = useRef<HTMLDivElement>(null);
@@ -67,8 +73,11 @@ const DefaultSensibilidadChart = ({
           <line x1="22.2%" y1="99.5%" x2="100%" y2="99.5%" stroke="#9ca3af" strokeWidth="1.5" strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />
         </svg>
 
-        {/* Activo - REFERENCIA FIJA */}
-        <div className="col-span-4 row-span-9 row-start-1 mr-[3px] border-[3px] border-[#a62cad] rounded-l-xl relative flex flex-col items-center justify-center">
+        {/* Activo - DINÁMICO proporcional al máximo global (ancho intacto: col-span-4) */}
+        <div
+          className="col-span-4 mr-[3px] border-[3px] border-[#a62cad] rounded-l-xl relative flex flex-col items-center justify-center"
+          style={{ gridRowStart: TOTAL_ROWS - activoRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+        >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Activo
           </span>
@@ -77,8 +86,11 @@ const DefaultSensibilidadChart = ({
           </span>
         </div>
 
-        {/* Pasivo - REFERENCIA FIJA */}
-        <div className="col-span-4 row-span-6 col-start-5 row-start-1 mb-[3px] border-[3px] border-green-600 rounded-tr-xl relative flex flex-col items-center justify-center">
+        {/* Pasivo - DINÁMICO proporcional al máximo global (ancho intacto) */}
+        <div
+          className="col-span-4 col-start-5 border-[3px] border-green-600 rounded-tr-xl relative flex flex-col items-center justify-center"
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioContableRowSpan - pasivoRowSpan + 1, gridRowEnd: TOTAL_ROWS - patrimonioContableRowSpan + 1 }}
+        >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Pasivo
           </span>
@@ -87,8 +99,12 @@ const DefaultSensibilidadChart = ({
           </span>
         </div>
 
-        {/* Patrimonio - REFERENCIA FIJA */}
-        <div ref={patrimonioRef} className="col-span-4 row-span-3 col-start-5 row-start-7 border-[3px] border-blue-400 rounded-br-xl relative flex flex-col items-center justify-center">
+        {/* Patrimonio - DINÁMICO proporcional al máximo global (ancho intacto) */}
+        <div
+          ref={patrimonioRef}
+          className="col-span-4 col-start-5 border-[3px] border-blue-400 rounded-br-xl relative flex flex-col items-center justify-center"
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioContableRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+        >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Patrimonio
           </span>
@@ -147,7 +163,7 @@ const MethodSensibilidadChart = ({
   patrimonio,
   empresaSensibilizado,
   patrimonioSensibilizado,
-  companyType,
+  companyType: _companyType,
 }: {
   activo: number;
   pasivo: number;
@@ -156,10 +172,14 @@ const MethodSensibilidadChart = ({
   patrimonioSensibilizado: number;
   companyType: "empresa" | "emergente";
 }) => {
-  const TOTAL_ROWS = 9;
-  const isEmergente = companyType === "emergente";
-  const empresaRowSpan = getSensibilidadEmpresaRowSpan(empresaSensibilizado, activo, isEmergente);
-  const patrimonioRowSpan = getSensibilidadPatrimonioRowSpan(patrimonioSensibilizado, patrimonio, isEmergente);
+  const TOTAL_ROWS = 240;
+  const maxVal = getMaxAbs(activo, pasivo, patrimonio, empresaSensibilizado, patrimonioSensibilizado);
+  const activoRowSpan = getProportionalRowSpan(activo, maxVal, TOTAL_ROWS);
+  const sumPP = Math.abs(pasivo) + Math.abs(patrimonio);
+  const pasivoRowSpan = sumPP > 0 ? Math.max(4, Math.round((activoRowSpan * Math.abs(pasivo)) / sumPP)) : Math.round(activoRowSpan / 2);
+  const patrimonioContableRowSpan = activoRowSpan - pasivoRowSpan;
+  const empresaRowSpan = getProportionalRowSpan(empresaSensibilizado, maxVal, TOTAL_ROWS);
+  const patrimonioRowSpan = getProportionalRowSpan(patrimonioSensibilizado, maxVal, TOTAL_ROWS);
 
   const gridRef = useRef<HTMLDivElement>(null);
   const empresaRef = useRef<HTMLDivElement>(null);
@@ -196,8 +216,12 @@ const MethodSensibilidadChart = ({
           </span>
         </div>
 
-        {/* Activo - REFERENCIA FIJA */}
-        <div ref={activoRef} className="z-10 col-span-4 row-span-8 col-start-6 row-start-2 mr-[3px] border-[3px] border-blue-500 bg-white rounded-xl relative flex flex-col items-center justify-center">
+        {/* Activo - DINÁMICO proporcional al máximo global (ancho intacto: col-span-4 col-start-6) */}
+        <div
+          ref={activoRef}
+          className="z-10 col-span-4 col-start-6 mr-[3px] border-[3px] border-blue-500 bg-white rounded-xl relative flex flex-col items-center justify-center"
+          style={{ gridRowStart: TOTAL_ROWS - activoRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+        >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Activo
           </span>
@@ -206,8 +230,11 @@ const MethodSensibilidadChart = ({
           </span>
         </div>
 
-        {/* Pasivo - REFERENCIA FIJA */}
-        <div className="z-10 col-span-4 row-span-5 col-start-10 row-start-2 mb-[3px] border-[3px] border-blue-500 bg-white rounded-t-xl relative flex flex-col items-center justify-center">
+        {/* Pasivo - DINÁMICO proporcional al máximo global (ancho intacto) */}
+        <div
+          className="z-10 col-span-4 col-start-10 border-[3px] border-blue-500 bg-white rounded-t-xl relative flex flex-col items-center justify-center"
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioContableRowSpan - pasivoRowSpan + 1, gridRowEnd: TOTAL_ROWS - patrimonioContableRowSpan + 1 }}
+        >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Pasivo
           </span>
@@ -216,8 +243,12 @@ const MethodSensibilidadChart = ({
           </span>
         </div>
 
-        {/* Patrimonio - REFERENCIA FIJA */}
-        <div ref={patrimonioRef} className="z-10 col-span-4 row-span-3 col-start-10 row-start-7 border-[3px] border-blue-500 bg-white rounded-br-xl relative flex flex-col items-center justify-center">
+        {/* Patrimonio - DINÁMICO proporcional al máximo global (ancho intacto) */}
+        <div
+          ref={patrimonioRef}
+          className="z-10 col-span-4 col-start-10 border-[3px] border-blue-500 bg-white rounded-br-xl relative flex flex-col items-center justify-center"
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioContableRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+        >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
             Patrimonio
           </span>

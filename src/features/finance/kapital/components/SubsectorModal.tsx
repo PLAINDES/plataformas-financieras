@@ -291,15 +291,17 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                     ? subsectorSensibilizacionTickersRef.current[sub.subsector]
                                     : subsectorTickersRef.current[sub.subsector];
                                 const tickersParaBoa = savedTickers || allTickersConBoa;
-                                // BOA Ponderado: Σ(Wi% × beta_unlevered) usando total_activos como peso
-                                const activosTotal = tickersParaBoa.reduce((sum: number, emp: string) => {
-                                    const activos = Number(sub.ticker_info?.[emp]?.total_activos) || 0;
-                                    return sum + activos;
-                                }, 0);
+                                // BOA Ponderado: Σ(Wi% × beta_unlevered) usando activo_mercado como peso (fallback total_activos)
+                                const getAsset = (emp: string) => Number(sub.ticker_info?.[emp]?.activo_mercado ?? sub.ticker_info?.[emp]?.total_activos ?? 0) || 0;
+                                const tickersValidos = tickersParaBoa.filter((emp: string) => {
+                                    const boa = sub.empresas_boa?.[emp];
+                                    return boa !== null && boa !== undefined && String(boa) !== "" && Number.isFinite(Number(boa));
+                                });
+                                const activosTotal = tickersValidos.reduce((sum: number, emp: string) => sum + getAsset(emp), 0);
                                 const avgBoa = activosTotal > 0
-                                    ? tickersParaBoa.reduce((sum: number, emp: string) => {
+                                    ? tickersValidos.reduce((sum: number, emp: string) => {
                                         const boa = Number(sub.empresas_boa?.[emp]) || 0;
-                                        const activos = Number(sub.ticker_info?.[emp]?.total_activos) || 0;
+                                        const activos = getAsset(emp);
                                         return sum + (activos / activosTotal) * boa;
                                     }, 0)
                                     : null;

@@ -18,6 +18,31 @@ export const calculateDynamicRowSpan = (
   return Math.max(minRowSpan, Math.min(rowSpan, maxRowSpan));
 };
 
+// === NUEVA LÓGICA PROPORCIONAL QUIRÚRGICA (solo altura, ancho intacto) ===
+export const getMaxAbs = (...values: Array<number | null | undefined>): number | null => {
+  const valid = values.filter((v): v is number => typeof v === "number" && Number.isFinite(v) && v !== null).map((v) => Math.abs(v as number));
+  if (valid.length === 0) return null;
+  const m = Math.max(...valid);
+  return m === 0 ? null : m;
+};
+
+export const getProportionalRowSpan = (
+  value: number | null,
+  maxValue: number | null,
+  totalRows: number = 240,
+  minRows?: number,
+  maxRows?: number
+): number => {
+  const effectiveMax = maxRows ?? Math.round(totalRows * 0.88);
+  const effectiveMin = minRows ?? 2;
+  if (value === null || maxValue === null || maxValue === 0) return effectiveMin;
+  const ratio = Math.abs(value) / Math.abs(maxValue);
+  const clamped = Math.min(Math.max(ratio, 0), 1);
+  // metodología origen 0 + dominio filtrado: altura = ratio * effectiveMax, orden estricto, 300k vs 1.2M y 1.214M vs 1.192M ya distinguibles
+  const span = Math.round(clamped * effectiveMax);
+  return Math.max(effectiveMin, Math.min(span, effectiveMax));
+};
+
 export const getEmpresaRowSpan = (
   empresaValue: number | null,
   activoValue: number | null,
