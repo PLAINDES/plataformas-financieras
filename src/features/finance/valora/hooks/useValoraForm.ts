@@ -113,14 +113,8 @@ export function useValoraForm() {
         return;
       }
 
-      // Si hay un subsector restaurado con su propio beta, preservarlo
-      if (
-        formData.subsector &&
-        formData.beta_unlevered_industry &&
-        !formData.beta_subsector
-      ) {
-        return;
-      }
+      // Si hay un subsector con beta propio, igual recalcular beta de industria
+      // (beta_subsector se preserva aparte y no se pisa)
 
       const { year } = getYearAndQuarter(formData.date);
       if (!year) return;

@@ -107,6 +107,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                 <div className="flex-1 min-h-0 bg-white p-2 pb-0 flex flex-col">
                     <div className="flex-1 overflow-y-auto flex flex-col gap-2">
                         {/* Section 1: Industry */}
+                        <div data-tour="kapital-step-1" className="rounded-lg">
                         <FormSection
                             title="Inputs de la industria"
                             step={1}
@@ -205,8 +206,10 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                 />
                             </div>
                         </FormSection>
+                        </div>
 
                         {/* Section 2: Sector */}
+                        <div data-tour="kapital-step-2" className="rounded-lg">
                         <FormSection
                             title="Inputs del sector"
                             step={2}
@@ -261,8 +264,10 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                 />
                             </section>
                         </FormSection>
+                        </div>
 
                         {/* Section 3: Company */}
+                        <div data-tour="kapital-step-3" className="rounded-lg">
                         <FormSection
                             title="Inputs de su empresa"
                             step={3}
@@ -337,6 +342,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                 />
                             </section>
                         </FormSection>
+                        </div>
                         {/* Section 4: Sensibilizaciones (Disabled/Hidden) */}
                         {false && isWaccCalculated && canSensibilizeBeta && (
                             <FormSection
@@ -368,6 +374,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
 
                     {/* Footer - Submit Button */}
                     <div
+                        data-tour="kapital-calculate"
                         className={`sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 transition-all duration-300 w-full`}
                     >
                         <button
