@@ -148,24 +148,14 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
 
   const activeSteps = sensitivityMode ? SENSITIVITY_STEPS : STEPS;
   const stepRaw = activeSteps[current] ?? activeSteps[0];
-  // dynamic target for random subsector / ticker
-  const step: TourStep = (() => {
+  const stepTarget = (() => {
     if (sensitivityMode && stepRaw.id === "sens-subsector-list" && highlightSubsectorIdx !== null) {
-      return { ...stepRaw, target: `[data-tour="kapital-subsector-item"][data-index="${highlightSubsectorIdx}"]` };
+      return `[data-tour="kapital-subsector-item"][data-index="${highlightSubsectorIdx}"]`;
     }
-    if (sensitivityMode && stepRaw.id === "sens-ticker") {
-      // focus first visible ticker row; if many, pick random 0
-      const rows = document.querySelectorAll('[data-tour="kapital-ticker-row"]');
-      if (rows.length > 0) {
-        // use 0 or random; prefer 0 for stability
-        const idx = Math.min(1, rows.length - 1);
-        const el = rows[idx] as HTMLElement;
-        const ticker = el.getAttribute("data-ticker") || "";
-        if (ticker) return { ...stepRaw, target: `[data-tour="kapital-ticker-row"][data-ticker="${ticker}"]` };
-      }
-    }
-    return stepRaw;
+    return stepRaw.target;
   })();
+  const stepId = stepRaw.id;
+  const stepPlacement = stepRaw.placement;
 
   const isLast = current === activeSteps.length - 1;
 
@@ -277,17 +267,19 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     };
   }, [showResults, startSensitivityTour, setIsFormOpen]);
 
+  const isFormOpenRef = useRef(isFormOpen);
+  useEffect(() => { isFormOpenRef.current = isFormOpen; }, [isFormOpen]);
   useEffect(() => {
     if (!active) return;
     const s = stepRaw;
     const isMobile = window.innerWidth <= 640;
     if (isMobile) {
       const shouldOpen = s.id !== "welcome";
-      if (isFormOpen !== shouldOpen) setIsFormOpen(shouldOpen);
-    } else if (s.id !== "welcome" && !isFormOpen) {
+      if (isFormOpenRef.current !== shouldOpen) setIsFormOpen(shouldOpen);
+    } else if (s.id !== "welcome" && !isFormOpenRef.current) {
       setIsFormOpen(true);
     }
-  }, [active, current, isFormOpen, setIsFormOpen, stepRaw]);
+  }, [active, current, stepRaw, setIsFormOpen]);
 
   // si PASO 2 quedó sin highlight porque datos aún cargaban, asigna al llegar datos
   useEffect(() => {
@@ -306,20 +298,27 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
 
   const updateRect = useCallback(() => {
     if (!active) return;
-    let el = document.querySelector(step.target) as HTMLElement | null;
-    if (!el && stepRaw.id === "sens-sensibiliza") {
+    let el = document.querySelector(stepTarget) as HTMLElement | null;
+    if (!el && stepId === "sens-sensibiliza") {
       el = (document.querySelector('[data-tour="kapital-beta-sensitivity-btn"]') || document.querySelector('[data-tour="kapital-beta-sensitivity"]')) as HTMLElement | null;
+    }
+    if (!el && stepId === "sens-ticker") {
+      const rows = document.querySelectorAll('[data-tour="kapital-ticker-row"]');
+      if (rows.length > 0) {
+        const idx = Math.min(1, rows.length - 1);
+        el = rows[idx] as HTMLElement;
+      }
     }
     let next: Rect | null = null;
     if (!el) {
-      if (stepRaw.id === "sens-subsector-list") {
+      if (stepId === "sens-subsector-list") {
         const fallback = document.querySelector('[data-tour="kapital-subsector-list"]') as HTMLElement | null;
         if (fallback) {
           const r = fallback.getBoundingClientRect();
           const pad = 8;
           next = { top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 };
         }
-      } else if (["sens-empresas","sens-ticker","sens-boa","sens-calcular"].includes(stepRaw.id)) {
+      } else if (["sens-empresas","sens-ticker","sens-boa","sens-calcular"].includes(stepId)) {
         const fb = document.querySelector('[data-tour="kapital-subsector-detail"]') as HTMLElement | null;
         if (fb) {
           const r = fb.getBoundingClientRect();
@@ -330,52 +329,52 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
       setTargetRect((prev) => {
         if (!next && !prev) return prev;
         if (!next || !prev) return next;
-        if (prev.top===next.top && prev.left===next.left && prev.width===next.width && prev.height===next.height) return prev;
+        if (Math.abs(prev.top-next.top)<0.5 && Math.abs(prev.left-next.left)<0.5 && Math.abs(prev.width-next.width)<0.5 && Math.abs(prev.height-next.height)<0.5) return prev;
         return next;
       });
       return;
     }
     const r = el.getBoundingClientRect();
-    const pad = step.id === "welcome" ? 14 : 8;
+    const pad = stepId === "welcome" ? 14 : 8;
     next = { top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 };
     setTargetRect((prev) => {
       if (!prev) return next;
-      if (prev.top===next!.top && prev.left===next!.left && prev.width===next!.width && prev.height===next!.height) return prev;
+      if (Math.abs(prev.top-next!.top)<0.5 && Math.abs(prev.left-next!.left)<0.5 && Math.abs(prev.width-next!.width)<0.5 && Math.abs(prev.height-next!.height)<0.5) return prev;
       return next;
     });
-  }, [active, step, stepRaw]);
+  }, [active, stepTarget, stepId]);
 
   // scroll target into view once per step change (evita loop de scroll)
   useEffect(() => {
     if (!active) return;
-    const el = document.querySelector(step.target) as HTMLElement | null;
+    const el = document.querySelector(stepTarget) as HTMLElement | null;
     if (el) try { el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" }); } catch {}
-    // para fallback list también
-    if (!el && stepRaw.id === "sens-subsector-list") {
+    if (!el && stepId === "sens-subsector-list") {
       const fb = document.querySelector('[data-tour="kapital-subsector-list"]') as HTMLElement | null;
       if (fb) try { fb.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" }); } catch {}
     }
-  }, [active, step.target, stepRaw.id]);
+  }, [active, stepTarget, stepId]);
 
+  const updateRectRef = useRef(updateRect);
+  useEffect(() => { updateRectRef.current = updateRect; }, [updateRect]);
   useLayoutEffect(() => {
     if (!active) return;
-    updateRect();
-    const onResize = () => updateRect();
+    updateRectRef.current();
+    const onResize = () => updateRectRef.current();
     window.addEventListener("resize", onResize);
-    window.addEventListener("scroll", onResize, true);
-    const id = window.setInterval(updateRect, 150);
+    const id = window.setInterval(() => updateRectRef.current(), 200);
     return () => {
       window.removeEventListener("resize", onResize);
-      window.removeEventListener("scroll", onResize, true);
       window.clearInterval(id);
     };
-  }, [active, updateRect]);
+  }, [active]);
 
   useLayoutEffect(() => {
-    if (!active) { setTooltipPos(null); return; }
+    if (!active) { setTooltipPos((p) => p===null?null:null); /* keep null without loop */ return; }
     if (!targetRect) {
       const vw = window.innerWidth; const vh = window.innerHeight;
-      setTooltipPos({ top: Math.max(16, vh/2 - 110), left: Math.max(16, vw/2 - 180) });
+      const next = { top: Math.max(16, vh/2 - 110), left: Math.max(16, vw/2 - 180) };
+      setTooltipPos((prev) => prev && Math.abs(prev.top-next.top)<0.5 && Math.abs(prev.left-next.left)<0.5 ? prev : next);
       return;
     }
     const vw = window.innerWidth;
@@ -391,7 +390,6 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
       const spaceBelow = vh - (targetRect.top + targetRect.height) - gap;
       const spaceAbove = targetRect.top - gap;
       const targetMid = targetRect.top + targetRect.height / 2;
-      // prioriza lado opuesto al target: si está en mitad inferior -> tooltip arriba, viceversa
       const preferAbove = targetMid > vh / 2;
       let top: number;
       if (preferAbove) {
@@ -399,9 +397,9 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
       } else {
         top = spaceBelow >= tooltipH ? targetRect.top + targetRect.height + gap : (spaceAbove >= tooltipH ? targetRect.top - tooltipH - gap : targetRect.top + targetRect.height + gap);
       }
-      // clamp final
       top = Math.max(8, Math.min(top, vh - tooltipH - 8));
-      setTooltipPos({ top, left });
+      const next = { top, left };
+      setTooltipPos((prev) => prev && Math.abs(prev.top-next.top)<0.5 && Math.abs(prev.left-next.left)<0.5 ? prev : next);
       return;
     }
     if (isMobile) {
@@ -411,20 +409,21 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
       if (top < 8) top = Math.max(8, vh - tooltipH - 8);
       if (top < 8) top = 8;
       if (top + tooltipH > vh - 8) top = Math.max(8, vh - tooltipH - 8);
-      setTooltipPos({ top, left });
+      const next = { top, left };
+      setTooltipPos((prev) => prev && Math.abs(prev.top-next.top)<0.5 && Math.abs(prev.left-next.left)<0.5 ? prev : next);
       return;
     }
     let top = 0; let left = 0;
-    if (step.placement === "center" || (step.id === "welcome" && vw < 1024)) {
+    if (stepPlacement === "center" || (stepId === "welcome" && vw < 1024)) {
       left = Math.max(16, Math.min(vw - tooltipW - 16, targetRect.left + targetRect.width / 2 - tooltipW / 2));
       top = targetRect.top + targetRect.height + gap;
       if (top + tooltipH > vh - 16) top = Math.max(16, targetRect.top - tooltipH - gap);
-    } else if (step.placement === "bottom") {
+    } else if (stepPlacement === "bottom") {
       left = Math.max(16, Math.min(vw - tooltipW - 16, targetRect.left + targetRect.width / 2 - tooltipW / 2));
       top = targetRect.top + targetRect.height + gap;
       if (top + tooltipH > vh - 16) top = targetRect.top - tooltipH - gap;
       if (top < 16) top = 16;
-    } else if (step.placement === "right") {
+    } else if (stepPlacement === "right") {
       left = targetRect.left + targetRect.width + gap;
       top = targetRect.top + targetRect.height / 2 - tooltipH / 2;
       if (left + tooltipW > vw - 16) {
@@ -435,8 +434,9 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
       if (top < 16) top = 16;
       if (top + tooltipH > vh - 16) top = vh - tooltipH - 16;
     }
-    setTooltipPos({ top, left });
-  }, [active, targetRect, step]);
+    const nextPos = { top, left };
+    setTooltipPos((prev) => prev && Math.abs(prev.top-nextPos.top)<0.5 && Math.abs(prev.left-nextPos.left)<0.5 ? prev : nextPos);
+  }, [active, targetRect, stepPlacement, stepId]);
 
   useEffect(() => {
     if (!active) return;
