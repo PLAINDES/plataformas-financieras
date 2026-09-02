@@ -310,35 +310,52 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     if (!el && stepRaw.id === "sens-sensibiliza") {
       el = (document.querySelector('[data-tour="kapital-beta-sensitivity-btn"]') || document.querySelector('[data-tour="kapital-beta-sensitivity"]')) as HTMLElement | null;
     }
+    let next: Rect | null = null;
     if (!el) {
       if (stepRaw.id === "sens-subsector-list") {
         const fallback = document.querySelector('[data-tour="kapital-subsector-list"]') as HTMLElement | null;
         if (fallback) {
           const r = fallback.getBoundingClientRect();
           const pad = 8;
-          setTargetRect({ top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
-          return;
+          next = { top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 };
         }
-      }
-      // extra fallbacks for mobile detached targets
-      if (["sens-empresas","sens-ticker","sens-boa","sens-calcular"].includes(stepRaw.id)) {
+      } else if (["sens-empresas","sens-ticker","sens-boa","sens-calcular"].includes(stepRaw.id)) {
         const fb = document.querySelector('[data-tour="kapital-subsector-detail"]') as HTMLElement | null;
         if (fb) {
           const r = fb.getBoundingClientRect();
           const pad = 8;
-          setTargetRect({ top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
-          return;
+          next = { top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 };
         }
       }
-      setTargetRect(null);
+      setTargetRect((prev) => {
+        if (!next && !prev) return prev;
+        if (!next || !prev) return next;
+        if (prev.top===next.top && prev.left===next.left && prev.width===next.width && prev.height===next.height) return prev;
+        return next;
+      });
       return;
     }
-    // ensure target visible on mobile scroll containers
-    try { el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" }); } catch {}
     const r = el.getBoundingClientRect();
     const pad = step.id === "welcome" ? 14 : 8;
-    setTargetRect({ top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+    next = { top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 };
+    setTargetRect((prev) => {
+      if (!prev) return next;
+      if (prev.top===next!.top && prev.left===next!.left && prev.width===next!.width && prev.height===next!.height) return prev;
+      return next;
+    });
   }, [active, step, stepRaw]);
+
+  // scroll target into view once per step change (evita loop de scroll)
+  useEffect(() => {
+    if (!active) return;
+    const el = document.querySelector(step.target) as HTMLElement | null;
+    if (el) try { el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" }); } catch {}
+    // para fallback list también
+    if (!el && stepRaw.id === "sens-subsector-list") {
+      const fb = document.querySelector('[data-tour="kapital-subsector-list"]') as HTMLElement | null;
+      if (fb) try { fb.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" }); } catch {}
+    }
+  }, [active, step.target, stepRaw.id]);
 
   useLayoutEffect(() => {
     if (!active) return;
@@ -346,7 +363,7 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     const onResize = () => updateRect();
     window.addEventListener("resize", onResize);
     window.addEventListener("scroll", onResize, true);
-    const id = window.setInterval(updateRect, 16);
+    const id = window.setInterval(updateRect, 150);
     return () => {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onResize, true);
