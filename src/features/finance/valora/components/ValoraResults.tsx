@@ -54,8 +54,6 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
   onResultViewChange,
   onSelectedSensIdxChange,
   onOpenFormPanel,
-  onOpenReport,
-  coverUrl,
 }) => {
   const [financialTab, setFinancialTab] = useState<"balance" | "results">(
     "balance"
