@@ -29,13 +29,13 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
 }) => {
   return (
     <article
-      className={`${compact ? 'min-w-[300px]' : 'min-w-[340px]'} max-w-[450px] bg-white shadow-md shadow-slate-300 flex flex-col w-full rounded-3xl h-full transition-all duration-300`}
+      className="min-w-0 max-w-[450px] bg-white shadow-md shadow-slate-300 flex flex-col w-full rounded-3xl h-full transition-all duration-300"
     >
       <main className="flex flex-col gap-y-2 flex-1">
         <div className={`flex flex-col flex-1 ${compact ? 'px-4 py-4 gap-y-2' : 'px-6 md:px-8 py-6 gap-y-4'}`}>
           <header className="flex flex-col gap-y-1 w-full relative">
             <div className="flex flex-row justify-between items-center w-full">
-              <h2 className={`font-semibold text-center my-auto text-gray-700 ${compact ? 'text-sm' : 'text-base'}`}>
+              <h2 className={`min-w-0 truncate font-semibold text-center my-auto text-gray-700 ${compact ? 'text-sm' : 'text-[clamp(0.75rem,1.4vw,1rem)]'}`}>
                 {title}
               </h2>
 
@@ -64,7 +64,7 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
             {/* Layout de CPPC centrado y Kd a la derecha */}
             <div className={`relative w-full ${compact ? 'mt-1' : 'mt-3'} gap-2 flex flex-row items-center justify-between mx-auto`}>
               <div className="flex flex-col items-center">
-                <span className={`font-black text-gray-900 ${compact ? 'text-xl' : 'text-2xl md:text-3xl'}`}>
+                <span className={`font-black text-gray-900 ${compact ? 'text-xl' : 'text-[clamp(1.25rem,2.5vw,1.875rem)]'}`}>
                   {formatterx100p(data.cppc)}
                 </span>
                 <p className={`${compact ? 'text-[9px]' : 'text-[11px]'} text-gray-500 font-bold uppercase tracking-widest text-center`}>
@@ -72,7 +72,7 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
                 </p>
               </div>
               <div className="flex flex-col items-end justify-center">
-                <span className={`font-bold text-gray-900 ${compact ? 'text-xs' : 'text-sm md:text-base'}`}>
+                <span className={`whitespace-nowrap font-bold text-gray-900 ${compact ? 'text-xs' : 'text-[clamp(0.7rem,1.2vw,1rem)]'}`}>
                    Kd = {formatterx100p(data.kd)}
                 </span>
                 <div className={`${compact ? 'h-2' : 'h-4'}`}></div> {/* Spacer to align with CPPC label */}

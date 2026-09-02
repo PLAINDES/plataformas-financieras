@@ -664,6 +664,33 @@ export const MainService = {
     return api.post("main/valora-template/set-default", { object_key: objectKey });
   },
 
+  // ==================== VALORA PDF TO TEMPLATE ====================
+
+  uploadValoraPdf: async (file: File, signal?: AbortSignal): Promise<{
+    status: string;
+    metadata: any;
+    balance_table: any;
+    results_table: any;
+    number_of_shares: any;
+    mapping_detail: any[];
+    unmapped_accounts: any[];
+    warnings: string[];
+    missing_information: string[];
+    validation: any;
+    model_used?: string;
+    xlsx_base64?: string;
+    filename?: string;
+  }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    // Bypass Vite proxy for large PDF (4MB) to evitar hang en 87%
+    return api.postForm<any>("main/valora/pdf-to-template", formData, {
+      token: getAuthToken(),
+      signal,
+      direct: true,
+    } as any);
+  },
+
   // ==================== VALORA RECOMMENDATIONS ====================
 
   getValoraRecommendations: async (calculationId: number): Promise<any> => {

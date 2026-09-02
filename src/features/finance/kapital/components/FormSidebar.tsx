@@ -140,6 +140,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     required
                                 />
                                   <div className="relative w-full border border-transparent">
+                                    <div data-tour="kapital-beta-sensitivity">
                                     <FormField
                                       label="Beta desapalancado"
                                       name="beta_unlevered_industry"
@@ -151,8 +152,9 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                       layout="horizontal"
                                       showClearButton={false}
                                       inputClassName="col-span-9"
-                                      disabled
+                                      disabled={!isWaccCalculated}
                                     />
+                                    </div>
 
                                     {formData.subsector === "Personalizado" && (
                                       <span className="absolute left-0 -top-2.5 text-[9px] font-black uppercase tracking-wider text-valora-primary bg-white px-1 rounded">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { cmsService } from "@/shared/services/cms.service";
 import { WhatsAppIcon } from "@/features/landing/sections/CTASection";
+import { buildWhatsAppUrl } from "@/shared/utils/whatsapp";
 
 type MainPageFooterProps = {
     brandName?: string;
@@ -34,8 +35,9 @@ export const MainPageFooter: React.FC<MainPageFooterProps> = ({
     }, []);
 
     const handleWhatsAppClick = () => {
-        if (whatsappData?.url) {
-            window.open(whatsappData.url, "_blank");
+        const url = buildWhatsAppUrl(whatsappData?.url || "");
+        if (url) {
+            window.open(url, "_blank");
         }
     };
 

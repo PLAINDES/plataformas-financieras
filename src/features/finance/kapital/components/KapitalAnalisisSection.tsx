@@ -163,10 +163,7 @@ const InputsDropdown = ({ inputs, label }: { inputs: any; label?: string }) => {
               value={`${inputs.tasa_impositiva}%`}
             />
             {inputs.damodaran?.beta && (
-              <InputDetail
-                label="Beta (Damo)"
-                value={inputs.damodaran.beta.toFixed(3)}
-              />
+              <InputDetail label="Beta" value={inputs.damodaran.beta.toFixed(3)} />
             )}
           </div>
         </div>
@@ -397,7 +394,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
         />
       </div>
 
-      <div className="lg:flex-1 min-w-[340px] max-w-[450px] w-full">
+      <div className="lg:flex-1 min-w-0 max-w-[450px] w-full">
         <FinancieraCard
           title="Mercado Desarrollado"
           data={dataDeveloped}
@@ -409,7 +406,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
         />
       </div>
 
-      <div className="lg:flex-1 min-w-[340px] max-w-[450px] w-full">
+      <div className="lg:flex-1 min-w-0 max-w-[450px] w-full">
         <FinancieraCard
           title={`Mercado emergente: ${countryName || results.pais || ""}`}
           data={dataEmergent}
@@ -423,7 +420,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
       </div>
 
       {showCompanyCard && dataEmpresa && (
-        <div className="lg:flex-1 min-w-[340px] max-w-[450px] w-full">
+        <div className="lg:flex-1 min-w-0 max-w-[450px] w-full">
           <FinancieraCard
             title="Tu empresa"
             data={dataEmpresa}
@@ -581,10 +578,10 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                   {scenarioOpen && (
                     <>
                       <div
-                        className="fixed inset-0 z-40 bg-black/10"
+                        className="fixed inset-0 z-[90] bg-black/10"
                         onClick={() => setScenarioOpen(false)}
                       />
-                      <div className="fixed bottom-24 right-6 z-50 w-[400px] max-w-[calc(100vw-48px)] max-h-[70vh] flex flex-col bg-white rounded-2xl shadow-xl border border-slate-200 p-4">
+                      <div className="fixed bottom-24 right-6 z-[100] w-[400px] max-w-[calc(100vw-48px)] max-h-[70vh] flex flex-col bg-white rounded-2xl shadow-xl border border-slate-200 p-4">
                         <div className="flex items-center justify-between mb-3 shrink-0">
                           <div className="flex items-center gap-2 text-valora-primary">
                             <SlidersHorizontal size={16} />
@@ -673,7 +670,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                   />
                 </div>
                 <section className="flex flex-col md:flex-row items-center justify-center gap-4 w-full">
-                  <div className="min-w-[300px] max-w-[450px] w-full">
+                  <div className="min-w-0 max-w-[450px] w-full">
                     <FinancieraCard
                       title="Mercado Desarrollado"
                       data={developedData}
@@ -683,7 +680,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                       compact={false}
                     />
                   </div>
-                  <div className="min-w-[300px] max-w-[450px] w-full">
+                  <div className="min-w-0 max-w-[450px] w-full">
                     <FinancieraCard
                       title={`Mercado emergente: ${results.pais || ""}`}
                       data={emergentOriginal}
@@ -696,7 +693,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                     />
                   </div>
                   {showCompanyCard && empresaOriginal && (
-                    <div className="min-w-[300px] max-w-[450px] w-full">
+                    <div className="min-w-0 max-w-[450px] w-full">
                       <FinancieraCard
                         title="Tu empresa"
                         data={empresaOriginal}
@@ -744,7 +741,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                         />
                       </div>
                       <section className="flex flex-col md:flex-row items-center justify-center gap-4 w-full">
-                        <div className="min-w-[300px] max-w-[450px] w-full">
+                        <div className="min-w-0 max-w-[450px] w-full">
                           <FinancieraCard
                             title="Mercado Desarrollado"
                             data={
@@ -754,7 +751,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                             compact={false}
                           />
                         </div>
-                        <div className="min-w-[300px] max-w-[450px] w-full">
+                        <div className="min-w-0 max-w-[450px] w-full">
                           <FinancieraCard
                             title={`Mercado emergente: ${selectedSens?.inputs?.pais || results.pais || ""}`}
                             data={emergentSens}
@@ -767,7 +764,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
                           />
                         </div>
                         {showCompanyCard && empresaSens && (
-                          <div className="min-w-[300px] max-w-[450px] w-full">
+                          <div className="min-w-0 max-w-[450px] w-full">
                             <FinancieraCard
                               title="Tu empresa"
                               data={empresaSens}

@@ -4,21 +4,26 @@ import { ValoraResultsHeader } from "./ValoraResultsHeader";
 import { ValoraBalanceSheetBlock } from "./ValoraBalanceSheetBlock";
 import { ValoraMethodsToggleCard } from "./ValoraMethodsToggleCard";
 import type { ValoraCalculationResults } from "@/shared/types/ValoraTypes";
+import { Book } from "../../kapital/components/Book";
 
 export interface ValoraGeneralResultsBlockProps {
   onOpenFormPanel?: () => void;
+  onOpenReport?: () => void;
   showPromptButton?: boolean;
   results?: ValoraCalculationResults;
   toolbar?: React.ReactNode;
+  coverUrl?: string;
 }
 
 type ChartMode = "default" | "conceptos" | "integrado";
 
 export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps> = ({
   onOpenFormPanel,
+  onOpenReport,
   showPromptButton = true,
   results,
   toolbar,
+  coverUrl,
 }) => {
   const [chartMode, setChartMode] = useState<ChartMode>("default");
   const [companyType, setCompanyType] = useState<"empresa" | "emergente">("empresa");
@@ -111,6 +116,16 @@ export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps>
 
   return (
     <div className="flex flex-col gap-4">
+      {onOpenReport && (
+        <div className="flex w-full justify-center lg:justify-end">
+          <section className="flex w-full max-w-105 flex-col items-center justify-center gap-2 overflow-visible rounded-[24px] sm:w-fit">
+            {coverUrl && <div onClick={onOpenReport} className="w-fit h-fit cursor-pointer"><Book href={coverUrl} width={95} height={130} interactive /></div>}
+            <button type="button" onClick={onOpenReport} className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer">
+              Generar reporte
+            </button>
+          </section>
+        </div>
+      )}
       <ValoraResultsHeader
         wacc={parsePercentage(currentWacc)}
         title="Resultados generales"

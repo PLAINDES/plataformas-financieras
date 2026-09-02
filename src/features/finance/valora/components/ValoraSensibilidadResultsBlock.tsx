@@ -4,13 +4,16 @@ import { ValoraResultsHeader } from "./ValoraResultsHeader";
 import { ValoraSensibilidadBalanceSheetBlock } from "./ValoraSensibilidadBalanceSheetBlock";
 import { ValoraMethodsToggleCard } from "./ValoraMethodsToggleCard";
 import type { ValoraCalculationResults } from "@/shared/types/ValoraTypes";
+import { Book } from "../../kapital/components/Book";
 
 export interface ValoraSensibilidadResultsBlockProps {
   onOpenFormPanel?: () => void;
+  onOpenReport?: () => void;
   sector?: string;
   originalResults?: ValoraCalculationResults;
   results?: ValoraCalculationResults;
   toolbar?: React.ReactNode;
+  coverUrl?: string;
 }
 
 type ChartMode = "default" | "conceptos" | "integrado";
@@ -51,12 +54,14 @@ const toPercentage = (value: string | number | null | undefined) => {
 export const ValoraSensibilidadResultsBlock: React.FC<
   ValoraSensibilidadResultsBlockProps
 > = ({
-  onOpenFormPanel: _onOpenFormPanel,
-  sector,
-  originalResults,
-  results,
-  toolbar,
-}) => {
+   onOpenFormPanel: _onOpenFormPanel,
+   onOpenReport,
+   sector,
+   originalResults,
+   results,
+    toolbar,
+    coverUrl,
+ }) => {
   const [chartMode, setChartMode] = useState<ChartMode>("default");
   const [companyType, setCompanyType] = useState<"empresa" | "emergente">("empresa");
   const sourceCurrency = (
@@ -136,9 +141,20 @@ export const ValoraSensibilidadResultsBlock: React.FC<
         onCompanyTypeChange={setCompanyType}
       />
 
-      {toolbar}
+       {toolbar}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+        {onOpenReport && (
+          <div className="flex w-full justify-center lg:justify-end">
+            <section className="flex w-full max-w-105 flex-col items-center justify-center gap-2 sm:w-fit">
+              {coverUrl && <div onClick={onOpenReport} className="w-fit cursor-pointer"><Book href={coverUrl} width={95} height={130} interactive /></div>}
+              <button type="button" onClick={onOpenReport} className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer">
+                Generar reporte
+              </button>
+            </section>
+          </div>
+        )}
+
+       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         <div className="lg:flex lg:items-center">
           <ValoraMethodsToggleCard
             methods={methods}
@@ -147,7 +163,7 @@ export const ValoraSensibilidadResultsBlock: React.FC<
           />
         </div>
 
-        <div className="min-w-0 lg:w-[calc(100%+clamp(1rem,4vw,4rem))]">
+        <div className="min-w-0 w-full">
           <ValoraSensibilidadBalanceSheetBlock
             activo={
               parseMoney(results?.balance?.activo) ??

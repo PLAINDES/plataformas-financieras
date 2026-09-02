@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { formatNumber, getMaxAbs, getProportionalRowSpan, DynamicConnector } from "./ValoraChartUtils";
+import { formatNumber, getMaxAbs, getProportionalRowSpan, getBalanceRowSpans, DynamicConnector } from "./ValoraChartUtils";
 
 export interface ValoraBalanceSheetBlockProps {
   activo: number | null;
@@ -34,11 +34,7 @@ const DefaultBalanceChart = ({
 }) => {
   const TOTAL_ROWS = 240;
   const maxVal = getMaxAbs(activo, pasivo, patrimonio, conceptosPatrimonio, integradoPatrimonio);
-  const activoRowSpan = getProportionalRowSpan(activo, maxVal, TOTAL_ROWS);
-  // PASIVO+PATRIMONIO apilados deben sumar ACTIVO para preservar identidad balance, sin doble min
-  const sumPP = Math.abs(pasivo ?? 0) + Math.abs(patrimonio ?? 0);
-  const pasivoRowSpan = sumPP > 0 ? Math.max(4, Math.round((activoRowSpan * Math.abs(pasivo ?? 0)) / sumPP)) : Math.round(activoRowSpan / 2);
-  const patrimonioContableRowSpan = activoRowSpan - pasivoRowSpan;
+  const { activoRowSpan, pasivoRowSpan, patrimonioRowSpan: patrimonioContableRowSpan } = getBalanceRowSpans(activo, pasivo, patrimonio, maxVal, TOTAL_ROWS);
   const conceptosPatRowSpan = getProportionalRowSpan(conceptosPatrimonio, maxVal, TOTAL_ROWS);
   const integradoPatRowSpan = getProportionalRowSpan(integradoPatrimonio, maxVal, TOTAL_ROWS);
 
@@ -154,10 +150,7 @@ const MethodBalanceChart = ({
 }) => {
   const TOTAL_ROWS = 240;
   const maxVal = getMaxAbs(activo, pasivo, patrimonio, valorFinancieroPatrimonio, valorFinancieroEmpresa);
-  const activoRowSpan = getProportionalRowSpan(activo, maxVal, TOTAL_ROWS);
-  const sumPP = Math.abs(pasivo ?? 0) + Math.abs(patrimonio ?? 0);
-  const pasivoRowSpan = sumPP > 0 ? Math.max(4, Math.round((activoRowSpan * Math.abs(pasivo ?? 0)) / sumPP)) : Math.round(activoRowSpan / 2);
-  const patrimonioContableRowSpan = activoRowSpan - pasivoRowSpan;
+  const { activoRowSpan, pasivoRowSpan, patrimonioRowSpan: patrimonioContableRowSpan } = getBalanceRowSpans(activo, pasivo, patrimonio, maxVal, TOTAL_ROWS);
   const empresaRowSpan = getProportionalRowSpan(valorFinancieroEmpresa, maxVal, TOTAL_ROWS);
   const patrimonioRowSpan = getProportionalRowSpan(valorFinancieroPatrimonio, maxVal, TOTAL_ROWS);
 

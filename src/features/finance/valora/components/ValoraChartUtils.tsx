@@ -34,13 +34,36 @@ export const getProportionalRowSpan = (
   maxRows?: number
 ): number => {
   const effectiveMax = maxRows ?? Math.round(totalRows * 0.88);
-  const effectiveMin = minRows ?? 2;
+  // Keep secondary blocks readable when an outlier makes the proportional scale tiny.
+  const effectiveMin = minRows ?? 8;
   if (value === null || maxValue === null || maxValue === 0) return effectiveMin;
   const ratio = Math.abs(value) / Math.abs(maxValue);
   const clamped = Math.min(Math.max(ratio, 0), 1);
+  // Billions can dwarf the other values; soften only that extreme case so
+  // ordinary thousands/millions keep their existing proportions.
+  const scaled = Math.abs(maxValue) >= 100_000_000 ? Math.sqrt(clamped) : clamped;
   // metodología origen 0 + dominio filtrado: altura = ratio * effectiveMax, orden estricto, 300k vs 1.2M y 1.214M vs 1.192M ya distinguibles
-  const span = Math.round(clamped * effectiveMax);
+  const span = Math.round(scaled * effectiveMax);
   return Math.max(effectiveMin, Math.min(span, effectiveMax));
+};
+
+export const getBalanceRowSpans = (
+  activo: number | null,
+  pasivo: number | null,
+  patrimonio: number | null,
+  maxValue: number | null,
+  totalRows: number
+) => {
+  const extreme = Math.abs(maxValue ?? 0) >= 100_000_000;
+  const extremeMinRows = 145;
+  const blockMinRows = extreme ? 65 : 8;
+  const activoRowSpan = getProportionalRowSpan(activo, maxValue, totalRows, extreme ? extremeMinRows : undefined);
+  const sumPP = Math.abs(pasivo ?? 0) + Math.abs(patrimonio ?? 0);
+  const maxPasivoRows = Math.max(1, activoRowSpan - blockMinRows);
+  const pasivoRowSpan = sumPP > 0
+    ? Math.min(maxPasivoRows, Math.max(extreme ? blockMinRows : 4, Math.round((activoRowSpan * Math.abs(pasivo ?? 0)) / sumPP)))
+    : Math.round(activoRowSpan / 2);
+  return { activoRowSpan, pasivoRowSpan, patrimonioRowSpan: Math.max(blockMinRows, activoRowSpan - pasivoRowSpan) };
 };
 
 export const getEmpresaRowSpan = (
@@ -236,7 +259,11 @@ export const DynamicConnector = ({
     };
 
     tryMeasure();
-    const ro = new ResizeObserver(tryMeasure);
+    const remeasure = () => {
+      attempts = 0;
+      tryMeasure();
+    };
+    const ro = new ResizeObserver(remeasure);
     if (containerRef.current) ro.observe(containerRef.current);
     const currentLines = linesRef.current;
     const observedEls = new Set<Element>();
@@ -246,10 +273,12 @@ export const DynamicConnector = ({
       if (fromEl && !observedEls.has(fromEl)) { ro.observe(fromEl); observedEls.add(fromEl); }
       if (toEl && !observedEls.has(toEl)) { ro.observe(toEl); observedEls.add(toEl); }
     }
+    window.addEventListener("resize", remeasure);
 
     return () => {
       mounted = false;
       ro.disconnect();
+      window.removeEventListener("resize", remeasure);
     };
   }, []);
 

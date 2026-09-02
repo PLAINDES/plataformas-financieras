@@ -75,6 +75,7 @@ const KapitalPage: React.FC = () => {
 
     // --- UI State ---
     const [isFormOpen, setIsFormOpen] = useState(true);
+    const [startSensitivityTour, setStartSensitivityTour] = useState(false);
     const [resultsSection, setResultsSection] = useState<"result" | "sensitivity">("result");
     const [showResults, setShowResults] = useState(false);
     const [isReportSidebarOpen, setIsReportSidebarOpen] = useState(false);
@@ -350,6 +351,7 @@ const KapitalPage: React.FC = () => {
                     localCurrency={activeSavedCurrency}
                     shouldShowChatbot={shouldShowChatbot}
                     onToggleForm={() => setIsFormOpen((prev) => !prev)}
+                    onStartSensitivityTour={() => setStartSensitivityTour(true)}
                 />
             )}
             <MainPageFooter brandName="Valora" brandHref="/valora" />
@@ -371,6 +373,7 @@ const KapitalPage: React.FC = () => {
                 isFormOpen={isFormOpen}
                 setIsFormOpen={setIsFormOpen}
                 showResults={showResults}
+                startSensitivityTour={startSensitivityTour}
             />
             <NavBar
                 user={user}
