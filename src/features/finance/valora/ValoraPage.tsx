@@ -430,7 +430,7 @@ const ValoraPage: React.FC = () => {
       console.log("[VALORA PDF] result status", result.status);
 
       tick(85, "Rellenando Excel ya subido con datos del PDF...");
-      // Merge IA -> tablas existentes (respeta años 2021-2025 del Excel ya subido)
+      // Merge IA -> tablas existentes respetando los periodos detectados.
       const mergeTables = (existing: FinancialTable | null, incoming: FinancialTable | null): FinancialTable | null => {
         if (!incoming) return existing;
         if (!existing) return incoming;
@@ -489,7 +489,9 @@ const ValoraPage: React.FC = () => {
         // Mantiene nombre del Excel ya subido (no cambia a .pdf)
         if (!prev.fileUsername || prev.fileUsername.toLowerCase().endsWith(".pdf")) {
           // Si antes no había Excel, usa nombre Excel generado
-          updates.fileUsername = result.filename || `${empresa.replace(/\s+/g, "_")}_${(result.metadata?.periodos || []).join("-") || "2021-2025"}_rellenado.xlsx`;
+          const sourceName = file.name.replace(/\.[^.]+$/, "").replace(/\s+/g, "_");
+          const detectedPeriods = (result.metadata?.periodos || []).join("-");
+          updates.fileUsername = result.filename || `${sourceName}${detectedPeriods ? `_${detectedPeriods}` : ""}_rellenado.xlsx`;
         }
         if (result.metadata?.moneda) updates.currency = result.metadata.moneda;
         const sharesVal = result.number_of_shares?.value ?? result.number_of_shares;
