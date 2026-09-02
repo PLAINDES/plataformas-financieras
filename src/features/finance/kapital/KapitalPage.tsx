@@ -374,6 +374,7 @@ const KapitalPage: React.FC = () => {
                 setIsFormOpen={setIsFormOpen}
                 showResults={showResults}
                 startSensitivityTour={startSensitivityTour}
+                onSensitivityTourEnd={() => setStartSensitivityTour(false)}
             />
             <NavBar
                 user={user}
