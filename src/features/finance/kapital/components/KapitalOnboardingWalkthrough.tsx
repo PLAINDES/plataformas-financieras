@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Calculator, Building2, Globe, Landmark, ArrowRight, X } from "lucide-react";
+import { Calculator, Building2, Globe, Landmark, ArrowRight, X, Layers, List, ToggleLeft, Scale, CheckCircle2 } from "lucide-react";
 
 const STORAGE_KEY_BASE = "kapital_tour_completed_v1";
 const DEVICE_ID_KEY = "analytics_device_id";
@@ -31,8 +31,7 @@ const STEPS: TourStep[] = [
   {
     id: "welcome",
     title: "Bienvenido a Kapital",
-    description:
-      "Calcula tu costo de capital (WACC) en segundos. Completa los inputs del panel izquierdo y presiona “Calcula tu WACC” para ver tus resultados al instante.",
+    description: "Calcula tu costo de capital (WACC) en segundos. Completa los inputs del panel izquierdo y presiona “Calcula tu WACC” para ver tus resultados al instante.",
     target: "[data-tour=\"kapital-welcome\"]",
     placement: "bottom",
     icon: <Calculator className="w-4 h-4" />,
@@ -40,8 +39,7 @@ const STEPS: TourStep[] = [
   {
     id: "industria",
     title: "Paso 1 — Inputs de la industria",
-    description:
-      "Selecciona fecha, sector, beta desapalancado y tasa libre de riesgo. Estos datos definen el riesgo operativo de tu industria y la tasa base del modelo.",
+    description: "Selecciona fecha, sector, beta desapalancado y tasa libre de riesgo. Estos datos definen el riesgo operativo de tu industria y la tasa base del modelo.",
     target: "[data-tour=\"kapital-step-1\"]",
     placement: "right",
     icon: <Building2 className="w-4 h-4" />,
@@ -49,8 +47,7 @@ const STEPS: TourStep[] = [
   {
     id: "sector",
     title: "Paso 2 — Inputs del sector",
-    description:
-      "Elige el país. Automáticamente obtendrás la devaluación y la tasa impositiva del Marco Macroeconómico y reportes EY para tu mercado emergente.",
+    description: "Elige el país. Automáticamente obtendrás la devaluación y la tasa impositiva del Marco Macroeconómico y reportes EY para tu mercado emergente.",
     target: "[data-tour=\"kapital-step-2\"]",
     placement: "right",
     icon: <Globe className="w-4 h-4" />,
@@ -58,8 +55,7 @@ const STEPS: TourStep[] = [
   {
     id: "empresa",
     title: "Paso 3 — Inputs de su empresa",
-    description:
-      "Personaliza con el costo de deuda y tu estructura financiera (% deuda / % capital). Si los dejas vacíos, calculamos el WACC sectorial puro.",
+    description: "Personaliza con el costo de deuda y tu estructura financiera (% deuda / % capital). Si los dejas vacíos, calculamos el WACC sectorial puro.",
     target: "[data-tour=\"kapital-step-3\"]",
     placement: "right",
     icon: <Landmark className="w-4 h-4" />,
@@ -67,36 +63,72 @@ const STEPS: TourStep[] = [
   {
     id: "calcular",
     title: "Paso 4 — Calcula tu WACC",
-    description:
-      "Cuando completes los campos obligatorios, presiona este botón. Generarás tus tres mercados (desarrollado, emergente y tu empresa) y podrás sensibilizar por subsector.",
+    description: "Cuando completes los campos obligatorios, presiona este botón. Generarás tus tres mercados (desarrollado, emergente y tu empresa) y podrás sensibilizar por subsector.",
     target: "[data-tour=\"kapital-calculate\"]",
     placement: "right",
     icon: <ArrowRight className="w-4 h-4" />,
   },
 ];
 
-const SENSITIVITY_STEP: TourStep = {
-  id: "sensibilizacion",
-  title: "Paso 5 — Sensibiliza tu Beta",
-  description:
-    "Ahora puedes probar una sensibilización con un beta personalizado o usar directamente un subsector.",
-  target: "[data-tour=\"kapital-beta-sensitivity\"]",
-  placement: "right",
-  icon: <Calculator className="w-4 h-4" />,
-};
+const SENSITIVITY_STEPS: TourStep[] = [
+  {
+    id: "sens-sensibiliza",
+    title: "Paso 5 — Sensibiliza tu Beta",
+    description: "Su WACC base ya está calculado. Desde aquí puede refinar el análisis ajustando el beta desapalancado o seleccionando un subsector comparable para obtener un beta más preciso. Pulse \"Obtén Tu Beta Por Subsector\" para continuar.",
+    target: "[data-tour=\"kapital-beta-sensitivity\"]",
+    placement: "right",
+    icon: <Calculator className="w-4 h-4" />,
+  },
+  {
+    id: "sens-subsector-list",
+    title: "Explore los subsectores disponibles",
+    description: "Este panel reúne los subsectores de su industria. Cada tarjeta muestra el número de empresas comparables y su BOA ponderado. Hemos resaltado un subsector aleatoriamente: selecciónelo para examinar su composición.",
+    target: "[data-tour=\"kapital-subsector-list\"]",
+    placement: "right",
+    icon: <Layers className="w-4 h-4" />,
+  },
+  {
+    id: "sens-empresas",
+    title: "Empresas del subsector",
+    description: "Aquí visualiza la muestra completa del subsector: cada fila corresponde a una empresa cotizada con su activo de mercado y su beta desapalancado individual. La transparencia de la muestra le permite evaluar la representatividad del comparable.",
+    target: "[data-tour=\"kapital-subsector-empresas\"]",
+    placement: "right",
+    icon: <List className="w-4 h-4" />,
+  },
+  {
+    id: "sens-ticker",
+    title: "Personalice la muestra",
+    description: "Si alguna empresa no resulta comparable para su caso, puede deshabilitarla con el icono de exclusión. Al desactivar un ticker, su activo y su beta se excluyen automáticamente del cálculo posterior.",
+    target: "[data-tour=\"kapital-ticker-row\"]",
+    placement: "right",
+    icon: <ToggleLeft className="w-4 h-4" />,
+  },
+  {
+    id: "sens-boa",
+    title: "BOA Ponderado del subsector",
+    description: "El BOA ponderado se obtiene como la suma de cada beta desapalancado multiplicado por su peso relativo (activo de mercado de la empresa dividido entre el total de activos de la muestra activa). Representa el riesgo operativo promedio del subsector seleccionado.",
+    target: "[data-tour=\"kapital-boa-ponderado\"]",
+    placement: "right",
+    icon: <Scale className="w-4 h-4" />,
+  },
+  {
+    id: "sens-calcular",
+    title: "Aplique la sensibilización",
+    description: "Pulse \"Calcular con N empresas — BOA X.XX\" para incorporar este beta ponderado a su sensibilización. El sistema recalculará su WACC utilizando el nuevo beta y registrará el escenario en su análisis.",
+    target: "[data-tour=\"kapital-calcular-subsector\"]",
+    placement: "right",
+    icon: <CheckCircle2 className="w-4 h-4" />,
+  },
+];
 
-interface Rect {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-}
+interface Rect { top: number; left: number; width: number; height: number; }
 
 interface KapitalOnboardingWalkthroughProps {
   isFormOpen: boolean;
   setIsFormOpen: (open: boolean) => void;
   showResults: boolean;
   startSensitivityTour?: boolean;
+  onSensitivityTourEnd?: () => void;
 }
 
 export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthroughProps> = ({
@@ -104,78 +136,130 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
   setIsFormOpen,
   showResults,
   startSensitivityTour = false,
+  onSensitivityTourEnd,
 }) => {
   const [active, setActive] = useState(false);
   const [current, setCurrent] = useState(0);
+  const [sensitivityMode, setSensitivityMode] = useState(false);
+  const [highlightSubsectorIdx, setHighlightSubsectorIdx] = useState<number | null>(null);
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  const step = current === STEPS.length ? SENSITIVITY_STEP : STEPS[current];
-  const isLast = current === STEPS.length - 1 || current === STEPS.length;
+  const activeSteps = sensitivityMode ? SENSITIVITY_STEPS : STEPS;
+  const stepRaw = activeSteps[current] ?? activeSteps[0];
+  // dynamic target for random subsector / ticker
+  const step: TourStep = (() => {
+    if (sensitivityMode && stepRaw.id === "sens-subsector-list" && highlightSubsectorIdx !== null) {
+      return { ...stepRaw, target: `[data-tour="kapital-subsector-item"][data-index="${highlightSubsectorIdx}"]` };
+    }
+    if (sensitivityMode && stepRaw.id === "sens-ticker") {
+      // focus first visible ticker row; if many, pick random 0
+      const rows = document.querySelectorAll('[data-tour="kapital-ticker-row"]');
+      if (rows.length > 0) {
+        // use 0 or random; prefer 0 for stability
+        const idx = Math.min(1, rows.length - 1);
+        const el = rows[idx] as HTMLElement;
+        const ticker = el.getAttribute("data-ticker") || "";
+        if (ticker) return { ...stepRaw, target: `[data-tour="kapital-ticker-row"][data-ticker="${ticker}"]` };
+      }
+    }
+    return stepRaw;
+  })();
+
+  const isLast = current === activeSteps.length - 1;
 
   const finish = useCallback(() => {
-    localStorage.setItem(getTourKey(), "true");
+    if (!sensitivityMode) localStorage.setItem(getTourKey(), "true");
+    else onSensitivityTourEnd?.();
     setActive(false);
-  }, []);
+    setSensitivityMode(false);
+  }, [sensitivityMode, onSensitivityTourEnd]);
 
   const skip = useCallback(() => {
-    localStorage.setItem(getTourKey(), "true");
+    if (!sensitivityMode) localStorage.setItem(getTourKey(), "true");
+    else onSensitivityTourEnd?.();
     setActive(false);
-  }, []);
+    setSensitivityMode(false);
+  }, [sensitivityMode, onSensitivityTourEnd]);
 
   const next = useCallback(() => {
-    if (isLast) {
-      if (step.id === "sensibilizacion") {
-        const betaButton = document.querySelector('[data-tour="kapital-beta-sensitivity"]') as HTMLButtonElement | null;
-        betaButton?.click();
+    if (!sensitivityMode) {
+      if (isLast) finish();
+      else setCurrent((c) => c + 1);
+      return;
+    }
+    // sensitivity flow
+    if (stepRaw.id === "sens-sensibiliza") {
+      const betaButton = (document.querySelector('[data-tour="kapital-beta-sensitivity-btn"]') || document.querySelector('[data-tour="kapital-beta-sensitivity"] button') || document.querySelector('[data-tour="kapital-beta-sensitivity"]')) as HTMLElement | null;
+      betaButton?.click();
+      // poll ultra-rápido (16ms) para que PASO 2 aparezca en milisegundos
+      const start = Date.now();
+      const poll = window.setInterval(() => {
+        const items = document.querySelectorAll('[data-tour="kapital-subsector-item"]');
+        if (items.length > 0) {
+          const rnd = Math.floor(Math.random() * items.length);
+          setHighlightSubsectorIdx(rnd);
+          window.clearInterval(poll);
+          setCurrent((c) => c + 1);
+        } else if (Date.now() - start > 800) {
+          window.clearInterval(poll);
+          setCurrent((c) => c + 1);
+        }
+      }, 16);
+      return;
+    }
+    if (stepRaw.id === "sens-subsector-list") {
+      if (highlightSubsectorIdx !== null) {
+        const el = document.querySelector(`[data-tour="kapital-subsector-item"][data-index="${highlightSubsectorIdx}"]`) as HTMLElement | null;
+        el?.click();
       }
+      window.setTimeout(() => setCurrent((c) => c + 1), 30);
+      return;
+    }
+    if (isLast) {
       finish();
     } else {
       setCurrent((c) => c + 1);
     }
-  }, [isLast, finish, step]);
+  }, [sensitivityMode, isLast, finish, stepRaw, highlightSubsectorIdx]);
 
-  // Decide if tour should start — 1 vez por deviceId, aparece aunque occupation se cierre con X
+  // Decide if tour should start
   useEffect(() => {
     if (startSensitivityTour) {
-      setActive(false);
+      setSensitivityMode(true);
+      setCurrent(0);
+      setHighlightSubsectorIdx(null);
       setIsFormOpen(true);
-      const timer = window.setTimeout(() => {
-        setCurrent(STEPS.length);
-        setActive(true);
-      }, 250);
+      const timer = window.setTimeout(() => setActive(true), 30);
       return () => window.clearTimeout(timer);
     }
     if (showResults) return;
     if (localStorage.getItem(getTourKey()) === "true") return;
-
     const startSoon = () => {
       window.setTimeout(() => {
         if (localStorage.getItem(getTourKey()) !== "true" && window.location.pathname === "/kapital" && !showResults) {
+          setSensitivityMode(false);
+          setCurrent(0);
           setActive(true);
         }
-      }, 350);
+      }, 80);
     };
-
-    // Si occupation ya no está visible (completada o cerrada con X), arranca pronto
     const isOccupationModalOpen = () => !!document.querySelector('[role="dialog"]');
     if (!isOccupationModalOpen()) {
       const t = window.setTimeout(() => {
         if (window.location.pathname === "/kapital" && localStorage.getItem(getTourKey()) !== "true") {
+          setSensitivityMode(false);
+          setCurrent(0);
           setActive(true);
         }
-      }, 600);
+      }, 80);
       return () => window.clearTimeout(t);
     }
-
-    // Espera a que occupation se cierre por cualquier vía (completar o X)
     const onOccupationDone = () => startSoon();
     const onOccupationDismissed = () => startSoon();
     window.addEventListener("kapital:occupationDone", onOccupationDone);
     window.addEventListener("kapital:occupationDismissed", onOccupationDismissed);
-
-    // Fallback poll: si dialog desaparece, arranca
     const fallback = window.setInterval(() => {
       if (!isOccupationModalOpen()) {
         window.clearInterval(fallback);
@@ -183,10 +267,8 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
         window.removeEventListener("kapital:occupationDismissed", onOccupationDismissed);
         startSoon();
       }
-    }, 400);
-
+    }, 50);
     const safety = window.setTimeout(() => window.clearInterval(fallback), 15000);
-
     return () => {
       window.removeEventListener("kapital:occupationDone", onOccupationDone);
       window.removeEventListener("kapital:occupationDismissed", onOccupationDismissed);
@@ -195,10 +277,9 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     };
   }, [showResults, startSensitivityTour, setIsFormOpen]);
 
-  // Keep the sidebar closed only during the welcome view on mobile.
   useEffect(() => {
     if (!active) return;
-    const s = current === STEPS.length ? SENSITIVITY_STEP : STEPS[current];
+    const s = stepRaw;
     const isMobile = window.innerWidth <= 640;
     if (isMobile) {
       const shouldOpen = s.id !== "welcome";
@@ -206,26 +287,58 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     } else if (s.id !== "welcome" && !isFormOpen) {
       setIsFormOpen(true);
     }
-  }, [active, current, isFormOpen, setIsFormOpen]);
+  }, [active, current, isFormOpen, setIsFormOpen, stepRaw]);
 
-  // Measure target rect
+  // si PASO 2 quedó sin highlight porque datos aún cargaban, asigna al llegar datos
+  useEffect(() => {
+    if (!active || !sensitivityMode || stepRaw.id !== "sens-subsector-list" || highlightSubsectorIdx !== null) return;
+    const id = window.setInterval(() => {
+      const items = document.querySelectorAll('[data-tour="kapital-subsector-item"]');
+      if (items.length > 0) {
+        const rnd = Math.floor(Math.random() * items.length);
+        setHighlightSubsectorIdx(rnd);
+        window.clearInterval(id);
+      }
+    }, 100);
+    const tout = window.setTimeout(() => window.clearInterval(id), 5000);
+    return () => { window.clearInterval(id); window.clearTimeout(tout); };
+  }, [active, sensitivityMode, stepRaw.id, highlightSubsectorIdx]);
+
   const updateRect = useCallback(() => {
     if (!active) return;
-    const el = document.querySelector(step.target) as HTMLElement | null;
+    let el = document.querySelector(step.target) as HTMLElement | null;
+    if (!el && stepRaw.id === "sens-sensibiliza") {
+      el = (document.querySelector('[data-tour="kapital-beta-sensitivity-btn"]') || document.querySelector('[data-tour="kapital-beta-sensitivity"]')) as HTMLElement | null;
+    }
     if (!el) {
+      if (stepRaw.id === "sens-subsector-list") {
+        const fallback = document.querySelector('[data-tour="kapital-subsector-list"]') as HTMLElement | null;
+        if (fallback) {
+          const r = fallback.getBoundingClientRect();
+          const pad = 8;
+          setTargetRect({ top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+          return;
+        }
+      }
+      // extra fallbacks for mobile detached targets
+      if (["sens-empresas","sens-ticker","sens-boa","sens-calcular"].includes(stepRaw.id)) {
+        const fb = document.querySelector('[data-tour="kapital-subsector-detail"]') as HTMLElement | null;
+        if (fb) {
+          const r = fb.getBoundingClientRect();
+          const pad = 8;
+          setTargetRect({ top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+          return;
+        }
+      }
       setTargetRect(null);
       return;
     }
+    // ensure target visible on mobile scroll containers
+    try { el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" }); } catch {}
     const r = el.getBoundingClientRect();
-    // Add small padding for highlight
     const pad = step.id === "welcome" ? 14 : 8;
-    setTargetRect({
-      top: r.top - pad,
-      left: r.left - pad,
-      width: r.width + pad * 2,
-      height: r.height + pad * 2,
-    });
-  }, [active, current, step]);
+    setTargetRect({ top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+  }, [active, step, stepRaw]);
 
   useLayoutEffect(() => {
     if (!active) return;
@@ -233,7 +346,7 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     const onResize = () => updateRect();
     window.addEventListener("resize", onResize);
     window.addEventListener("scroll", onResize, true);
-    const id = window.setInterval(updateRect, 300);
+    const id = window.setInterval(updateRect, 16);
     return () => {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onResize, true);
@@ -241,49 +354,63 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     };
   }, [active, updateRect]);
 
-  // Compute tooltip position
   useLayoutEffect(() => {
-    if (!active || !targetRect) {
-      setTooltipPos(null);
+    if (!active) { setTooltipPos(null); return; }
+    if (!targetRect) {
+      const vw = window.innerWidth; const vh = window.innerHeight;
+      setTooltipPos({ top: Math.max(16, vh/2 - 110), left: Math.max(16, vw/2 - 180) });
       return;
     }
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const tooltipW = 360;
+    const isMobile = vw <= 640;
+    const tooltipW = Math.min(360, vw - 16);
     const tooltipH = tooltipRef.current?.offsetHeight || 220;
-    const gap = 16;
-    const mobileFinalStep = vw <= 640 && current >= 3;
-
-    let top = 0;
-    let left = 0;
-
-    if (mobileFinalStep) {
-      // Keep the last form sections visible on small screens.
-      left = Math.max(16, Math.min(vw - tooltipW - 16, targetRect.left + targetRect.width / 2 - tooltipW / 2));
-      top = targetRect.top - tooltipH - gap;
-      if (top < 16) top = targetRect.top + targetRect.height + gap;
-      if (top + tooltipH > vh - 16) top = Math.max(16, vh - tooltipH - 16);
-    } else if (step.placement === "center" || (step.id === "welcome" && vw < 1024)) {
-      // Center below welcome
+    const gap = 12;
+    // adaptive for subsector/ticker: arriba si target está abajo, abajo si está arriba
+    const isAdaptive = stepRaw.id === "sens-subsector-list" || stepRaw.id === "sens-ticker";
+    if (isAdaptive) {
+      const left = Math.max(8, Math.min(vw - tooltipW - 8, targetRect.left + targetRect.width / 2 - tooltipW / 2));
+      const spaceBelow = vh - (targetRect.top + targetRect.height) - gap;
+      const spaceAbove = targetRect.top - gap;
+      const targetMid = targetRect.top + targetRect.height / 2;
+      // prioriza lado opuesto al target: si está en mitad inferior -> tooltip arriba, viceversa
+      const preferAbove = targetMid > vh / 2;
+      let top: number;
+      if (preferAbove) {
+        top = spaceAbove >= tooltipH ? targetRect.top - tooltipH - gap : (spaceBelow >= tooltipH ? targetRect.top + targetRect.height + gap : targetRect.top - tooltipH - gap);
+      } else {
+        top = spaceBelow >= tooltipH ? targetRect.top + targetRect.height + gap : (spaceAbove >= tooltipH ? targetRect.top - tooltipH - gap : targetRect.top + targetRect.height + gap);
+      }
+      // clamp final
+      top = Math.max(8, Math.min(top, vh - tooltipH - 8));
+      setTooltipPos({ top, left });
+      return;
+    }
+    if (isMobile) {
+      let left = Math.max(8, Math.min(vw - tooltipW - 8, targetRect.left + targetRect.width / 2 - tooltipW / 2));
+      let top = targetRect.top + targetRect.height + gap;
+      if (top + tooltipH > vh - 8) top = targetRect.top - tooltipH - gap;
+      if (top < 8) top = Math.max(8, vh - tooltipH - 8);
+      if (top < 8) top = 8;
+      if (top + tooltipH > vh - 8) top = Math.max(8, vh - tooltipH - 8);
+      setTooltipPos({ top, left });
+      return;
+    }
+    let top = 0; let left = 0;
+    if (step.placement === "center" || (step.id === "welcome" && vw < 1024)) {
       left = Math.max(16, Math.min(vw - tooltipW - 16, targetRect.left + targetRect.width / 2 - tooltipW / 2));
       top = targetRect.top + targetRect.height + gap;
-      if (top + tooltipH > vh - 16) {
-        top = Math.max(16, targetRect.top - tooltipH - gap);
-      }
+      if (top + tooltipH > vh - 16) top = Math.max(16, targetRect.top - tooltipH - gap);
     } else if (step.placement === "bottom") {
       left = Math.max(16, Math.min(vw - tooltipW - 16, targetRect.left + targetRect.width / 2 - tooltipW / 2));
       top = targetRect.top + targetRect.height + gap;
-      if (top + tooltipH > vh - 16) {
-        // flip to top
-        top = targetRect.top - tooltipH - gap;
-      }
+      if (top + tooltipH > vh - 16) top = targetRect.top - tooltipH - gap;
       if (top < 16) top = 16;
     } else if (step.placement === "right") {
       left = targetRect.left + targetRect.width + gap;
       top = targetRect.top + targetRect.height / 2 - tooltipH / 2;
-      // Clamp
       if (left + tooltipW > vw - 16) {
-        // not enough space on right, place bottom
         left = Math.max(16, Math.min(vw - tooltipW - 16, targetRect.left + targetRect.width / 2 - tooltipW / 2));
         top = targetRect.top + targetRect.height + gap;
         if (top + tooltipH > vh - 16) top = vh - tooltipH - 16;
@@ -291,11 +418,9 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
       if (top < 16) top = 16;
       if (top + tooltipH > vh - 16) top = vh - tooltipH - 16;
     }
-
     setTooltipPos({ top, left });
   }, [active, targetRect, step]);
 
-  // Keyboard
   useEffect(() => {
     if (!active) return;
     const onKey = (e: KeyboardEvent) => {
@@ -309,134 +434,67 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
 
   if (!active) return null;
   if (showResults && !startSensitivityTour) return null;
-  const visibleStep = step;
-  const visibleIsLast = isLast;
+  // sensitivity tour should show even with results
+  if (!sensitivityMode && showResults) return null;
+
+  const visibleStep = stepRaw;
+  const totalSteps = activeSteps.length;
 
   const overlayPieces = targetRect
     ? [
-        // top
         { top: 0, left: 0, width: "100%", height: targetRect.top },
-        // bottom
         { top: targetRect.top + targetRect.height, left: 0, width: "100%", height: `calc(100% - ${targetRect.top + targetRect.height}px)` },
-        // left
         { top: targetRect.top, left: 0, width: targetRect.left, height: targetRect.height },
-        // right
         { top: targetRect.top, left: targetRect.left + targetRect.width, width: `calc(100% - ${targetRect.left + targetRect.width}px)`, height: targetRect.height },
       ]
     : [];
 
   return createPortal(
-    <div className="fixed inset-0 z-[85] pointer-events-auto" aria-modal="true" role="dialog">
-      {/* Overlay pieces with extremely low blur */}
+    <div className="fixed inset-0 z-[130] pointer-events-auto" aria-modal="true" role="dialog">
       {targetRect ? (
         <>
           {overlayPieces.map((p, i) => (
-            <div
-              key={i}
-              className="absolute bg-[#0b1a33]/[0.14] backdrop-blur-[1.2px]"
-              style={{
-                top: typeof p.top === "number" ? p.top : (p.top as string),
-                left: typeof p.left === "number" ? p.left : (p.left as string),
-                width: typeof p.width === "number" ? p.width : (p.width as string),
-                height: typeof p.height === "number" ? p.height : (p.height as string),
-                backgroundImage:
-                  "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.22) 1px, transparent 0)",
-                backgroundSize: "18px 18px",
-              }}
-            />
+            <div key={i} className="absolute bg-[#0b1a33]/[0.14] backdrop-blur-[1.2px]" style={{ top: typeof p.top === "number" ? p.top : (p.top as string), left: typeof p.left === "number" ? p.left : (p.left as string), width: typeof p.width === "number" ? p.width : (p.width as string), height: typeof p.height === "number" ? p.height : (p.height as string), backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.22) 1px, transparent 0)", backgroundSize: "18px 18px" }} />
           ))}
-          {/* Highlight border */}
-          <div
-            className="absolute rounded-[14px] border-[2.5px] border-[#2563eb] shadow-[0_0_0_4px_rgba(37,99,235,0.14),0_10px_30px_rgba(2,12,36,0.18)] pointer-events-none transition-all duration-300 ease-out"
-            style={{
-              top: targetRect.top,
-              left: targetRect.left,
-              width: targetRect.width,
-              height: targetRect.height,
-              background: "transparent",
-            }}
-          />
+          <div className="absolute rounded-[14px] border-[2.5px] border-[#2563eb] shadow-[0_0_0_4px_rgba(37,99,235,0.14),0_10px_30px_rgba(2,12,36,0.18)] pointer-events-none transition-all duration-75 ease-out" style={{ top: targetRect.top, left: targetRect.left, width: targetRect.width, height: targetRect.height, background: "transparent" }} />
         </>
       ) : (
         <div className="absolute inset-0 bg-[#0b1a33]/[0.14] backdrop-blur-[1.2px]" />
       )}
-
-      {/* Tooltip */}
       {tooltipPos && (
-        <div
-          ref={tooltipRef}
-          className="fixed w-[360px] max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,0.18),0_4px_12px_rgba(15,23,42,0.10)] border border-slate-200/70 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-          style={{ top: tooltipPos.top, left: tooltipPos.left }}
-        >
-          {/* Header with form-like typography */}
+        <div ref={tooltipRef} className="fixed w-[360px] max-w-[calc(100vw-16px)] sm:max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,0.18),0_4px_12px_rgba(15,23,42,0.10)] border border-slate-200/70 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[calc(100dvh-24px)] overflow-y-auto" style={{ top: tooltipPos.top, left: tooltipPos.left, width: `min(360px, calc(100vw - 16px))` }}>
           <div className="px-5 pt-5 pb-3">
             <div className="flex items-center justify-between gap-3 mb-2.5">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eff6ff] border border-[#dbeafe] px-2.5 py-1 text-[11px] font-bold tracking-wider uppercase text-[#2563eb]">
-                <span className="inline-flex size-5 items-center justify-center rounded-full bg-[#2563eb] text-white text-[11px] font-bold">
-                  {current + 1}
-                </span>
-                Paso {current + 1} de {current === STEPS.length ? STEPS.length + 1 : STEPS.length}
+                <span className="inline-flex size-5 items-center justify-center rounded-full bg-[#2563eb] text-white text-[11px] font-bold">{current + 1}</span>
+                Paso {current + 1} de {totalSteps}
               </span>
-              <button
-                onClick={skip}
-                className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                aria-label="Cerrar tour"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <button onClick={skip} className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors" aria-label="Cerrar tour"><X className="w-4 h-4" /></button>
             </div>
-
             <h3 className="flex items-center gap-2 text-[15px] font-bold leading-tight tracking-tight text-slate-900">
-              <span className="inline-flex size-7 items-center justify-center rounded-lg bg-[#eff6ff] text-[#2563eb] border border-[#dbeafe]">
-              {visibleStep.icon}
-              </span>
+              <span className="inline-flex size-7 items-center justify-center rounded-lg bg-[#eff6ff] text-[#2563eb] border border-[#dbeafe]">{visibleStep.icon}</span>
               {visibleStep.title}
             </h3>
-            <p className="mt-2 text-[13px] leading-[1.55] text-slate-600 font-medium">
-              {visibleStep.description}
-            </p>
+            <p className="mt-2 text-[13px] leading-[1.55] text-slate-600 font-medium">{visibleStep.description}</p>
           </div>
-
-          {/* Footer actions - same style as form */}
           <div className="flex items-center justify-between gap-3 px-5 py-3.5 bg-slate-50/70 border-t border-slate-100">
-            <button
-              onClick={skip}
-              className="text-[13px] font-semibold text-slate-500 hover:text-slate-700 transition-colors px-2 py-1 rounded-md hover:bg-white"
-            >
-              Omitir tour
-            </button>
-
+            <button onClick={skip} className="text-[13px] font-semibold text-slate-500 hover:text-slate-700 transition-colors px-2 py-1 rounded-md hover:bg-white">Omitir tour</button>
             <div className="flex items-center gap-2">
-              <button
-                onClick={next}
-                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg text-[13px] font-bold text-white bg-[#2563eb] hover:bg-[#1d4ed8] shadow-[0_4px_12px_rgba(37,99,235,0.30)] active:scale-[0.98] transition-all"
-              >
-                {visibleIsLast ? "Entendido" : "Siguiente"}
-                {!visibleIsLast && <ArrowRight className="w-3.5 h-3.5" />}
+              <button onClick={next} className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg text-[13px] font-bold text-white bg-[#2563eb] hover:bg-[#1d4ed8] shadow-[0_4px_12px_rgba(37,99,235,0.30)] active:scale-[0.98] transition-all">
+                {isLast ? "Entendido" : "Siguiente"}
+                {!isLast && <ArrowRight className="w-3.5 h-3.5" />}
               </button>
             </div>
           </div>
-
-          {/* Dots */}
           <div className="flex items-center justify-center gap-1.5 pb-3 bg-slate-50/70">
-            {(current === STEPS.length ? [...STEPS, SENSITIVITY_STEP] : STEPS).map((_, i) => (
-              <span
-                key={i}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === current ? "w-6 bg-[#2563eb]" : i < current ? "w-1.5 bg-[#93c5fd]" : "w-1.5 bg-slate-300"
-                }`}
-              />
+            {activeSteps.map((_, i) => (
+              <span key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "w-6 bg-[#2563eb]" : i < current ? "w-1.5 bg-[#93c5fd]" : "w-1.5 bg-slate-300"}`} />
             ))}
           </div>
         </div>
       )}
-
-      {/* Mobile progress bar top */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/30">
-        <div
-          className="h-full bg-[#2563eb] transition-all duration-300"
-          style={{ width: `${((current + 1) / STEPS.length) * 100}%` }}
-        />
+        <div className="h-full bg-[#2563eb] transition-all duration-300" style={{ width: `${((current + 1) / totalSteps) * 100}%` }} />
       </div>
     </div>,
     document.body
