@@ -75,6 +75,16 @@ const STEPS: TourStep[] = [
   },
 ];
 
+const SENSITIVITY_STEP: TourStep = {
+  id: "sensibilizacion",
+  title: "Paso 5 — Sensibiliza tu Beta",
+  description:
+    "Ahora puedes probar una sensibilización con un beta personalizado o usar directamente un subsector.",
+  target: "[data-tour=\"kapital-beta-sensitivity\"]",
+  placement: "right",
+  icon: <Calculator className="w-4 h-4" />,
+};
+
 interface Rect {
   top: number;
   left: number;
@@ -86,12 +96,14 @@ interface KapitalOnboardingWalkthroughProps {
   isFormOpen: boolean;
   setIsFormOpen: (open: boolean) => void;
   showResults: boolean;
+  startSensitivityTour?: boolean;
 }
 
 export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthroughProps> = ({
   isFormOpen,
   setIsFormOpen,
   showResults,
+  startSensitivityTour = false,
 }) => {
   const [active, setActive] = useState(false);
   const [current, setCurrent] = useState(0);
@@ -99,9 +111,8 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  const step = STEPS[current];
-  const isLast = current === STEPS.length - 1;
-  const isFirst = current === 0;
+  const step = current === STEPS.length ? SENSITIVITY_STEP : STEPS[current];
+  const isLast = current === STEPS.length - 1 || current === STEPS.length;
 
   const finish = useCallback(() => {
     localStorage.setItem(getTourKey(), "true");
@@ -115,18 +126,27 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
 
   const next = useCallback(() => {
     if (isLast) {
+      if (step.id === "sensibilizacion") {
+        const betaButton = document.querySelector('[data-tour="kapital-beta-sensitivity"]') as HTMLButtonElement | null;
+        betaButton?.click();
+      }
       finish();
     } else {
       setCurrent((c) => c + 1);
     }
-  }, [isLast, finish]);
-
-  const prev = useCallback(() => {
-    setCurrent((c) => Math.max(0, c - 1));
-  }, []);
+  }, [isLast, finish, step]);
 
   // Decide if tour should start — 1 vez por deviceId, aparece aunque occupation se cierre con X
   useEffect(() => {
+    if (startSensitivityTour) {
+      setActive(false);
+      setIsFormOpen(true);
+      const timer = window.setTimeout(() => {
+        setCurrent(STEPS.length);
+        setActive(true);
+      }, 250);
+      return () => window.clearTimeout(timer);
+    }
     if (showResults) return;
     if (localStorage.getItem(getTourKey()) === "true") return;
 
@@ -173,16 +193,17 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
       window.clearInterval(fallback);
       window.clearTimeout(safety);
     };
-  }, [showResults]);
+  }, [showResults, startSensitivityTour, setIsFormOpen]);
 
-  // Ensure correct sidebar state per step (welcome closed on mobile, sidebar steps open)
+  // Keep the sidebar closed only during the welcome view on mobile.
   useEffect(() => {
     if (!active) return;
-    const s = STEPS[current];
+    const s = current === STEPS.length ? SENSITIVITY_STEP : STEPS[current];
     const isMobile = window.innerWidth <= 640;
-    if (s.id === "welcome") {
-      if (isMobile && isFormOpen) setIsFormOpen(false);
-    } else if (!isFormOpen) {
+    if (isMobile) {
+      const shouldOpen = s.id !== "welcome";
+      if (isFormOpen !== shouldOpen) setIsFormOpen(shouldOpen);
+    } else if (s.id !== "welcome" && !isFormOpen) {
       setIsFormOpen(true);
     }
   }, [active, current, isFormOpen, setIsFormOpen]);
@@ -204,7 +225,7 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
       width: r.width + pad * 2,
       height: r.height + pad * 2,
     });
-  }, [active, step]);
+  }, [active, current, step]);
 
   useLayoutEffect(() => {
     if (!active) return;
@@ -231,11 +252,18 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     const tooltipW = 360;
     const tooltipH = tooltipRef.current?.offsetHeight || 220;
     const gap = 16;
+    const mobileFinalStep = vw <= 640 && current >= 3;
 
     let top = 0;
     let left = 0;
 
-    if (step.placement === "center" || (step.id === "welcome" && vw < 1024)) {
+    if (mobileFinalStep) {
+      // Keep the last form sections visible on small screens.
+      left = Math.max(16, Math.min(vw - tooltipW - 16, targetRect.left + targetRect.width / 2 - tooltipW / 2));
+      top = targetRect.top - tooltipH - gap;
+      if (top < 16) top = targetRect.top + targetRect.height + gap;
+      if (top + tooltipH > vh - 16) top = Math.max(16, vh - tooltipH - 16);
+    } else if (step.placement === "center" || (step.id === "welcome" && vw < 1024)) {
       // Center below welcome
       left = Math.max(16, Math.min(vw - tooltipW - 16, targetRect.left + targetRect.width / 2 - tooltipW / 2));
       top = targetRect.top + targetRect.height + gap;
@@ -273,14 +301,16 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") skip();
       if (e.key === "ArrowRight") next();
-      if (e.key === "ArrowLeft") prev();
+      if (e.key === "ArrowLeft") e.preventDefault();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [active, next, prev, skip]);
+  }, [active, next, skip]);
 
   if (!active) return null;
-  if (showResults) return null;
+  if (showResults && !startSensitivityTour) return null;
+  const visibleStep = step;
+  const visibleIsLast = isLast;
 
   const overlayPieces = targetRect
     ? [
@@ -345,7 +375,7 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
                 <span className="inline-flex size-5 items-center justify-center rounded-full bg-[#2563eb] text-white text-[11px] font-bold">
                   {current + 1}
                 </span>
-                Paso {current + 1} de {STEPS.length}
+                Paso {current + 1} de {current === STEPS.length ? STEPS.length + 1 : STEPS.length}
               </span>
               <button
                 onClick={skip}
@@ -358,12 +388,12 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
 
             <h3 className="flex items-center gap-2 text-[15px] font-bold leading-tight tracking-tight text-slate-900">
               <span className="inline-flex size-7 items-center justify-center rounded-lg bg-[#eff6ff] text-[#2563eb] border border-[#dbeafe]">
-                {step.icon}
+              {visibleStep.icon}
               </span>
-              {step.title}
+              {visibleStep.title}
             </h3>
             <p className="mt-2 text-[13px] leading-[1.55] text-slate-600 font-medium">
-              {step.description}
+              {visibleStep.description}
             </p>
           </div>
 
@@ -377,27 +407,19 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
             </button>
 
             <div className="flex items-center gap-2">
-              {!isFirst && (
-                <button
-                  onClick={prev}
-                  className="px-4 py-2 rounded-lg text-[13px] font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm transition-all"
-                >
-                  Atrás
-                </button>
-              )}
               <button
                 onClick={next}
                 className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg text-[13px] font-bold text-white bg-[#2563eb] hover:bg-[#1d4ed8] shadow-[0_4px_12px_rgba(37,99,235,0.30)] active:scale-[0.98] transition-all"
               >
-                {isLast ? "Entendido" : "Siguiente"}
-                {!isLast && <ArrowRight className="w-3.5 h-3.5" />}
+                {visibleIsLast ? "Entendido" : "Siguiente"}
+                {!visibleIsLast && <ArrowRight className="w-3.5 h-3.5" />}
               </button>
             </div>
           </div>
 
           {/* Dots */}
           <div className="flex items-center justify-center gap-1.5 pb-3 bg-slate-50/70">
-            {STEPS.map((_, i) => (
+            {(current === STEPS.length ? [...STEPS, SENSITIVITY_STEP] : STEPS).map((_, i) => (
               <span
                 key={i}
                 className={`h-1.5 rounded-full transition-all duration-300 ${

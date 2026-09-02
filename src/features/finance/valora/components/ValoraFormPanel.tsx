@@ -30,8 +30,10 @@ export interface ValoraFormPanelProps {
   onSubmit: (e: React.FormEvent) => void;
   onDownloadTemplate: () => void;
   onUploadTemplate: (file: File) => void;
+  onUploadPdf?: (file: File) => void;
   onSearchSectorBeta?: () => void;
   isSearchingBeta?: boolean;
+  isPdfLoading?: boolean;
   loading?: boolean;
   hasCalculated?: boolean;
   currentCalculationId?: number | null;
@@ -59,8 +61,10 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
   onSubmit,
   onDownloadTemplate,
   onUploadTemplate,
+  onUploadPdf,
   onSearchSectorBeta,
   isSearchingBeta = false,
+  isPdfLoading = false,
   loading = false,
   hasCalculated = false,
   currentCalculationId,
@@ -167,6 +171,17 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
     }
   };
 
+  const handlePdfChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (onUploadPdf) onUploadPdf(file);
+      else onUploadTemplate(file);
+    }
+    if (pdfInputRef.current) {
+      pdfInputRef.current.value = "";
+    }
+  };
+
   const submitLabel = hasCalculated ? "SENSIBILIZAR" : "VALORIZAR";
 
   return (
@@ -238,10 +253,11 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                     <button
                       type="button"
                       onClick={handleOpenPdfPicker}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-500 transition-colors hover:bg-red-100 shrink-0"
+                      disabled={isPdfLoading}
+                      className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-colors shrink-0 ${isPdfLoading ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed" : "border-red-200 bg-red-50 text-red-500 hover:bg-red-100"}`}
                       aria-label="Subir EEFF PDF"
                     >
-                      <i className="fa-solid fa-file-pdf text-sm"></i>
+                      <i className={`fa-solid ${isPdfLoading ? "fa-spinner fa-spin" : "fa-file-pdf"} text-sm`}></i>
                     </button>
                     <Tooltip content="El EEFF debe incluir la nota de depreciación acumulada correspondiente a todos los períodos reportados, así como las notas de las cuentas por cobrar corrientes y cuentas por pagar corrientes. La IA identificará y clasificará las cuentas para convertir automáticamente la información al formato de plantilla Excel utilizado por la plataforma.">
                       <span
@@ -264,7 +280,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                     type="file"
                     accept=".pdf"
                     className="hidden"
-                    onChange={handleFileChange}
+                    onChange={handlePdfChange}
                   />
                 </div>
 
@@ -386,7 +402,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                   value={
                     formData.beta_subsector || formData.beta_unlevered_industry || ""
                   }
-                  disabled
+                  disabled={!hasCalculated}
                   onChange={onInputChange}
                   suffix="coef."
                   layout="horizontal"
@@ -398,7 +414,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                     type="button"
                     onClick={handleSearchSectorBeta}
                     disabled={
-                      isSearchingBeta || !formData.sector || isSection2Disabled
+                      isSearchingBeta || !formData.sector || isSection2Disabled || !hasCalculated
                     }
                     className={cn(
                       "text-[10px] w-full h-10 py-0.5 px-1 rounded-sm text-wrap font-bold cursor-pointer flex items-center justify-center text-center leading-tight tracking-wider",

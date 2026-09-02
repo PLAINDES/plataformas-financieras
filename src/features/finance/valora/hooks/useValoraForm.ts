@@ -14,6 +14,8 @@ const INITIAL_FORM_DATA: FormData = {
   sector: "",
   subsector: "",
   tickers_subsector: "",
+  subsector_sensibilizacion: "",
+  tickers_subsector_sensibilizacion: "",
   fileUsername: "",
   action: "",
   longgrowth: "",
@@ -243,9 +245,23 @@ export function useValoraForm() {
     setFormData((prev) => {
       const updates = { ...prev, [name]: value };
 
+      if (name === "beta_unlevered_industry") {
+        const trimmed = value.trim();
+        if (trimmed !== "" && trimmed !== "0") {
+          updates.beta_subsector = trimmed;
+          if (!prev.subsector || prev.subsector !== "Personalizado") {
+            updates.subsector = "Personalizado";
+          }
+        } else {
+          updates.beta_subsector = "";
+        }
+      }
+
       if (name === "sector") {
         updates.subsector = "";
         updates.tickers_subsector = "";
+        updates.subsector_sensibilizacion = "";
+        updates.tickers_subsector_sensibilizacion = "";
         updates.beta_subsector = "";
         updates.beta_unlevered_industry = "";
       }

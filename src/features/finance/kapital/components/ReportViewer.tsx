@@ -36,6 +36,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
   const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
   const [loaderState, setLoaderState] = useState<ReportLoaderState>("idle");
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [pendingPaymentAfterLogin, setPendingPaymentAfterLogin] = useState(false);
   const { user, login } = useAuthContext();
   const isAuthenticated = !!user;
   const paymentWindowRef = useRef<Window | null>(null);
@@ -123,6 +124,12 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
   ]);
 
   const handleCulqiPayment = async () => {
+    if (!isAuthenticated) {
+      setPendingPaymentAfterLogin(true);
+      setIsLoginModalOpen(true);
+      return;
+    }
+
     const reportId = Number(reportProductId);
     const currentCalculationId = Number(calculationId);
     if (!Number.isFinite(reportId) || !Number.isFinite(currentCalculationId)) {
@@ -333,8 +340,29 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
 
       <LoginModal
         isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onLogin={login}
+        onClose={() => {
+          setIsLoginModalOpen(false);
+          setPendingPaymentAfterLogin(false);
+        }}
+        onLogin={async (credentials) => {
+          const loggedUser = await login(credentials);
+          if (pendingPaymentAfterLogin && calculationId && loggedUser?.id) {
+            try {
+              await MainService.updateCalculation(Number(calculationId), {
+                user_id: Number(loggedUser.id),
+              });
+            } catch {
+              // silently fail — payment will still work
+            }
+            setIsLoginModalOpen(false);
+            setPendingPaymentAfterLogin(false);
+            setTimeout(() => handleCulqiPayment(), 100);
+          } else {
+            setIsLoginModalOpen(false);
+            setPendingPaymentAfterLogin(false);
+          }
+          return loggedUser;
+        }}
         onSwitchToRegister={() => setIsLoginModalOpen(false)}
       />
     </section>

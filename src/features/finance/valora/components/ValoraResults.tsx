@@ -4,10 +4,12 @@ import { ValoraEstadosSection } from "./ValoraEstadosSection";
 import { ValoraGeneralResultsBlock } from "./ValoraGeneralResultsBlock";
 import { ValoraComparisonResultsBlock } from "./ValoraComparisonResultsBlock";
 import { ValoraSensibilidadResultsBlock } from "./ValoraSensibilidadResultsBlock";
+import { ValoraScenarioSelector } from "./ValoraScenarioSelector";
 import type {
   FinancialTable,
   FormData,
   ValoraCalculationResults,
+  ValoraSensibilidadEntry,
 } from "@/shared/types/ValoraTypes";
 
 export type ValoraResultsSectionKey = "estados" | "resultados";
@@ -28,9 +30,14 @@ export interface ValoraResultsProps {
   sensitizedResults?: ValoraCalculationResults;
   resultView: ValoraResultsView;
   hasSensitized?: boolean;
+  sensibilizaciones?: ValoraSensibilidadEntry[];
+  selectedSensIdx?: number;
   onResultViewChange: (view: ValoraResultsView) => void;
+  onSelectedSensIdxChange?: (idx: number) => void;
   onSectionChange?: (section: ValoraResultsSectionKey) => void;
   onOpenFormPanel?: () => void;
+  onOpenReport?: () => void;
+  coverUrl?: string;
 }
 
 export const ValoraResults: React.FC<ValoraResultsProps> = ({
@@ -42,8 +49,13 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
   sensitizedResults,
   resultView,
   hasSensitized = false,
+  sensibilizaciones = [],
+  selectedSensIdx = 0,
   onResultViewChange,
+  onSelectedSensIdxChange,
   onOpenFormPanel,
+  onOpenReport,
+  coverUrl,
 }) => {
   const [financialTab, setFinancialTab] = useState<"balance" | "results">(
     "balance"
@@ -85,27 +97,42 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
   ) : null;
 
   return (
-    <div className="flex flex-12 flex-col w-full h-full lg:pb-10 py-10 lg:pt-10 bg-[#f3f6f9]">
+    <div className="relative flex flex-12 flex-col w-full h-full lg:pb-10 py-10 lg:pt-10 bg-[#f3f6f9]">
       <div className="flex-1 w-full px-4 sm:px-8">
         <div className="mx-auto flex w-full max-w-300 flex-col gap-6">
-          {section === "resultados" && resultView === "original" && (
-            <ValoraGeneralResultsBlock
-              onOpenFormPanel={onOpenFormPanel}
-              showPromptButton={!showTabs}
-              results={calculationResults}
-              toolbar={controls}
-            />
-          )}
+           {/* Temporalmente oculto: portada y generación del reporte especializado. */}
+           {/*
+           {onOpenReport && (
+             <div className="flex w-full justify-center">
+               <section className="flex w-full max-w-105 flex-col items-center justify-center gap-2 sm:w-fit">
+                 {coverUrl && <div onClick={onOpenReport} className="w-fit cursor-pointer"><Book href={coverUrl} width={95} height={130} interactive /></div>}
+                 <button type="button" onClick={onOpenReport} className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer">
+                   Generar Reporte Especializado
+                 </button>
+               </section>
+             </div>
+           )}
+           */}
+            {section === "resultados" && resultView === "original" && (
+             <ValoraGeneralResultsBlock
+               onOpenFormPanel={onOpenFormPanel}
+                onOpenReport={undefined}
+               showPromptButton={!showTabs}
+               results={calculationResults}
+               toolbar={controls}
+             />
+           )}
 
-          {section === "resultados" && resultView === "sensibilidad" && (
-            <ValoraSensibilidadResultsBlock
-              onOpenFormPanel={onOpenFormPanel}
-              sector={formData.sector}
-              originalResults={calculationResults}
-              results={sensitizedResults}
-              toolbar={controls}
-            />
-          )}
+           {section === "resultados" && resultView === "sensibilidad" && (
+             <ValoraSensibilidadResultsBlock
+               onOpenFormPanel={onOpenFormPanel}
+                onOpenReport={undefined}
+                sector={formData.sector}
+               originalResults={calculationResults}
+               results={sensitizedResults}
+               toolbar={controls}
+             />
+           )}
 
           {section === "resultados" && resultView === "comparacion" && (
             <ValoraComparisonResultsBlock
@@ -173,6 +200,14 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
           )}
         </div>
       </div>
+
+      {hasSensitized && sensibilizaciones.length > 0 && onSelectedSensIdxChange && (
+        <ValoraScenarioSelector
+          sensibilizaciones={sensibilizaciones}
+          selectedIdx={selectedSensIdx}
+          onSelectIdx={onSelectedSensIdxChange}
+        />
+      )}
     </div>
   );
 };

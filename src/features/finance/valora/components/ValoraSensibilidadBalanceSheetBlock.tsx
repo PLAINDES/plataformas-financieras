@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { formatNumber, getMaxAbs, getProportionalRowSpan, DynamicConnector } from "./ValoraChartUtils";
+import { formatNumber, getMaxAbs, getProportionalRowSpan, getBalanceRowSpans, DynamicConnector } from "./ValoraChartUtils";
 
 export interface ValoraSensibilidadBalanceSheetBlockProps {
   activo: number;
@@ -39,10 +39,7 @@ const DefaultSensibilidadChart = ({
   // mismo anclaje que GeneralComparison: balance no comprimido por outlier sensibilizado
   const maxBalance = getMaxAbs(activo, pasivo, patrimonio);
   const maxOverall = getMaxAbs(activo, pasivo, patrimonio, conceptosPatrimonioSensibilizado, integradoPatrimonioSensibilizado);
-  const activoRowSpan = getProportionalRowSpan(activo, maxBalance, TOTAL_ROWS);
-  const sumPP = Math.abs(pasivo) + Math.abs(patrimonio);
-  const pasivoRowSpan = sumPP > 0 ? Math.max(4, Math.round((activoRowSpan * Math.abs(pasivo)) / sumPP)) : Math.round(activoRowSpan / 2);
-  const patrimonioContableRowSpan = activoRowSpan - pasivoRowSpan;
+  const { activoRowSpan, pasivoRowSpan, patrimonioRowSpan: patrimonioContableRowSpan } = getBalanceRowSpans(activo, pasivo, patrimonio, maxOverall, TOTAL_ROWS);
   const conceptosPatRowSpan = getProportionalRowSpan(conceptosPatrimonioSensibilizado, maxBalance, TOTAL_ROWS);
   const integradoPatRowSpan = getProportionalRowSpan(integradoPatrimonioSensibilizado, maxOverall, TOTAL_ROWS);
 
@@ -174,10 +171,7 @@ const MethodSensibilidadChart = ({
 }) => {
   const TOTAL_ROWS = 240;
   const maxVal = getMaxAbs(activo, pasivo, patrimonio, empresaSensibilizado, patrimonioSensibilizado);
-  const activoRowSpan = getProportionalRowSpan(activo, maxVal, TOTAL_ROWS);
-  const sumPP = Math.abs(pasivo) + Math.abs(patrimonio);
-  const pasivoRowSpan = sumPP > 0 ? Math.max(4, Math.round((activoRowSpan * Math.abs(pasivo)) / sumPP)) : Math.round(activoRowSpan / 2);
-  const patrimonioContableRowSpan = activoRowSpan - pasivoRowSpan;
+  const { activoRowSpan, pasivoRowSpan, patrimonioRowSpan: patrimonioContableRowSpan } = getBalanceRowSpans(activo, pasivo, patrimonio, maxVal, TOTAL_ROWS);
   const empresaRowSpan = getProportionalRowSpan(empresaSensibilizado, maxVal, TOTAL_ROWS);
   const patrimonioRowSpan = getProportionalRowSpan(patrimonioSensibilizado, maxVal, TOTAL_ROWS);
 

@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { BarChart3, CheckCircle2, ChevronRight, PieChart } from "lucide-react";
 import { ValoraResultsHeader } from "./ValoraResultsHeader";
 import type { ValoraCalculationResults } from "@/shared/types/ValoraTypes";
-import { getMaxAbs, getProportionalRowSpan, DynamicConnector } from "./ValoraChartUtils";
+import { getMaxAbs, getProportionalRowSpan, getBalanceRowSpans, DynamicConnector } from "./ValoraChartUtils";
 
 type ComparisonMethodId = "conceptos" | "integrado";
 type ComparisonView = ComparisonMethodId | "none";
@@ -328,10 +328,7 @@ const GeneralComparisonChart = ({
   const maxBalance = getMaxAbs(activo, pasivo, patrimonio, conceptosPatrimonioEsperado, integradoPatrimonioEsperado);
   const maxOverall = getMaxAbs(activo, pasivo, patrimonio, conceptosPatrimonioEsperado, conceptosPatrimonioSensibilizado, integradoPatrimonioEsperado, integradoPatrimonioSensibilizado);
   const maxVal = maxOverall;
-  const activoRowSpan = getProportionalRowSpan(activo, maxBalance, TOTAL_ROWS);
-  const sumPP = Math.abs(pasivo ?? 0) + Math.abs(patrimonio ?? 0);
-  const pasivoRowSpan = sumPP > 0 ? Math.max(4, Math.round((activoRowSpan * Math.abs(pasivo ?? 0)) / sumPP)) : Math.round(activoRowSpan / 2);
-  const patrimonioRowSpan = activoRowSpan - pasivoRowSpan;
+  const { activoRowSpan, pasivoRowSpan, patrimonioRowSpan } = getBalanceRowSpans(activo, pasivo, patrimonio, maxOverall, TOTAL_ROWS);
   const conceptosEspRowSpan = getProportionalRowSpan(conceptosPatrimonioEsperado, maxBalance, TOTAL_ROWS);
   const conceptosSensRowSpan = getProportionalRowSpan(conceptosPatrimonioSensibilizado, maxBalance, TOTAL_ROWS);
   const integradoEspRowSpan = getProportionalRowSpan(integradoPatrimonioEsperado, maxBalance, TOTAL_ROWS);
@@ -503,10 +500,7 @@ const MethodComparisonChart = ({
   const TOTAL_ROWS = 240;
   const maxBalance = getMaxAbs(activo, pasivo, patrimonio, empresaEsperado, patrimonioEsperado);
   const maxVal = getMaxAbs(activo, pasivo, patrimonio, empresaEsperado, empresaSensibilizado, patrimonioEsperado, patrimonioSensibilizado);
-  const activoRowSpan = getProportionalRowSpan(activo, maxBalance, TOTAL_ROWS);
-  const sumPP = Math.abs(pasivo ?? 0) + Math.abs(patrimonio ?? 0);
-  const pasivoRowSpan = sumPP > 0 ? Math.max(4, Math.round((activoRowSpan * Math.abs(pasivo ?? 0)) / sumPP)) : Math.round(activoRowSpan / 2);
-  const patrimonioContableRowSpan = activoRowSpan - pasivoRowSpan;
+  const { activoRowSpan, pasivoRowSpan, patrimonioRowSpan: patrimonioContableRowSpan } = getBalanceRowSpans(activo, pasivo, patrimonio, maxVal, TOTAL_ROWS);
   const empresaSensRowSpan = getProportionalRowSpan(empresaSensibilizado, maxVal, TOTAL_ROWS);
   const empresaEspRowSpan = getProportionalRowSpan(empresaEsperado, maxBalance, TOTAL_ROWS);
   const patrimonioEspRowSpan = getProportionalRowSpan(patrimonioEsperado, maxBalance, TOTAL_ROWS);

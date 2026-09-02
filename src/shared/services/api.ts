@@ -1,15 +1,16 @@
 // src/services/api.ts
 
-// In dev, route through Vite's proxy (/api → backend) to avoid CORS.
-// In production, use the explicit API URL from env.
+// In dev, proxy via Vite (/api → backend) except for large PDF uploads which bypass proxy to avoid 4MB limit/hang
 const API_BASE_URL = import.meta.env.DEV
   ? `${window.location.origin}/api/v1/`
   : `${import.meta.env.VITE_API_URL}/api/v1/`;
+const DIRECT_API_URL = (import.meta.env.VITE_API_URL || "http://localhost:8000") + "/api/v1/";
 
 interface RequestOptions {
   token?: string;
   params?: Record<string, any>;
   body?: any;
+  signal?: AbortSignal;
 }
 
 class APIClient {
@@ -153,9 +154,12 @@ class APIClient {
   async postForm<T>(
     endpoint: string,
     formData: FormData,
-    options?: RequestOptions
+    options?: RequestOptions & { direct?: boolean }
   ): Promise<T> {
-    const url = this.buildURL(endpoint, options?.params);
+    const useDirect = (options as any)?.direct;
+    const base = useDirect ? DIRECT_API_URL : this.baseURL;
+    const url = new URL(endpoint, base).toString() + (options?.params ? "?" + new URLSearchParams(options.params as any).toString() : "");
+    console.log(`[API] postForm ${useDirect ? "DIRECT" : "PROXY"} -> ${url}`);
 
     const headers: HeadersInit = {};
     if (options?.token) {
@@ -166,6 +170,7 @@ class APIClient {
       method: "POST",
       headers,
       body: formData,
+      signal: options?.signal,
     });
 
     return this.handleResponse<T>(response);

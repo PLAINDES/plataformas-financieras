@@ -48,11 +48,17 @@ export function useSubsectorModal({
         if (!subsectorDetail) return;
         const activeTickers = detailTickers.filter((t) => !inactiveTickers.includes(t));
 
-        // BOA Ponderado: Σ(Wi% × beta_unlevered) — misma fórmula que lista (usa activo_mercado fallback total_activos)
-        const getAsset = (emp: string) => Number(subsectorDetail.ticker_info?.[emp]?.activo_mercado ?? subsectorDetail.ticker_info?.[emp]?.total_activos ?? 0) || 0;
+        // BOA Ponderado estricto Excel: Wi = Activo / Σ Activos activas, BOA = SUMPRODUCT(Wi, BOA) — solo activo_mercado, sin fallback total_activos
+        const getAsset = (emp: string) => {
+            const v = subsectorDetail.ticker_info?.[emp]?.activo_mercado;
+            const n = Number(v);
+            return Number.isFinite(n) && n > 0 ? n : 0;
+        };
         const tickersValidos = activeTickers.filter((emp: string) => {
             const boa = subsectorDetail.empresas_boa?.[emp];
-            return boa !== null && boa !== undefined && String(boa) !== "" && Number.isFinite(Number(boa));
+            const boaOk = boa !== null && boa !== undefined && String(boa) !== "" && Number.isFinite(Number(boa));
+            const activoOk = getAsset(emp) > 0;
+            return boaOk && activoOk;
         });
         const activosTotal = tickersValidos.reduce((sum, emp) => sum + getAsset(emp), 0);
         if (activosTotal === 0) return;
@@ -97,11 +103,17 @@ export function useSubsectorModal({
         const activeTickers = detailTickers.filter((t) => !inactiveTickers.includes(t));
         if (activeTickers.length === 0 || !subsectorDetail) return null;
 
-        // BOA Ponderado: Σ(Wi% × beta_unlevered) — idéntico a lista
-        const getAsset = (emp: string) => Number(subsectorDetail.ticker_info?.[emp]?.activo_mercado ?? subsectorDetail.ticker_info?.[emp]?.total_activos ?? 0) || 0;
+        // BOA Ponderado estricto Excel — solo activo_mercado, sin fallback, excluye activos 0
+        const getAsset = (emp: string) => {
+            const v = subsectorDetail.ticker_info?.[emp]?.activo_mercado;
+            const n = Number(v);
+            return Number.isFinite(n) && n > 0 ? n : 0;
+        };
         const tickersValidos = activeTickers.filter((emp: string) => {
             const boa = subsectorDetail.empresas_boa?.[emp];
-            return boa !== null && boa !== undefined && String(boa) !== "" && Number.isFinite(Number(boa));
+            const boaOk = boa !== null && boa !== undefined && String(boa) !== "" && Number.isFinite(Number(boa));
+            const activoOk = getAsset(emp) > 0;
+            return boaOk && activoOk;
         });
         const activosTotal = tickersValidos.reduce((sum, emp) => sum + getAsset(emp), 0);
         if (activosTotal === 0) return null;
