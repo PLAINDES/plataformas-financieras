@@ -82,8 +82,16 @@ const SENSITIVITY_STEPS: TourStep[] = [
   {
     id: "sens-subsector-list",
     title: "Explore los subsectores disponibles",
-    description: "Este panel reúne los subsectores de su industria. Cada tarjeta muestra el número de empresas comparables y su BOA ponderado. Hemos resaltado un subsector aleatoriamente: selecciónelo para examinar su composición.",
+    description: "Este panel reúne los subsectores de su industria. Cada tarjeta muestra el número de empresas comparables y su BOA ponderado. Explore la lista completa antes de profundizar.",
     target: "[data-tour=\"kapital-subsector-list\"]",
+    placement: "right",
+    icon: <Layers className="w-4 h-4" />,
+  },
+  {
+    id: "sens-subsector-item",
+    title: "Subsector destacado",
+    description: "Hemos resaltado un subsector aleatoriamente: selecciónelo para examinar su composición y ver las empresas que lo conforman.",
+    target: "[data-tour=\"kapital-subsector-item\"]",
     placement: "right",
     icon: <Layers className="w-4 h-4" />,
   },
@@ -149,8 +157,11 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
   const activeSteps = sensitivityMode ? SENSITIVITY_STEPS : STEPS;
   const stepRaw = activeSteps[current] ?? activeSteps[0];
   const stepTarget = (() => {
-    if (sensitivityMode && stepRaw.id === "sens-subsector-list" && highlightSubsectorIdx !== null) {
+    if (sensitivityMode && stepRaw.id === "sens-subsector-item" && highlightSubsectorIdx !== null) {
       return `[data-tour="kapital-subsector-item"][data-index="${highlightSubsectorIdx}"]`;
+    }
+    if (sensitivityMode && stepRaw.id === "sens-ticker") {
+      return `[data-tour="kapital-ticker-row"][data-index="0"]`;
     }
     return stepRaw.target;
   })();
@@ -201,11 +212,27 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
       return;
     }
     if (stepRaw.id === "sens-subsector-list") {
+      window.setTimeout(() => setCurrent((c) => c + 1), 30);
+      return;
+    }
+    if (stepRaw.id === "sens-subsector-item") {
       if (highlightSubsectorIdx !== null) {
         const el = document.querySelector(`[data-tour="kapital-subsector-item"][data-index="${highlightSubsectorIdx}"]`) as HTMLElement | null;
         el?.click();
       }
-      window.setTimeout(() => setCurrent((c) => c + 1), 30);
+      // espera a que cargue el detalle (tickers) antes de avanzar
+      const start = Date.now();
+      const poll = window.setInterval(() => {
+        const detail = document.querySelector('[data-tour="kapital-subsector-detail"]');
+        const rows = document.querySelectorAll('[data-tour="kapital-ticker-row"]');
+        if (detail && rows.length > 0) {
+          window.clearInterval(poll);
+          setCurrent((c) => c + 1);
+        } else if (Date.now() - start > 3000) {
+          window.clearInterval(poll);
+          setCurrent((c) => c + 1);
+        }
+      }, 40);
       return;
     }
     if (isLast) {
@@ -282,9 +309,11 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     }
   }, [active, current, stepRaw, setIsFormOpen]);
 
-  // si PASO 2 quedó sin highlight porque datos aún cargaban, asigna al llegar datos
+  // si highlight aún no asignado porque datos cargaban, asigna al llegar datos
   useEffect(() => {
-    if (!active || !sensitivityMode || stepRaw.id !== "sens-subsector-list" || highlightSubsectorIdx !== null) return;
+    if (!active || !sensitivityMode || highlightSubsectorIdx !== null) return;
+    const needsHighlight = stepRaw.id === "sens-subsector-list" || stepRaw.id === "sens-subsector-item";
+    if (!needsHighlight) return;
     const id = window.setInterval(() => {
       const items = document.querySelectorAll('[data-tour="kapital-subsector-item"]');
       if (items.length > 0) {
@@ -306,13 +335,12 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     if (!el && stepId === "sens-ticker") {
       const rows = document.querySelectorAll('[data-tour="kapital-ticker-row"]');
       if (rows.length > 0) {
-        const idx = Math.min(1, rows.length - 1);
-        el = rows[idx] as HTMLElement;
+        el = rows[0] as HTMLElement;
       }
     }
     let next: Rect | null = null;
     if (!el) {
-      if (stepId === "sens-subsector-list") {
+      if (stepId === "sens-subsector-list" || stepId === "sens-subsector-item") {
         const fallback = document.querySelector('[data-tour="kapital-subsector-list"]') as HTMLElement | null;
         if (fallback) {
           const r = fallback.getBoundingClientRect();
@@ -350,7 +378,7 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     if (!active) return;
     const el = document.querySelector(stepTarget) as HTMLElement | null;
     if (el) try { el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" }); } catch {}
-    if (!el && stepId === "sens-subsector-list") {
+    if (!el && (stepId === "sens-subsector-list" || stepId === "sens-subsector-item")) {
       const fb = document.querySelector('[data-tour="kapital-subsector-list"]') as HTMLElement | null;
       if (fb) try { fb.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" }); } catch {}
     }
@@ -398,7 +426,7 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
       return;
     }
     // adaptive for subsector/ticker: arriba si target está abajo, abajo si está arriba
-    const isAdaptive = stepRaw.id === "sens-subsector-list" || stepRaw.id === "sens-ticker";
+    const isAdaptive = stepRaw.id === "sens-subsector-list" || stepRaw.id === "sens-subsector-item" || stepRaw.id === "sens-ticker";
     if (isAdaptive) {
       const left = Math.max(8, Math.min(vw - tooltipW - 8, targetRect.left + targetRect.width / 2 - tooltipW / 2));
       const spaceBelow = vh - (targetRect.top + targetRect.height) - gap;
