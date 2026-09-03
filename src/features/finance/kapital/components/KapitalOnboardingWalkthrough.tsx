@@ -182,8 +182,9 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     // sensitivity flow
     if (stepRaw.id === "sens-sensibiliza") {
       const betaButton = (document.querySelector('[data-tour="kapital-beta-sensitivity-btn"]') || document.querySelector('[data-tour="kapital-beta-sensitivity"] button') || document.querySelector('[data-tour="kapital-beta-sensitivity"]')) as HTMLElement | null;
+      if (!betaButton || (betaButton instanceof HTMLButtonElement && betaButton.disabled)) return;
       betaButton?.click();
-      // poll ultra-rápido (16ms) para que PASO 2 aparezca en milisegundos
+      // Wait for the async subsector request before moving the tour target.
       const start = Date.now();
       const poll = window.setInterval(() => {
         const items = document.querySelectorAll('[data-tour="kapital-subsector-item"]');
@@ -192,11 +193,11 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
           setHighlightSubsectorIdx(rnd);
           window.clearInterval(poll);
           setCurrent((c) => c + 1);
-        } else if (Date.now() - start > 800) {
+        } else if (Date.now() - start > 5000) {
           window.clearInterval(poll);
           setCurrent((c) => c + 1);
         }
-      }, 16);
+      }, 40);
       return;
     }
     if (stepRaw.id === "sens-subsector-list") {
@@ -292,7 +293,7 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
         window.clearInterval(id);
       }
     }, 100);
-    const tout = window.setTimeout(() => window.clearInterval(id), 5000);
+    const tout = window.setTimeout(() => window.clearInterval(id), 10000);
     return () => { window.clearInterval(id); window.clearTimeout(tout); };
   }, [active, sensitivityMode, stepRaw.id, highlightSubsectorIdx]);
 
@@ -383,6 +384,19 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     const tooltipW = Math.min(360, vw - 16);
     const tooltipH = tooltipRef.current?.offsetHeight || 220;
     const gap = 12;
+    const isSensitivityModalStep = sensitivityMode && stepRaw.id.startsWith("sens-");
+    if (isSensitivityModalStep && !isMobile && targetRect.width > 300) {
+      // Keep the explanation beside the modal instead of covering its target.
+      const leftOfTarget = targetRect.left - tooltipW - gap;
+      const rightOfTarget = targetRect.left + targetRect.width + gap;
+      const left = leftOfTarget >= 16
+        ? leftOfTarget
+        : Math.min(vw - tooltipW - 16, rightOfTarget);
+      const top = Math.max(16, Math.min(targetRect.top + targetRect.height / 2 - tooltipH / 2, vh - tooltipH - 16));
+      const next = { top, left };
+      setTooltipPos((prev) => prev && Math.abs(prev.top-next.top)<0.5 && Math.abs(prev.left-next.left)<0.5 ? prev : next);
+      return;
+    }
     // adaptive for subsector/ticker: arriba si target está abajo, abajo si está arriba
     const isAdaptive = stepRaw.id === "sens-subsector-list" || stepRaw.id === "sens-ticker";
     if (isAdaptive) {
