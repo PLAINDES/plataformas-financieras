@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { BarChart3, CheckCircle2, ChevronRight, PieChart } from "lucide-react";
 import { ValoraResultsHeader } from "./ValoraResultsHeader";
 import type { ValoraCalculationResults } from "@/shared/types/ValoraTypes";
-import { getComparisonPatrimonioRowSpan, getEmpresaRowSpan, DynamicConnector } from "./ValoraChartUtils";
+import { getMaxAbs, getProportionalRowSpan, getBalanceRowSpans, DynamicConnector } from "./ValoraChartUtils";
 
 type ComparisonMethodId = "conceptos" | "integrado";
 type ComparisonView = ComparisonMethodId | "none";
@@ -309,7 +309,7 @@ const GeneralComparisonChart = ({
   currency,
   availableCurrencies,
   onCurrencyChange,
-  companyType,
+  companyType: _companyType,
 }: {
   activo: number | null;
   pasivo: number | null;
@@ -323,18 +323,16 @@ const GeneralComparisonChart = ({
   onCurrencyChange: (currency: string) => void;
   companyType: "empresa" | "emergente";
 }) => {
-  const TOTAL_ROWS = 9;
-  const isEmergente = companyType === "emergente";
-  // PASIVO/PATRIMONIO proporcionales a ACTIVO - suman TOTAL_ROWS y respeta quién es mayor
-  const pasivoRowSpan = (() => {
-    if (activo === null || pasivo === null || activo === 0) return 5;
-    const ratio = Math.abs(pasivo) / Math.abs(activo);
-    return Math.max(2, Math.min(7, Math.round(ratio * TOTAL_ROWS)));
-  })();
-  const conceptosEspRowSpan = getComparisonPatrimonioRowSpan(conceptosPatrimonioEsperado, patrimonio, isEmergente);
-  const conceptosSensRowSpan = getComparisonPatrimonioRowSpan(conceptosPatrimonioSensibilizado, patrimonio, isEmergente);
-  const integradoEspRowSpan = getComparisonPatrimonioRowSpan(integradoPatrimonioEsperado, patrimonio, isEmergente);
-  const integradoSensRowSpan = getComparisonPatrimonioRowSpan(integradoPatrimonioSensibilizado, patrimonio, isEmergente);
+  const TOTAL_ROWS = 240;
+  // metodología anclada a primer cálculo: balance escala con max sin outlier sensibilizado, financieros pequeños no se comprimen
+  const maxBalance = getMaxAbs(activo, pasivo, patrimonio, conceptosPatrimonioEsperado, integradoPatrimonioEsperado);
+  const maxOverall = getMaxAbs(activo, pasivo, patrimonio, conceptosPatrimonioEsperado, conceptosPatrimonioSensibilizado, integradoPatrimonioEsperado, integradoPatrimonioSensibilizado);
+  const maxVal = maxOverall;
+  const { activoRowSpan, pasivoRowSpan, patrimonioRowSpan } = getBalanceRowSpans(activo, pasivo, patrimonio, maxOverall, TOTAL_ROWS);
+  const conceptosEspRowSpan = getProportionalRowSpan(conceptosPatrimonioEsperado, maxBalance, TOTAL_ROWS);
+  const conceptosSensRowSpan = getProportionalRowSpan(conceptosPatrimonioSensibilizado, maxBalance, TOTAL_ROWS);
+  const integradoEspRowSpan = getProportionalRowSpan(integradoPatrimonioEsperado, maxBalance, TOTAL_ROWS);
+  const integradoSensRowSpan = getProportionalRowSpan(integradoPatrimonioSensibilizado, maxVal, TOTAL_ROWS);
 
   const gridRef = useRef<HTMLDivElement>(null);
   const patrimonioRef = useRef<HTMLDivElement>(null);
@@ -377,84 +375,95 @@ const GeneralComparisonChart = ({
           <line x1="0%" y1="99.5%" x2="100%" y2="99.5%" stroke="#9ca3af" strokeWidth="1.5" strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />
         </svg>
 
-        {/* Activo - REFERENCIA FIJA (MORADO) */}
-        <div className="z-10 col-start-1 row-span-9 mr-[3px] border-[3px] border-[#a62cad] bg-white rounded-l-xl relative flex flex-col items-center justify-center">
+        {/* Activo - DINÁMICO proporcional al máximo global (ancho intacto: col-start-1) */}
+        <div
+          className="z-10 col-start-1 mr-[3px] border-[3px] border-[#a62cad] bg-white rounded-l-xl relative flex flex-col items-center justify-center"
+          style={{ gridRowStart: TOTAL_ROWS - activoRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+        >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">Activo</span>
           <span className="text-lg font-bold text-gray-800 text-center px-2">{formatNumber(activo)}</span>
         </div>
 
-        {/* Pasivo - ALTURA DINÁMICA proporcional a ACTIVO */}
+        {/* Pasivo - DINÁMICO proporcional al máximo global (ancho intacto: col-start-2) */}
         <div
           className="z-10 col-start-2 border-[3px] border-green-500 bg-white rounded-tr-xl relative flex flex-col items-center justify-center"
-          style={{ gridRowStart: 1, gridRowEnd: pasivoRowSpan + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioRowSpan - pasivoRowSpan + 1, gridRowEnd: TOTAL_ROWS - patrimonioRowSpan + 1 }}
         >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">Pasivo</span>
           <span className="text-base font-bold text-gray-800 text-center px-2">{formatNumber(pasivo)}</span>
         </div>
 
-        {/* Patrimonio - ALTURA DINÁMICA proporcional a ACTIVO */}
+        {/* Patrimonio - DINÁMICO proporcional al máximo global (ancho intacto) */}
         <div
           ref={patrimonioRef}
           className="z-10 col-start-2 border-[3px] border-blue-500 bg-white rounded-br-xl relative flex flex-col items-center justify-center"
-          style={{ gridRowStart: pasivoRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
         >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">Patrimonio</span>
           <span className="text-base font-bold text-gray-800 text-center px-2">{formatNumber(patrimonio)}</span>
         </div>
 
-        {/* Conceptos Patrimonio Esperado - DINÁMICO (NARANJA) */}
+        {/* Conceptos Patrimonio Esperado - DINÁMICO (NARANJA) título por encima */}
         <div
           ref={conceptosEspRef}
-          className="z-10 col-start-3 border-[3px] border-orange-400 bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 ml-4 gap-1"
+          className="z-10 col-start-3 border-[3px] border-orange-400 bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 ml-4"
           style={{ gridRowStart: TOTAL_ROWS - conceptosEspRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
         >
-          <span className="text-[10px] font-bold text-center text-gray-800 leading-tight">
-            Valor Financiero del Patrimonio
-          </span>
-          <span className="text-[9px] font-black text-center text-gray-900 leading-tight">Método Por Conceptos</span>
-          <span className="text-[10px] font-bold text-center text-gray-900 leading-tight">Esperado</span>
+          <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
+            <span className="text-[10px] font-bold text-center text-gray-800 leading-tight">
+              Valor Financiero del Patrimonio
+            </span>
+            <span className="text-[9px] font-black text-center text-gray-900 leading-tight">Método Por Conceptos</span>
+            <span className="text-[10px] font-bold text-center text-gray-900 leading-tight">Esperado</span>
+          </div>
           <span className="text-lg font-bold text-gray-800">{formatNumber(conceptosPatrimonioEsperado)}</span>
         </div>
 
-        {/* Integrado Patrimonio Esperado - DINÁMICO (NARANJA) */}
+        {/* Integrado Patrimonio Esperado - DINÁMICO (NARANJA) título por encima */}
         <div
           ref={integradoEspRef}
-          className="z-10 col-start-4 border-[3px] border-orange-400 bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 ml-3 gap-1"
+          className="z-10 col-start-4 border-[3px] border-orange-400 bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 ml-3"
           style={{ gridRowStart: TOTAL_ROWS - integradoEspRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
         >
-          <span className="text-[10px] font-bold text-center text-gray-800 leading-tight">
-            Valor Financiero del Patrimonio
-          </span>
-          <span className="text-[9px] font-black text-center text-gray-900 leading-tight">Método Integrado</span>
-          <span className="text-[10px] font-bold text-center text-gray-900 leading-tight">Esperado</span>
+          <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
+            <span className="text-[10px] font-bold text-center text-gray-800 leading-tight">
+              Valor Financiero del Patrimonio
+            </span>
+            <span className="text-[9px] font-black text-center text-gray-900 leading-tight">Método Integrado</span>
+            <span className="text-[10px] font-bold text-center text-gray-900 leading-tight">Esperado</span>
+          </div>
           <span className="text-lg font-bold text-gray-800">{formatNumber(integradoPatrimonioEsperado)}</span>
         </div>
 
-        {/* Conceptos Patrimonio Sensibilizado - DINÁMICO (AZUL) */}
+        {/* Conceptos Patrimonio Sensibilizado - DINÁMICO (AZUL) título por encima */}
         <div
           ref={conceptosSensRef}
-          className="z-10 col-start-5 border-[3px] border-[#0101ff] bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 ml-4 gap-1"
+          className="z-10 col-start-5 border-[3px] border-[#0101ff] bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 ml-4"
           style={{ gridRowStart: TOTAL_ROWS - conceptosSensRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
         >
-          <span className="text-[10px] font-bold text-center text-gray-800 leading-tight">
-            Valor del Patrimonio
-          </span>
-          <span className="text-[9px] font-black text-center text-gray-900 leading-tight">Método Por Conceptos</span>
-          <span className="text-[10px] font-bold text-center text-gray-900 leading-tight">Sensibilizado</span>
+          <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
+            <span className="text-[10px] font-bold text-center text-gray-800 leading-tight">
+              Valor del Patrimonio
+            </span>
+            <span className="text-[9px] font-black text-center text-gray-900 leading-tight">Método Por Conceptos</span>
+            <span className="text-[10px] font-bold text-center text-gray-900 leading-tight">Sensibilizado</span>
+          </div>
           <span className="text-lg font-bold text-gray-800">{formatNumber(conceptosPatrimonioSensibilizado)}</span>
         </div>
 
-        {/* Integrado Patrimonio Sensibilizado - DINÁMICO (AZUL) */}
+        {/* Integrado Patrimonio Sensibilizado - DINÁMICO (AZUL) título por encima */}
         <div
           ref={integradoSensRef}
-          className="z-10 col-start-6 border-[3px] border-[#0101ff] bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 ml-3 gap-1"
+          className="z-10 col-start-6 border-[3px] border-[#0101ff] bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 ml-3"
           style={{ gridRowStart: TOTAL_ROWS - integradoSensRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
         >
-          <span className="text-[10px] font-bold text-center text-gray-800 leading-tight">
-            Valor del Patrimonio
-          </span>
-          <span className="text-[9px] font-black text-center text-gray-900 leading-tight">Método Integrado</span>
-          <span className="text-[10px] font-bold text-center text-gray-900 leading-tight">Sensibilizado</span>
+          <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
+            <span className="text-[10px] font-bold text-center text-gray-800 leading-tight">
+              Valor del Patrimonio
+            </span>
+            <span className="text-[9px] font-black text-center text-gray-900 leading-tight">Método Integrado</span>
+            <span className="text-[10px] font-bold text-center text-gray-900 leading-tight">Sensibilizado</span>
+          </div>
           <span className="text-lg font-bold text-gray-800">{formatNumber(integradoPatrimonioSensibilizado)}</span>
         </div>
         </div>
@@ -474,7 +483,7 @@ const MethodComparisonChart = ({
   currency,
   availableCurrencies,
   onCurrencyChange,
-  companyType,
+  companyType: _companyType,
 }: {
   activo: number | null;
   pasivo: number | null;
@@ -488,17 +497,14 @@ const MethodComparisonChart = ({
   onCurrencyChange: (currency: string) => void;
   companyType: "empresa" | "emergente";
 }) => {
-  const TOTAL_ROWS = 9;
-  const isEmergente = companyType === "emergente";
-  const empresaSensRowSpan = getEmpresaRowSpan(empresaSensibilizado, activo, isEmergente);
-  const empresaEspRowSpan = getEmpresaRowSpan(empresaEsperado, activo, isEmergente);
-  const patrimonioEspRowSpan = getComparisonPatrimonioRowSpan(patrimonioEsperado, patrimonio, isEmergente);
-  const patrimonioSensRowSpan = getComparisonPatrimonioRowSpan(patrimonioSensibilizado, patrimonio, isEmergente);
-  const pasivoRowSpan = (() => {
-    if (activo === null || pasivo === null || activo === 0) return 5;
-    const ratio = Math.abs(pasivo) / Math.abs(activo);
-    return Math.max(2, Math.min(7, Math.round(ratio * TOTAL_ROWS)));
-  })();
+  const TOTAL_ROWS = 240;
+  const maxBalance = getMaxAbs(activo, pasivo, patrimonio, empresaEsperado, patrimonioEsperado);
+  const maxVal = getMaxAbs(activo, pasivo, patrimonio, empresaEsperado, empresaSensibilizado, patrimonioEsperado, patrimonioSensibilizado);
+  const { activoRowSpan, pasivoRowSpan, patrimonioRowSpan: patrimonioContableRowSpan } = getBalanceRowSpans(activo, pasivo, patrimonio, maxVal, TOTAL_ROWS);
+  const empresaSensRowSpan = getProportionalRowSpan(empresaSensibilizado, maxVal, TOTAL_ROWS);
+  const empresaEspRowSpan = getProportionalRowSpan(empresaEsperado, maxBalance, TOTAL_ROWS);
+  const patrimonioEspRowSpan = getProportionalRowSpan(patrimonioEsperado, maxBalance, TOTAL_ROWS);
+  const patrimonioSensRowSpan = getProportionalRowSpan(patrimonioSensibilizado, maxVal, TOTAL_ROWS);
 
   const gridRef = useRef<HTMLDivElement>(null);
   const empSensRef = useRef<HTMLDivElement>(null);
@@ -587,26 +593,30 @@ const MethodComparisonChart = ({
 
         {/* ========== REFERENCIAS - CENTRO ========== */}
 
-        {/* Activo - REFERENCIA FIJA (AZUL) */}
-        <div ref={activoRef} className="z-10 col-start-3 row-span-9 row-start-1 ml-4 mr-[3px] border-[3px] border-[#28a7fd] bg-white rounded-l-xl relative flex flex-col items-center justify-center">
+        {/* Activo - DINÁMICO proporcional al máximo global (ancho intacto: col-start-3) */}
+        <div
+          ref={activoRef}
+          className="z-10 col-start-3 ml-4 mr-[3px] border-[3px] border-[#28a7fd] bg-white rounded-l-xl relative flex flex-col items-center justify-center"
+          style={{ gridRowStart: TOTAL_ROWS - activoRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+        >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">Activo</span>
           <span className="text-lg font-bold text-gray-800 text-center px-2">{formatNumber(activo)}</span>
         </div>
 
-        {/* Pasivo - ALTURA DINÁMICA proporcional a ACTIVO */}
+        {/* Pasivo - DINÁMICO proporcional al máximo global (ancho intacto: col-start-4) */}
         <div
           className="z-10 col-start-4 border-[3px] border-[#28a7fd] bg-white rounded-tr-xl relative flex flex-col items-center justify-center"
-          style={{ gridRowStart: 1, gridRowEnd: pasivoRowSpan + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioContableRowSpan - pasivoRowSpan + 1, gridRowEnd: TOTAL_ROWS - patrimonioContableRowSpan + 1 }}
         >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">Pasivo</span>
           <span className="text-base font-bold text-gray-800 text-center px-2">{formatNumber(pasivo)}</span>
         </div>
 
-        {/* Patrimonio - ALTURA DINÁMICA proporcional a ACTIVO */}
+        {/* Patrimonio - DINÁMICO proporcional al máximo global (ancho intacto) */}
         <div
           ref={patrimonioRef}
           className="z-10 col-start-4 border-[3px] border-[#28a7fd] bg-white rounded-br-xl relative flex flex-col items-center justify-center"
-          style={{ gridRowStart: pasivoRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioContableRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
         >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">Patrimonio</span>
           <span className="text-base font-bold text-gray-800 text-center px-2">{formatNumber(patrimonio)}</span>

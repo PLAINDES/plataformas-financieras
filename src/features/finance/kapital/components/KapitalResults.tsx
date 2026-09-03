@@ -25,6 +25,7 @@ export interface KapitalResultsProps {
     chatbotComponent?: React.ReactNode;
     shouldShowChatbot: boolean;
     onToggleForm: () => void;
+    onStartSensitivityTour?: () => void;
 }
 
 export const KapitalResults: React.FC<KapitalResultsProps> = ({
@@ -45,6 +46,7 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
     localCurrency,
     shouldShowChatbot,
     onToggleForm,
+    onStartSensitivityTour,
 }) => {
     if (loading) {
         return <LoadingOverlay />;
@@ -72,6 +74,7 @@ export const KapitalResults: React.FC<KapitalResultsProps> = ({
                             localCurrency={localCurrency}
                             shouldShowChatbot={shouldShowChatbot}
                             onToggleForm={onToggleForm}
+                            onStartSensitivityTour={onStartSensitivityTour}
                         />
                     )}
                     {section === "sensitivity" && (

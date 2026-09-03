@@ -19,6 +19,7 @@ export type ReportSidebarProps = {
   onOpenReportViewer: () => void;
   reportScope?: "empresa" | "sectorial";
   rateScope?: "bonos" | "ajustado";
+  reportType?: string;
 };
 
 const normalizeScope = (value?: string | null) =>
@@ -76,6 +77,7 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
   onOpenReportViewer,
   reportScope,
   rateScope,
+  reportType = "kapital",
 }) => {
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const [quoteEmail, setQuoteEmail] = useState("");
@@ -97,9 +99,9 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
       const fetchReports = async () => {
         //setIsLoading(true);
         try {
-          // Traemos los reportes activos del tipo kapital
+          // Traemos los reportes activos del tipo seleccionado
           const data = await MainService.getReports({
-            type: "kapital",
+            type: reportType,
             activo: true,
           });
           const matchingReports = data.filter((report) =>
@@ -182,15 +184,18 @@ export const ReportSidebar: React.FC<ReportSidebarProps> = ({
           </div>
           <div className="flex flex-1 justify-center w-full overflow-hidden">
             <div className="flex h-full min-h-[calc(100dvh-4rem)] w-full flex-col lg:p-6 lg:px-10 p-4 pt-8">
-              <div className="mb-10 flex flex-col gap-2">
-                <h3 className="text-xl font-bold">
-                  Genera un reporte con tus datos
-                </h3>
-                <p className="text-sm w-11/12">
-                  Identifica el costo de capital al que se enfrenta tu empresa,
-                  proyecto o inversion.
-                </p>
-              </div>
+               <div className="mb-10 flex flex-col gap-2">
+                 <h3 className="text-xl font-bold">
+                   {reportType === "valora"
+                     ? "Genera un reporte de valoración"
+                     : "Genera un reporte con tus datos"}
+                 </h3>
+                 <p className="text-sm w-11/12">
+                   {reportType === "valora"
+                     ? "Genera un reporte de valoración con tus datos."
+                     : "Identifica el costo de capital al que se enfrenta tu empresa, proyecto o inversion."}
+                 </p>
+               </div>
               <div className="flex-1 overflow-y-auto pr-2 pb-2">
                 <h4 className="mt-2 text-lg font-bold text-center">
                   Seleccione el producto de su preferencia:

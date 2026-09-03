@@ -48,17 +48,25 @@ export function useSubsectorModal({
         if (!subsectorDetail) return;
         const activeTickers = detailTickers.filter((t) => !inactiveTickers.includes(t));
 
-        // BOA Ponderado: Σ(Wi% × beta_unlevered) donde Wi% = total_activos_i / Σtotal_activos
-        const activosTotal = activeTickers.reduce((sum, emp) => {
-            const activos = Number(subsectorDetail.ticker_info?.[emp]?.total_activos) || 0;
-            return sum + activos;
-        }, 0);
+        // BOA Ponderado estricto Excel: Wi = Activo / Σ Activos activas, BOA = SUMPRODUCT(Wi, BOA) — solo activo_mercado, sin fallback total_activos
+        const getAsset = (emp: string) => {
+            const v = subsectorDetail.ticker_info?.[emp]?.activo_mercado;
+            const n = Number(v);
+            return Number.isFinite(n) && n > 0 ? n : 0;
+        };
+        const tickersValidos = activeTickers.filter((emp: string) => {
+            const boa = subsectorDetail.empresas_boa?.[emp];
+            const boaOk = boa !== null && boa !== undefined && String(boa) !== "" && Number.isFinite(Number(boa));
+            const activoOk = getAsset(emp) > 0;
+            return boaOk && activoOk;
+        });
+        const activosTotal = tickersValidos.reduce((sum, emp) => sum + getAsset(emp), 0);
         if (activosTotal === 0) return;
 
         let boaPonderado = 0;
-        for (const emp of activeTickers) {
+        for (const emp of tickersValidos) {
             const boa = Number(subsectorDetail.empresas_boa?.[emp]) || 0;
-            const activos = Number(subsectorDetail.ticker_info?.[emp]?.total_activos) || 0;
+            const activos = getAsset(emp);
             const wi = activos / activosTotal;
             boaPonderado += wi * boa;
         }
@@ -95,17 +103,25 @@ export function useSubsectorModal({
         const activeTickers = detailTickers.filter((t) => !inactiveTickers.includes(t));
         if (activeTickers.length === 0 || !subsectorDetail) return null;
 
-        // BOA Ponderado: Σ(Wi% × beta_unlevered)
-        const activosTotal = activeTickers.reduce((sum, emp) => {
-            const activos = Number(subsectorDetail.ticker_info?.[emp]?.total_activos) || 0;
-            return sum + activos;
-        }, 0);
+        // BOA Ponderado estricto Excel — solo activo_mercado, sin fallback, excluye activos 0
+        const getAsset = (emp: string) => {
+            const v = subsectorDetail.ticker_info?.[emp]?.activo_mercado;
+            const n = Number(v);
+            return Number.isFinite(n) && n > 0 ? n : 0;
+        };
+        const tickersValidos = activeTickers.filter((emp: string) => {
+            const boa = subsectorDetail.empresas_boa?.[emp];
+            const boaOk = boa !== null && boa !== undefined && String(boa) !== "" && Number.isFinite(Number(boa));
+            const activoOk = getAsset(emp) > 0;
+            return boaOk && activoOk;
+        });
+        const activosTotal = tickersValidos.reduce((sum, emp) => sum + getAsset(emp), 0);
         if (activosTotal === 0) return null;
 
         let boaPonderado = 0;
-        for (const emp of activeTickers) {
+        for (const emp of tickersValidos) {
             const boa = Number(subsectorDetail.empresas_boa?.[emp]) || 0;
-            const activos = Number(subsectorDetail.ticker_info?.[emp]?.total_activos) || 0;
+            const activos = getAsset(emp);
             const wi = activos / activosTotal;
             boaPonderado += wi * boa;
         }

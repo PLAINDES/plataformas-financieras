@@ -98,6 +98,7 @@ export function OccupationOnboardingModal() {
     });
     localStorage.setItem(deviceKey, "true");
     setIsOpen(false);
+    window.dispatchEvent(new CustomEvent("kapital:occupationDone"));
   };
 
   const canSubmit = roleInput.trim().length > 0 && companyInput.trim().length > 0;
@@ -106,7 +107,10 @@ export function OccupationOnboardingModal() {
     <Dialog
       open={isOpen}
       onOpenChange={(open) => {
-        if (!open) setIsOpen(false);
+        if (!open) {
+          setIsOpen(false);
+          window.dispatchEvent(new CustomEvent("kapital:occupationDismissed"));
+        }
       }}
     >
       <DialogContent

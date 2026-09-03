@@ -2,7 +2,11 @@ import { useRef, useState } from "react";
 import { MainService } from "@/shared/services/main.service";
 import { generateCalculationCode } from "../../kapital/services/kapital.utils";
 import type { Calculation } from "@/shared/types";
-import type { FinancialTable, FormData } from "@/shared/types/ValoraTypes";
+import type {
+  FinancialTable,
+  FormData,
+  ValoraSensibilidadEntry,
+} from "@/shared/types/ValoraTypes";
 import type { ToastType } from "@/shared/types/toast.types";
 
 export type ValoraResultView = "original" | "sensibilidad" | "comparacion";
@@ -63,7 +67,79 @@ export function useValoraCalculation({
   const [isLoading, setIsLoading] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
   const [resultView, setResultView] = useState<ValoraResultView>("original");
+  const [sensibilizaciones, setSensibilizaciones] = useState<ValoraSensibilidadEntry[]>([]);
+  const [selectedSensIdx, setSelectedSensIdx] = useState(0);
+  const [isSessionFresh, setIsSessionFresh] = useState(false);
   const loadFromUrlCalledRef = useRef(false);
+
+  const parseWaccValue = (raw: unknown): number | undefined => {
+    if (raw === undefined || raw === null || raw === "") return undefined;
+    if (typeof raw === "number") return Number.isFinite(raw) ? raw : undefined;
+    const str = String(raw).trim().replace("%", "").replace(",", ".");
+    const num = Number(str);
+    if (!Number.isFinite(num)) return undefined;
+    return Math.abs(num) < 1 && num !== 0 ? num * 100 : num;
+  };
+
+  const extractSensibilizaciones = (
+    data: unknown
+  ): ValoraSensibilidadEntry[] => {
+    if (!data || typeof data !== "object") return [];
+    const d = data as Record<string, unknown>;
+    const raw = d.sensibilizacion ?? d.sensibilidad;
+    if (!Array.isArray(raw)) return [];
+    return raw.map((entry: any) => {
+      const inputs = entry.inputs ?? entry.input ?? {};
+      const resultados = entry.resultados ?? entry.resultado ?? {};
+      const waccRaw =
+        entry.wacc ??
+        entry.WACC ??
+        resultados.wacc ??
+        resultados.WACC ??
+        entry.wacc_emergente ??
+        inputs.wacc ??
+        inputs.WACC;
+      const parseNum = (v: unknown) => {
+        if (v === undefined || v === null || String(v).trim() === "") return undefined;
+        const n = Number(String(v).replace(",", "."));
+        return Number.isFinite(n) ? n : undefined;
+      };
+      return {
+        ...entry,
+        // Histórico sin subsector queda undefined -> selector mostrará "Escenario N" + Beta en subtítulo
+        subsector:
+          entry.subsector ??
+          entry.sector ??
+          inputs.subsector ??
+          inputs.subsector_sensibilizacion ??
+          inputs.sector ??
+          undefined,
+        wacc: parseWaccValue(waccRaw),
+        revenue_forecast_rate: parseNum(
+          entry.revenue_forecast_rate ??
+            entry.forecast_ingresos ??
+            inputs.revenue_forecast_rate ??
+            inputs.forecast_ingresos ??
+            inputs.revenue_forecast_rate ??
+            entry.tasa_forecast
+        ),
+        fdc_forecast_rate: parseNum(
+          entry.fdc_forecast_rate ??
+            entry.forecast_fde ??
+            inputs.fdc_forecast_rate ??
+            inputs.forecast_fde ??
+            entry.tasa_fdc
+        ),
+        perpetual_growth_rate: parseNum(
+          entry.perpetual_growth_rate ??
+            entry.crecimiento_perpetuo ??
+            inputs.perpetual_growth_rate ??
+            inputs.crecimiento_perpetuo ??
+            entry.tasa_perpetua
+        ),
+      } as ValoraSensibilidadEntry;
+    });
+  };
 
   const getCodeFromUrl = (): string | null => {
     const pathname = window.location.pathname;
@@ -131,6 +207,8 @@ export function useValoraCalculation({
       results_table: normalizedResultsTable,
     };
 
+    // formData Tasas debug removed
+
     try {
       let persistedCalculation: Calculation;
       if (currentCalculation) {
@@ -160,12 +238,35 @@ export function useValoraCalculation({
         );
       }
 
+      // Parche frontend: backend no persiste subsector nombre, inyecta último seleccionado localmente
+      const rawSens = extractSensibilizaciones(persistedCalculation.data);
+      let patchedSens = rawSens;
+      const lastSelectedSubsector = (formData as any).subsector_sensibilizacion || (formData as any).subsector;
+      if (lastSelectedSubsector && rawSens.length > 0 && !rawSens[0]?.subsector) {
+        patchedSens = rawSens.map((entry, idx) =>
+          idx === 0 ? { ...entry, subsector: lastSelectedSubsector } : entry
+        );
+        // Persiste parche en data para que recarga mantenga nombre sin depender de backend
+        (persistedCalculation.data as any).sensibilizacion = patchedSens;
+        // Intenta guardar en backend de forma best-effort (no bloquea)
+        if (currentCalculation) {
+          MainService.updateCalculation(persistedCalculation.id, {
+            data: { sensibilizacion: patchedSens } as any,
+          }).catch(() => {});
+        }
+      }
+
       setCurrentCalculation(persistedCalculation);
       setHasCalculated(true);
+      setIsSessionFresh(true);
 
-      const hasSensitivity = Boolean(
-        (persistedCalculation.data as any)?.sensibilizacion?.length
+      const sensibilizacionesData = patchedSens;
+      setSensibilizaciones(sensibilizacionesData);
+      setSelectedSensIdx(
+        sensibilizacionesData.length > 0 ? 0 : 0
       );
+
+      const hasSensitivity = sensibilizacionesData.length > 0;
       setResultView(hasSensitivity ? "sensibilidad" : "original");
 
       ui.setShowResults(true);
@@ -214,13 +315,27 @@ export function useValoraCalculation({
           }
 
           setHasCalculated(true);
-          const hasSavedSensitivity =
-            Boolean((calculationData.data as any)?.sensibilizacion?.length) ||
-            Boolean((calculationData.data as any)?.sensibilidad?.length);
+          let sensibilizacionesData = extractSensibilizaciones(
+            calculationData.data
+          );
+          // Patch Kapital-style: si entry no trae subsector, usa último input sensibilización
+          const latestSubsector = (latestInput as any)?.subsector_sensibilizacion;
+          const latestTickers = (latestInput as any)?.tickers_subsector_sensibilizacion;
+          if ((latestSubsector || latestTickers) && sensibilizacionesData.length > 0) {
+            sensibilizacionesData = sensibilizacionesData.map((entry) => ({
+              ...entry,
+              subsector: (entry as any).subsector || latestSubsector || undefined,
+              tickers: (entry as any).tickers || latestTickers || undefined,
+            }));
+          }
+          setSensibilizaciones(sensibilizacionesData);
+          setSelectedSensIdx(sensibilizacionesData.length > 0 ? sensibilizacionesData.length - 1 : 0);
+          const hasSavedSensitivity = sensibilizacionesData.length > 0;
           setResultView(hasSavedSensitivity ? "sensibilidad" : "original");
-          ui.setShowResults(true);
-          ui.setIsDesktopFormOpen(false);
-          addToast("info", `Cálculo Valora (${code}) cargado correctamente.`);
+           ui.setShowResults(true);
+           ui.setIsDesktopFormOpen(false);
+           setIsSessionFresh(false);
+           addToast("info", `Cálculo Valora (${code}) cargado correctamente.`);
         }
       }
     } catch (error) {
@@ -232,8 +347,13 @@ export function useValoraCalculation({
     currentCalculation,
     isLoading,
     hasCalculated,
+    isSessionFresh,
+    setIsSessionFresh,
     resultView,
     setResultView,
+    sensibilizaciones,
+    selectedSensIdx,
+    setSelectedSensIdx,
     handleSubmit,
     loadFromUrl,
   };

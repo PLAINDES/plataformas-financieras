@@ -43,6 +43,7 @@ import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
 import { ReportViewer } from "./components/ReportViewer";
 import { SubsectorModal } from "./components/SubsectorModal";
 import { OccupationOnboardingModal } from "../components/OccupationOnboardingModal";
+import { KapitalOnboardingWalkthrough } from "./components/KapitalOnboardingWalkthrough";
 
 const KAPITAL_STARTED_SESSION_KEY = "analytics_kapital_calculator_started";
 
@@ -74,6 +75,7 @@ const KapitalPage: React.FC = () => {
 
     // --- UI State ---
     const [isFormOpen, setIsFormOpen] = useState(true);
+    const [startSensitivityTour, setStartSensitivityTour] = useState(false);
     const [resultsSection, setResultsSection] = useState<"result" | "sensitivity">("result");
     const [showResults, setShowResults] = useState(false);
     const [isReportSidebarOpen, setIsReportSidebarOpen] = useState(false);
@@ -349,6 +351,7 @@ const KapitalPage: React.FC = () => {
                     localCurrency={activeSavedCurrency}
                     shouldShowChatbot={shouldShowChatbot}
                     onToggleForm={() => setIsFormOpen((prev) => !prev)}
+                    onStartSensitivityTour={() => setStartSensitivityTour(true)}
                 />
             )}
             <MainPageFooter brandName="Valora" brandHref="/valora" />
@@ -366,6 +369,13 @@ const KapitalPage: React.FC = () => {
     return (
         <div className="min-h-dvh bg-gray-50">
             <OccupationOnboardingModal />
+            <KapitalOnboardingWalkthrough
+                isFormOpen={isFormOpen}
+                setIsFormOpen={setIsFormOpen}
+                showResults={showResults}
+                startSensitivityTour={startSensitivityTour}
+                onSensitivityTourEnd={() => setStartSensitivityTour(false)}
+            />
             <NavBar
                 user={user}
                 onLogout={handleLogout}

@@ -5,6 +5,7 @@ import { EditableText } from "@/shared/components/editable/EditableText";
 import { FooterEditModal } from "./FooterEditModal";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
+import { buildWhatsAppUrl } from "@/shared/utils/whatsapp";
 import type { EditableContent } from "@/shared/types/editable.types";
 import { Button } from "@/components/ui/button";
 
@@ -53,9 +54,8 @@ export function LandingFooter({
 
   const handleWhatsAppClick = () => {
     trackEvent("cta_whatsapp_click", { location: "footer" });
-    if (ctaContent?.whatsappNumber) {
-      window.open(ctaContent.whatsappNumber, "_blank");
-    }
+    const url = buildWhatsAppUrl(ctaContent?.whatsappNumber || "");
+    if (url) window.open(url, "_blank");
   };
 
   if (!content) return null;

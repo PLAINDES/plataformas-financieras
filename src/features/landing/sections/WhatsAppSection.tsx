@@ -10,6 +10,7 @@ import { EditableText } from "@/shared/components/editable/EditableText";
 import type { EditableContent } from "@/shared/types/editable.types";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
+import { buildWhatsAppUrl } from "@/shared/utils/whatsapp";
 
 export const WhatsAppIcon = ({ className }: { className?: string }) => (
     <svg
@@ -72,51 +73,22 @@ export function WhatsAppSection({
 
     const handleWhatsAppClick = () => {
         trackEvent("cta_whatsapp_click", { location: "floating_chat" });
-        const rawUrl = content?.whatsappNumber || "";
-        if (!rawUrl) {
+        const rawInput = content?.whatsappNumber || "";
+        if (!rawInput) {
             alert("No hay enlace de WhatsApp configurado.");
             return;
         }
-
-        // Parsear la URL base del CMS (ej: https://api.whatsapp.com/send?phone=+51924242220&text=...)
-        let finalUrl: string;
-        try {
-            const url = new URL(rawUrl);
-            // Extraer número del parámetro phone
-            const phoneParam = url.searchParams.get("phone") || "";
-            const cleanNumber = phoneParam.replace(/[^0-9]/g, "");
-
-            if (!cleanNumber) {
-                alert("No se encontró número de teléfono en el enlace de WhatsApp.");
-                return;
-            }
-
-            // Si el usuario escribió algo, reemplazamos el mensaje
-            const finalMessage =
-                userMessage.trim() !== ""
-                    ? userMessage
-                    : content?.defaultMessage ||
-                    "Hola, me gustaría recibir más información.";
-
-            url.searchParams.set("text", finalMessage);
-            finalUrl = url.toString();
-        } catch {
-            // Fallback: si no es una URL válida, usar como número directo
-            const cleanNumber = rawUrl.replace(/[^0-9]/g, "");
-            if (!cleanNumber) {
-                alert("No hay enlace de WhatsApp configurado.");
-                return;
-            }
-            const finalMessage =
-                userMessage.trim() !== ""
-                    ? userMessage
-                    : content?.defaultMessage ||
-                    "Hola, me gustaría recibir más información.";
-            finalUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(finalMessage)}`;
+        const customMessage =
+            userMessage.trim() !== ""
+                ? userMessage
+                : content?.defaultMessage || undefined;
+        const finalUrl = buildWhatsAppUrl(rawInput, customMessage);
+        if (!finalUrl) {
+            alert("No se encontró número de teléfono en el enlace de WhatsApp.");
+            return;
         }
-
         window.open(finalUrl, "_blank");
-        setUserMessage(""); // Limpiar después de enviar
+        setUserMessage("");
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

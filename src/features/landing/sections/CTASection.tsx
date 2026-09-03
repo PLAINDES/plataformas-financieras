@@ -5,6 +5,7 @@ import type { CTAContent } from "../types/landing.types";
 import type { EditableContent } from "@/shared/types/editable.types";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
+import { buildWhatsAppUrl, extractWhatsAppNumber } from "@/shared/utils/whatsapp";
 
 interface CTASectionProps {
     content: CTAContent;
@@ -34,8 +35,9 @@ export function CTASection({ content, onSave }: CTASectionProps) {
     const { trackEvent } = useAnalytics();
     const handleWhatsAppClick = () => {
         trackEvent("cta_whatsapp_click", { location: "cta_section" });
-        if (content.whatsappNumber) {
-            window.open(content.whatsappNumber, "_blank");
+        const url = buildWhatsAppUrl(content.whatsappNumber);
+        if (url) {
+            window.open(url, "_blank");
         }
     };
 
@@ -109,10 +111,10 @@ export function CTASection({ content, onSave }: CTASectionProps) {
                                                 Link de WhatsApp
                                             </span>
                                         </div>
-                                        <div className="bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus-within:ring-2 focus-within:ring-[#2FA4FF] transition-all overflow-hidden">
+                                        <div className="bg-white border border-gray-300 rounded-lg px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-[#2FA4FF] transition-all overflow-visible">
                                             <EditableText
                                                 content={{
-                                                    value: content.whatsappNumber,
+                                                    value: extractWhatsAppNumber(content.whatsappNumber),
                                                     id: "whatsappNumber",
                                                     type: "text",
                                                     section: "cta",
@@ -120,7 +122,7 @@ export function CTASection({ content, onSave }: CTASectionProps) {
                                                 onSave={onSave}
                                                 as="p"
                                                 singleLine={true}
-                                                className="mb-0 text-gray-700 font-medium text-sm outline-none"
+                                                className="mb-0 text-gray-700 font-medium text-sm outline-none text-center"
                                             />
                                         </div>
                                     </div>

@@ -3,6 +3,8 @@ export interface FormData {
   sector: string;
   subsector: string;
   tickers_subsector: string;
+  subsector_sensibilizacion?: string;
+  tickers_subsector_sensibilizacion?: string;
   beta_unlevered_industry: string;
   beta_subsector: string;
   instrument?: string;
@@ -70,4 +72,16 @@ export interface ValoraCalculationResults {
   integrado?: ValoraMethodResults;
   conceptos_emergente?: ValoraMethodResults;
   integrado_emergente?: ValoraMethodResults;
+}
+
+export interface ValoraSensibilidadEntry {
+  created_at?: string;
+  subsector?: string;
+  industria?: string;
+  tickers?: string;
+  wacc?: number;
+  revenue_forecast_rate?: number;
+  fdc_forecast_rate?: number;
+  perpetual_growth_rate?: number;
+  inputs?: any;
 }

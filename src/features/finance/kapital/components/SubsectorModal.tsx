@@ -75,8 +75,8 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                 </div>
 
                 {/* Detail body */}
-                <div className="flex-1 flex flex-col p-4 sm:p-5 overflow-y-auto min-h-0 bg-slate-50/40">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col min-h-0">
+                <div data-tour="kapital-subsector-detail" className="flex-1 flex flex-col p-4 sm:p-5 overflow-y-auto min-h-0 bg-slate-50/40">
+                    <div data-tour="kapital-subsector-empresas" className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col min-h-0">
                         <div className="shrink-0 px-4 py-2.5 border-b border-gray-100 bg-gray-50/60">
                             <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">
                                 Empresas ({detailTickers.length - inactiveTickers.length} activas / {detailTickers.length})
@@ -100,6 +100,9 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                         return (
                                             <div
                                                 key={i}
+                                                data-tour="kapital-ticker-row"
+                                                data-ticker={emp}
+                                                data-index={i}
                                                 className={`grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 px-4 py-2.5 transition-colors ${
                                                     isInactive ? "opacity-40 hover:opacity-60" : "hover:bg-gray-50/50"
                                                 }`}
@@ -144,7 +147,7 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                             </div>
                         </div>
                         {detailBoa !== null && (
-                            <div className="sticky bottom-0 bg-white z-10 border-t border-valora-primary/10 rounded-b-xl">
+                            <div data-tour="kapital-boa-ponderado" className="sticky bottom-0 bg-white z-10 border-t border-valora-primary/10 rounded-b-xl">
                                 <div className="flex items-center justify-between px-4 py-2.5 bg-valora-primary/5">
                                     <span className="text-[10px] font-bold text-blue-700 uppercase">BOA Ponderado</span>
                                     <span className="text-lg font-black text-valora-primary leading-none">{detailBoa.toFixed(2)}</span>
@@ -157,6 +160,7 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                         <div className="mt-auto pt-4">
                             <button
                                 type="button"
+                                data-tour="kapital-calcular-subsector"
                                 onClick={onCalculateDetail}
                                 className="w-full py-3 px-6 rounded-lg font-bold text-xs sm:text-sm text-white bg-valora-primary hover:bg-valora-secondary transition-all cursor-pointer shadow-lg hover:shadow-xl active:scale-[0.98]"
                             >
@@ -268,7 +272,7 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
             ) : (
                 /* Subsector list */
                 <>
-                    <div className="flex-1 flex flex-col p-4 sm:p-5 overflow-y-auto gap-3 min-h-0 bg-slate-50/40">
+                    <div data-tour="kapital-subsector-list" className="flex-1 flex flex-col p-4 sm:p-5 overflow-y-auto gap-3 min-h-0 bg-slate-50/40">
                         {filteredSubsectores.length === 0 ? (
                             <div className="flex-1 flex flex-col items-center justify-center py-20 gap-3 bg-white rounded-xl border border-gray-100 shadow-sm">
                                 <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -291,15 +295,17 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                     ? subsectorSensibilizacionTickersRef.current[sub.subsector]
                                     : subsectorTickersRef.current[sub.subsector];
                                 const tickersParaBoa = savedTickers || allTickersConBoa;
-                                // BOA Ponderado: Σ(Wi% × beta_unlevered) usando total_activos como peso
-                                const activosTotal = tickersParaBoa.reduce((sum: number, emp: string) => {
-                                    const activos = Number(sub.ticker_info?.[emp]?.total_activos) || 0;
-                                    return sum + activos;
-                                }, 0);
+                                // BOA Ponderado: Σ(Wi% × beta_unlevered) usando activo_mercado como peso (fallback total_activos)
+                                const getAsset = (emp: string) => Number(sub.ticker_info?.[emp]?.activo_mercado ?? sub.ticker_info?.[emp]?.total_activos ?? 0) || 0;
+                                const tickersValidos = tickersParaBoa.filter((emp: string) => {
+                                    const boa = sub.empresas_boa?.[emp];
+                                    return boa !== null && boa !== undefined && String(boa) !== "" && Number.isFinite(Number(boa));
+                                });
+                                const activosTotal = tickersValidos.reduce((sum: number, emp: string) => sum + getAsset(emp), 0);
                                 const avgBoa = activosTotal > 0
-                                    ? tickersParaBoa.reduce((sum: number, emp: string) => {
+                                    ? tickersValidos.reduce((sum: number, emp: string) => {
                                         const boa = Number(sub.empresas_boa?.[emp]) || 0;
-                                        const activos = Number(sub.ticker_info?.[emp]?.total_activos) || 0;
+                                        const activos = getAsset(emp);
                                         return sum + (activos / activosTotal) * boa;
                                     }, 0)
                                     : null;
@@ -307,6 +313,8 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                 return (
                                     <div
                                         key={idx}
+                                        data-tour="kapital-subsector-item"
+                                        data-index={idx}
                                         onClick={() => !isPrincipal && onOpenDetail(sub, allTickersConBoa, savedTickers)}
                                         className={`rounded-xl border shadow-sm transition-all px-4 py-3.5 flex items-center justify-between gap-2 ${
                                             isPrincipal

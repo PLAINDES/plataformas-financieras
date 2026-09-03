@@ -178,6 +178,7 @@ export interface KapitalResultadosSectionProps {
     chatbotComponent?: React.ReactNode;
     shouldShowChatbot: boolean;
     onToggleForm: () => void;
+    onStartSensitivityTour?: () => void;
 }
 
 export const KapitalResultadosSection: React.FC<
@@ -195,6 +196,7 @@ export const KapitalResultadosSection: React.FC<
   localCurrency,
   shouldShowChatbot,
   onToggleForm,
+  onStartSensitivityTour,
 }) => {
 
   const mainIndustry = results.industria || selectedSector;
@@ -236,8 +238,11 @@ export const KapitalResultadosSection: React.FC<
           {shouldShowChatbot && (
             <button
               type="button"
-              onClick={onToggleForm}
-              className="px-4 py-2 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100"
+              onClick={() => {
+                onToggleForm();
+                onStartSensitivityTour?.();
+              }}
+              className="mt-2 sm:mt-0 px-4 py-2 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100"
             >
               <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
                 <Sparkles className="h-5 w-5 shrink-0" />
@@ -287,7 +292,7 @@ export const KapitalResultadosSection: React.FC<
           )}
         </div>
       </header>
-      <section className="mx-auto flex w-full max-w-[1600px] flex-col items-center justify-center gap-4 lg:flex-row">
+      <section className="mx-auto flex w-full max-w-[1600px] flex-col items-center justify-center gap-4 lg:flex-row lg:flex-wrap">
         <div
           className={`shrink-0 transform-gpu transition-all ease-out duration-700 will-change-transform ${cardMotion}`}
           style={{ transitionDelay: mounted ? "0ms" : "0ms" }}
@@ -316,7 +321,7 @@ export const KapitalResultadosSection: React.FC<
         </div>
 
         <div
-          className={`w-full min-w-0 max-w-[430px] transform-gpu transition-all duration-700 ease-out will-change-transform sm:min-w-[300px] lg:flex-1 ${cardMotion}`}
+          className={`w-full min-w-0 max-w-[430px] flex-1 basis-0 transform-gpu transition-all duration-700 ease-out will-change-transform ${cardMotion}`}
           style={{ transitionDelay: mounted ? "140ms" : "0ms" }}
         >
           <FinancieraCard
@@ -329,7 +334,7 @@ export const KapitalResultadosSection: React.FC<
         </div>
 
         <div
-          className={`w-full min-w-0 max-w-[430px] transform-gpu transition-all duration-700 ease-out will-change-transform sm:min-w-[300px] lg:flex-1 ${cardMotion}`}
+          className={`w-full min-w-0 max-w-[430px] flex-1 basis-0 transform-gpu transition-all duration-700 ease-out will-change-transform ${cardMotion}`}
           style={{ transitionDelay: mounted ? "280ms" : "0ms" }}
         >
           <FinancieraCard
@@ -346,7 +351,7 @@ export const KapitalResultadosSection: React.FC<
 
         {showCompanyCard && empresaData && (
           <div
-            className={`w-full min-w-0 max-w-[430px] transform-gpu transition-all duration-700 ease-out will-change-transform sm:min-w-[300px] lg:flex-1 ${cardMotion}`}
+            className={`w-full min-w-0 max-w-[430px] flex-1 basis-0 transform-gpu transition-all duration-700 ease-out will-change-transform ${cardMotion}`}
             style={{ transitionDelay: mounted ? "420ms" : "0ms" }}
           >
             <FinancieraCard
