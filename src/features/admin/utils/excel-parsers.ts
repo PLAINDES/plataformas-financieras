@@ -647,61 +647,6 @@ export const parseSubsectoresSheet = (ws: any) => {
   return result;
 };
 
-export const parseSubsectoresLongSheet = (ws: any) => {
-  const rawData = utils.sheet_to_json<any[]>(ws, { header: 1 });
-  let headerRowIndex = -1;
-
-  for (let i = 0; i < Math.min(30, rawData.length); i++) {
-    const row = rawData[i];
-    if (!row || !Array.isArray(row)) continue;
-    const cells = row.map((c: any) => String(c || "").toLowerCase().trim());
-    const hasSector = cells.some((c) => c === "sector" || c === "industry name");
-    const hasSubsector = cells.some((c) => c === "subsector");
-    const hasEmpresa = cells.some((c) => c === "empresa" || c === "ticker");
-    if (hasSector && hasSubsector && hasEmpresa) {
-      headerRowIndex = i;
-      break;
-    }
-  }
-
-  if (headerRowIndex === -1) return null;
-
-  const headers = rawData[headerRowIndex].map((h: any) =>
-    String(h || "").toLowerCase().trim()
-  );
-  const sectorIdx = headers.findIndex(
-    (h: string) => (h === "sector" || h === "industry name" || h === "industria")
-  );
-  const subsectorIdx = headers.findIndex((h: string) => h === "subsector");
-  const empresaIdx = headers.findIndex(
-    (h: string) => h === "empresa" || h === "ticker"
-  );
-  const boaIdx = headers.findIndex(
-    (h: string) => h === "boa" || h.includes("beta")
-  );
-  if (sectorIdx === -1 || subsectorIdx === -1 || empresaIdx === -1) return null;
-
-  const groups = new Map<string, any>();
-  for (const row of rawData.slice(headerRowIndex + 1)) {
-    if (!row || row.length === 0) continue;
-    const sector = String(row[sectorIdx] ?? "").trim();
-    const subsector = String(row[subsectorIdx] ?? "").trim();
-    const ticker = String(row[empresaIdx] ?? "").trim().toUpperCase();
-    if (!subsector || !ticker) continue;
-    const key = `${sector.toLowerCase()}||${subsector.toLowerCase()}`;
-    if (!groups.has(key)) {
-      groups.set(key, { sector, subsector, empresas: [], empresas_boa: {} });
-    }
-    const g = groups.get(key);
-    if (!g.empresas.includes(ticker)) g.empresas.push(ticker);
-    if (boaIdx !== -1) {
-      const boa = Number(row[boaIdx]);
-      if (Number.isFinite(boa)) g.empresas_boa[ticker] = boa;
-    }
-  }
-  return [...groups.values()].filter((g) => g.empresas.length > 0);
-};
-
 export const parseFinancialExcel = (
   file: File,
   activeTab: string,
@@ -741,26 +686,15 @@ export const parseFinancialExcel = (
         }
 
         if (activeTab === "subsectores") {
-          // Formato ancho clásico: hoja "by subsectores" con columnas Empresa 1..N
-          const wideSheetName = sheets.find(
+          const sheetName = sheets.find(
             (s) => s.toLowerCase() === "by subsectores"
           );
-          if (wideSheetName) {
-            parsedData = parseSubsectoresSheet(wb.Sheets[wideSheetName]);
-          } else {
-            // Formato largo: cualquier hoja con columnas Sector|Subsector|Empresa(+BOA)
-            for (const name of sheets) {
-              const longData = parseSubsectoresLongSheet(wb.Sheets[name]);
-              if (longData && longData.length > 0) {
-                parsedData = longData;
-                break;
-              }
-            }
-            if (parsedData.length === 0)
-              throw new Error(
-                "No se encontró la hoja 'by subsectores' ni columnas Sector/Subsector/Empresa en el archivo."
-              );
-          }
+          if (!sheetName)
+            throw new Error(
+              "No se encontró la hoja 'by subsectores' en el archivo."
+            );
+          const ws = wb.Sheets[sheetName];
+          parsedData = parseSubsectoresSheet(ws);
 
           if (parsedData.length === 0) {
             throw new Error(
