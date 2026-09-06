@@ -403,14 +403,15 @@ export const FormField: React.FC<FormFieldProps> = ({
                                     name={prefixSelect.name}
                                     value={prefixSelect.value}
                                     onChange={onChange}
-                                    className={`px-0.5 py-1.25 text-sm border-r border-gray-300 outline-none focus:outline-none text-wrap ${disabled
+                                    translate="no"
+                                    className={`notranslate px-1.5 py-1.25 text-sm border-r border-gray-300 outline-none focus:outline-none whitespace-nowrap min-w-[72px] ${disabled
                                         ? "bg-valora-primary/5 text-black cursor-not-allowed"
                                         : "bg-gray-50 cursor-pointer hover:bg-gray-100"
                                         }`}
                                     disabled={disabled}
                                 >
                                     {prefixSelect.options.map((opt) => (
-                                        <option key={opt} value={opt}>
+                                        <option key={opt} value={opt} translate="no" className="notranslate">
                                             {opt}
                                         </option>
                                     ))}
@@ -447,7 +448,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                                 )}
                             </div>
                             {suffix && (
-                                <span className="text-sm text-black px-2 py-1.25 bg-valora-primary/5 border-l border-gray-300 whitespace-nowrap flex items-center justify-center gap-1">
+                                <span translate="no" className="notranslate text-sm text-black px-2 py-1.25 bg-valora-primary/5 border-l border-gray-300 whitespace-nowrap flex items-center justify-center gap-1">
                                     {suffix}
                                 </span>
                             )}

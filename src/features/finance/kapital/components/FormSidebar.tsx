@@ -151,7 +151,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                       suffix="coef."
                                       layout="horizontal"
                                       showClearButton={false}
-                                      inputClassName="col-span-9"
+                                      inputClassName="col-span-11"
                                       disabled={!isWaccCalculated}
                                     />
                                     </div>

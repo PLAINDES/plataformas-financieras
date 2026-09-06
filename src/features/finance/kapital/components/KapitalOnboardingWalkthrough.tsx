@@ -2,6 +2,45 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { createPortal } from "react-dom";
 import { Calculator, Building2, Globe, Landmark, ArrowRight, X, Layers, List, ToggleLeft, Scale, CheckCircle2 } from "lucide-react";
 
+// Protocol: visible element resolver — picks the rendered (non-hidden) tour target.
+// On responsive, SubsectorModal exists twice (desktop aside + mobile overlay); querySelector
+// alone returns the hidden one (0 rect) and causes blur mis-target.
+const getVisibleTourEl = (selector: string): HTMLElement | null => {
+  const all = Array.from(document.querySelectorAll(selector)) as HTMLElement[];
+  if (all.length === 0) return null;
+  // Prefer visible (layouted) element
+  const visible = all.find((el) => {
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 && el.offsetParent !== null;
+  });
+  return visible ?? all[0] ?? null;
+};
+const getVisibleTourEls = (selector: string): HTMLElement[] =>
+  (Array.from(document.querySelectorAll(selector)) as HTMLElement[]).filter((el) => el.getBoundingClientRect().width > 0);
+
+// Protocol: waitFor — event-driven wait with MutationObserver, device-invariant.
+const waitForSelector = (
+  selector: string,
+  { timeout = 8000, minCount = 1, signal }: { timeout?: number; minCount?: number; signal?: AbortSignal } = {}
+): Promise<boolean> =>
+  new Promise((resolve) => {
+    if (signal?.aborted) return resolve(false);
+    const check = () => getVisibleTourEls(selector).length >= minCount;
+    if (check()) return resolve(true);
+    let done = false;
+    const finish = (ok: boolean) => {
+      if (done) return;
+      done = true;
+      obs.disconnect();
+      clearTimeout(tid);
+      resolve(ok);
+    };
+    const obs = new MutationObserver(() => { if (check()) finish(true); });
+    obs.observe(document.documentElement, { childList: true, subtree: true });
+    signal?.addEventListener("abort", () => finish(false), { once: true });
+    const tid = window.setTimeout(() => finish(check()), timeout);
+  });
+
 const STORAGE_KEY_BASE = "kapital_tour_completed_v1";
 const DEVICE_ID_KEY = "analytics_device_id";
 
@@ -153,12 +192,15 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const advancingRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   const activeSteps = sensitivityMode ? SENSITIVITY_STEPS : STEPS;
   const stepRaw = activeSteps[current] ?? activeSteps[0];
   const stepTarget = (() => {
-    if (sensitivityMode && stepRaw.id === "sens-subsector-item" && highlightSubsectorIdx !== null) {
-      return `[data-tour="kapital-subsector-item"][data-index="${highlightSubsectorIdx}"]`;
+    if (sensitivityMode && stepRaw.id === "sens-subsector-item") {
+      const idx = highlightSubsectorIdx ?? 0;
+      return `[data-tour="kapital-subsector-item"][data-index="${idx}"]`;
     }
     if (sensitivityMode && stepRaw.id === "sens-ticker") {
       return `[data-tour="kapital-ticker-row"][data-index="0"]`;
@@ -171,6 +213,8 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
   const isLast = current === activeSteps.length - 1;
 
   const finish = useCallback(() => {
+    abortRef.current?.abort();
+    advancingRef.current = false;
     if (!sensitivityMode) localStorage.setItem(getTourKey(), "true");
     else onSensitivityTourEnd?.();
     setActive(false);
@@ -178,61 +222,65 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
   }, [sensitivityMode, onSensitivityTourEnd]);
 
   const skip = useCallback(() => {
+    abortRef.current?.abort();
+    advancingRef.current = false;
     if (!sensitivityMode) localStorage.setItem(getTourKey(), "true");
     else onSensitivityTourEnd?.();
     setActive(false);
     setSensitivityMode(false);
   }, [sensitivityMode, onSensitivityTourEnd]);
 
-  const next = useCallback(() => {
+  const next = useCallback(async () => {
+    if (advancingRef.current) return;
     if (!sensitivityMode) {
       if (isLast) finish();
       else setCurrent((c) => c + 1);
       return;
     }
-    // sensitivity flow
+    // Protocol for sensitivity: each gate waits for DOM precondition, no fixed delay.
     if (stepRaw.id === "sens-sensibiliza") {
       const betaButton = (document.querySelector('[data-tour="kapital-beta-sensitivity-btn"]') || document.querySelector('[data-tour="kapital-beta-sensitivity"] button') || document.querySelector('[data-tour="kapital-beta-sensitivity"]')) as HTMLElement | null;
       if (!betaButton || (betaButton instanceof HTMLButtonElement && betaButton.disabled)) return;
-      betaButton?.click();
-      // Wait for the async subsector request before moving the tour target.
-      const start = Date.now();
-      const poll = window.setInterval(() => {
-        const items = document.querySelectorAll('[data-tour="kapital-subsector-item"]');
-        if (items.length > 0) {
-          const rnd = Math.floor(Math.random() * items.length);
-          setHighlightSubsectorIdx(rnd);
-          window.clearInterval(poll);
-          setCurrent((c) => c + 1);
-        } else if (Date.now() - start > 5000) {
-          window.clearInterval(poll);
-          setCurrent((c) => c + 1);
+      advancingRef.current = true;
+      abortRef.current?.abort();
+      abortRef.current = new AbortController();
+      betaButton.click();
+      const ok = await waitForSelector('[data-tour="kapital-subsector-item"]', { timeout: 8000, signal: abortRef.current.signal });
+      if (ok && !abortRef.current.signal.aborted) {
+        const items = getVisibleTourEls('[data-tour="kapital-subsector-item"]');
+        if (items.length > 0 && highlightSubsectorIdx === null) {
+          setHighlightSubsectorIdx(0);
+          items[0]?.scrollIntoView({ block: "nearest" });
         }
-      }, 40);
+      }
+      advancingRef.current = false;
+      setCurrent((c) => c + 1);
       return;
     }
     if (stepRaw.id === "sens-subsector-list") {
-      window.setTimeout(() => setCurrent((c) => c + 1), 30);
+      // No delay: advance synchronously; rAF ensures paint is done before next measure.
+      requestAnimationFrame(() => setCurrent((c) => c + 1));
       return;
     }
     if (stepRaw.id === "sens-subsector-item") {
-      if (highlightSubsectorIdx !== null) {
-        const el = document.querySelector(`[data-tour="kapital-subsector-item"][data-index="${highlightSubsectorIdx}"]`) as HTMLElement | null;
-        el?.click();
+      const targetIdx = highlightSubsectorIdx ?? 0;
+      const el = (getVisibleTourEl(`[data-tour="kapital-subsector-item"][data-index="${targetIdx}"]`) || getVisibleTourEl('[data-tour="kapital-subsector-item"]')) as HTMLElement | null;
+      if (!el) return;
+      el.scrollIntoView({ block: "nearest" });
+      el.click();
+      advancingRef.current = true;
+      abortRef.current?.abort();
+      abortRef.current = new AbortController();
+      const detailOk = await waitForSelector('[data-tour="kapital-subsector-detail"]', { timeout: 5000, signal: abortRef.current.signal });
+      const rowsOk = await waitForSelector('[data-tour="kapital-ticker-row"]', { timeout: 5000, signal: abortRef.current.signal });
+      advancingRef.current = false;
+      // Advance even if detail/rows missing (fallback shows detail container) — but only after wait.
+      if (detailOk || rowsOk) {
+        setCurrent((c) => c + 1);
+      } else {
+        // Anti-error: if detail never loaded, keep highlight but advance to fallback view
+        setCurrent((c) => c + 1);
       }
-      // espera a que cargue el detalle (tickers) antes de avanzar
-      const start = Date.now();
-      const poll = window.setInterval(() => {
-        const detail = document.querySelector('[data-tour="kapital-subsector-detail"]');
-        const rows = document.querySelectorAll('[data-tour="kapital-ticker-row"]');
-        if (detail && rows.length > 0) {
-          window.clearInterval(poll);
-          setCurrent((c) => c + 1);
-        } else if (Date.now() - start > 3000) {
-          window.clearInterval(poll);
-          setCurrent((c) => c + 1);
-        }
-      }, 40);
       return;
     }
     if (isLast) {
@@ -242,15 +290,19 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     }
   }, [sensitivityMode, isLast, finish, stepRaw, highlightSubsectorIdx]);
 
-  // Decide if tour should start
+  // Decide if tour should start — protocol: wait for paint, not fixed timeout.
   useEffect(() => {
     if (startSensitivityTour) {
       setSensitivityMode(true);
       setCurrent(0);
       setHighlightSubsectorIdx(null);
       setIsFormOpen(true);
-      const timer = window.setTimeout(() => setActive(true), 30);
-      return () => window.clearTimeout(timer);
+      let raf = 0;
+      let tid = 0 as unknown as number;
+      raf = requestAnimationFrame(() => {
+        tid = window.setTimeout(() => setActive(true), 80);
+      });
+      return () => { cancelAnimationFrame(raf); window.clearTimeout(tid); };
     }
     if (showResults) return;
     if (localStorage.getItem(getTourKey()) === "true") return;
@@ -309,46 +361,41 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     }
   }, [active, current, stepRaw, setIsFormOpen]);
 
-  // si highlight aún no asignado porque datos cargaban, asigna al llegar datos
+  // Protocol: lazy highlight assignment — event-driven, single assignment, cancellable.
   useEffect(() => {
     if (!active || !sensitivityMode || highlightSubsectorIdx !== null) return;
     const needsHighlight = stepRaw.id === "sens-subsector-list" || stepRaw.id === "sens-subsector-item";
     if (!needsHighlight) return;
-    const id = window.setInterval(() => {
-      const items = document.querySelectorAll('[data-tour="kapital-subsector-item"]');
-      if (items.length > 0) {
-        const rnd = Math.floor(Math.random() * items.length);
-        setHighlightSubsectorIdx(rnd);
-        window.clearInterval(id);
-      }
-    }, 100);
-    const tout = window.setTimeout(() => window.clearInterval(id), 10000);
-    return () => { window.clearInterval(id); window.clearTimeout(tout); };
+    const ctrl = new AbortController();
+    waitForSelector('[data-tour="kapital-subsector-item"]', { timeout: 10000, signal: ctrl.signal }).then((ok) => {
+      if (!ok || ctrl.signal.aborted) return;
+      const items = getVisibleTourEls('[data-tour="kapital-subsector-item"]');
+      if (items.length > 0) setHighlightSubsectorIdx((prev) => prev ?? 0);
+    });
+    return () => ctrl.abort();
   }, [active, sensitivityMode, stepRaw.id, highlightSubsectorIdx]);
 
   const updateRect = useCallback(() => {
     if (!active) return;
-    let el = document.querySelector(stepTarget) as HTMLElement | null;
+    let el = getVisibleTourEl(stepTarget) as HTMLElement | null;
     if (!el && stepId === "sens-sensibiliza") {
-      el = (document.querySelector('[data-tour="kapital-beta-sensitivity-btn"]') || document.querySelector('[data-tour="kapital-beta-sensitivity"]')) as HTMLElement | null;
+      el = (getVisibleTourEl('[data-tour="kapital-beta-sensitivity-btn"]') || getVisibleTourEl('[data-tour="kapital-beta-sensitivity"]')) as HTMLElement | null;
     }
     if (!el && stepId === "sens-ticker") {
-      const rows = document.querySelectorAll('[data-tour="kapital-ticker-row"]');
-      if (rows.length > 0) {
-        el = rows[0] as HTMLElement;
-      }
+      const rows = getVisibleTourEls('[data-tour="kapital-ticker-row"]');
+      if (rows.length > 0) el = rows[0] as HTMLElement;
     }
     let next: Rect | null = null;
     if (!el) {
       if (stepId === "sens-subsector-list" || stepId === "sens-subsector-item") {
-        const fallback = document.querySelector('[data-tour="kapital-subsector-list"]') as HTMLElement | null;
+        const fallback = getVisibleTourEl('[data-tour="kapital-subsector-list"]') as HTMLElement | null;
         if (fallback) {
           const r = fallback.getBoundingClientRect();
           const pad = 8;
           next = { top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 };
         }
       } else if (["sens-empresas","sens-ticker","sens-boa","sens-calcular"].includes(stepId)) {
-        const fb = document.querySelector('[data-tour="kapital-subsector-detail"]') as HTMLElement | null;
+        const fb = getVisibleTourEl('[data-tour="kapital-subsector-detail"]') as HTMLElement | null;
         if (fb) {
           const r = fb.getBoundingClientRect();
           const pad = 8;
@@ -373,13 +420,17 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     });
   }, [active, stepTarget, stepId]);
 
-  // scroll target into view once per step change (evita loop de scroll)
+  // scroll target into view once per step change (evita loop de scroll) — usa visible
   useEffect(() => {
     if (!active) return;
-    const el = document.querySelector(stepTarget) as HTMLElement | null;
+    const el = getVisibleTourEl(stepTarget) as HTMLElement | null;
     if (el) try { el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" }); } catch {}
     if (!el && (stepId === "sens-subsector-list" || stepId === "sens-subsector-item")) {
-      const fb = document.querySelector('[data-tour="kapital-subsector-list"]') as HTMLElement | null;
+      const fb = getVisibleTourEl('[data-tour="kapital-subsector-list"]') as HTMLElement | null;
+      if (fb) try { fb.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" }); } catch {}
+    }
+    if ((stepId === "sens-boa" || stepId === "sens-calcular") && !el) {
+      const fb = getVisibleTourEl('[data-tour="kapital-subsector-detail"]') as HTMLElement | null;
       if (fb) try { fb.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" }); } catch {}
     }
   }, [active, stepTarget, stepId]);
@@ -409,7 +460,7 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const isMobile = vw <= 640;
-    const tooltipW = Math.min(360, vw - 16);
+    const tooltipW = Math.min(360, vw - (isMobile ? 32 : 16));
     const tooltipH = tooltipRef.current?.offsetHeight || 220;
     const gap = 12;
     const isSensitivityModalStep = sensitivityMode && stepRaw.id.startsWith("sens-");
@@ -422,6 +473,15 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
         : Math.min(vw - tooltipW - 16, rightOfTarget);
       const top = Math.max(16, Math.min(targetRect.top + targetRect.height / 2 - tooltipH / 2, vh - tooltipH - 16));
       const next = { top, left };
+      setTooltipPos((prev) => prev && Math.abs(prev.top-next.top)<0.5 && Math.abs(prev.left-next.left)<0.5 ? prev : next);
+      return;
+    }
+    // Mobile: centered horizontally with breathing room, docked vertically
+    if (isMobile && isSensitivityModalStep) {
+      const left = Math.max(16, (vw - tooltipW) / 2);
+      const targetMid = targetRect.top + targetRect.height / 2;
+      const top = targetMid > vh * 0.45 ? 16 : vh - tooltipH - 16;
+      const next = { top: Math.max(16, Math.min(top, vh - tooltipH - 16)), left };
       setTooltipPos((prev) => prev && Math.abs(prev.top-next.top)<0.5 && Math.abs(prev.left-next.left)<0.5 ? prev : next);
       return;
     }
@@ -521,7 +581,7 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
         <div className="absolute inset-0 bg-[#0b1a33]/[0.14] backdrop-blur-[1.2px]" />
       )}
       {tooltipPos && (
-        <div ref={tooltipRef} className="fixed w-[360px] max-w-[calc(100vw-16px)] sm:max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,0.18),0_4px_12px_rgba(15,23,42,0.10)] border border-slate-200/70 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[calc(100dvh-24px)] overflow-y-auto" style={{ top: tooltipPos.top, left: tooltipPos.left, width: `min(360px, calc(100vw - 16px))` }}>
+        <div ref={tooltipRef} className="fixed w-[360px] max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,0.18),0_4px_12px_rgba(15,23,42,0.10)] border border-slate-200/70 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[calc(100dvh-32px)] overflow-y-auto" style={{ top: tooltipPos.top, left: tooltipPos.left, width: `min(360px, calc(100vw - 32px))` }}>
           <div className="px-5 pt-5 pb-3">
             <div className="flex items-center justify-between gap-3 mb-2.5">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eff6ff] border border-[#dbeafe] px-2.5 py-1 text-[11px] font-bold tracking-wider uppercase text-[#2563eb]">
