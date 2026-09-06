@@ -532,7 +532,12 @@ export const ConfiguracionPage = () => {
   const doImport = async (parsedData: any[], boaResult: any, tab: string) => {
     try {
       if (tab === "subsectores") {
-        addToast("success", `Se procesaron ${parsedData.length} registros de subsectores.`);
+        await MainService.createTemplateComplement({
+          nombre: tab,
+          fecha: new Date().toISOString(),
+          data: parsedData,
+        });
+        addToast("success", `Se importaron ${parsedData.length} subsectores.`);
         loadData();
         return;
       }
@@ -563,34 +568,89 @@ export const ConfiguracionPage = () => {
 
     if (activeTab === "subsectores") {
       try {
-        const boaResult = await MainService.uploadSubsectoresBoa(file);
+        // 1. Parsear el Excel en el navegador (ancho "by subsectores" o largo Sector|Subsector|Empresa).
+        const parsedData = await parseFinancialExcel(file, activeTab, activeFrequency);
+        parsedDataRef.current = parsedData;
+        boaTabRef.current = activeTab;
 
-        if (boaResult?.message) {
-          addToast("info", boaResult.message);
-        }
-
-        if (boaResult?.job_id) {
-          setActiveBoaJob({
-            jobId: boaResult.job_id,
-            total: boaResult.total || 0,
-            processed: boaResult.processed || 0,
-            failed: boaResult.failed || 0,
-          });
-          startBoaPolling(boaResult.job_id, boaResult.total || 0).catch(() => {});
-        }
-
-        setModalState({
-          isOpen: true,
-          title: "BOA en proceso",
-          description: `Se calcularon ${boaResult?.processed || 0} empresas de prueba.\n\nLos resultados no se guardaron en la base de datos. Solo se muestran en este modal.`,
-          confirmText: "Cerrar",
-          cancelText: "Cerrar",
-          variant: "default",
-          onConfirm: closeModal,
+        // 2. Guardar la estructura AL INSTANTE para que la tabla muestre datos.
+        await MainService.createTemplateComplement({
+          nombre: activeTab,
+          fecha: new Date().toISOString(),
+          data: parsedData,
         });
-      } catch (err) {
-        console.warn("Error obteniendo BOA de depuración, se continuará sin BOA:", err);
-        addToast("error", "Error al procesar el archivo Excel. Asegúrese de que el formato sea correcto.");
+        loadData();
+
+        const allTickers = Array.from(
+          new Set(
+            parsedData
+              .flatMap((item: any) => item.empresas || [])
+              .map((t: string) => String(t || "").trim().toUpperCase())
+              .filter(Boolean)
+          )
+        ) as string[];
+        const missingBoa = allTickers.filter(
+          (t) =>
+            !parsedData.some(
+              (item: any) =>
+                item.empresas_boa?.[t] !== undefined &&
+                item.empresas_boa?.[t] !== null &&
+                String(item.empresas_boa?.[t]) !== ""
+            )
+        );
+
+        if (missingBoa.length === 0) {
+          addToast(
+            "success",
+            `Se importaron ${parsedData.length} subsectores (${allTickers.length} empresas con BOA incluido).`
+          );
+          return;
+        }
+
+        // 3. Calcular BOA solo para los tickers sin valor; el polling enriquece
+        // parsedDataRef y lo guarda periódicamente (ver startBoaPolling).
+        addToast(
+          "success",
+          `Se importaron ${parsedData.length} subsectores. Calculando BOA para ${missingBoa.length} empresas en segundo plano...`
+        );
+        try {
+          const res = await MainService.startSubsectoresBoa(missingBoa);
+          if (res?.message) addToast("info", res.message);
+          if (res?.job_id) {
+            setActiveBoaJob({
+              jobId: res.job_id,
+              total: res.total || missingBoa.length,
+              processed: 0,
+              failed: 0,
+            });
+            setBoaProgressText(`Iniciando cálculo para ${res.total || missingBoa.length} empresas...`);
+            setModalState({
+              isOpen: true,
+              title: "BOA en proceso",
+              description: undefined,
+              confirmText: "Cerrar y seguir en segundo plano",
+              variant: "default",
+              onConfirm: closeModal,
+            });
+            startBoaPolling(res.job_id, res.total || missingBoa.length)
+              .then(() => loadData())
+              .catch(() => {});
+          }
+        } catch (boaErr) {
+          console.warn("Estructura guardada, falló el cálculo BOA:", boaErr);
+          addToast(
+            "error",
+            "Subsectores guardados, pero falló el cálculo BOA. Use “Recalcular BOA ponderado”."
+          );
+        }
+      } catch (err: any) {
+        console.error("Error processing Excel file", err);
+        addToast(
+          "error",
+          typeof err?.message === "string" && err.message
+            ? err.message
+            : "Error al procesar el archivo Excel. Asegúrese de que el formato sea correcto."
+        );
       } finally {
         e.target.value = "";
       }
