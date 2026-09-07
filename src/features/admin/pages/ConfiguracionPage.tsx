@@ -42,6 +42,9 @@ export const ConfiguracionPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [boaProgressText, setBoaProgressText] = useState<string | null>(null);
+  const [subsectorNotice, setSubsectorNotice] = useState<string | null>(null);
+  const notifiedSubsectorTickers = useRef<Set<string>>(new Set());
+  const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const resolveBoaRef = useRef<((v: boolean) => void) | null>(null);
   const boaPollingRef = useRef(false);
@@ -92,6 +95,21 @@ export const ConfiguracionPage = () => {
           if (!prev) return prev;
           return { ...prev, processed: progress.processed, failed: progress.failed };
         });
+
+        if (activeTabRef.current === "subsectores") {
+          const rows = Array.isArray(progress.result?.ticker_rows) ? progress.result.ticker_rows : [];
+          const next = rows.find((row: any) => {
+            const key = `${row.ticker}|${row.subsector || ""}`;
+            return row.ticker && !notifiedSubsectorTickers.current.has(key);
+          });
+          if (next) {
+            const key = `${next.ticker}|${next.subsector || ""}`;
+            notifiedSubsectorTickers.current.add(key);
+            setSubsectorNotice(`Se escribió ticker ${next.ticker} de ${next.subsector || "subsector"}`);
+            if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+            noticeTimerRef.current = setTimeout(() => setSubsectorNotice(null), 4500);
+          }
+        }
 
         const processedTotal = progress.processed + progress.failed;
         if (processedTotal > 0 && processedTotal >= lastRefreshBatch + 50) {
@@ -807,6 +825,11 @@ export const ConfiguracionPage = () => {
           )}
         </ConfirmationModal>
         <ToastStack toasts={toasts} onDismiss={removeToast} />
+        {activeTab === "subsectores" && subsectorNotice && (
+          <div className="fixed right-6 top-6 z-[201] w-full max-w-xs rounded border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 shadow-md">
+            {subsectorNotice}
+          </div>
+        )}
 
         {/* TABS GENERALES */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
