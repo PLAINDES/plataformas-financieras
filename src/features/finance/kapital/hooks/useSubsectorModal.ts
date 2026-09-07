@@ -50,7 +50,7 @@ export function useSubsectorModal({
 
         // BOA Ponderado estricto Excel: Wi = Activo / Σ Activos activas, BOA = SUMPRODUCT(Wi, BOA) — solo activo_mercado, sin fallback total_activos
         const getAsset = (emp: string) => {
-            const v = subsectorDetail.ticker_info?.[emp]?.activo_mercado;
+            const v = subsectorDetail.ticker_info?.[emp]?.activo_mercado ?? subsectorDetail.ticker_info?.[emp]?.total_activos;
             const n = Number(v);
             return Number.isFinite(n) && n > 0 ? n : 0;
         };
@@ -105,7 +105,7 @@ export function useSubsectorModal({
 
         // BOA Ponderado estricto Excel — solo activo_mercado, sin fallback, excluye activos 0
         const getAsset = (emp: string) => {
-            const v = subsectorDetail.ticker_info?.[emp]?.activo_mercado;
+            const v = subsectorDetail.ticker_info?.[emp]?.activo_mercado ?? subsectorDetail.ticker_info?.[emp]?.total_activos;
             const n = Number(v);
             return Number.isFinite(n) && n > 0 ? n : 0;
         };
