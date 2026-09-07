@@ -59,7 +59,7 @@ export const ConfiguracionPage = () => {
   const startBoaPolling = useCallback(async (jobId: string, total: number) => {
     if (boaPollingRef.current) return;
     boaPollingRef.current = true;
-    let lastSavedCompanies = 0;
+    let lastRefreshBatch = 0;
     try {
       while (true) {
         let progress;
@@ -93,73 +93,19 @@ export const ConfiguracionPage = () => {
           return { ...prev, processed: progress.processed, failed: progress.failed };
         });
 
-        // Save intermediate results when new batch data is available
-        const currentCompanies = progress.result?.valid_companies?.length || 0;
-        const tab = boaTabRef.current;
-        const pData = parsedDataRef.current;
-        if (currentCompanies > lastSavedCompanies && tab === "subsectores" && pData) {
-          lastSavedCompanies = currentCompanies;
-          try {
-            const boaMap: Record<string, number> = {};
-            const tickerInfoMap: Record<string, any> = {};
-            progress.result.valid_companies.forEach((c: any) => {
-              boaMap[c.ticker] = c.beta_unlevered;
-              tickerInfoMap[c.ticker] = {
-                name: c.company_name || c.ticker,
-                beta_desapalancado: c.beta_unlevered ?? null,
-                market_cap: c.market_cap ?? null,
-                beta_apalancado: c.beta_levered ?? null,
-                total_activos: c.total_assets ?? null,
-                fx: c.fx_rate ?? null,
-                activo_mercado: c.total_assets ?? null,
-                sector: c.sector ?? null,
-                subsector: c.subsector ?? null,
-                country: c.country ?? null,
-                listing_currency: c.listing_currency ?? null,
-                reporting_currency: c.reporting_currency ?? null,
-                debt_lt: c.debt_lt ?? null,
-                debt_st: c.debt_st ?? null,
-                debt_value: c.debt_value ?? null,
-                equity_value: c.equity_value ?? null,
-                dc_ratio: c.dc_ratio ?? null,
-                effective_tax_rate: c.effective_tax_rate ?? null,
-                pct_debt: c.pct_debt ?? null,
-                pct_equity: c.pct_equity ?? null,
-              };
-            });
-            pData.forEach((item: any) => {
-              item.empresas_boa = item.empresas_boa || {};
-              item.ticker_info = item.ticker_info || {};
-              (item.empresas || []).forEach((emp: string) => {
-                if (boaMap[emp] !== undefined) {
-                  item.empresas_boa[emp] = boaMap[emp];
-                }
-                if (tickerInfoMap[emp]) {
-                  item.ticker_info[emp] = tickerInfoMap[emp];
-                }
-              });
-            });
-            await MainService.createTemplateComplement({
-              nombre: tab,
-              fecha: new Date().toISOString(),
-              data: [...pData],
-            });
-            // Refrescar la tabla para reflejar el progreso intermedio
-            loadDataRef.current();
-          } catch (e) {
-            console.warn("Error saving intermediate BOA results", e);
-          }
-        } else if (progress.status === "running") {
-          console.log(
-            `BOA polling: skip save (saved: ${lastSavedCompanies}, current: ${currentCompanies}, tab: "${tab}", pData: ${!!pData}, liveTab: "${activeTabRef.current}")`
-          );
+        const processedTotal = progress.processed + progress.failed;
+        if (processedTotal > 0 && processedTotal >= lastRefreshBatch + 50) {
+          lastRefreshBatch = processedTotal;
+          loadDataRef.current?.();
         }
 
         if (progress.status === "completed") {
+          loadDataRef.current?.();
           setActiveBoaJob(null);
           return progress.result;
         }
         if (progress.status === "error") {
+          loadDataRef.current?.();
           setActiveBoaJob(null);
           throw new Error(progress.result?.error || `Error desconocido en el cálculo BOA (${stopReason || "sin razón"})`);
         }
@@ -576,13 +522,14 @@ export const ConfiguracionPage = () => {
             processed: boaResult.processed || 0,
             failed: boaResult.failed || 0,
           });
+          loadData();
           startBoaPolling(boaResult.job_id, boaResult.total || 0).catch(() => {});
         }
 
         setModalState({
           isOpen: true,
           title: "BOA en proceso",
-          description: `Se calcularon ${boaResult?.processed || 0} empresas de prueba.\n\nLos resultados no se guardaron en la base de datos. Solo se muestran en este modal.`,
+          description: `Se están procesando ${boaResult?.total || 0} empresas.\n\nLos subsectores se actualizarán progresivamente en la tabla.`,
           confirmText: "Cerrar",
           cancelText: "Cerrar",
           variant: "default",
