@@ -635,7 +635,7 @@ export const parseSubsectoresSheet = (ws: any) => {
 
     const empresas = empresaIdxs
       .map((i) => String(row[i] || "").trim())
-      .filter((v) => v !== "");
+      .filter((v) => v !== "" && !["nan", "none", "null", "n/a", "na", "-"].includes(v.toLowerCase()));
 
     result.push({
       sector,
