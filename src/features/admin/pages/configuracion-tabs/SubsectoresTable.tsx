@@ -65,6 +65,7 @@ export const SubsectoresTable = ({
   isLoading,
   onDelete,
 }: SubsectoresTableProps) => {
+  const [renderedData, setRenderedData] = useState<SubsectorRow[]>(data);
   const [tickerInfo, setTickerInfo] = useState<TickerInfoData | null>(null);
   const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -85,7 +86,29 @@ export const SubsectoresTable = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [tickerInfo, closePopover]);
 
-  const { paginatedData, tableProps } = useClientPagination(data);
+  // Reveal two tickers per frame group to keep the table responsive.
+  useEffect(() => {
+    let cancelled = false;
+    const seed = data.map((row) => ({ ...row, empresas: [] }));
+    setRenderedData(seed);
+    const timer = setInterval(() => {
+      if (cancelled) return;
+      setRenderedData((current) => {
+        let complete = true;
+        const next = data.map((row, index) => {
+          const visible = current[index]?.empresas?.length || 0;
+          const target = Math.min(visible + 2, row.empresas?.length || 0);
+          if (target < (row.empresas?.length || 0)) complete = false;
+          return { ...row, empresas: (row.empresas || []).slice(0, target) };
+        });
+        if (complete) clearInterval(timer);
+        return next;
+      });
+    }, 80);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, [data]);
+
+  const { paginatedData, tableProps } = useClientPagination(renderedData);
 
   return (
     <>
@@ -111,7 +134,7 @@ export const SubsectoresTable = ({
             }
             return (
               <div className="flex flex-wrap gap-1">
-                {item.empresas.map((emp: string, i: number) => {
+                {item.empresas.filter((emp: string) => emp && !["nan", "none", "null", "n/a", "na", "-"].includes(emp.trim().toLowerCase())).map((emp: string, i: number) => {
                   const boa = item.empresas_boa?.[emp];
                   const formattedBoa = formatBoa(boa);
                   const info = item.ticker_info?.[emp];
