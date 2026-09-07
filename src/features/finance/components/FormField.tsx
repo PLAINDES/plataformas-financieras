@@ -32,6 +32,7 @@ export interface FormFieldProps {
         name: string;
         value: string;
         options: string[];
+        className?: string;
     };
     onChange: (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -404,7 +405,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                                     value={prefixSelect.value}
                                     onChange={onChange}
                                     translate="no"
-                                    className={`notranslate px-1.5 py-1.25 text-sm border-r border-gray-300 outline-none focus:outline-none whitespace-nowrap min-w-[72px] ${disabled
+                                    className={`notranslate px-0.5 py-1.25 text-sm border-r border-gray-300 outline-none focus:outline-none text-wrap ${prefixSelect.className || ""} ${disabled
                                         ? "bg-valora-primary/5 text-black cursor-not-allowed"
                                         : "bg-gray-50 cursor-pointer hover:bg-gray-100"
                                         }`}
