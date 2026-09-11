@@ -3,6 +3,7 @@ import { SimpleTable } from "@/shared/components/ui/SimpleTable";
 import { useNavigate } from "react-router-dom";
 import { MainService } from "@/shared/services/main.service";
 import type { Report } from "@/shared/types";
+import { TableSkeleton } from "../components/Skeleton";
 
 export const ReportesKapitalPage = () => {
   const [activeTab, setActiveTab] = useState<"kapital" | "valora">("kapital");
@@ -68,11 +69,7 @@ export const ReportesKapitalPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-12 text-sm text-gray-400">
-        Cargando reportes...
-      </div>
-    );
+    return <TableSkeleton rows={4} cols={5} />;
   }
 
   if (error) {

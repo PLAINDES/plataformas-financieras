@@ -1,11 +1,11 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 
 export const DynamicPageFooter: React.FC = () => {
   const [isCollapsed, _setIsCollapsed] = useState(false);
 
   return (
     <div
-      className={`w-full transition-all duration-500 ease-in-out overflow-hidden bg-white ${
+      className={`w-full transition-[height] duration-500 ease-in-out overflow-hidden bg-white ${
         isCollapsed ? "h-16" : "h-60"
       }`}
     >

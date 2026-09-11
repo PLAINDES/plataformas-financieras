@@ -1,4 +1,4 @@
-// src/features/landing/layout/LandingHeader.tsx
+﻿// src/features/landing/layout/LandingHeader.tsx
 import { useState, useEffect } from "react";
 import { X, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -92,7 +92,7 @@ export function LandingHeader({
     <header className="relative w-full" id="home">
       <nav
         className={`
-        fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-out
+        fixed top-0 left-0 w-full z-50 transition-[background-color,box-shadow] duration-300 ease-out
         ${isSticky ? "bg-white/95 backdrop-blur-md h-16 lg:h-20 shadow-xs" : "bg-transparent h-28 lg:h-32"}`}
       >
         <div className="max-w-350 mx-auto px-6 grid grid-cols-2 lg:grid-cols-12 items-center h-full">
@@ -107,7 +107,7 @@ export function LandingHeader({
             <div className="relative flex items-center py-1">
               {/* Stacked layout — visible cuando NO sticky */}
               <div
-                className={`flex flex-col items-start gap-1 transition-all duration-300 ease-out ${
+                className={`flex flex-col items-start gap-1 transition-[opacity,transform] duration-300 ease-out ${
                   isSticky
                     ? "opacity-0 -translate-y-2 pointer-events-none absolute left-0"
                     : "opacity-100 translate-y-0 relative"
@@ -143,7 +143,7 @@ export function LandingHeader({
 
               {/* Side-by-side layout — visible cuando sticky */}
               <div
-                className={`flex flex-row items-center gap-3 transition-all duration-300 ease-out ${
+                className={`flex flex-row items-center gap-3 transition-[opacity,transform] duration-300 ease-out ${
                   isSticky
                     ? "opacity-100 translate-y-0 relative"
                     : "opacity-0 translate-y-2 pointer-events-none absolute left-0"
@@ -192,7 +192,7 @@ export function LandingHeader({
                       e.preventDefault();
                       handleMenuClick(item.title);
                     }}
-                    className={`px-5 py-2 rounded-full text-[16px] tracking-tight transition-all duration-300 ${isActive ? "text-valora-primary" : "text-gray-600 hover:text-valora-primary"}`}
+                    className={`px-5 py-2 rounded-full text-[16px] tracking-tight transition-colors duration-300 ${isActive ? "text-valora-primary" : "text-gray-600 hover:text-valora-primary"}`}
                   >
                     {item.title}
                   </a>
@@ -215,7 +215,7 @@ export function LandingHeader({
             ) : (
               <Button
                 onClick={openLogin}
-                className="h-9 lg:h-10 px-6 rounded-lg bg-valora-primary text-white text-xs hover:bg-valora-secondary active:scale-95 shadow-sm"
+                className="h-9 lg:h-10 px-6 rounded-lg bg-valora-primary text-white text-xs hover:bg-valora-secondary active:scale-[0.96] shadow-sm"
               >
                                 Iniciar Sesión
               </Button>
@@ -228,7 +228,7 @@ export function LandingHeader({
         {isAdmin && (
           <button
             onClick={() => setEditModalOpen(true)}
-            className="absolute cursor-pointer top-5 right-20 xl:right-60 2xl:right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-white text-[11px] font-medium backdrop-blur-sm transition-all shadow-sm"
+            className="absolute cursor-pointer top-5 right-20 xl:right-60 2xl:right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-white text-[11px] font-medium backdrop-blur-sm transition-colors shadow-sm"
             title="Editar menú"
           >
             <Pencil size={11} />
@@ -239,7 +239,7 @@ export function LandingHeader({
 
       {/* Mobile Drawer */}
       <div
-        className={`fixed inset-0 z-100 lg:hidden transition-all duration-300 ${isMobileMenuOpen ? "visible" : "invisible"}`}
+        className={`fixed inset-0 z-100 lg:hidden transition-opacity duration-300 ${isMobileMenuOpen ? "visible" : "invisible"}`}
       >
         <div
           onClick={() => setIsMobileMenuOpen(false)}
@@ -250,7 +250,7 @@ export function LandingHeader({
         >
           <div className="flex flex-col h-full">
             <div className="p-6 flex items-center justify-between border-b border-gray-50">
-              <img src="images/logo.png" alt="Logo" className="h-8" />
+              <img src="images/logo.png" alt="Logo" className="h-8 outline outline-1 outline-black/10" />
               <Button
                 variant="ghost"
                 size="icon"
@@ -271,7 +271,7 @@ export function LandingHeader({
                       e.preventDefault();
                       handleMenuClick(item.title);
                     }}
-                    className={`px-4 py-3 rounded-md text-sm transition-all ${isActive ? "bg-valora-primary/10 text-valora-primary" : "text-gray-700 hover:bg-gray-50 hover:text-valora-secondary"}`}
+                    className={`px-4 py-3 rounded-md text-sm transition-colors ${isActive ? "bg-valora-primary/10 text-valora-primary" : "text-gray-700 hover:bg-gray-50 hover:text-valora-secondary"}`}
                   >
                     {item.title}
                   </a>

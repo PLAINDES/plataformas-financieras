@@ -1,4 +1,4 @@
-// src/components/common/MobileMenuToggle.tsx
+﻿// src/components/common/MobileMenuToggle.tsx
 import { Menu } from "lucide-react";
 
 interface MobileMenuToggleProps {
@@ -15,7 +15,7 @@ export function MobileMenuToggle({
       className={`
         lg:hidden inline-flex items-center justify-center p-2 rounded-md 
         text-gray-600 hover:text-blue-600 hover:bg-blue-50 
-        transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500
+        transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500
         ${isOpen ? "bg-blue-50 text-blue-600" : ""}
       `}
       id="kt_landing_menu_toggle"

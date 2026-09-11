@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import type { FormEvent } from "react";
 import { X, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -89,11 +89,11 @@ export function RegisterModal({
   return (
     <div className="fixed inset-0 z-1050 flex items-center justify-center">
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity animate-in fade-in duration-200 ease-out"
         onClick={handleClose}
       />
 
-      <div className="relative w-full h-full sm:h-auto sm:max-w-120 bg-white sm:rounded-2xl shadow-2xl overflow-y-auto animate-in fade-in zoom-in duration-300">
+      <div className="relative w-full h-full sm:h-auto sm:max-w-120 bg-white sm:rounded-2xl shadow-2xl overflow-y-auto animate-in fade-in zoom-in duration-300 ease-out">
         <Button
           type="button"
           variant="ghost"
@@ -105,7 +105,7 @@ export function RegisterModal({
           <X className="w-5 h-5" />
         </Button>
 
-        <div className="flex flex-col min-h-full">
+        <div className="flex flex-col h-full">
           <div className="sm:hidden bg-gray-50 text-center py-8 px-6 border-b border-gray-100">
             <img
               src="images/logo.png"
@@ -145,7 +145,7 @@ export function RegisterModal({
                     value={formData.name}
                     onChange={(e) => handleChange("name", e.target.value)}
                     disabled={loading}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-[border-color,box-shadow,background-color] text-[16px]"
                   />
                   <input
                     type="text"
@@ -153,7 +153,7 @@ export function RegisterModal({
                     value={formData.lastname}
                     onChange={(e) => handleChange("lastname", e.target.value)}
                     disabled={loading}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-[border-color,box-shadow,background-color] text-[16px]"
                   />
                 </div>
 
@@ -163,7 +163,7 @@ export function RegisterModal({
                   value={formData.email}
                   onChange={(e) => handleChange("email", e.target.value)}
                   disabled={loading}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-[border-color,box-shadow,background-color] text-[16px]"
                 />
 
                 <input
@@ -176,7 +176,7 @@ export function RegisterModal({
                   autoComplete="tel"
                   required
                   disabled={loading}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-[border-color,box-shadow,background-color] text-[16px]"
                 />
 
                 <input
@@ -185,7 +185,7 @@ export function RegisterModal({
                   value={formData.password}
                   onChange={(e) => handleChange("password", e.target.value)}
                   disabled={loading}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all text-[16px]"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-[border-color,box-shadow,background-color] text-[16px]"
                 />
 
                 <Button

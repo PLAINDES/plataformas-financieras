@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FinancePageTemplate } from "../components/MainPage";
 import {
   ValoraResults,
@@ -171,7 +171,9 @@ const ValoraPage: React.FC = () => {
     if (activeTickers.length === 0) return null;
 
     const getAsset = (emp: string) => {
-      const v = subsectorDetail.ticker_info?.[emp]?.activo_mercado;
+      const v =
+        subsectorDetail.ticker_info?.[emp]?.activo_mercado ??
+        subsectorDetail.ticker_info?.[emp]?.total_activos;
       const n = Number(v);
       return Number.isFinite(n) && n > 0 ? n : 0;
     };
@@ -581,9 +583,6 @@ const ValoraPage: React.FC = () => {
            onClose={() => setIsReportViewerOpen(false)}
            reportProductId={selectedReportProductId}
            calculationId={valoraCalc.currentCalculation?.id}
-           isSessionFresh={valoraCalc.isSessionFresh}
-           setIsSessionFresh={valoraCalc.setIsSessionFresh}
-           prewarmedSessionId={null}
          />
        ) : (
          <ValoraResults
@@ -676,18 +675,12 @@ const ValoraPage: React.FC = () => {
   };
 
   const handleGetAIRecommendations = async () => {
-    if (!valoraCalc.currentCalculation?.id) {
-      addToast("warn", "Primero guarda el cálculo para obtener recomendaciones.");
-      return;
-    }
-
     setIsLoadingAI(true);
     console.info("[VALORA FRONTEND] Solicitando recomendaciones IA...");
 
     try {
-      const recommendations = await MainService.getValoraRecommendations(
-        valoraCalc.currentCalculation.id
-      );
+      const calcData = (valoraCalc.currentCalculation?.data as Record<string, unknown> | undefined) || {};
+      const recommendations = await MainService.getValoraRecommendations(calcData);
 
       const rates = recommendations?.rates;
       if (rates) {
@@ -786,7 +779,7 @@ const ValoraPage: React.FC = () => {
         hasResults={showResults}
       />
       <main
-        className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} transition-all h-screen duration-300 ${isDesktopFormOpen ? "lg:pl-105" : "lg:pl-0"}`}
+        className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} transition-[padding] h-screen duration-300 ${isDesktopFormOpen ? "lg:pl-105" : "lg:pl-0"}`}
       >
         {mainContent}
       </main>
@@ -816,7 +809,7 @@ const ValoraPage: React.FC = () => {
             onSearchSectorBeta={openSubsectorModal}
             isSearchingBeta={false}
             isPdfLoading={isPdfLoading}
-            loading={valoraCalc.isLoading}
+            loading={valoraCalc.isLoading || valoraCalc.isNativeLoading}
             hasCalculated={valoraCalc.hasCalculated}
             currentCalculationId={valoraCalc.currentCalculation?.id ?? null}
 isLoadingAI={isLoadingAI}
@@ -891,10 +884,14 @@ isLoadingAI={isLoadingAI}
        />
 
        <ToastStack toasts={toasts} onDismiss={removeToast} />
-      {valoraCalc.isLoading && <LoadingOverlay />}
+      {(valoraCalc.isLoading || valoraCalc.isNativeLoading) && (
+        <LoadingOverlay
+          message={valoraCalc.hasCalculated ? "Sensibilizando..." : "Calculando..."}
+        />
+      )}
       {isPdfLoading && (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="w-[480px] max-w-[90vw] bg-white rounded-2xl shadow-2xl p-6 flex flex-col gap-4">
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 ease-out">
+          <div className="w-[480px] max-w-[90vw] bg-white rounded-2xl shadow-2xl p-6 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200 ease-out">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-valora-primary/10 flex items-center justify-center">
                 <i className="fa-solid fa-file-pdf text-valora-primary"></i>
@@ -912,7 +909,7 @@ isLoadingAI={isLoadingAI}
               </button>
             </div>
             <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-              <div className="h-2 bg-valora-primary transition-all duration-500" style={{ width: `${pdfProgress}%` }} />
+              <div className="h-2 bg-valora-primary transition-[width] duration-500" style={{ width: `${pdfProgress}%` }} />
             </div>
             <p className="text-[11px] text-gray-400 text-center">{pdfProgress}% — La IA clasifica semánticamente cuentas, valida y mapea a plantilla</p>
             <p className="text-[10px] text-gray-400 text-center">Si tarda &gt;180s se cancela automáticamente. Abre Consola (F12) y Network para ver POST.</p>

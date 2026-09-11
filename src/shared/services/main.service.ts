@@ -142,26 +142,14 @@ export const MainService = {
     return api.get<Calculation>(`main/calculations/by-code/${code}`);
   },
 
-  createCalculation: async (data: CalculationCreate): Promise<Calculation> => {
-    return api.post<Calculation>("main/calculations", data);
+  createNativeCalculation: async (data: CalculationCreate): Promise<Calculation> => {
+    return api.post<Calculation>("main/calculations/native", data);
   },
 
-  updateCalculation: async (
+  updateNativeCalculation: async (
     id: number,
     data: CalculationUpdate
-  ): Promise<Calculation> => {
-    return api.put<Calculation>(`main/calculations/${id}`, data);
-  },
-
-  refreshCalculation: async (
-    id: number,
-    prewarmedSessionId?: string | null
-  ): Promise<Calculation> => {
-    const payload = prewarmedSessionId
-      ? { prewarmed_session_id: prewarmedSessionId }
-      : {};
-    return api.post<Calculation>(`main/calculations/${id}/refresh`, payload);
-  },
+  ): Promise<Calculation> => api.put<Calculation>(`main/calculations/${id}/native`, data),
 
   deleteCalculation: async (id: number): Promise<void> => {
     return api.delete<void>(`main/calculations/${id}`);
@@ -591,7 +579,7 @@ export const MainService = {
     download_url: string;
     item_id: string;
   }> => {
-    return api.get<any>(`main/master-templates/valora-copies/${itemId}/download-url`, {
+    return api.get<any>(`main/master-templates/valora-copies/${encodeURIComponent(itemId)}/download-url`, {
       token: getAuthToken(token),
     });
   },
@@ -600,7 +588,7 @@ export const MainService = {
     success: boolean;
     deleted_id: string;
   }> => {
-    return api.delete<any>(`main/master-templates/valora-copies/${itemId}`, {
+    return api.delete<any>(`main/master-templates/valora-copies/${encodeURIComponent(itemId)}`, {
       token: getAuthToken(token),
     });
   },
@@ -693,10 +681,10 @@ export const MainService = {
 
   // ==================== VALORA RECOMMENDATIONS ====================
 
-  getValoraRecommendations: async (calculationId: number): Promise<any> => {
-    console.info(`[VALORA FRONTEND] Fetching recommendations for calculationId=${calculationId}`);
+  getValoraRecommendations: async (payload: Record<string, unknown>): Promise<any> => {
+    console.info("[VALORA FRONTEND] Fetching native Valora recommendations");
     try {
-      const result = await api.get<any>(`analytics/valora-recommendations/${calculationId}`);
+      const result = await api.post<any>("analytics/valora-recommendations", payload);
       console.info("[VALORA FRONTEND] Recommendations received:", result);
       return result;
     } catch (error) {

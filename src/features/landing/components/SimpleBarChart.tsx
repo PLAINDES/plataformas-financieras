@@ -1,4 +1,4 @@
-import type { SimpleBarChartProps } from "../types/benefit.types";
+﻿import type { SimpleBarChartProps } from "../types/benefit.types";
 
 export function SimpleBarChart({
   data,
@@ -31,7 +31,7 @@ export function SimpleBarChart({
                 {item.value.toFixed(1)}%
               </div>
               <div
-                className="w-full rounded-t relative transition-all duration-300 ease-in-out min-h-2.5"
+                className="w-full rounded-t relative transition-[height] duration-300 ease-in-out min-h-2.5"
                 style={{
                   height: `${barHeight}%`,
                   backgroundColor: isSelected ? "#0d6efd" : "#e9ecef",

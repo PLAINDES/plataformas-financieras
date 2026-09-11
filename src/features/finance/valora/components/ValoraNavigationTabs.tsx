@@ -1,4 +1,4 @@
-// src/app/valora/components/NavigationTabs.tsx
+﻿// src/app/valora/components/NavigationTabs.tsx
 import { useState, useEffect } from "react";
 
 import type { ValoraResultsSectionKey } from "./ValoraResults";
@@ -55,7 +55,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
           <button
             onClick={() => onNavigate("resultados")}
             className={`
-              flex flex-row items-center justify-center gap-2 px-3 py-2.5 rounded-lg font-medium text-xs transition-all duration-200 flex-1
+              flex flex-row items-center justify-center gap-2 px-3 py-2.5 rounded-lg font-medium text-xs transition-[background-color,color,box-shadow] duration-200 flex-1
               ${
                 selected === "resultados"
                   ? "bg-blue-50 text-blue-600 shadow-sm"

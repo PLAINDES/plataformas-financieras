@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { MainService } from "@/shared/services/main.service";
-import { generateCalculationCode } from "../../kapital/services/kapital.utils";
+import { calculateValoraNative } from "@/shared/services/valora-native.service";
+import { generateCalculationCode } from "@/features/finance/kapital/services/kapital.utils";
 import type { Calculation } from "@/shared/types";
 import type {
   FinancialTable,
@@ -64,7 +65,8 @@ export function useValoraCalculation({
   ui,
 }: UseValoraCalculationProps) {
   const [currentCalculation, setCurrentCalculation] = useState<Calculation | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
+  const [isNativeLoading, setIsNativeLoading] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
   const [resultView, setResultView] = useState<ValoraResultView>("original");
   const [sensibilizaciones, setSensibilizaciones] = useState<ValoraSensibilidadEntry[]>([]);
@@ -152,6 +154,8 @@ export function useValoraCalculation({
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
+    return handleNativeSubmit(e);
+    /* Legacy API calculation path retained temporarily for rollback.
     if (e) e.preventDefault();
 
     const missingFields: string[] = [];
@@ -212,7 +216,7 @@ export function useValoraCalculation({
     try {
       let persistedCalculation: Calculation;
       if (currentCalculation) {
-        persistedCalculation = await MainService.updateCalculation(
+        persistedCalculation = await MainService.updateNativeCalculation(
           currentCalculation.id,
           {
             data: {
@@ -221,7 +225,7 @@ export function useValoraCalculation({
           }
         );
       } else {
-        persistedCalculation = await MainService.createCalculation({
+        persistedCalculation = await MainService.createNativeCalculation({
           calculation_file_id: null,
           user_id: currentUserId ? Number(currentUserId) : null,
           code: generateCalculationCode(),
@@ -250,7 +254,7 @@ export function useValoraCalculation({
         (persistedCalculation.data as any).sensibilizacion = patchedSens;
         // Intenta guardar en backend de forma best-effort (no bloquea)
         if (currentCalculation) {
-          MainService.updateCalculation(persistedCalculation.id, {
+          MainService.updateNativeCalculation(persistedCalculation.id, {
             data: { sensibilizacion: patchedSens } as any,
           }).catch(() => {});
         }
@@ -282,8 +286,192 @@ export function useValoraCalculation({
     }
   };
 
-  const loadFromUrl = async () => {
-    if (loadFromUrlCalledRef.current) return;
+    */
+  };
+
+  const handleNativeSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+
+    const missingFields: string[] = [];
+    if (!formData.date) missingFields.push("Fecha");
+    if (!formData.country) missingFields.push("País");
+    if (!formData.currency) missingFields.push("Moneda");
+    if (!formData.sector) missingFields.push("Sector");
+    if (!fileUploaded && !hasCalculated && !formData.fileUsername) {
+      missingFields.push("Plantilla EEFF");
+    }
+
+    if (missingFields.length > 0) {
+      addToast("warn", `Completa los campos: ${missingFields.join(", ")}`);
+      return;
+    }
+
+    let currentUserId = userId;
+    if (!currentUserId) {
+      try {
+        const storedUser = localStorage.getItem("user_data");
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          currentUserId = parsed.id;
+        }
+      } catch (err) {
+        console.warn("Could not read user from storage", err);
+      }
+    }
+
+    ui.setShowResults(false);
+    setIsNativeLoading(true);
+
+    const normalizedBalanceTable =
+      normalizeTableThousandsSeparators(balanceTable);
+    const normalizedResultsTable =
+      normalizeTableThousandsSeparators(resultsTable);
+
+    const inputPayload = {
+      ...formData,
+      balance_table: normalizedBalanceTable,
+      results_table: normalizedResultsTable,
+    };
+
+    const numOrUndefined = (v: unknown): number | undefined => {
+      if (v === undefined || v === null || String(v).trim() === "") return undefined;
+      const n = Number(String(v).replace(",", "."));
+      return Number.isFinite(n) ? n : undefined;
+    };
+
+    let sensitivity: Record<string, unknown> | null = null;
+    if (hasCalculated) {
+      const sensBeta =
+        numOrUndefined((formData as any).beta_subsector) ??
+        numOrUndefined((formData as any).beta_unlevered_sensitivity) ??
+        numOrUndefined((formData as any).beta_subsector_custom) ??
+        numOrUndefined((formData as any).beta_desapalancado) ??
+        numOrUndefined((formData as any).beta_unlevered) ??
+        numOrUndefined((formData as any).beta_unlevered_industry);
+      const sensRates = {
+        revenue_forecast_rate: numOrUndefined((formData as any).revenue_forecast_rate),
+        fdc_forecast_rate: numOrUndefined((formData as any).fdc_forecast_rate),
+        perpetual_growth_rate: numOrUndefined((formData as any).perpetual_growth_rate),
+      };
+      const hasRates = Object.values(sensRates).some((v) => v !== undefined);
+      if (sensBeta !== undefined) {
+        sensitivity = {
+          beta_desapalancado: sensBeta,
+          beta_subsector: (formData as any).beta_subsector,
+          subsector: (formData as any).subsector_sensibilizacion,
+          tickers: (formData as any).tickers_subsector_sensibilizacion,
+          industria: (formData as any).sector,
+        };
+        if (hasRates) {
+          if (sensRates.revenue_forecast_rate !== undefined)
+            (sensitivity as Record<string, unknown>).revenue_forecast_rate = sensRates.revenue_forecast_rate;
+          if (sensRates.fdc_forecast_rate !== undefined)
+            (sensitivity as Record<string, unknown>).fdc_forecast_rate = sensRates.fdc_forecast_rate;
+          if (sensRates.perpetual_growth_rate !== undefined)
+            (sensitivity as Record<string, unknown>).perpetual_growth_rate = sensRates.perpetual_growth_rate;
+        }
+      }
+    }
+
+    try {
+      const res = await calculateValoraNative(
+        inputPayload as unknown as Record<string, unknown>,
+        sensitivity
+      );
+
+      if (!res.success) {
+        throw new Error("El servicio nativo no devolvió éxito");
+      }
+
+      const now = new Date().toISOString();
+      const baseResultados = {
+        created_at: now,
+        wacc: res.wacc ?? (res.conceptos as any)?.wacc ?? null,
+        wacc_emergente: res.wacc_emergente ?? null,
+        balance: res.balance ?? {},
+        conceptos: res.conceptos ?? {},
+        integrado: res.integrado ?? {},
+        conceptos_emergente: res.conceptos_emergente ?? {},
+        integrado_emergente: res.integrado_emergente ?? {},
+      };
+      const sensEntries = (res.sensitivity_results ?? []).map((entry) => ({
+        ...entry,
+        created_at: now,
+      }));
+      const previousData = (currentCalculation?.data || {}) as Record<string, unknown>;
+      const previousSens = Array.isArray(previousData.sensibilizacion)
+        ? previousData.sensibilizacion
+        : Array.isArray(previousData.sensibilidad)
+          ? previousData.sensibilidad
+          : [];
+      const allSensEntries = [...previousSens, ...sensEntries];
+
+      const persistedData = {
+        inputs: [{ ...inputPayload, created_at: now }],
+        resultados: [baseResultados],
+        sensibilizacion: allSensEntries,
+      };
+      const persistedCalculation =
+        currentCalculation && currentCalculation.id > 0
+          ? await MainService.updateNativeCalculation(currentCalculation.id, {
+              data: persistedData,
+            })
+          : await MainService.createNativeCalculation({
+              calculation_file_id: null,
+              user_id: currentUserId ? Number(currentUserId) : null,
+              code: generateCalculationCode(),
+              type: "valora",
+              data: persistedData,
+            });
+
+      if (!currentCalculation || currentCalculation.id === 0) {
+        window.history.pushState({}, "", `/valora/${persistedCalculation.code}`);
+      }
+
+      const nativeCalculation = {
+        code: persistedCalculation.code,
+        id: persistedCalculation.id,
+        calculation_file_id: (res.s3_key as string) ?? null,
+        user_id: currentUserId ? Number(currentUserId) : 0,
+        type: "valora",
+        data: persistedData,
+        created_at: now,
+        updated_at: now,
+      } as unknown as Calculation;
+
+      setCurrentCalculation(nativeCalculation);
+      setHasCalculated(true);
+      setIsSessionFresh(true);
+
+      const sensibilizacionesData = extractSensibilizaciones(nativeCalculation.data);
+      setSensibilizaciones(sensibilizacionesData);
+      setSelectedSensIdx(Math.max(0, sensibilizacionesData.length - 1));
+
+      const hasSensitivity = sensibilizacionesData.length > 0;
+      setResultView(hasSensitivity ? "sensibilidad" : "original");
+
+      ui.setShowResults(true);
+      ui.setIsDesktopFormOpen(false);
+      ui.setResultsSection("resultados");
+
+      addToast(
+        "success",
+        res.s3_key
+          ? `Cálculo nativo listo. Copia debug en S3: ${res.s3_key}`
+          : "Cálculo nativo listo (sin espejo S3, revisa el servicio)."
+      );
+    } catch (error) {
+      console.error("Error in native Valora calculation", error);
+      addToast(
+        "error",
+        error instanceof Error ? error.message : "No se pudo calcular con Excel nativo."
+      );
+    } finally {
+      setIsNativeLoading(false);
+    }
+  };
+
+  const loadFromUrl = async () => {    if (loadFromUrlCalledRef.current) return;
     loadFromUrlCalledRef.current = true;
     try {
       const code = getCodeFromUrl();
@@ -346,6 +534,7 @@ export function useValoraCalculation({
   return {
     currentCalculation,
     isLoading,
+    isNativeLoading,
     hasCalculated,
     isSessionFresh,
     setIsSessionFresh,
@@ -355,6 +544,7 @@ export function useValoraCalculation({
     selectedSensIdx,
     setSelectedSensIdx,
     handleSubmit,
+    handleNativeSubmit,
     loadFromUrl,
   };
 }

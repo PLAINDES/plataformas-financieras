@@ -1,4 +1,4 @@
-// src/components/editable/EditableCollection.tsx
+﻿// src/components/editable/EditableCollection.tsx
 
 import React, { useState, useEffect, useRef } from "react";
 import type {
@@ -376,7 +376,7 @@ export function AdminControls({
     w-8 h-8 rounded-full 
     border border-gray-200 bg-white 
     text-gray-600 shadow-sm 
-    transition-all duration-300 ease-out
+    transition-[transform,box-shadow,border-color] duration-300 ease-out
     hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400
     cursor-pointer
   `;
@@ -403,7 +403,7 @@ export function AdminControls({
           setIsOpen(!isOpen);
         }}
         className={`
-            relative z-20 flex items-center justify-center w-8 h-8 rounded-full bg-white border shadow-sm transition-all duration-200 cursor-pointer
+            relative z-20 flex items-center justify-center w-8 h-8 rounded-full bg-white border shadow-sm transition-[border-color,background-color,box-shadow] duration-200 cursor-pointer
             ${isOpen ? "border-gray-400 bg-gray-50" : "border-gray-200 hover:border-gray-400 hover:shadow-md"}
         `}
       >
@@ -417,7 +417,7 @@ export function AdminControls({
       {/* --- Menú Desplegado (Las Opciones) --- */}
       <div
         className={`
-          flex gap-2 transition-all duration-300
+          flex gap-2 transition-[opacity,transform] duration-300
           ${isVertical ? "flex-col" : "flex-row"}
           ${
             isOpen

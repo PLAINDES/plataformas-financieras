@@ -1,4 +1,4 @@
-import { Bot, X } from "lucide-react";
+﻿import { Bot, X } from "lucide-react";
 
 interface SubsectorModalProps {
     subsectorDetail: any;
@@ -162,7 +162,7 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                 type="button"
                                 data-tour="kapital-calcular-subsector"
                                 onClick={onCalculateDetail}
-                                className="w-full py-3 px-6 rounded-lg font-bold text-xs sm:text-sm text-white bg-valora-primary hover:bg-valora-secondary transition-all cursor-pointer shadow-lg hover:shadow-xl active:scale-[0.98]"
+                                className="w-full py-3 px-6 rounded-lg font-bold text-xs sm:text-sm text-white bg-valora-primary hover:bg-valora-secondary transition-[background-color,box-shadow,transform] cursor-pointer shadow-lg hover:shadow-xl active:scale-[0.96]"
                             >
                                 Calcular con {detailTickers.length - inactiveTickers.length} empresa{(detailTickers.length - inactiveTickers.length) !== 1 ? "s" : ""} — BOA {detailBoa.toFixed(2)}
                             </button>
@@ -316,10 +316,10 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                         data-tour="kapital-subsector-item"
                                         data-index={idx}
                                         onClick={() => !isPrincipal && onOpenDetail(sub, allTickersConBoa, savedTickers)}
-                                        className={`rounded-xl border shadow-sm transition-all px-4 py-3.5 flex items-center justify-between gap-2 ${
+                                        className={`rounded-xl border shadow-sm transition-[background-color,border-color,opacity] px-4 py-3.5 flex items-center justify-between gap-2 ${
                                             isPrincipal
                                                 ? "bg-blue-50/60 border-blue-200 cursor-not-allowed opacity-80"
-                                                : `group cursor-pointer active:scale-[0.99] ${
+                                                : `group cursor-pointer active:scale-[0.96] ${
                                                     isSelected
                                                         ? "bg-valora-primary/5 border-valora-primary shadow-md"
                                                         : "bg-white border-gray-200 shadow-sm hover:border-valora-primary/40 hover:shadow-md"
@@ -336,7 +336,7 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                         <div className="flex items-center gap-3 shrink-0">
                                             {isPrincipal && (
                                                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
-                                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                                     </svg>
                                                     Principal
@@ -344,7 +344,7 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                             )}
                                             {isSelected && !isPrincipal && (
                                                 <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full">
-                                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                                                     </svg>
                                                     Usado

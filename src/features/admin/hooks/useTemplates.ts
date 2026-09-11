@@ -18,9 +18,8 @@ export interface FormState {
   description: string;
   is_active: boolean;
   is_default: boolean;
-  onedrive_item_id?: string | null;
-  onedrive_filename?: string | null;
   original_filename?: string | null;
+  s3_object_key?: string | null;
 }
 
 export const EMPTY_FORM: FormState = {
@@ -28,8 +27,8 @@ export const EMPTY_FORM: FormState = {
   description: "",
   is_active: true,
   is_default: false,
-  onedrive_item_id: null,
-  onedrive_filename: null,
+  original_filename: null,
+  s3_object_key: null,
 };
 
 export const formatDate = (dateString: string) => {
@@ -159,8 +158,8 @@ export const useTemplates = () => {
       description: t.description ?? "",
       is_active: t.is_active,
       is_default: t.is_default,
-      onedrive_item_id: t.onedrive_item_id,
-      onedrive_filename: t.onedrive_filename,
+      original_filename: t.original_filename,
+      s3_object_key: t.s3_object_key,
     });
     setExcelFile(null);
     setDialogOpen(true);
@@ -214,7 +213,7 @@ export const useTemplates = () => {
         closeDialog();
 
         try {
-          if (editingId !== null && form.onedrive_item_id) {
+          if (editingId !== null && form.s3_object_key) {
             const data = await MainService.reUploadMasterTemplateFile(
               templateId,
               excelFile,
@@ -257,7 +256,7 @@ export const useTemplates = () => {
             setCodesModalOpen(true);
 
             addToast(
-              `Archivo "${excelFile.name}" subido a OneDrive correctamente.`,
+                `Archivo "${excelFile.name}" subido a S3 correctamente.`,
               "success"
             );
           }
@@ -282,8 +281,8 @@ export const useTemplates = () => {
   };
 
   const handleDownload = (t: MasterTemplate) => {
-    if (!t.onedrive_item_id) {
-      addToast("Esta plantilla no tiene archivo subido en OneDrive.", "warn");
+    if (!t.s3_object_key) {
+      addToast("Esta plantilla no tiene archivo subido en S3.", "warn");
       return;
     }
     const token = getToken();

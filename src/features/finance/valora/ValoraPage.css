@@ -314,7 +314,7 @@
   animation: ai-gradient-shift 4s ease infinite;
   box-shadow: 0 4px 15px -3px rgba(236, 72, 153, 0.4);
   color: white;
-  transition: all 0.2s ease-in-out;
+  transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
   border: none;
   cursor: pointer;
 }
@@ -325,7 +325,7 @@
 }
 
 .btn-ai-mesh:active {
-  transform: translateY(0px) scale(0.98);
+  transform: translateY(0px) scale(0.96);
 }
 
 .btn-ai-mesh:disabled {

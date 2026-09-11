@@ -1,4 +1,4 @@
-// features/finance/kapital/components/KapitalResultadosSection.tsx
+﻿// features/finance/kapital/components/KapitalResultadosSection.tsx
 import { FinancieraCard } from "./FinancieraCard";
 import type { KapitalResults } from "@/shared/types";
 import { ArrowRight, Sparkles, ChevronDown } from "lucide-react";
@@ -242,7 +242,7 @@ export const KapitalResultadosSection: React.FC<
                 onToggleForm();
                 onStartSensitivityTour?.();
               }}
-              className="mt-2 sm:mt-0 px-4 py-2 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100"
+              className="mt-2 sm:mt-0 px-4 py-2 flex items-center justify-between gap-3 text-left font-semibold transition-[background-color,border-color] shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100"
             >
               <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
                 <Sparkles className="h-5 w-5 shrink-0" />
@@ -283,7 +283,7 @@ export const KapitalResultadosSection: React.FC<
                 <button
                   type="button"
                   onClick={onOpenReport}
-                  className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer"
+                  className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-[background-color,box-shadow,transform] active:scale-[0.96] uppercase leading-tight tracking-wide cursor-pointer"
                 >
                   Reporte de Costo de Capital
                 </button>
@@ -294,7 +294,7 @@ export const KapitalResultadosSection: React.FC<
       </header>
       <section className="mx-auto flex w-full max-w-[1600px] flex-col items-center justify-center gap-4 lg:flex-row lg:flex-wrap">
         <div
-          className={`shrink-0 transform-gpu transition-all ease-out duration-700 will-change-transform ${cardMotion}`}
+          className={`shrink-0 transform-gpu transition-[transform,opacity] ease-out duration-700 ${cardMotion}`}
           style={{ transitionDelay: mounted ? "0ms" : "0ms" }}
         >
           <BoaIndicator
@@ -321,7 +321,7 @@ export const KapitalResultadosSection: React.FC<
         </div>
 
         <div
-          className={`w-full min-w-0 max-w-[430px] flex-1 basis-0 transform-gpu transition-all duration-700 ease-out will-change-transform ${cardMotion}`}
+          className={`w-full min-w-0 max-w-[430px] flex-1 basis-0 transform-gpu transition-[transform,opacity] duration-700 ease-out ${cardMotion}`}
           style={{ transitionDelay: mounted ? "140ms" : "0ms" }}
         >
           <FinancieraCard
@@ -334,7 +334,7 @@ export const KapitalResultadosSection: React.FC<
         </div>
 
         <div
-          className={`w-full min-w-0 max-w-[430px] flex-1 basis-0 transform-gpu transition-all duration-700 ease-out will-change-transform ${cardMotion}`}
+          className={`w-full min-w-0 max-w-[430px] flex-1 basis-0 transform-gpu transition-[transform,opacity] duration-700 ease-out ${cardMotion}`}
           style={{ transitionDelay: mounted ? "280ms" : "0ms" }}
         >
           <FinancieraCard
@@ -351,7 +351,7 @@ export const KapitalResultadosSection: React.FC<
 
         {showCompanyCard && empresaData && (
           <div
-            className={`w-full min-w-0 max-w-[430px] flex-1 basis-0 transform-gpu transition-all duration-700 ease-out will-change-transform ${cardMotion}`}
+            className={`w-full min-w-0 max-w-[430px] flex-1 basis-0 transform-gpu transition-[transform,opacity] duration-700 ease-out ${cardMotion}`}
             style={{ transitionDelay: mounted ? "420ms" : "0ms" }}
           >
             <FinancieraCard

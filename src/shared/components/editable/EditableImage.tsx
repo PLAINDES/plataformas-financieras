@@ -1,4 +1,4 @@
-// src/components/editable/EditableImage.tsx
+﻿// src/components/editable/EditableImage.tsx
 
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -162,7 +162,7 @@ export function EditableImage({
                         className={`
               ${className}
               flex items-center justify-center bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg
-              ${isAdmin ? "hover:bg-slate-200 hover:border-blue-400 transition-all duration-200" : ""}
+              ${isAdmin ? "hover:bg-slate-200 hover:border-blue-400 transition-[background-color,border-color] duration-200" : ""}
             `}
                     >
                         <div className="flex flex-col items-center gap-1 px-2 text-center">
@@ -180,7 +180,7 @@ export function EditableImage({
                         alt={alt}
                         className={`
               ${className}
-              ${isAdmin ? "transition-all duration-200 group-hover:ring-4 group-hover:ring-blue-500/50 group-hover:brightness-90" : ""}
+              ${isAdmin ? "transition-[box-shadow,filter] duration-200 group-hover:ring-4 group-hover:ring-blue-500/50 group-hover:brightness-90" : ""}
             `}
                         onError={(e) => {
                             e.currentTarget.onerror = null;

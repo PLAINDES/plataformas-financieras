@@ -1,4 +1,4 @@
-// src/components/layout/Header.tsx
+﻿// src/components/layout/Header.tsx
 
 import { useState, useEffect } from "react";
 import { UserMenu } from "../common/UserMenu";
@@ -93,7 +93,7 @@ export function Header({
                 }}
             >
                 <header
-                    className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 px-6 py-4 md:px-12 md:py-6 flex items-center justify-between ${isSticky ? "bg-white shadow-md py-3" : "bg-transparent"
+                    className={`fixed top-0 left-0 w-full z-50 transition-[background-color,box-shadow,padding] duration-300 px-6 py-4 md:px-12 md:py-6 flex items-center justify-between ${isSticky ? "bg-white shadow-md py-3" : "bg-transparent"
                         }`}
                 >
                     <div className="flex items-center flex-1">
@@ -145,7 +145,7 @@ export function Header({
                             ) : (
                                 <button
                                     onClick={openLogin}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center transition-all"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center transition-colors"
                                 >
                                     <i className="fa-solid fa-arrow-right-to-bracket mr-2"></i>
                                     <span className="hidden sm:inline">Iniciar sesión</span>

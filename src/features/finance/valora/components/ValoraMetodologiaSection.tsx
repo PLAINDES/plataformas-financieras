@@ -1,4 +1,4 @@
-export interface ValoraMetodologiaSectionProps {
+﻿export interface ValoraMetodologiaSectionProps {
   selectedMetodologiaItem: "curso" | "mercado";
   isCategoriaOpen: boolean;
   isModuloOpen: boolean;
@@ -50,7 +50,7 @@ export const ValoraMetodologiaSection: React.FC<
             <div>
               <button
                 type="button"
-                className={`flex w-full ${isCategoriaOpen ? "text-blue-600" : "text-gray-700"} items-center justify-between rounded bg-gray-50 p-5 text-sm font-bold transition-all`}
+                className={`flex w-full ${isCategoriaOpen ? "text-blue-600" : "text-gray-700"} items-center justify-between rounded bg-gray-50 p-5 text-sm font-bold transition-colors`}
                 onClick={onToggleCategoria}
                 aria-expanded={isCategoriaOpen}
               >
@@ -60,7 +60,7 @@ export const ValoraMetodologiaSection: React.FC<
                 ></i>
               </button>
               <div
-                className={`overflow-hidden bg-white px-5 text-sm text-gray-700 transition-all duration-300 ${isCategoriaOpen ? "max-h-20 py-5 opacity-100" : "max-h-0 py-0 opacity-0"}`}
+                className={`overflow-hidden bg-white px-5 text-sm text-gray-700 transition-[max-height,padding,opacity] duration-300 ${isCategoriaOpen ? "max-h-20 py-5 opacity-100" : "max-h-0 py-0 opacity-0"}`}
               >
                 <button
                   type="button"
@@ -84,7 +84,7 @@ export const ValoraMetodologiaSection: React.FC<
                 ></i>
               </button>
               <div
-                className={`overflow-hidden bg-white px-5 text-sm text-gray-700 transition-all duration-300 ${isModuloOpen ? "max-h-20 py-5 opacity-100" : "max-h-0 py-0 opacity-0"}`}
+                className={`overflow-hidden bg-white px-5 text-sm text-gray-700 transition-[max-height,padding,opacity] duration-300 ${isModuloOpen ? "max-h-20 py-5 opacity-100" : "max-h-0 py-0 opacity-0"}`}
               >
                 <button
                   type="button"

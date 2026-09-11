@@ -3,6 +3,8 @@
 import type { User } from "../../../features/auth/types/user.types";
 import { UserMenu } from "@/shared/components/common/UserMenu";
 import { useAuth } from "../../auth/hooks/useAuth";
+import { Link } from "react-router-dom";
+import { FolderKanban } from "lucide-react";
 
 interface LandingUserMenuProps {
   user: User;
@@ -16,7 +18,7 @@ export function LandingUserMenu({ user, onLogout }: LandingUserMenuProps) {
     <UserMenu user={user} onLogout={onLogout}>
       {/* Administrador Opciones */}
       {isAdmin && (
-        <div className="px-2">
+        <div className="px-2 pb-1 mb-1 border-b border-gray-100">
           <a
             href="/admin"
             target="_blank"
@@ -42,10 +44,23 @@ export function LandingUserMenu({ user, onLogout }: LandingUserMenuProps) {
                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
-            Panel Administrador
+            Portal de Administración
           </a>
         </div>
       )}
+      <div className="px-2">
+        <Link
+          to="/usuario/proyectos"
+          state={{ fromLanding: true }}
+          className="flex items-center px-3 py-2 text-sm font-semibold text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+        >
+          <FolderKanban
+            className="w-4 h-4 mr-3 text-gray-400 group-hover:text-blue-500"
+            strokeWidth={1.8}
+          />
+          Mis proyectos
+        </Link>
+      </div>
     </UserMenu>
   );
 }

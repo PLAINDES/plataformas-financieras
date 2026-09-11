@@ -1,4 +1,4 @@
-// src/components/auth/ProtectedRoute.tsx
+﻿// src/components/auth/ProtectedRoute.tsx
 
 import type { ReactNode } from "react";
 import { Navigate, Link } from "react-router-dom";
@@ -67,7 +67,7 @@ export function ProtectedRoute({
           <div className="space-y-3">
             <Link
               to="/"
-              className="block w-full py-3 px-4 bg-gray-900 hover:bg-black text-white font-semibold rounded-xl transition-all shadow-lg"
+              className="block w-full py-3 px-4 bg-gray-900 hover:bg-black text-white font-semibold rounded-xl transition-[background-color,box-shadow] shadow-lg"
             >
               Volver al inicio
             </Link>

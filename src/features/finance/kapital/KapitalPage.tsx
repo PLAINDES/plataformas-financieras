@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { NavBar } from "./components/NavBar";
 import { NavigationTabs } from "./components/NavigationTabs";
 import { FormSidebar } from "./components/FormSidebar";
@@ -155,11 +155,6 @@ const KapitalPage: React.FC = () => {
         document.body.style.overflow = isFormOpen && isMobile ? "hidden" : "unset";
         return () => { document.body.style.overflow = "unset"; };
     }, [isFormOpen]);
-
-    // Pre-warm session
-    useEffect(() => {
-        if (!calc.currentCalculation) session.prewarmSession();
-    }, [calc.currentCalculation]);
 
     // Load from URL
     useEffect(() => { calc.loadFromUrl(); }, []);
@@ -323,9 +318,6 @@ const KapitalPage: React.FC = () => {
                     onClose={() => setIsReportViewerOpen(false)}
                     reportProductId={selectedReportProductId}
                     calculationId={calc.currentCalculation?.id}
-                    isSessionFresh={calc.isSessionFresh}
-                    setIsSessionFresh={calc.setIsSessionFresh}
-                    prewarmedSessionId={session.prewarmedSessionId}
                 />
             ) : (
                 <KapitalResults
@@ -409,7 +401,7 @@ const KapitalPage: React.FC = () => {
             />
 
             <main
-                className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} h-screen transition-all duration-300 ${isFormOpen ? "lg:pl-90" : "lg:pl-0"}`}
+                className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} h-screen transition-[padding] duration-300 ${isFormOpen ? "lg:pl-90" : "lg:pl-0"}`}
             >
                 {mainContent}
             </main>
@@ -480,7 +472,7 @@ const KapitalPage: React.FC = () => {
 
             {/* Mobile/Tablet Modal */}
             {modal.subsectorModalOpen && (
-                <div className="fixed inset-0 z-120 flex lg:hidden items-start justify-center overflow-y-auto bg-gray-900/40 backdrop-blur-sm transition-all animate-in fade-in p-2 sm:p-4">
+                <div className="fixed inset-0 z-120 flex lg:hidden items-start justify-center overflow-y-auto bg-gray-900/40 backdrop-blur-sm transition-opacity animate-in fade-in p-2 sm:p-4">
                     <div className={`bg-white rounded-xl shadow-2xl w-[96dvw] max-w-2xl overflow-hidden flex flex-col animate-in zoom-in-95 justify-between ${modalData ? "h-[calc(100dvh-1rem)] sm:h-[85dvh]" : "h-auto"}`}>
                         <SubsectorModal
                             subsectorDetail={modal.subsectorDetail}

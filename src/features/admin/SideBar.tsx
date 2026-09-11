@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { UserMenu } from "@/shared/components/common/UserMenu";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
@@ -29,6 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const navigate = useNavigate();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const location = useLocation?.() || { pathname: "" };
+  const hasAnimated = useRef(false);
 
   const handleLogout = () => {
     logout();
@@ -54,12 +55,12 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       title: "Métricas",
       href: "/admin/metricas",
-      icon: <BarChart3 className="h-4 w-4" />,
+      icon: <BarChart3 className="h-4 w-4" strokeWidth={1.5} />,
     },
     {
       title: "Usuarios",
       href: "/admin/usuarios",
-      icon: <User />,
+      icon: <User className="h-4 w-4" strokeWidth={1.5} />,
     },
     {
       title: "Configuración",
@@ -75,6 +76,29 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
+      <style>{`
+        @keyframes sidebarItemEnter {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+            filter: blur(4px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0px);
+          }
+        }
+        .sidebar-item-enter {
+          opacity: 0;
+          animation: sidebarItemEnter 350ms cubic-bezier(0.2, 0, 0, 1) forwards;
+        }
+        nav a:active {
+          transform: scale(0.96);
+          transition: transform 150ms ease-out;
+        }
+      `}</style>
+
       {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
@@ -86,26 +110,41 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar */}
       <div
         id="kt_app_sidebar"
-        className={`fixed left-0 top-0 z-50 flex h-dvh flex-col overflow-hidden bg-slate-900 transition-all duration-300
+        className={`fixed left-0 top-0 z-50 flex h-dvh flex-col transition-[width,transform] duration-300
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
           ${isMinimized ? "w-18.75" : "w-62.5"}
         `}
+        style={{ backgroundColor: "#0c1524" }}
       >
         {/* Logo Section */}
-        <div className="py-6  relative text-center border-b px-0 border-gray-600 border-dashed">
-          <Link to="/admin" className="">
-            <h3
-              className={`font-bold text-white transition-all duration-300 ${isMinimized ? "text-sm" : "text-md"}`}
-            >
-              {isMinimized ? "ADM" : "ADMINISTRADOR"}
-            </h3>
+        <div className="relative flex items-center justify-center border-b border-white/10 border-dashed px-4 py-7">
+          {/* Radial glow behind logo */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: isMinimized
+                ? "radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, transparent 70%)"
+                : "radial-gradient(ellipse 80% 70% at center, rgba(255,255,255,0.06) 0%, transparent 70%)",
+            }}
+          />
+          <Link to="/admin" className="relative flex items-center justify-center">
+            {isMinimized ? (
+              <span className="text-sm font-bold tracking-wide" style={{ color: "#2dd4bf" }}>
+                PF
+              </span>
+            ) : (
+              <img
+                src="/images/logo-profinance.png"
+                alt="ProFinance"
+                className="h-7 w-auto object-contain"
+                style={{ filter: "brightness(1.1) contrast(1.05)" }}
+              />
+            )}
           </Link>
           {/* Toggle Button - Desktop Only */}
           <button
             onClick={onToggleMinimize}
-            className={
-              "absolute -right-3.75  top-1/2 hidden h-7.5 w-7.5 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-110 lg:flex"
-            }
+            className="absolute -right-3.75 top-1/2 hidden h-7.5 w-7.5 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-[1.02] lg:flex cursor-pointer"
             aria-label="Toggle sidebar"
           >
             <ArrowIcon rotated={!isMinimized} />
@@ -117,7 +156,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {/* Menu Heading */}
           <div className="mb-2 px-3 pt-5">
             {!isMinimized && (
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#4a6a8a" }}>
                 Módulos
               </span>
             )}
@@ -136,19 +175,31 @@ const Sidebar: React.FC<SidebarProps> = ({
                   }
                   setIsMobileOpen(false);
                 }}
-                className={`group flex items-center rounded-lg px-3 py-1.5 transition-all duration-200
+                className={`${!hasAnimated.current ? "sidebar-item-enter" : ""} group flex items-center rounded-lg px-3 py-2 transition-all duration-150 ease-out
                   ${
                     isActive(item.href)
-                      ? "bg-[#1b1b28] text-[#3699FF]"
-                      : "text-gray-400 hover:bg-[#1b1b28] hover:text-white"
+                      ? "text-[#5eead4]"
+                      : "text-gray-400 hover:text-white"
                   }
                   ${isMinimized ? "justify-center" : ""}
                 `}
+                style={{
+                  animationDelay: `${index * 80}ms`,
+                  background: isActive(item.href)
+                    ? "linear-gradient(135deg, rgba(45, 212, 191, 0.12) 0%, rgba(45, 212, 191, 0.04) 100%)"
+                    : undefined,
+                }}
+                onAnimationEnd={() => {
+                  if (!hasAnimated.current) {
+                    hasAnimated.current = true;
+                  }
+                }}
                 title={isMinimized ? item.title : ""}
               >
                 {/* Icon */}
                 <span
-                  className={`shrink-0 flex justify-center ${isMinimized ? "" : "mr-3"}`}
+                  className={`shrink-0 flex justify-center transition-colors duration-150 ${isMinimized ? "" : "mr-3"}`}
+                  style={{ color: isActive(item.href) ? "#2dd4bf" : undefined }}
                 >
                   <span className="inline-block h-4 w-4">{item.icon}</span>
                 </span>
@@ -160,7 +211,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                 {/* Active Indicator */}
                 {isActive(item.href) && !isMinimized && (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#3699FF]" />
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#2dd4bf" }} />
                 )}
               </Link>
             ))}
@@ -169,16 +220,16 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* User Profile Section */}
         {user && (
-          <div className="border-t border-dashed border-gray-600 p-4">
+          <div className="border-t border-white/10 border-dashed p-4">
             <UserMenu
               user={user}
               onLogout={handleLogout}
               onlyLogout={true}
               customTrigger={
                 <div
-                  className={`flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-white/10 cursor-pointer ${isMinimized ? "justify-center" : ""}`}
+                  className={`flex items-center gap-3 rounded-xl p-2 transition-colors duration-150 hover:bg-white/10 cursor-pointer ${isMinimized ? "justify-center" : ""}`}
                 >
-                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gray-700">
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gray-700 outline outline-1 outline-white/10">
                     <img
                       src={
                         user.avatar ||
@@ -208,7 +259,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile Toggle Button */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="fixed bottom-4 left-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#1e1e2d] text-white shadow-lg lg:hidden"
+        className="fixed bottom-4 left-4 z-50 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg lg:hidden"
+        style={{ backgroundColor: "#0c1524" }}
         aria-label="Toggle mobile menu"
       >
         {isMobileOpen ? (

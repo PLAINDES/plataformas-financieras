@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -95,9 +95,7 @@ export function PlatformCardsSection({
         cardsData.items[0]?.name || ""
     );
     void _activeVideoTitle;
-    const [hoveredCardId, setHoveredCardId] = useState<string | null>(
-        cardsData.items[0]?.id || null
-    );
+    const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
     const [currentIndex, setCurrentIndex] = useState<number>(0);
     const videoRef = useRef<HTMLVideoElement>(null);
     const cardsContainerRef = useRef<HTMLDivElement>(null);
@@ -107,7 +105,6 @@ export function PlatformCardsSection({
             const firstCard = cardsData.items[0];
             setActiveVideoUrl(firstCard.videoUrl);
             setActiveVideoTitle(firstCard.name);
-            setHoveredCardId(firstCard.id);
         }
     }, [cardsData.items]);
 
@@ -131,6 +128,12 @@ export function PlatformCardsSection({
                 videoRef.current.load();
                 videoRef.current.play();
             }
+        }
+    };
+
+    const handleCardLeave = () => {
+        if (window.innerWidth >= 992) {
+            setHoveredCardId(null);
         }
     };
 
@@ -259,6 +262,7 @@ export function PlatformCardsSection({
                                             isEditing={helpers.isEditing}
                                             onActivate={() => handleCardClick(card, index)}
                                             onHover={() => handleCardHover(card)}
+                                            onLeave={handleCardLeave}
                                             helpers={helpers}
                                         />
                                     </div>
@@ -271,26 +275,26 @@ export function PlatformCardsSection({
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="absolute top-1/2 -translate-y-1/2 left-2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 backdrop-blur-sm shadow-lg hover:shadow-xl border-gray-200/50 hover:scale-110 active:scale-95 lg:hidden group"
+                                    className="absolute top-1/2 -translate-y-1/2 left-2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 backdrop-blur-sm shadow-lg hover:shadow-xl border-gray-200/50 hover:scale-[1.02] active:scale-[0.96] lg:hidden group"
                                     onClick={handlePrevCard}
                                     aria-label="Card anterior"
                                 >
                                     <ChevronLeft
                                         className="text-gray-700 group-hover:text-indigo-600 transition-colors"
-                                        strokeWidth={1}
+                                        strokeWidth={1.5}
                                     />
                                 </Button>
 
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="absolute top-1/2 -translate-y-1/2 right-2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 backdrop-blur-sm shadow-lg hover:shadow-xl border-gray-200/50 hover:scale-110 active:scale-95 lg:hidden group"
+                                    className="absolute top-1/2 -translate-y-1/2 right-2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 backdrop-blur-sm shadow-lg hover:shadow-xl border-gray-200/50 hover:scale-[1.02] active:scale-[0.96] lg:hidden group"
                                     onClick={handleNextCard}
                                     aria-label="Card siguiente"
                                 >
                                     <ChevronRight
                                         className="text-gray-700 group-hover:text-indigo-600 transition-colors"
-                                        strokeWidth={1}
+                                        strokeWidth={1.5}
                                     />
                                 </Button>
                             </>
@@ -308,6 +312,7 @@ interface PlatformCardProps {
     isEditing: boolean;
     onActivate: () => void;
     onHover: () => void;
+    onLeave: () => void;
     helpers: any;
 }
 
@@ -317,6 +322,7 @@ function PlatformCard({
     isEditing,
     onActivate,
     onHover,
+    onLeave,
     helpers,
 }: PlatformCardProps) {
     const handleClick = () => {
@@ -325,6 +331,10 @@ function PlatformCard({
 
     const handleMouseEnter = () => {
         if (!isEditing && window.innerWidth >= 992) onHover();
+    };
+
+    const handleMouseLeave = () => {
+        if (!isEditing && window.innerWidth >= 992) onLeave();
     };
 
     if (isEditing) {
@@ -350,6 +360,7 @@ function PlatformCard({
             className={`video-card ${isActive ? "active" : ""} ${!isAvailable ? "not-available pointer-events-none" : ""}`}
             onClick={handleClick}
             onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
         >
             {helpers.onEdit && (
                 <div className="pointer-events-auto">

@@ -1,4 +1,4 @@
-// features/finance/kapital/components/FinancieraCard.tsx
+﻿// features/finance/kapital/components/FinancieraCard.tsx
 
 import { BalanceSheetBlock } from "./BalanceSheetBlock";
 import type { KapitalMarketResults } from "@/shared/types";
@@ -29,7 +29,7 @@ export const FinancieraCard: React.FC<FinancieraCardProps> = ({
 }) => {
   return (
     <article
-      className="min-w-0 max-w-[450px] bg-white shadow-md shadow-slate-300 flex flex-col w-full rounded-3xl h-full transition-all duration-300"
+      className="min-w-0 max-w-[450px] bg-white shadow-md shadow-slate-300 flex flex-col w-full rounded-3xl h-full transition-[box-shadow] duration-300"
     >
       <main className="flex flex-col gap-y-2 flex-1">
         <div className={`flex flex-col flex-1 ${compact ? 'px-4 py-4 gap-y-2' : 'px-6 md:px-8 py-6 gap-y-4'}`}>

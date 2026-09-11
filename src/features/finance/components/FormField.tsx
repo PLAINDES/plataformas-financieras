@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import type { FormData } from "@/shared/types/ValoraTypes";
@@ -463,7 +463,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                                     className="flex h-5 w-5 items-center justify-center rounded-full bg-valora-primary/5 text-[11px] font-bold text-valora-primary cursor-pointer select-none"
                                 >
                                     <svg className="h-3 w-3 text-valora-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </span>
                             </div>

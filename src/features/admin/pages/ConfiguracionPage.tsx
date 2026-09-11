@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+﻿import React, { useState, useRef, useEffect, useCallback } from "react";
 import { MainService } from "@/shared/services/main.service";
 import {
   ToastStack,
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { BaseFinancialItem, DamodaranItem } from "@/shared/types"; // Fallback import
-import { Upload, RefreshCw } from "lucide-react";
+import { Upload } from "lucide-react";
 
 import { RfTable } from "./configuracion-tabs/RfTable";
 import { EmbiTable } from "./configuracion-tabs/EmbiTable";
@@ -932,34 +932,6 @@ export const ConfiguracionPage = () => {
                 <Upload className="h-4 w-4 mr-2" />
                 Importar Excel ({activeFrequency === "bvl" ? "BVL" : activeTab.toUpperCase()})
               </button>
-              {activeFrequency === "subsectores" && (
-                <button
-                  onClick={async () => {
-                    const allTickers = subsectoresData.flatMap((item: any) => item.empresas || []).filter((t: string) => t?.trim());
-                    const unique = Array.from(new Set(allTickers.map((t: string) => t.trim().toUpperCase()))).filter(Boolean) as string[];
-                    if (unique.length === 0) {
-                      addToast("error", "No hay empresas registradas para recalcular.");
-                      return;
-                    }
-                    try {
-                      const res = await MainService.startSubsectoresBoa(unique);
-                      if (res?.job_id) {
-                        setActiveBoaJob({ jobId: res.job_id, total: res.total || unique.length, processed: 0, failed: 0 });
-                        startBoaPolling(res.job_id, res.total || unique.length).catch(() => {});
-                        addToast("info", `Recalculando BOA ponderado para ${unique.length} empresas seleccionadas — sin re-subir Excel.`);
-                      } else if (res?.message) {
-                        addToast("info", res.message);
-                      }
-                    } catch (err: any) {
-                      addToast("error", err.message || "Error al recalcular BOA ponderado.");
-                    }
-                  }}
-                  className="inline-flex items-center px-4 py-2 text-xs sm:text-sm border border-blue-200 shadow-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Recalcular BOA ponderado
-                </button>
-              )}
             </div>
           )}
         </div>
@@ -1195,7 +1167,7 @@ export const ConfiguracionPage = () => {
                 },
               });
             }}
-            className="flex items-center justify-center h-12 w-12 rounded-full shadow-lg bg-white/80 hover:bg-red-500/80 backdrop-blur-sm border border-slate-200/80 text-slate-600 hover:text-white transition-all"
+            className="flex items-center justify-center h-12 w-12 rounded-full shadow-lg bg-white/80 hover:bg-red-500/80 backdrop-blur-sm border border-slate-200/80 text-slate-600 hover:text-white transition-[background-color,color]"
             title="Cancelar cálculo BOA"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
