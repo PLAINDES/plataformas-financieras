@@ -3,6 +3,7 @@ name: Deploy Frontend Test - New Financieras
 on:
   push:
     branches: ["dev"]
+    workflow_dispatch:
 
 jobs:
   deploy:
