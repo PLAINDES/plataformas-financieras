@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { ArrowRight, BarChart3, PieChart, Sparkles } from "lucide-react";
 import { ValoraResultsHeader } from "./ValoraResultsHeader";
 import { ValoraBalanceSheetBlock } from "./ValoraBalanceSheetBlock";
@@ -120,7 +120,7 @@ export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps>
         <div className="flex w-full justify-center lg:justify-end">
           <section className="flex w-full max-w-105 flex-col items-center justify-center gap-2 overflow-visible rounded-[24px] sm:w-fit">
             {coverUrl && <div onClick={onOpenReport} className="w-fit h-fit cursor-pointer"><Book href={coverUrl} width={95} height={130} interactive /></div>}
-            <button type="button" onClick={onOpenReport} className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer">
+            <button type="button" onClick={onOpenReport} className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-[background-color,box-shadow,transform] active:scale-[0.96] uppercase leading-tight tracking-wide cursor-pointer">
               Generar reporte
             </button>
           </section>
@@ -141,7 +141,7 @@ export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps>
           <button
             type="button"
             onClick={onOpenFormPanel}
-            className="px-4 py-2 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100"
+            className="px-4 py-2 flex items-center justify-between gap-3 text-left font-semibold transition-[background-color,border-color] shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100"
           >
             <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
               <Sparkles className="h-5 w-5 shrink-0" />

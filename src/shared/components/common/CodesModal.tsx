@@ -287,8 +287,8 @@ export const CodesModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-in fade-in duration-200 ease-out">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl mx-4 p-6 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 ease-out">
         <div className="flex items-center justify-between mb-5 sticky top-0 bg-white pb-4 z-10">
           <div>
             <h2 className="text-lg font-bold text-gray-900">

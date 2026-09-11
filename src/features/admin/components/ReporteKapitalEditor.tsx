@@ -83,13 +83,13 @@ export const ReporteKapitalEditor: React.FC = () => {
       {/* Lightbox */}
       {lightboxOpen && selectedCoverUrl && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 ease-out"
           onClick={() => setLightboxOpen(false)}
         >
           <img
             src={selectedCoverUrl!}
             alt={"portada"}
-            className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-2xl object-contain"
+            className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-2xl object-contain animate-in fade-in zoom-in-95 duration-200 ease-out"
             onClick={(e) => e.stopPropagation()}
           />
           <button

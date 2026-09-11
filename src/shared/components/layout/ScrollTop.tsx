@@ -40,17 +40,17 @@ export function ScrollTop({ whatsappOpen = false }: ScrollTopProps) {
                 bg-valora-primary text-white
                 shadow-lg shadow-valora-primary/30
                 cursor-pointer
-                hover:bg-valora-secondary hover:scale-110
+                hover:bg-valora-secondary hover:scale-[1.02] active:scale-[0.96]
                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-valora-primary
                 ${position}
-                transition-all duration-300 ease-out
+                transition-[opacity,transform,background-color] duration-300 ease-out
                 ${isVisible
                     ? "opacity-100 translate-y-0 scale-100 rotate-0 pointer-events-auto"
                     : "opacity-0 translate-y-4 scale-90 -rotate-12 pointer-events-none"
                 }
             `}
         >
-            <ArrowUp className="w-5 h-5" strokeWidth={2.5} />
+            <ArrowUp className="w-5 h-5" strokeWidth={2} />
         </button>
     );
 }

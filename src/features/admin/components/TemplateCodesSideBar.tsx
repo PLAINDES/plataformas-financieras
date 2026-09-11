@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -52,7 +52,7 @@ export const FieldItem: React.FC<{
       e.dataTransfer.effectAllowed = "copy";
     }}
     onClick={() => onCodeClick?.(field)}
-    className="flex cursor-grab active:cursor-grabbing items-center gap-3 rounded-lg border border-transparent px-3 py-2 transition-all hover:border-blue-100 hover:bg-blue-50"
+    className="flex cursor-grab active:cursor-grabbing items-center gap-3 rounded-lg border border-transparent px-3 py-2 transition-[border-color,background-color] hover:border-blue-100 hover:bg-blue-50"
   >
     {/** show thumbnail if available */}
     {((field as any).template_code_image_url as string) && (
@@ -120,6 +120,8 @@ export const TemplateCodesSideBar: React.FC<TemplateCodesSideBarProps> = ({
   const isChartOrTable = (tc: TemplateCodeBasic) => {
     const text = `${tc.nombre} ${tc.code}`.toLowerCase();
     return (
+      Boolean((tc as any).template_code_image_url) ||
+      Boolean((tc as any).template_code_image_id) ||
       text.includes("grafico") ||
       text.includes("gráfico") ||
       text.includes("tabla")

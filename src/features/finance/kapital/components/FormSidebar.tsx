@@ -151,7 +151,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                       suffix="coef."
                                       layout="horizontal"
                                       showClearButton={false}
-                                      inputClassName="col-span-10"
+                                      inputClassName="col-span-9"
                                       disabled={!isWaccCalculated}
                                     />
                                     </div>
@@ -163,7 +163,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     )}
 
                                     {isWaccCalculated && canSensibilizeBeta && (
-                                      <div className="absolute right-0 top-0 bottom-0 w-[25%] flex items-center justify-end">
+                                      <div className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end">
                                         <button
                                           data-tour="kapital-beta-sensitivity-btn"
                                           type="button"
@@ -178,7 +178,15 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                             "disabled:cursor-not-allowed disabled:opacity-50"
                                           )}
                                         >
-                                          {isSearchingBeta ? "Buscando..." : "Obtén Tu Beta Por Subsector"}
+                                          {isSearchingBeta ? (
+                                            "Buscando..."
+                                          ) : (
+                                            <span>
+                                              Obtén Tu Beta
+                                              <br />
+                                              Por Subsector
+                                            </span>
+                                          )}
                                         </button>
                                       </div>
                                     )}
@@ -379,17 +387,17 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                     {/* Footer - Submit Button */}
                     <div
                         data-tour="kapital-calculate"
-                        className={`sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 transition-all duration-300 w-full`}
+                        className={`sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 transition-[box-shadow] duration-300 w-full`}
                     >
                         <button
                             type="submit"
                             form="wacc-form"
                             disabled={loading}
                             className={`
-                cursor-pointer w-full py-3 px-6 rounded-lg font-bold text-xs md:text-sm transition-all duration-200 
+                cursor-pointer w-full py-3 px-6 rounded-lg font-bold text-xs md:text-sm transition-[background-color,box-shadow,transform,color] duration-200 
                 ${loading
                                     ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                                    : "bg-valora-primary text-white hover:bg-valora-secondary shadow-lg hover:shadow-xl active:scale-95"
+                                    : "bg-valora-primary text-white hover:bg-valora-secondary shadow-lg hover:shadow-xl active:scale-[0.96]"
                                 }
               `}
                         >
@@ -446,7 +454,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                     <div className="flex items-start gap-3">
                         <div className="mt-0.5 shrink-0 bg-valora-primary/10 p-1.5 rounded-full">
                             <svg className="w-4 h-4 text-valora-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
                         <div>
@@ -462,3 +470,4 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
         </>
     );
 };
+

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { CodesModal } from "@/shared/components/common/CodesModal";
 import { ToastStack } from "@/shared/components/common/ToastStack";
 import { ConfirmationModal } from "@/shared/components/common/ConfirmationModal";
+import { TableSkeleton } from "../components/Skeleton";
 
 import {
   Plus,
@@ -367,10 +368,7 @@ export const PlantillasMaestrasPage = () => {
 
             {/* Table */}
             {loading ? (
-              <div className="flex items-center justify-center py-20 text-gray-500">
-                <Loader2 className="animate-spin h-6 w-6 mr-2" />
-                Cargando plantillas…
-              </div>
+              <TableSkeleton rows={4} cols={5} />
             ) : templates.length === 0 ? (
               <div className="rounded-xl border-2 border-dashed border-gray-200 px-8 py-16 text-center text-gray-400">
                 <p className="text-lg font-medium">No hay plantillas maestras</p>
@@ -445,14 +443,14 @@ export const PlantillasMaestrasPage = () => {
                             </button>
                           </td>
                           <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900">
-                            {t.onedrive_filename ? (
+                            {t.s3_object_key ? (
                               <span
                                 className="flex items-center gap-1.5 text-xs text-blue-600 font-medium truncate max-w-48"
-                                title={t.onedrive_filename}
+                                title={t.original_filename || t.s3_object_key || ""}
                               >
                                 <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
                                 <span className="truncate">
-                                  {t.original_filename || t.onedrive_filename}
+                                  {t.original_filename || t.s3_object_key}
                                 </span>
                               </span>
                             ) : (
@@ -479,11 +477,11 @@ export const PlantillasMaestrasPage = () => {
                               <button
                                 onClick={() => handleDownload(t)}
                                 title={
-                                  t.onedrive_item_id
+                                  t.s3_object_key
                                     ? "Descargar archivo Excel"
                                     : "Sin archivo Excel"
                                 }
-                                disabled={!t.onedrive_item_id}
+                                disabled={!t.s3_object_key}
                                 className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-1.5 rounded-md transition-colors disabled:opacity-30 disabled:hover:bg-indigo-50"
                               >
                                 <Download className="w-4 h-4" />
@@ -563,7 +561,7 @@ export const PlantillasMaestrasPage = () => {
                   Copias de Trabajo — Valora/Kapital ({valoraCopiesEnv})
                 </h2>
                 <p className="text-[11px] text-gray-500 mt-1">
-                  Archivos generados por el motor de cálculo cuando persist_changes=True. Desde aquí puedes inspeccionar el Excel resultante o limpiar copias.
+                  Archivos generados por el motor de cálculo en S3 (templates/tmps/valora|kapital). Desde aquí puedes inspeccionar el Excel resultante o limpiar copias.
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -743,8 +741,8 @@ export const PlantillasMaestrasPage = () => {
 
             {/* == Set Default Valora Confirm Dialog ================================ */}
             {valoraSetDefaultTarget && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => !settingValoraDefault && setValoraSetDefaultTarget(null)}>
-                <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-in fade-in duration-200 ease-out" onClick={() => !settingValoraDefault && setValoraSetDefaultTarget(null)}>
+                <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 animate-in fade-in zoom-in-95 duration-200 ease-out" onClick={(e) => e.stopPropagation()}>
                   <h3 className="text-lg font-semibold text-slate-900 mb-2">Asignar como plantilla actual</h3>
                   <p className="text-sm text-slate-500 mb-6">
                     ¿Deseas establecer <strong>"{valoraSetDefaultTarget.original_name}"</strong> como la plantilla actual de Valora? Los usuarios descargarán esta versión por defecto.
@@ -774,8 +772,8 @@ export const PlantillasMaestrasPage = () => {
 
         {/* == Create / Edit Dialog ============================================ */}
         {dialogOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 ease-out">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200 ease-out">
               <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
                 <h3 className="text-base font-bold text-gray-900">
                   {editingId === null ? "Nueva Plantilla Maestra" : "Editar Plantilla Maestra"}
@@ -842,7 +840,7 @@ export const PlantillasMaestrasPage = () => {
                           <FileSpreadsheet className="w-4 h-4" />
                           {excelFile.name}
                         </>
-                      ) : form.onedrive_filename ? (
+                      ) : form.s3_object_key ? (
                         "Reemplazar archivo Excel"
                       ) : (
                         "Seleccionar archivo Excel"
@@ -930,8 +928,8 @@ export const PlantillasMaestrasPage = () => {
         />
 
         {extractingAfterCreate && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60">
-            <div className="bg-white rounded-xl shadow-2xl px-8 py-6 flex items-center gap-4 max-w-md mx-4">
+          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 animate-in fade-in duration-200 ease-out">
+            <div className="bg-white rounded-xl shadow-2xl px-8 py-6 flex items-center gap-4 max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200 ease-out">
               <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
               <div>
                 <h4 className="text-sm font-bold text-gray-900">

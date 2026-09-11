@@ -6,7 +6,7 @@ import { Proyectos } from "./Proyectos";
 import { LoginModal } from "@/features/auth/components/LoginModal";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
 import { useToast } from "@/shared/components/common/ToastProvider";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface ProyectosUsuarioPageProps {
   heroTitle?: string;
@@ -21,6 +21,7 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
   brandHref = "Kapital",
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, login, logout } = useAuthContext();
   const { addToast } = useToast();
 
@@ -67,7 +68,10 @@ const ProyectosUsuarioPage: React.FC<ProyectosUsuarioPageProps> = ({
       />
       <div className="flex-1 flex flex-col">
         <div className="flex flex-1 flex-col-3 justify-center py-20 px-3 md:px-6 bg-[#f3f6f9] overflow-y-auto">
-          <Proyectos userId={user?.id} />
+          <Proyectos
+            userId={user?.id}
+            openCalculationsInNewTab={location.state?.fromLanding === true}
+          />
         </div>
         <div>
           <MainPageFooter brandName={brandName} brandHref={brandHref} />

@@ -68,7 +68,7 @@ export function UserMenu({
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className={`absolute ${customTrigger ? "bottom-full left-0 mb-2" : "right-0 mt-2"} w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-100 animate-in fade-in zoom-in duration-200`}
+          className={`absolute ${customTrigger ? "bottom-full left-0 mb-2" : "right-0 mt-2"} w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-100 animate-in fade-in zoom-in duration-200 ease-out`}
         >
           {/* Nombre + email */}
           {!onlyLogout && user && (
@@ -111,7 +111,7 @@ export function UserMenu({
           <div className="px-2">
             <button
               onClick={onLogout}
-              className="flex items-center w-full px-3 py-2 text-sm font-semibold text-red-600 rounded-lg hover:bg-red-50 transition-colors group"
+              className="flex items-center w-full px-3 py-2 text-sm font-semibold text-red-600 rounded-lg hover:bg-red-50 transition-colors group cursor-pointer"
             >
               <svg
                 className="w-4 h-4 mr-3 text-red-400 group-hover:text-red-600"
@@ -122,7 +122,7 @@ export function UserMenu({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                 />
               </svg>

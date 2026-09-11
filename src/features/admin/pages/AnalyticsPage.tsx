@@ -5,6 +5,8 @@ import type {
   OccupationProfileMetrics,
 } from "@shared/services/analytics.service";
 import { Tooltip } from "@shared/components/common/Tooltip";
+import { useCountUp } from "./useCountUp";
+import { Skeleton, MetricsSkeleton } from "../components/Skeleton";
 import * as XLSX from "xlsx";
 import {
   Users,
@@ -57,27 +59,37 @@ const MetricCard: React.FC<{
   icon: React.ReactNode;
   subtitle?: string;
   tooltip?: string;
-}> = ({ title, value, icon, subtitle, tooltip }) => (
-  <div className="rounded-xl bg-white p-5 shadow-sm border border-gray-100">
-    <div className="flex items-center justify-between">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          {tooltip && (
-            <Tooltip id={`tooltip-${title}`} content={tooltip}>
-              <HelpCircle className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700 cursor-help transition-colors" />
-            </Tooltip>
-          )}
+}> = ({ title, value, icon, subtitle, tooltip }) => {
+  const isNumeric = typeof value === "number";
+  const numericValue = isNumeric ? value : parseFloat(String(value).replace(/[^0-9.-]/g, "")) || 0;
+  const suffix = isNumeric ? "" : String(value).replace(/[\d.-]/g, "");
+  const prefix = isNumeric ? "" : String(value).match(/^[^0-9]*/)?.[0] || "";
+  const animated = useCountUp(numericValue);
+
+  return (
+    <div className="rounded-xl bg-white p-5 shadow-sm border border-gray-100">
+      <div className="flex items-center justify-between">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-medium text-gray-500">{title}</p>
+            {tooltip && (
+              <Tooltip id={`tooltip-${title}`} content={tooltip}>
+                <HelpCircle className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700 cursor-help transition-colors" />
+              </Tooltip>
+            )}
+          </div>
+          <p className="mt-1 text-2xl font-bold text-gray-900">
+            {isNumeric ? animated : `${prefix}${animated}${suffix}`}
+          </p>
+          {subtitle && <p className="mt-1 text-xs text-gray-400">{subtitle}</p>}
         </div>
-        <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
-        {subtitle && <p className="mt-1 text-xs text-gray-400">{subtitle}</p>}
-      </div>
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-        {icon}
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+          {icon}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const ProgressBar: React.FC<{ label: string; count: number; percentage: number; color?: string }> = ({
   label,
@@ -98,13 +110,14 @@ const ProgressBar: React.FC<{ label: string; count: number; percentage: number; 
   </div>
 );
 
-const SectionCard: React.FC<{ title: string; children: React.ReactNode; icon?: React.ReactNode; tooltip?: string }> = ({
+const SectionCard: React.FC<{ title: string; children: React.ReactNode; icon?: React.ReactNode; tooltip?: string; className?: string }> = ({
   title,
   children,
   icon,
   tooltip,
+  className = "",
 }) => (
-  <div className="min-w-0 rounded-xl bg-white p-5 shadow-sm border border-gray-100">
+  <div className={`min-w-0 rounded-xl bg-white p-5 shadow-sm border border-gray-100 ${className}`}>
     <div className="mb-4 flex items-center gap-2">
       {icon && <span className="text-gray-500">{icon}</span>}
       <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500">{title}</h3>
@@ -263,6 +276,13 @@ const SessionsChart: React.FC<{ data: { date: string; count: number }[] }> = ({ 
       date: d.date,
       count: d.count,
     }));
+
+    // Animación de dibujado de línea de izquierda a derecha
+    series.hide();
+    setTimeout(() => {
+      series.show();
+      series.appear(1500, 100);
+    }, 200);
 
     return () => {
       chart.dispose();
@@ -452,11 +472,7 @@ const AnalyticsPage: React.FC = () => {
       {/* Content */}
       <div className="flex-1 py-5 md:py-8">
         <div className="container mx-auto px-4">
-          {loading && (
-            <div className="flex items-center justify-center py-20">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
-            </div>
-          )}
+          {loading && <MetricsSkeleton />}
 
           {error && (
             <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-red-700">
@@ -465,6 +481,7 @@ const AnalyticsPage: React.FC = () => {
           )}
 
           {!loading && data && (
+            <Skeleton>
             <div className="space-y-6">
               {/* KPIs */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -554,8 +571,74 @@ const AnalyticsPage: React.FC = () => {
                 </div>
               </section>
 
-              <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
-                <section className="space-y-3 lg:col-span-2">
+              {/* Chart + Dispositivos */}
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+                {/* Chart */}
+                <div className="lg:col-span-3">
+                  <SectionCard title="Sesiones en el tiempo" icon={<TrendingUp className="h-4 w-4" />} tooltip="Evolución diaria del tráfico en el periodo seleccionado. Permite identificar picos de actividad y tendencias de crecimiento.">
+                    <SessionsChart data={data.sessions_over_time} />
+                  </SectionCard>
+                </div>
+
+                {/* Devices */}
+                <SectionCard title="Dispositivos" icon={<Monitor className="h-4 w-4" />} tooltip="Distribución del tráfico según el tipo de dispositivo (desktop, mobile, tablet)." className="lg:col-span-2">
+                  {data.devices.length === 0 ? (
+                    <p className="text-sm text-gray-400">Sin datos</p>
+                  ) : (
+                    data.devices.map((d) => (
+                      <div key={d.label} className="mb-3 flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50 text-gray-500">
+                          {deviceIcon(d.label)}
+                        </div>
+                        <div className="flex-1">
+                          <div className="mb-1 flex items-center justify-between text-sm">
+                            <span className="font-medium text-gray-700 capitalize">{d.label}</span>
+                            <span className="text-gray-500">{d.count}</span>
+                          </div>
+                          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                            <div
+                              className={`h-full rounded-full ${deviceColor(d.label)}`}
+                              style={{ width: `${Math.min(d.percentage, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </SectionCard>
+              </div>
+
+              {/* Ciudades + Navegadores + Páginas */}
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                {/* Cities */}
+                <SectionCard title="Ciudades principales" icon={<MapPin className="h-4 w-4" />} tooltip="Top 10 ciudades desde donde acceden los usuarios. Se obtiene mediante la IP del visitante.">
+                  {data.cities.length === 0 ? (
+                    <p className="text-sm text-gray-400">Sin datos de geolocalización</p>
+                  ) : (
+                    data.cities.map((c) => (
+                      <ProgressBar key={c.label} label={c.label} count={c.count} percentage={c.percentage} color="bg-indigo-500" />
+                    ))
+                  )}
+                </SectionCard>
+
+                {/* Browsers */}
+                <SectionCard title="Navegadores" icon={<Globe className="h-4 w-4" />} tooltip="Desglose de navegadores usados por los visitantes.">
+                  {data.browsers.map((b) => (
+                    <ProgressBar key={b.label} label={b.label === "Unknown" ? "Otro / no identificado" : b.label} count={b.count} percentage={b.percentage} color="bg-cyan-500" />
+                  ))}
+                </SectionCard>
+
+                {/* Pages */}
+                <SectionCard title="Páginas más vistas" icon={<BarChart3 className="h-4 w-4" />} tooltip="Páginas con mayor cantidad de vistas. Muestra qué contenido atrae más tráfico (/kapital, landing, etc.).">
+                  {data.pages.map((p) => (
+                    <ProgressBar key={p.label} label={formatPageLabel(p.label)} count={p.count} percentage={p.percentage} color="bg-violet-500" />
+                  ))}
+                </SectionCard>
+              </div>
+
+              {/* Retención + Perfil */}
+              <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+                <section className="space-y-3">
                   <div>
                     <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
                       Retención de Kapital
@@ -583,90 +666,26 @@ const AnalyticsPage: React.FC = () => {
                 </section>
 
                 <section className="min-w-0 space-y-3">
-                <div>
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
-                    Perfil de usuarios
-                  </h2>
-                  <p className="text-xs text-gray-500">
-                    Elección más reciente por dispositivo que completó el formulario de Kapital.
-                  </p>
-                </div>
-                <SectionCard
-                  title="Ocupación declarada"
-                  icon={<Users className="h-4 w-4" />}
-                  tooltip="Cada dispositivo se cuenta una sola vez según su elección más reciente dentro del periodo seleccionado."
-                >
-                  {!data.occupation_profiles || data.occupation_profiles.total_devices === 0 ? (
-                    <p className="text-sm text-gray-400">Aún no hay perfiles registrados</p>
-                  ) : (
-                    <OccupationProfileBreakdown data={data.occupation_profiles} />
-                  )}
-                </SectionCard>
-                </section>
-              </div>
-
-              {/* Chart + Tables */}
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                {/* Chart */}
-                <div className="lg:col-span-2">
-                  <SectionCard title="Sesiones en el tiempo" icon={<TrendingUp className="h-4 w-4" />} tooltip="Evolución diaria del tráfico en el periodo seleccionado. Permite identificar picos de actividad y tendencias de crecimiento.">
-                    <SessionsChart data={data.sessions_over_time} />
+                  <div>
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
+                      Perfil de usuarios
+                    </h2>
+                    <p className="text-xs text-gray-500">
+                      Elección más reciente por dispositivo que completó el formulario de Kapital.
+                    </p>
+                  </div>
+                  <SectionCard
+                    title="Ocupación declarada"
+                    icon={<Users className="h-4 w-4" />}
+                    tooltip="Cada dispositivo se cuenta una sola vez según su elección más reciente dentro del periodo seleccionado."
+                  >
+                    {!data.occupation_profiles || data.occupation_profiles.total_devices === 0 ? (
+                      <p className="text-sm text-gray-400">Aún no hay perfiles registrados</p>
+                    ) : (
+                      <OccupationProfileBreakdown data={data.occupation_profiles} />
+                    )}
                   </SectionCard>
-                </div>
-
-                {/* Devices */}
-                <SectionCard title="Dispositivos" icon={<Monitor className="h-4 w-4" />} tooltip="Distribución del tráfico según el tipo de dispositivo (desktop, mobile, tablet).">
-                  {data.devices.length === 0 ? (
-                    <p className="text-sm text-gray-400">Sin datos</p>
-                  ) : (
-                    data.devices.map((d) => (
-                      <div key={d.label} className="mb-3 flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50 text-gray-500">
-                          {deviceIcon(d.label)}
-                        </div>
-                        <div className="flex-1">
-                          <div className="mb-1 flex items-center justify-between text-sm">
-                            <span className="font-medium text-gray-700 capitalize">{d.label}</span>
-                            <span className="text-gray-500">{d.count}</span>
-                          </div>
-                          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                            <div
-                              className={`h-full rounded-full ${deviceColor(d.label)}`}
-                              style={{ width: `${Math.min(d.percentage, 100)}%` }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </SectionCard>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                {/* Cities */}
-                <SectionCard title="Ciudades principales" icon={<MapPin className="h-4 w-4" />} tooltip="Top 10 ciudades desde donde acceden los usuarios. Se obtiene mediante la IP del visitante.">
-                  {data.cities.length === 0 ? (
-                    <p className="text-sm text-gray-400">Sin datos de geolocalización</p>
-                  ) : (
-                    data.cities.map((c) => (
-                      <ProgressBar key={c.label} label={c.label} count={c.count} percentage={c.percentage} color="bg-indigo-500" />
-                    ))
-                  )}
-                </SectionCard>
-
-                {/* Browsers */}
-                <SectionCard title="Navegadores" icon={<Globe className="h-4 w-4" />} tooltip="Desglose de navegadores usados por los visitantes.">
-                  {data.browsers.map((b) => (
-                    <ProgressBar key={b.label} label={b.label === "Unknown" ? "Otro / no identificado" : b.label} count={b.count} percentage={b.percentage} color="bg-cyan-500" />
-                  ))}
-                </SectionCard>
-
-                {/* Pages */}
-                <SectionCard title="Páginas más vistas" icon={<BarChart3 className="h-4 w-4" />} tooltip="Páginas con mayor cantidad de vistas. Muestra qué contenido atrae más tráfico (/kapital, landing, etc.).">
-                  {data.pages.map((p) => (
-                    <ProgressBar key={p.label} label={formatPageLabel(p.label)} count={p.count} percentage={p.percentage} color="bg-violet-500" />
-                  ))}
-                </SectionCard>
+                </section>
               </div>
 
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -705,6 +724,7 @@ const AnalyticsPage: React.FC = () => {
                 </SectionCard>
               </div>
             </div>
+            </Skeleton>
           )}
         </div>
       </div>

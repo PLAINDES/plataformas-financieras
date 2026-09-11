@@ -56,12 +56,8 @@ export interface MasterTemplate {
   is_active: boolean;
   is_default: boolean;
   hojas_config: Record<string, any> | null;
-  onedrive_env: string | null;
-  onedrive_folder: string | null;
-  onedrive_item_id: string | null;
-  onedrive_filename: string | null;
   original_filename: string | null;
-  onedrive_path: string | null;
+  s3_object_key?: string | null;
   created_by_user_id: number | null;
   created_at: string;
   updated_at: string;

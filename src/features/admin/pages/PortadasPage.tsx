@@ -2,6 +2,7 @@ import { MainService } from "@/shared/services/main.service";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ConfirmationModal } from "@/shared/components/common/ConfirmationModal";
+import { CardGallerySkeleton } from "../components/Skeleton";
 
 type Cover = {
   id: number;
@@ -138,9 +139,7 @@ const PortadasPage: React.FC = () => {
           </div>
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-12 text-sm text-gray-400">
-              Cargando portadas...
-            </div>
+            <CardGallerySkeleton count={4} />
           ) : covers.length === 0 ? (
             <div className="flex items-center justify-center py-12 text-sm text-gray-500">
               No hay portadas
@@ -241,10 +240,10 @@ const PortadasPage: React.FC = () => {
                   )}
                   {galleryOpen && (
                     <div
-                      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+                      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 ease-out"
                       onClick={closeGallery}
                     >
-                      <div className="relative max-h-[90vh] max-w-[90vw] flex items-center">
+                      <div className="relative max-h-[90vh] max-w-[90vw] flex items-center animate-in fade-in zoom-in-95 duration-200 ease-out">
                         <img
                           src={galleryImages[galleryIndex]}
                           alt={`Imagen ${galleryIndex + 1}`}

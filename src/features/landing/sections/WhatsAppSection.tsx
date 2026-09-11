@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import {
     Send,
     Loader2,
@@ -155,10 +155,10 @@ export function WhatsAppSection({
             <div
                 className={`
                     w-[320px] md:w-[350px] bg-[#EFEAE2] rounded-[1.5rem] shadow-2xl border-4 border-white overflow-hidden relative flex flex-col pointer-events-auto
-                    transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]
+                    transition-[opacity,transform] duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]
                     ${isOpen
                         ? "opacity-100 scale-100 translate-y-0"
-                        : "opacity-0 scale-95 translate-y-4 pointer-events-none"
+                        : "opacity-0 scale-[0.96] translate-y-4 pointer-events-none"
                     }
                 `}
             >
@@ -178,7 +178,7 @@ export function WhatsAppSection({
                                 )}
 
                                 {isAdmin && !pendingAvatarPreview && !isUploading && (
-                                    <label className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center cursor-pointer transition-all">
+                                    <label className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center cursor-pointer transition-[background-color]">
                                         <UploadCloud className="w-4 h-4 text-white" />
                                         <input
                                             type="file"
@@ -265,7 +265,7 @@ export function WhatsAppSection({
                                     }}
                                     onSave={onSave}
                                     as="div"
-                                    className="outline-none focus:ring-2 focus:ring-green-400 rounded px-1 transition-all"
+                                    className="outline-none focus:ring-2 focus:ring-green-400 rounded px-1 transition-[box-shadow]"
                                 />
                             </div>
                             <div className="flex justify-end items-center gap-1 mt-1">
@@ -297,7 +297,7 @@ export function WhatsAppSection({
                         <button
                             onClick={handleWhatsAppClick}
                             title="Abrir chat en WhatsApp"
-                            className="w-11 h-11 bg-[#128C7E] hover:bg-[#075E54] active:scale-95 rounded-full flex items-center justify-center shrink-0 shadow-md transition-all cursor-pointer group pointer-events-auto"
+                            className="w-11 h-11 bg-[#128C7E] hover:bg-[#075E54] active:scale-[0.96] rounded-full flex items-center justify-center shrink-0 shadow-md transition-[background-color,transform,box-shadow] cursor-pointer group pointer-events-auto"
                         >
                             <Send className="w-5 h-5 text-white" />
                         </button>
@@ -309,9 +309,9 @@ export function WhatsAppSection({
                 <div
                     className={`
                         absolute -top-12 right-0 bg-white px-4 py-2 rounded-2xl shadow-xl border border-slate-100 text-slate-800 text-sm font-semibold whitespace-nowrap flex items-center gap-2
-                        transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]
+                        transition-[opacity,transform] duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]
                         ${isOpen
-                            ? "opacity-0 translate-y-2 scale-95 pointer-events-none"
+                            ? "opacity-0 translate-y-2 scale-[0.96] pointer-events-none"
                             : "opacity-100 translate-y-0 scale-100"
                         }
                     `}
@@ -325,16 +325,16 @@ export function WhatsAppSection({
                 </div>
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className={`w-16 h-16 rounded-full flex items-center justify-center shadow-[0_10px_40px_rgba(37,211,102,0.4)] transition-all duration-500 active:scale-90 group ${isOpen
+                    className={`w-16 h-16 rounded-full flex items-center justify-center shadow-[0_10px_40px_rgba(37,211,102,0.4)] transition-[transform,background-color,box-shadow] duration-500 active:scale-[0.96] group ${isOpen
                         ? "bg-white text-slate-600 rotate-180"
-                        : "bg-[#25D366] text-white hover:scale-110 hover:shadow-[0_15px_50px_rgba(37,211,102,0.6)]"
+                        : "bg-[#25D366] text-white hover:scale-[1.02] hover:shadow-[0_15px_50px_rgba(37,211,102,0.6)]"
                         }`}
                     title={isOpen ? "Cerrar" : "Escríbenos por WhatsApp"}
                 >
                     {isOpen ? (
                         <X className="w-8 h-8 transition-transform duration-500" />
                     ) : (
-                        <div className="relative h-10 w-10 transition-transform duration-300 group-hover:scale-110">
+                        <div className="relative h-10 w-10 transition-transform duration-300 group-hover:scale-[1.02]">
                             <WhatsAppIcon className="w-full h-full drop-shadow-md" />
                         </div>
                     )}

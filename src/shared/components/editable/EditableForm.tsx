@@ -1,4 +1,4 @@
-// src/components/editable/EditableForm.tsx
+﻿// src/components/editable/EditableForm.tsx
 
 import { useState } from "react";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
@@ -160,7 +160,7 @@ export function EditableForm({
                   {field.type === "textarea" ? (
                     <textarea
                       name={field.name}
-                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent transition-all ${isLastTextarea && mobileMode ? "flex-grow" : ""}`}
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent transition-[border-color,box-shadow] ${isLastTextarea && mobileMode ? "flex-grow" : ""}`}
                       rows={mobileMode ? undefined : field.rows || 4}
                       placeholder={field.placeholder}
                       value={formData[field.name] || ""}
@@ -181,7 +181,7 @@ export function EditableForm({
                     <input
                       type={field.type}
                       name={field.name}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent transition-[border-color,box-shadow]"
                       placeholder={field.placeholder}
                       value={formData[field.name] || ""}
                       onChange={onChange}
@@ -266,7 +266,7 @@ export function EditableForm({
                   {field.type === "textarea" ? (
                     <textarea
                       name={field.name}
-                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent transition-all ${isLastTextarea && mobileMode ? "flex-grow" : ""}`}
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--bs-primary)] focus:border-transparent transition-[border-color,box-shadow] ${isLastTextarea && mobileMode ? "flex-grow" : ""}`}
                       rows={mobileMode ? undefined : field.rows || 4}
                       placeholder={field.placeholder}
                       value={formData[field.name] || ""}
@@ -287,7 +287,7 @@ export function EditableForm({
                     <input
                       type={field.type}
                       name={field.name}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-(--bs-primary) focus:border-transparent transition-[border-color,box-shadow]"
                       placeholder={field.placeholder}
                       value={formData[field.name] || ""}
                       onChange={onChange}

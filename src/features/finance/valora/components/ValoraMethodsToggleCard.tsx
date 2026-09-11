@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+﻿import type { LucideIcon } from "lucide-react";
 import { CheckCircle2, ChevronRight } from "lucide-react";
 
 export interface ValoraMethodData {
@@ -129,15 +129,15 @@ export const ValoraMethodsToggleCard: React.FC<ValoraMethodsToggleCardProps> = (
   const buttonStyles = {
     orange: {
       default:
-        "border border-orange-300 bg-white text-orange-950 hover:border-orange-400 hover:bg-orange-50/50 transition-all duration-200 shadow-2xs",
+        "border border-orange-300 bg-white text-orange-950 hover:border-orange-400 hover:bg-orange-50/50 transition-[border-color,background-color,box-shadow] duration-200 shadow-2xs",
       selected:
-        "border-2 border-orange-500 bg-orange-50/90 text-orange-950 font-bold shadow-xs transition-all duration-200 ring-2 ring-orange-500/10",
+        "border-2 border-orange-500 bg-orange-50/90 text-orange-950 font-bold shadow-xs transition-[border-color,background-color,box-shadow] duration-200 ring-2 ring-orange-500/10",
     },
     blue: {
       default:
-        "border border-blue-300 bg-white text-blue-950 hover:border-blue-400 hover:bg-blue-50/50 transition-all duration-200 shadow-2xs",
+        "border border-blue-300 bg-white text-blue-950 hover:border-blue-400 hover:bg-blue-50/50 transition-[border-color,background-color,box-shadow] duration-200 shadow-2xs",
       selected:
-        "border-2 border-blue-600 bg-blue-50/90 text-blue-950 font-bold shadow-xs transition-all duration-200 ring-2 ring-blue-600/10",
+        "border-2 border-blue-600 bg-blue-50/90 text-blue-950 font-bold shadow-xs transition-[border-color,background-color,box-shadow] duration-200 ring-2 ring-blue-600/10",
     },
   };
 
@@ -155,7 +155,7 @@ export const ValoraMethodsToggleCard: React.FC<ValoraMethodsToggleCardProps> = (
               <button
                 type="button"
                 onClick={() => onSelectMethod(method.id)}
-                className={`group w-full rounded-xl py-3 px-4 flex items-center justify-between transition-all duration-200 cursor-pointer active:scale-[0.99] ${
+                className={`group w-full rounded-xl py-3 px-4 flex items-center justify-between transition-[background-color,border-color,box-shadow,transform] duration-200 cursor-pointer active:scale-[0.96] ${
                   isSelected ? styles.selected : styles.default
                 }`}
               >
@@ -197,7 +197,7 @@ export const ValoraMethodsToggleCard: React.FC<ValoraMethodsToggleCardProps> = (
                       Activo
                     </span>
                   ) : (
-                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-0.5 transition-all" />
+                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-0.5 transition-[color,transform]" />
                   )}
                 </div>
               </button>

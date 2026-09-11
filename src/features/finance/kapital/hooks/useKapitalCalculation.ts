@@ -1,6 +1,7 @@
 // src/features/kapital/hooks/useKapitalCalculation.ts
 import { useState } from "react";
 import { MainService } from "@/shared/services/main.service";
+import { calculateKapitalNative } from "@/shared/services/valora-native.service";
 import {
   computeResultsFromCalculationData,
   extractSensibilizaciones,
@@ -105,28 +106,70 @@ export function useKapitalCalculation({
     }
 
     try {
+      const nativeInput = enrichCalculationInputPayload(dataToSubmit) as unknown as Record<string, unknown>;
+      const previousInputs = (currentCalculation?.data as Record<string, unknown> | undefined)?.inputs;
+      const previousInput = Array.isArray(previousInputs) && previousInputs[0]
+        ? previousInputs[0]
+        : nativeInput;
+      const nativeBaseInput = isBetaUpdate
+        ? (previousInput as Record<string, unknown>)
+        : nativeInput;
+      const nativeSensitivity = isBetaUpdate ? nativeInput : null;
+      const nativeResult = await calculateKapitalNative(nativeBaseInput, nativeSensitivity);
+      const nativeBase = (nativeResult.base_results || {}) as Record<string, unknown>;
+      const baseResults = {
+        ...((nativeBase.resultados || {}) as Record<string, unknown>),
+        boa: nativeBase.boa,
+        boa_sector: nativeBase.boa_sector,
+        boa_subsector: nativeBase.boa_subsector,
+        inputs: nativeBaseInput,
+      };
+      const sensitivityResults = (Array.isArray(nativeResult.sensitivity_results)
+        ? nativeResult.sensitivity_results
+        : []
+      ).map((entry) => {
+        const item = entry as Record<string, unknown>;
+        return {
+          ...((item.resultados || {}) as Record<string, unknown>),
+          boa: item.boa,
+          boa_subsector: item.boa_subsector,
+          subsector: item.subsector,
+          inputs: item.inputs,
+        };
+      });
+      const previousSensibilizaciones = currentCalculation?.data &&
+        Array.isArray((currentCalculation.data as Record<string, unknown>).sensibilizacion)
+        ? ((currentCalculation.data as Record<string, unknown>).sensibilizacion as unknown[])
+        : [];
+      const persistedSensibilizaciones = isBetaUpdate
+        ? [...previousSensibilizaciones, ...sensitivityResults]
+        : sensitivityResults;
       let persistedCalculation: Calculation;
       // Si ya hay un cálculo actual, SIEMPRE hacemos PUT
       if (currentCalculation) {
-        persistedCalculation = await MainService.updateCalculation(
+        persistedCalculation = await MainService.updateNativeCalculation(
           currentCalculation!.id,
           {
             data: {
-              inputs: [enrichCalculationInputPayload(dataToSubmit)],
+              inputs: [nativeBaseInput],
+              resultados: [baseResults],
+              sensibilizacion: persistedSensibilizaciones,
               active_session_id: prewarmedSessionId,
             },
           }
         );
       } else {
         // CREATE new calculation
-        persistedCalculation = await MainService.createCalculation({
+        persistedCalculation = await MainService.createNativeCalculation({
           calculation_file_id: null,
           user_id: currentUserId ? Number(currentUserId) : null,
           code: generateCalculationCode(),
           type: "kapital",
           data: {
             ...buildCalculationDataPayload(),
-            inputs: [enrichCalculationInputPayload(dataToSubmit)],
+            inputs: [nativeBaseInput],
+            resultados: [baseResults],
+            sensibilizacion: persistedSensibilizaciones,
             prewarmed_session_id: prewarmedSessionId,
           },
         });
@@ -219,9 +262,12 @@ export function useKapitalCalculation({
 
           // Reconstruir el formData con el último input guardado
           const dataObj = calculationData.data as { inputs?: any[] };
-          const latestInput = Array.isArray(dataObj.inputs)
+          const storedBaseInput =
+            Array.isArray((calculationData.data as any)?.resultados) &&
+            (calculationData.data as any).resultados[0]?.inputs;
+          const latestInput = storedBaseInput || (Array.isArray(dataObj.inputs)
             ? dataObj.inputs[0]
-            : undefined;
+            : undefined);
 
           if (latestInput) {
             setFormData((prev) => ({

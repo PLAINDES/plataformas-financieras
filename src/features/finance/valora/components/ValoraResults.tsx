@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { ValoraEstadosSection } from "./ValoraEstadosSection";
 import { ValoraGeneralResultsBlock } from "./ValoraGeneralResultsBlock";
@@ -66,7 +66,7 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
         <button
           type="button"
           onClick={onOpenFormPanel}
-          className="px-4 py-2 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100"
+          className="px-4 py-2 flex items-center justify-between gap-3 text-left font-semibold transition-[background-color,border-color] shadow-md w-full sm:w-auto cursor-pointer bg-valora-primary text-white rounded-xl hover:bg-valora-secondary max-w-100"
         >
           <span className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold leading-snug">
             <Sparkles className="h-5 w-5 shrink-0" />
@@ -81,7 +81,7 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
             key={tab.id}
             type="button"
             onClick={() => onResultViewChange(tab.id)}
-            className={`px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap flex-1 sm:flex-none ${
+            className={`px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-[background-color,color,box-shadow] duration-200 whitespace-nowrap flex-1 sm:flex-none ${
               resultView === tab.id
                 ? "bg-white text-valora-primary shadow-sm"
                 : "text-slate-500 hover:text-valora-primary hover:bg-slate-100"
@@ -104,7 +104,7 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
              <div className="flex w-full justify-center">
                <section className="flex w-full max-w-105 flex-col items-center justify-center gap-2 sm:w-fit">
                  {coverUrl && <div onClick={onOpenReport} className="w-fit cursor-pointer"><Book href={coverUrl} width={95} height={130} interactive /></div>}
-                 <button type="button" onClick={onOpenReport} className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer">
+                 <button type="button" onClick={onOpenReport} className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-[background-color,box-shadow,transform] active:scale-[0.96] uppercase leading-tight tracking-wide cursor-pointer">
                    Generar Reporte Especializado
                  </button>
                </section>

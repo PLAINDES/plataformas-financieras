@@ -1,4 +1,4 @@
-import { parsePercentageString } from "../services/kapital.utils";
+﻿import { parsePercentageString } from "../services/kapital.utils";
 
 export const BalanceSheetBlock: React.FC<{
   koa: string;
@@ -48,7 +48,7 @@ export const BalanceSheetBlock: React.FC<{
           {/* Pasivo (Deuda) */}
           <div
             style={{ height: `calc(${visualPasivoPerc}% - 2px)` }}
-            className="border-[3px] border-[#4caf50] rounded-tr-xl relative p-0.5 flex flex-col items-center justify-center shadow-sm transition-all duration-500 overflow-hidden"
+            className="border-[3px] border-[#4caf50] rounded-tr-xl relative p-0.5 flex flex-col items-center justify-center shadow-sm transition-[height] duration-500 overflow-hidden"
           >
             <div
               className={`absolute top-1 text-gray-400 text-center w-full uppercase tracking-widest font-bold ${compact ? 'text-[8px]' : 'text-[10px]'}`}
@@ -65,7 +65,7 @@ export const BalanceSheetBlock: React.FC<{
           {/* Patrimonio (Equity) */}
           <div
             style={{ height: `calc(${visualPatrimonioPerc}% - 2px)` }}
-            className="border-[3px] border-[#03a9f4] rounded-br-xl relative p-2 flex flex-col items-center justify-center shadow-sm transition-all duration-500 overflow-hidden"
+            className="border-[3px] border-[#03a9f4] rounded-br-xl relative p-2 flex flex-col items-center justify-center shadow-sm transition-[height] duration-500 overflow-hidden"
           >
             <div
               className={`absolute top-1 text-gray-400 text-center w-full uppercase tracking-widest font-bold ${compact ? 'text-[8px]' : 'text-[10px]'}`}

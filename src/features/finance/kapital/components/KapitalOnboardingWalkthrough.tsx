@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Calculator, Building2, Globe, Landmark, ArrowRight, X, Layers, List, ToggleLeft, Scale, CheckCircle2 } from "lucide-react";
 
@@ -575,7 +575,7 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
           {overlayPieces.map((p, i) => (
             <div key={i} className="absolute bg-[#0b1a33]/[0.14] backdrop-blur-[1.2px]" style={{ top: typeof p.top === "number" ? p.top : (p.top as string), left: typeof p.left === "number" ? p.left : (p.left as string), width: typeof p.width === "number" ? p.width : (p.width as string), height: typeof p.height === "number" ? p.height : (p.height as string), backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.22) 1px, transparent 0)", backgroundSize: "18px 18px" }} />
           ))}
-          <div className="absolute rounded-[14px] border-[2.5px] border-[#2563eb] shadow-[0_0_0_4px_rgba(37,99,235,0.14),0_10px_30px_rgba(2,12,36,0.18)] pointer-events-none transition-all duration-75 ease-out" style={{ top: targetRect.top, left: targetRect.left, width: targetRect.width, height: targetRect.height, background: "transparent" }} />
+          <div className="absolute rounded-[14px] border-[2.5px] border-[#2563eb] shadow-[0_0_0_4px_rgba(37,99,235,0.14),0_10px_30px_rgba(2,12,36,0.18)] pointer-events-none transition-[top,left,width,height] duration-75 ease-out" style={{ top: targetRect.top, left: targetRect.left, width: targetRect.width, height: targetRect.height, background: "transparent" }} />
         </>
       ) : (
         <div className="absolute inset-0 bg-[#0b1a33]/[0.14] backdrop-blur-[1.2px]" />
@@ -599,7 +599,7 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
           <div className="flex items-center justify-between gap-3 px-5 py-3.5 bg-slate-50/70 border-t border-slate-100">
             <button onClick={skip} className="text-[13px] font-semibold text-slate-500 hover:text-slate-700 transition-colors px-2 py-1 rounded-md hover:bg-white">Omitir tour</button>
             <div className="flex items-center gap-2">
-              <button onClick={next} className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg text-[13px] font-bold text-white bg-[#2563eb] hover:bg-[#1d4ed8] shadow-[0_4px_12px_rgba(37,99,235,0.30)] active:scale-[0.98] transition-all">
+              <button onClick={next} className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg text-[13px] font-bold text-white bg-[#2563eb] hover:bg-[#1d4ed8] shadow-[0_4px_12px_rgba(37,99,235,0.30)] active:scale-[0.96] transition-[background-color,box-shadow,transform]">
                 {isLast ? "Entendido" : "Siguiente"}
                 {!isLast && <ArrowRight className="w-3.5 h-3.5" />}
               </button>
@@ -607,13 +607,13 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
           </div>
           <div className="flex items-center justify-center gap-1.5 pb-3 bg-slate-50/70">
             {activeSteps.map((_, i) => (
-              <span key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "w-6 bg-[#2563eb]" : i < current ? "w-1.5 bg-[#93c5fd]" : "w-1.5 bg-slate-300"}`} />
+              <span key={i} className={`h-1.5 rounded-full transition-[width,background-color] duration-300 ${i === current ? "w-6 bg-[#2563eb]" : i < current ? "w-1.5 bg-[#93c5fd]" : "w-1.5 bg-slate-300"}`} />
             ))}
           </div>
         </div>
       )}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/30">
-        <div className="h-full bg-[#2563eb] transition-all duration-300" style={{ width: `${((current + 1) / totalSteps) * 100}%` }} />
+        <div className="h-full bg-[#2563eb] transition-[width] duration-300" style={{ width: `${((current + 1) / totalSteps) * 100}%` }} />
       </div>
     </div>,
     document.body

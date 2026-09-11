@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import {
   ChevronUp,
   ChevronDown,
@@ -271,7 +271,7 @@ function ClientLogoCard({
               </label>
               <input
                 type="text"
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-[border-color,box-shadow]"
                 value={editedClient.name || ""}
                 onChange={(e) =>
                   setEditedClient({ ...editedClient, name: e.target.value })
@@ -287,7 +287,7 @@ function ClientLogoCard({
               </label>
               <input
                 type="text"
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-[border-color,box-shadow]"
                 value={editedClient.alt || ""}
                 onChange={(e) =>
                   setEditedClient({ ...editedClient, alt: e.target.value })
@@ -378,7 +378,7 @@ function ClientLogoCard({
       data-client-logo
       className={`
         relative w-24 h-12 md:w-32 md:h-16 lg:w-40 lg:h-20 flex justify-center items-center
-        transition-all duration-200
+        transition-[box-shadow] duration-200
         ${isAdmin ? "cursor-pointer" : ""}
         ${isSelected ? "ring-2 ring-blue-500 ring-offset-2 rounded-lg p-1" : ""}
       `}
@@ -391,9 +391,9 @@ function ClientLogoCard({
         className={`
           w-full h-full object-contain
           grayscale brightness-85 opacity-40
-          transition-all duration-300
-          hover:grayscale-0 hover:brightness-100 hover:opacity-60 hover:scale-110
-          ${isSelected ? "grayscale-0 brightness-100 opacity-80 scale-110" : ""}
+          transition-[filter,opacity,scale] duration-300
+          hover:grayscale-0 hover:brightness-100 hover:opacity-60 hover:scale-[1.02]
+          ${isSelected ? "grayscale-0 brightness-100 opacity-80 scale-[1.02]" : ""}
         `}
         onError={(e) => {
           e.currentTarget.src =

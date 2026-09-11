@@ -1,4 +1,4 @@
-// src/app/kapital/components/NavigationTabs.tsx
+﻿// src/app/kapital/components/NavigationTabs.tsx
 import { useState, useEffect } from "react";
 
 interface NavigationTabsProps {
@@ -56,7 +56,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
           <button
             onClick={() => onNavigate("result")}
             className={`
-              flex flex-row items-center justify-center gap-2 px-3 py-2.5 rounded-lg font-medium text-xs transition-all duration-200 flex-1
+              flex flex-row items-center justify-center gap-2 px-3 py-2.5 rounded-lg font-medium text-xs transition-[background-color,color,box-shadow] duration-200 flex-1
               ${
                 selected === "result"
                   ? "bg-blue-50 text-blue-600 shadow-sm"
@@ -90,7 +90,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
             onClick={() => hasSensibilizaciones && onNavigate("sensitivity")}
             disabled={!hasSensibilizaciones}
             className={`
-              flex flex-row items-center justify-center gap-2 px-3 py-2.5 rounded-lg font-medium text-xs transition-all duration-200 flex-1
+              flex flex-row items-center justify-center gap-2 px-3 py-2.5 rounded-lg font-medium text-xs transition-[background-color,color,box-shadow] duration-200 flex-1
               ${
                 selected === "sensitivity"
                   ? "bg-blue-50 text-blue-600 shadow-sm"

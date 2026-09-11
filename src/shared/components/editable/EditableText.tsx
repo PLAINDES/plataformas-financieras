@@ -1,4 +1,4 @@
-// src/components/editable/EditableText.tsx
+﻿// src/components/editable/EditableText.tsx
 
 import { useState, useRef, useEffect } from "react";
 import type { EditableContent } from "../../types/editable.types";
@@ -188,7 +188,7 @@ export function EditableText({
     <Component
       className={`
         ${className} 
-        relative cursor-pointer transition-all duration-200 min-h-[1.5rem] min-w-[6rem] inline-block
+        relative cursor-pointer transition-[background-color,outline-color] duration-200 min-h-[1.5rem] min-w-[6rem] inline-block
         outline-2 outline-dashed outline-transparent hover:outline-blue-500
         hover:bg-blue-50/30 rounded px-1
       `}

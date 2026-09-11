@@ -3,6 +3,7 @@ export type PaymentDiagnosticState =
   | "validating"
   | "validated"
   | "waiting"
+  | "paid"
   | "cancelled"
   | "error";
 

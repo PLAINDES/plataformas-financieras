@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+﻿import { useState, useRef, useEffect, useCallback } from "react";
 import { MainService } from "@/shared/services/main.service";
 import Markdown from "react-markdown";
 import {
@@ -344,7 +344,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 
       {/* Ventana del Chatbot */}
       <div
-        className={`absolute top-full left-0 right-0 z-10 flex w-full flex-col overflow-hidden rounded-b-4xl border border-slate-100 transition-all duration-300 h-[min(550px,calc(100vh-140px))] origin-top ${
+        className={`absolute top-full left-0 right-0 z-10 flex w-full flex-col overflow-hidden rounded-b-4xl border border-slate-100 transition-[transform,opacity] duration-300 h-[min(550px,calc(100vh-140px))] origin-top ${
           isOpen
             ? "scale-y-100 opacity-100"
             : "pointer-events-none scale-y-0 opacity-0"

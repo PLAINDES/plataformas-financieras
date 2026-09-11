@@ -1,4 +1,4 @@
-import { Phone, ExternalLink } from "lucide-react";
+﻿import { Phone, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditableText } from "@/shared/components/editable/EditableText";
 import type { CTAContent } from "../types/landing.types";
@@ -76,13 +76,13 @@ export function CTASection({ content, onSave }: CTASectionProps) {
                         )}
 
                         {isAdmin && (
-                            <div className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center gap-8 transition-all">
+                            <div className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center gap-8 transition-[border-color,box-shadow]">
                                 <div className="w-full flex flex-col md:flex-row items-center justify-around gap-8">
                                     <div className="flex flex-col items-center gap-3 w-full max-w-60">
                                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                                             Previsualización
                                         </span>
-                                        <div className="relative flex items-center justify-center gap-3 w-full min-h-13 px-6 bg-valora-primary rounded-xl shadow-lg shadow-blue-200 transition-all">
+                                        <div className="relative flex items-center justify-center gap-3 w-full min-h-13 px-6 bg-valora-primary rounded-xl shadow-lg shadow-blue-200 transition-[box-shadow,background-color]">
                                             <WhatsAppIcon className="w-5 h-5 shrink-0 drop-shadow-sm" />
                                             <div className="flex-1 relative text-white focus-within:text-gray-900">
                                                 <EditableText
@@ -111,7 +111,7 @@ export function CTASection({ content, onSave }: CTASectionProps) {
                                                 Link de WhatsApp
                                             </span>
                                         </div>
-                                        <div className="bg-white border border-gray-300 rounded-lg px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-[#2FA4FF] transition-all overflow-visible">
+                                        <div className="bg-white border border-gray-300 rounded-lg px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-[#2FA4FF] transition-[box-shadow,border-color] overflow-visible">
                                             <EditableText
                                                 content={{
                                                     value: extractWhatsAppNumber(content.whatsappNumber),

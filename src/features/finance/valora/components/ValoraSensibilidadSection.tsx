@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { ValoraGeneralResultsBlock } from "./ValoraGeneralResultsBlock";
 import { ValoraSensibilidadResultsBlock } from "./ValoraSensibilidadResultsBlock";
 
@@ -33,7 +33,7 @@ export const ValoraSensibilidadSection: React.FC<ValoraSensibilidadSectionProps>
               type="button"
               onClick={() => !((tab.id === "sensibility" || tab.id === "comparison") && !hasSensitized) && setActiveTab(tab.id)}
               disabled={(tab.id === "sensibility" || tab.id === "comparison") && !hasSensitized}
-              className={`px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
+              className={`px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-[background-color,color,box-shadow] duration-200 whitespace-nowrap cursor-pointer ${
                 activeTab === tab.id
                   ? "bg-white text-valora-primary shadow-sm"
                   : "text-slate-500 hover:text-valora-primary hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"

@@ -3,7 +3,7 @@ import { FinanceNavbar } from "@/features/finance/components/FinanceNavbar";
 import type { NavTab } from "@/features/finance/components/FinanceNavbar";
 import { UserMenu } from "@/shared/components/common/UserMenu";
 import type { User } from "@/shared/types/user.types";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, FolderKanban } from "lucide-react";
 import type { ValoraResultsSectionKey } from "./ValoraResults";
 
 interface NavBarProps {
@@ -170,6 +170,7 @@ l347 -2 4 -472 c4 -533 6 -547 78 -696 76 -157 229 -281 404 -327 49 -12 137
               href={projectsHref}
               className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
+              <FolderKanban className="w-4 h-4 text-gray-400" strokeWidth={1.8} />
               Mis proyectos
             </a>
           </UserMenu>

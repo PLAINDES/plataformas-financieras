@@ -108,6 +108,7 @@ export function useReportEditor(id?: string) {
                 hoja: item.hoja ?? null,
                 value: item.value ?? null,
                 template_code_image_url: item.template_code_image_url,
+                template_code_image_id: item.template_code_image_id ?? null,
               });
             }
           }

@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { ToastStack } from "@/shared/components/common/ToastStack";
 import { ConfirmationModal } from "@/shared/components/common/ConfirmationModal";
+import { TableSkeleton } from "../components/Skeleton";
 import {
   Plus,
   Search,
@@ -109,10 +110,7 @@ export const UsersPage = () => {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-gray-500">
-            <Loader2 className="animate-spin h-6 w-6 mr-2" />
-            Cargando usuarios…
-          </div>
+          <TableSkeleton rows={4} cols={4} />
         ) : users.length === 0 ? (
           <div className="rounded-xl border-2 border-dashed border-gray-200 px-8 py-16 text-center text-gray-400">
             <p className="text-lg font-medium">No hay usuarios registrados</p>
@@ -169,7 +167,7 @@ export const UsersPage = () => {
                               ? "No modificable"
                               : "Clic para cambiar rol"
                           }
-                          className="group inline-flex items-center justify-center transition-all disabled:opacity-100"
+                          className="group inline-flex items-center justify-center transition-opacity disabled:opacity-100"
                         >
                           {togglingRoleId === u.id ? (
                             <Loader2 className="w-5 h-5 animate-spin text-valora-primary" />
@@ -286,8 +284,8 @@ export const UsersPage = () => {
         )}
 
         {dialogOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-in fade-in duration-200 ease-out">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 animate-in fade-in zoom-in-95 duration-200 ease-out">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-lg font-bold text-gray-900">
                   {editingId === null ? "Nuevo Usuario" : "Editar Usuario"}

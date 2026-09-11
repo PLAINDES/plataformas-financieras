@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Calculator, FileText } from "lucide-react";
 
 type MainPageHeroProps = {
@@ -29,7 +29,7 @@ export const MainPageHero: React.FC<MainPageHeroProps> = ({
 
       <button
         onClick={onOpenForm}
-        className="cursor-pointer inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 shadow-lg transition-all"
+        className="cursor-pointer inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 shadow-lg transition-[background-color,box-shadow]"
       >
         <FileText className="w-5 h-5" />
         {buttonText}
