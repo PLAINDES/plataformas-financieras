@@ -185,7 +185,7 @@ const OccupationProfileBreakdown: React.FC<{ data: OccupationProfileMetrics }> =
   </div>
 );
 
-const KapitalFunnelOverview: React.FC<{ data: DashboardData }> = ({ data }) => {
+const _KapitalFunnelOverview: React.FC<{ data: DashboardData }> = ({ data }) => {
   const funnel = data.kapital_funnel;
   const stages = [
     { label: "Visitantes que inician", value: funnel?.users_started ?? 0, color: "#2563eb" },
