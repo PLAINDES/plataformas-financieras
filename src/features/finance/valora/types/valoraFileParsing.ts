@@ -158,13 +158,13 @@ export const parseFinancialTablesFromFile = async (
       const shares = parseNumberValue(cellC5, rawC5);
 
       if (date !== null || kd !== null || debt !== null || shares !== null) {
-        customInputs = {
-          ...(customInputs || {}),
-          ...(date !== null && !customInputs?.date ? { date } : {}),
-          ...(kd !== null && !customInputs?.kd ? { kd } : {}),
-          ...(debt !== null && !customInputs?.debt ? { debt } : {}),
-          ...(shares !== null && !customInputs?.shares ? { shares } : {}),
-        };
+        const prev = customInputs || {};
+        const next: CustomTemplateInputs = { ...prev };
+        if (date !== null && !prev.date) next.date = date;
+        if (kd !== null && !prev.kd) next.kd = kd;
+        if (debt !== null && !prev.debt) next.debt = debt;
+        if (shares !== null && !prev.shares) next.shares = shares;
+        customInputs = next;
       }
     }
 

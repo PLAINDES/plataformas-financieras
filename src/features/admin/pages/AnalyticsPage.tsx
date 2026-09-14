@@ -185,45 +185,6 @@ const OccupationProfileBreakdown: React.FC<{ data: OccupationProfileMetrics }> =
   </div>
 );
 
-const _KapitalFunnelOverview: React.FC<{ data: DashboardData }> = ({ data }) => {
-  const funnel = data.kapital_funnel;
-  const stages = [
-    { label: "Visitantes que inician", value: funnel?.users_started ?? 0, color: "#2563eb" },
-    { label: "Cálculos iniciados", value: funnel?.started ?? 0, color: "#06b6d4" },
-    { label: "Cálculos completados", value: funnel?.completed ?? 0, color: "#10b981" },
-  ];
-  const maxValue = Math.max(...stages.map((stage) => stage.value), 1);
-
-  return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-center justify-between gap-4">
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500">Actividad de Kapital</h3>
-          <p className="mt-1 text-xs text-gray-400">Conversión de visitantes a cálculos completados.</p>
-        </div>
-        <div className="flex gap-4 text-right text-xs">
-          <div><span className="block font-bold text-gray-900">{funnel?.activation_rate ?? 0}%</span><span className="text-gray-400">activación</span></div>
-          <div><span className="block font-bold text-gray-900">{funnel?.completion_rate ?? 0}%</span><span className="text-gray-400">finalización</span></div>
-        </div>
-      </div>
-      <div className="mb-5 flex h-3 overflow-hidden rounded-full bg-gray-100">
-        {stages.map((stage) => (
-          <div key={stage.label} style={{ width: `${Math.max((stage.value / maxValue) * 100, stage.value ? 8 : 0)}%`, backgroundColor: stage.color }} title={`${stage.label}: ${stage.value}`} />
-        ))}
-      </div>
-      <div className="space-y-3">
-        {stages.map((stage) => (
-          <div key={stage.label} className="flex items-center gap-3 text-sm">
-            <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: stage.color }} />
-            <span className="min-w-0 flex-1 truncate text-gray-700">{stage.label}</span>
-            <span className="font-medium text-gray-500">{stage.value}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 const SessionsSummaryBar: React.FC<{ items: { label: string; value: string | number; subtitle?: string; tooltip: string; icon: React.ReactNode; color: string }[] }> = ({ items }) => {
   const segmentWeight = (value: string | number) => {
     const numericValue = Number.parseFloat(String(value).replace(/[^0-9.-]/g, "")) || 0;
