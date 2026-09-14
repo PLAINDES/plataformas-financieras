@@ -3,6 +3,7 @@ import * as XLSX from "xlsx";
 import type { FinancialTable } from "@/shared/types/ValoraTypes";
 
 export type CustomTemplateInputs = {
+  date?: string;    // Celda C2: Fecha
   kd?: string;     // Celda C3: Costo de deuda (Section 4)
   debt?: string;   // Celda C4: % de deuda (Section 4)
   shares?: string; // Celda C5: Número de acciones (Section 1)
@@ -49,7 +50,7 @@ const parsePercentageValue = (
   if (formatted.includes("%")) {
     const num = parseFloat(formatted.replace("%", "").trim());
     if (!isNaN(num)) {
-      return String(num);
+      return num >= 0 && num <= 100 ? String(num) : null;
     }
   }
 
@@ -58,7 +59,7 @@ const parsePercentageValue = (
     if (val > 0 && val <= 1) {
       return String(Number((val * 100).toFixed(4)));
     }
-    return String(val);
+    return val >= 0 && val <= 100 ? String(val) : null;
   }
 
   if (typeof val === "string") {
@@ -68,11 +69,25 @@ const parsePercentageValue = (
       if (num > 0 && num <= 1 && !val.includes("%") && clean.startsWith("0.")) {
         return String(Number((num * 100).toFixed(4)));
       }
-      return String(num);
+      return num >= 0 && num <= 100 ? String(num) : null;
     }
   }
 
   return null;
+};
+
+const parseDateValue = (cell: XLSX.CellObject | undefined, rawArrayValue: any): string | null => {
+  const value: any = cell?.v ?? rawArrayValue;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return `${String(value.getDate()).padStart(2, "0")}/${String(value.getMonth() + 1).padStart(2, "0")}/${value.getFullYear()}`;
+  }
+  if (typeof value === "number") {
+    const parsed = XLSX.SSF.parse_date_code(value);
+    if (parsed) return `${String(parsed.d).padStart(2, "0")}/${String(parsed.m).padStart(2, "0")}/${parsed.y}`;
+  }
+  const text = String(cell?.w ?? value ?? "").trim();
+  const match = text.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  return match ? `${match[1].padStart(2, "0")}/${match[2].padStart(2, "0")}/${match[3]}` : null;
 };
 
 const parseNumberValue = (
@@ -123,25 +138,32 @@ export const parseFinancialTablesFromFile = async (
       }
     ) as Array<Array<string | number | null>>;
 
-    // Extraer C3, C4, C5 si no han sido extraídos aun
-    if (!customInputs) {
+    // Los inputs pueden estar en una hoja distinta a los estados financieros.
+    // Acumularlos por hoja evita quedarnos únicamente con C2 de una hoja
+    // auxiliar y perder C3:C5 de la plantilla principal.
+    {
+      const cellC2 = sheet["C2"];
       const cellC3 = sheet["C3"];
       const cellC4 = sheet["C4"];
       const cellC5 = sheet["C5"];
 
+      const rawC2 = data[1]?.[2];
       const rawC3 = data[2]?.[2];
       const rawC4 = data[3]?.[2];
       const rawC5 = data[4]?.[2];
 
+      const date = parseDateValue(cellC2, rawC2);
       const kd = parsePercentageValue(cellC3, rawC3);
       const debt = parsePercentageValue(cellC4, rawC4);
       const shares = parseNumberValue(cellC5, rawC5);
 
-      if (kd !== null || debt !== null || shares !== null) {
+      if (date !== null || kd !== null || debt !== null || shares !== null) {
         customInputs = {
-          ...(kd !== null ? { kd } : {}),
-          ...(debt !== null ? { debt } : {}),
-          ...(shares !== null ? { shares } : {}),
+          ...customInputs,
+          ...(date !== null && !customInputs?.date ? { date } : {}),
+          ...(kd !== null && !customInputs?.kd ? { kd } : {}),
+          ...(debt !== null && !customInputs?.debt ? { debt } : {}),
+          ...(shares !== null && !customInputs?.shares ? { shares } : {}),
         };
       }
     }
@@ -161,7 +183,7 @@ export const parseFinancialTablesFromFile = async (
       );
     }
 
-    if (parsedBalance && parsedResults && customInputs) {
+    if (parsedBalance && parsedResults && customInputs?.date && customInputs?.kd && customInputs?.debt && customInputs?.shares) {
       break;
     }
   }

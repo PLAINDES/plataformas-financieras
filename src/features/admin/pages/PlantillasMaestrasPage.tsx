@@ -561,7 +561,7 @@ export const PlantillasMaestrasPage = () => {
                   Copias de Trabajo — Valora/Kapital ({valoraCopiesEnv})
                 </h2>
                 <p className="text-[11px] text-gray-500 mt-1">
-                  Archivos generados por el motor de cálculo en S3 (templates/tmps/valora|kapital). Desde aquí puedes inspeccionar el Excel resultante o limpiar copias.
+                  Archivos generados por el motor de cálculo en S3 (templates/tmps/{valoraCopiesEnv}/valora|kapital). Desde aquí puedes inspeccionar el Excel resultante o limpiar copias.
                 </p>
               </div>
               <div className="flex items-center gap-3">

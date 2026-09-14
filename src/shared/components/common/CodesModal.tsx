@@ -60,6 +60,15 @@ const imageUrlFromName = (image: string) => {
   return `/api/v1/main/master-templates/chart-file/${encodeURIComponent(filename)}`;
 };
 
+const isProtectedApiUrl = (value: string) => {
+  try {
+    const url = new URL(value, window.location.origin);
+    return url.origin === window.location.origin && url.pathname.startsWith("/api/");
+  } catch {
+    return value.startsWith("/api/");
+  }
+};
+
 export const CodesModal = ({
   isOpen,
   mode,
@@ -142,7 +151,7 @@ export const CodesModal = ({
             continue;
           }
 
-          if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+          if (!isProtectedApiUrl(rawUrl)) {
             nextMap[key] = rawUrl;
             continue;
           }
@@ -208,7 +217,7 @@ export const CodesModal = ({
             continue;
           }
 
-          if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+          if (!isProtectedApiUrl(rawUrl)) {
             nextMap[key] = rawUrl;
             continue;
           }
@@ -278,12 +287,13 @@ export const CodesModal = ({
 
   const getAllModeImageSrc = (image: ChartImageItem) => {
     const key = `${image.filename}::${image.url || ""}`;
-    return imageBlobUrls[key] || image.url;
+    return imageBlobUrls[key] || (isProtectedApiUrl(image.url) ? undefined : image.url);
   };
 
   const getNewModeImageSrc = (imageName: string) => {
     const key = `new::${imageName}`;
-    return imageBlobUrls[key] || imageUrlFromName(imageName);
+    const fallback = imageUrlFromName(imageName);
+    return imageBlobUrls[key] || (isProtectedApiUrl(fallback) ? undefined : fallback);
   };
 
   return (
@@ -410,7 +420,7 @@ export const CodesModal = ({
                           >
                             <div className="aspect-4/3 bg-white">
                               <img
-                                src={getNewModeImageSrc(image)}
+                                src={getNewModeImageSrc(image) || undefined}
                                 alt={image}
                                 className="h-full w-full object-cover"
                               />
@@ -473,7 +483,7 @@ export const CodesModal = ({
                           >
                             <div className="aspect-4/3 bg-white">
                               <img
-                                src={getNewModeImageSrc(image)}
+                                src={getNewModeImageSrc(image) || undefined}
                                 alt={image}
                                 className="h-full w-full object-cover"
                               />
@@ -582,11 +592,14 @@ export const CodesModal = ({
                           className="rounded-lg border border-gray-200 overflow-hidden bg-gray-50 hover:shadow-lg transition-shadow"
                         >
                           <img
-                            src={getAllModeImageSrc(image)}
+                            src={getAllModeImageSrc(image) || undefined}
                             alt={image.filename}
                             className="w-full h-32 object-cover cursor-pointer"
                             onClick={() =>
-                              window.open(getAllModeImageSrc(image), "_blank")
+                              (() => {
+                                const src = getAllModeImageSrc(image);
+                                if (src) window.open(src, "_blank");
+                              })()
                             }
                             title="Click para ver en grande"
                           />
@@ -661,11 +674,14 @@ export const CodesModal = ({
                           className="rounded-lg border border-gray-200 overflow-hidden bg-gray-50 hover:shadow-lg transition-shadow"
                         >
                           <img
-                            src={getAllModeImageSrc(image)}
+                            src={getAllModeImageSrc(image) || undefined}
                             alt={image.filename}
                             className="w-full h-32 object-cover cursor-pointer"
                             onClick={() =>
-                              window.open(getAllModeImageSrc(image), "_blank")
+                              (() => {
+                                const src = getAllModeImageSrc(image);
+                                if (src) window.open(src, "_blank");
+                              })()
                             }
                             title="Click para ver en grande"
                           />

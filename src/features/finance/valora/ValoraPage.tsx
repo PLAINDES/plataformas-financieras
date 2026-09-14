@@ -91,6 +91,7 @@ const ValoraPage: React.FC = () => {
   >([]);
   const toastTimeoutsRef = useRef<Map<string, number>>(new Map());
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
+  const uploadedTemplateRef = useRef<File | null>(null);
   const [resultsSection, setResultsSection] = useState<ValoraResultsSectionKey>(
     "resultados"
   );
@@ -242,6 +243,7 @@ const ValoraPage: React.FC = () => {
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [pdfProgress, setPdfProgress] = useState(0);
   const [pdfStage, setPdfStage] = useState("");
+  const [pdfElapsedSeconds, setPdfElapsedSeconds] = useState(0);
   const pdfControllerRef = useRef<AbortController | null>(null);
   const pdfTimeoutRef = useRef<number | null>(null);
   const pdfIntervalRef = useRef<number | null>(null);
@@ -373,6 +375,7 @@ const ValoraPage: React.FC = () => {
   };
 
   const handleUploadTemplate = (file: File) => {
+    uploadedTemplateRef.current = file;
     setUploadedFileUrl((prevUrl) => {
       if (prevUrl) {
         URL.revokeObjectURL(prevUrl);
@@ -407,7 +410,8 @@ const ValoraPage: React.FC = () => {
     console.log("[VALORA PDF] handleUploadPdf iniciado", file.name, file.size);
     setIsPdfLoading(true);
     setPdfProgress(10);
-    setPdfStage("Subiendo PDF...");
+    setPdfStage("Leyendo el PDF y preparando sus hojas...");
+    setPdfElapsedSeconds(0);
     const controller = new AbortController();
     pdfControllerRef.current = controller;
     const timeoutId = window.setTimeout(() => {
@@ -415,8 +419,22 @@ const ValoraPage: React.FC = () => {
       try { controller.abort(new DOMException("timeout 600s", "AbortError")); } catch { controller.abort(); }
     }, 600_000);
     pdfTimeoutRef.current = timeoutId;
+    const startedAt = Date.now();
     const progressInterval = window.setInterval(() => {
-      setPdfProgress((prev) => (prev < 87 ? prev + 2 : prev));
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      setPdfElapsedSeconds(elapsed);
+      const progress = Math.min(82, Math.round(16 + 68 * (1 - Math.exp(-elapsed / 55))));
+      setPdfProgress((prev) => Math.max(prev, progress));
+      const stage = elapsed < 8
+        ? "Leyendo el PDF y preparando sus hojas..."
+        : elapsed < 25
+          ? "Identificando estados financieros y periodos..."
+          : elapsed < 90
+            ? "La IA está clasificando las cuentas..."
+            : elapsed < 180
+              ? "Validando datos y completando el mapeo..."
+              : "Consolidando resultados para generar el Excel...";
+      setPdfStage(stage);
     }, 900);
     pdfIntervalRef.current = progressInterval;
     try {
@@ -424,11 +442,10 @@ const ValoraPage: React.FC = () => {
         setPdfProgress(p);
         setPdfStage(s);
       };
-      tick(20, "Extrayendo texto del PDF...");
-      tick(30, "Clasificando cuentas con IA...");
       console.log("[VALORA PDF] POST /main/valora/pdf-to-template ->", file.name);
 
-       const result = await MainService.uploadValoraPdf(file, controller.signal);
+      // ── PASO 1: Enviar PDF al backend, recibir Excel rellenado ──
+      const result = await MainService.uploadValoraPdf(file, controller.signal);
       console.log("[VALORA PDF] result status", result.status);
 
       tick(85, "Rellenando Excel ya subido con datos del PDF...");
@@ -436,7 +453,6 @@ const ValoraPage: React.FC = () => {
       const mergeTables = (existing: FinancialTable | null, incoming: FinancialTable | null): FinancialTable | null => {
         if (!incoming) return existing;
         if (!existing) return incoming;
-        // Mapa incoming: label -> periodo -> valor
         const incomingMap = new Map<string, Map<string, any>>();
         incoming.rows.forEach((r) => {
           const m = new Map<string, any>();
@@ -462,12 +478,15 @@ const ValoraPage: React.FC = () => {
       if (mergedRes) setResultsTable(mergedRes);
       else if (result.results_table) setResultsTable(result.results_table);
 
-      // Usa exclusivamente la copia de la plantilla maestra rellenada por el backend.
+      // ── PASO 2: Decodificar el Excel y parsearlo para extraer C2:C5 ──
+      let xlsxBlob: Blob;
+      let parsedFromExcel: Awaited<ReturnType<typeof parseFinancialTablesFromFile>>["customInputs"] = undefined;
+
       try {
         if (!result.xlsx_base64) {
           throw new Error("El backend no devolvió la plantilla Valora rellenada");
         }
-        const xlsxBlob = new Blob([Uint8Array.from(atob(result.xlsx_base64), (char) => char.charCodeAt(0))], {
+        xlsxBlob = new Blob([Uint8Array.from(atob(result.xlsx_base64), (char) => char.charCodeAt(0))], {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         const xlsxUrl = URL.createObjectURL(xlsxBlob);
@@ -476,8 +495,14 @@ const ValoraPage: React.FC = () => {
           return xlsxUrl;
         });
         (window as any).__lastValoraXlsxBlob = xlsxBlob;
+
+        // Parsear el Excel generado para extraer kd, debt, date, shares desde C2:C5
+        const generatedFile = new File([xlsxBlob], "generated.xlsx", { type: xlsxBlob.type });
+        const parsed = await parseFinancialTablesFromFile(generatedFile);
+        parsedFromExcel = parsed.customInputs;
+        console.log("[VALORA PDF] customInputs from generated Excel:", parsedFromExcel);
       } catch (e) {
-        console.warn("[VALORA PDF] No se pudo generar Excel rellenado", e);
+        console.warn("[VALORA PDF] No se pudo parsear el Excel generado", e);
         if (!balanceTable && !resultsTable) {
           setUploadedFileUrl((prevUrl) => {
             if (prevUrl) URL.revokeObjectURL(prevUrl);
@@ -486,18 +511,56 @@ const ValoraPage: React.FC = () => {
         }
       }
 
+      // ── PASO 3: Actualizar formData con los valores extraídos ──
+      // Helper: validar que un valor sea un porcentaje válido (0-100)
+      const validPct = (v: any): string | null => {
+        if (v === undefined || v === null || v === "") return null;
+        const n = Number(String(v).replace("%", "").replace(",", ".").trim());
+        return Number.isFinite(n) && n >= 0 && n <= 100 ? String(n) : null;
+      };
+
+      // Fuente: el Excel generado es la fuente de verdad
+      const kdRaw = validPct(parsedFromExcel?.kd);
+      const debtRaw = validPct(parsedFromExcel?.debt);
+      const dateRaw = parsedFromExcel?.date || null;
+      let sharesRaw = validPct(parsedFromExcel?.shares);
+
+      // Calcular capital = 100 - debt
+      const debtNum = debtRaw ? Number(debtRaw) : null;
+      const capitalRaw = debtNum !== null ? String(100 - debtNum) : null;
+
+      // Validar que shares no se mezcle con debt/kd
+      if (sharesRaw && (sharesRaw === kdRaw || sharesRaw === debtRaw)) {
+        sharesRaw = null;
+      }
+
+      console.log("[VALORA PDF] formData kd/debt:", kdRaw, debtRaw);
+
       setFormData((prev) => {
         const updates: any = { ...prev };
         // Mantiene nombre del Excel ya subido (no cambia a .pdf)
         if (!prev.fileUsername || prev.fileUsername.toLowerCase().endsWith(".pdf")) {
-          // Si antes no había Excel, usa nombre Excel generado
           const sourceName = file.name.replace(/\.[^.]+$/, "").replace(/\s+/g, "_");
           const detectedPeriods = (result.metadata?.periodos || []).join("-");
           updates.fileUsername = result.filename || `${sourceName}${detectedPeriods ? `_${detectedPeriods}` : ""}_rellenado.xlsx`;
         }
         if (result.metadata?.moneda) updates.currency = result.metadata.moneda;
-        const sharesVal = result.number_of_shares?.value ?? result.number_of_shares;
-        if (sharesVal !== null && sharesVal !== undefined && String(sharesVal).trim() !== "") updates.shares = String(sharesVal);
+
+        // Actualizar kd, debt, capital, date, shares desde el Excel generado
+        if (dateRaw) updates.date = dateRaw;
+        if (kdRaw) updates.kd = kdRaw;
+        if (debtRaw) {
+          updates.debt = debtRaw;
+          updates.capital = capitalRaw;
+        }
+        // shares: solo si no está vacío y es diferente a kd/debt
+        const sharesVal = sharesRaw ?? result.number_of_shares?.value ?? result.number_of_shares;
+        if (sharesVal !== null && sharesVal !== undefined && String(sharesVal).trim() !== "") {
+          const sNum = Number(String(sharesVal).replace(/,/g, ""));
+          if (Number.isFinite(sNum) && sNum > 0) {
+            updates.shares = String(sNum);
+          }
+        }
         return updates;
       });
       setFileUploaded(true);
@@ -545,6 +608,11 @@ const ValoraPage: React.FC = () => {
       if (customInputs) {
         setFormData((prev) => {
           const updates = { ...prev };
+
+          // C2 -> Fecha de los estados financieros (Section 2)
+          if (customInputs.date !== undefined && customInputs.date !== null && customInputs.date !== "") {
+            updates.date = customInputs.date;
+          }
 
           // C3 -> Costo de deuda (Section 4)
           if (customInputs.kd !== undefined && customInputs.kd !== null && customInputs.kd !== "") {
@@ -911,8 +979,10 @@ isLoadingAI={isLoadingAI}
             <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
               <div className="h-2 bg-valora-primary transition-[width] duration-500" style={{ width: `${pdfProgress}%` }} />
             </div>
-            <p className="text-[11px] text-gray-400 text-center">{pdfProgress}% — La IA clasifica semánticamente cuentas, valida y mapea a plantilla</p>
-            <p className="text-[10px] text-gray-400 text-center">Si tarda &gt;180s se cancela automáticamente. Abre Consola (F12) y Network para ver POST.</p>
+            <div className="flex items-center justify-between text-[11px] text-gray-400">
+              <span>{pdfProgress}% completado</span>
+              <span>{Math.floor(pdfElapsedSeconds / 60)}:{String(pdfElapsedSeconds % 60).padStart(2, "0")} transcurridos</span>
+            </div>
           </div>
         </div>
       )}

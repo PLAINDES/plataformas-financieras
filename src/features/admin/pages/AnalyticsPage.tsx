@@ -24,12 +24,10 @@ import {
   Activity,
   PlayCircle,
   CheckCircle2,
-  Percent,
   UserPlus,
   RefreshCw,
   HelpCircle,
   Download,
-  ChevronDown,
 } from "lucide-react";
 
 declare global {
@@ -59,7 +57,8 @@ const MetricCard: React.FC<{
   icon: React.ReactNode;
   subtitle?: string;
   tooltip?: string;
-}> = ({ title, value, icon, subtitle, tooltip }) => {
+  compact?: boolean;
+}> = ({ title, value, icon, subtitle, tooltip, compact = false }) => {
   const isNumeric = typeof value === "number";
   const numericValue = isNumeric ? value : parseFloat(String(value).replace(/[^0-9.-]/g, "")) || 0;
   const suffix = isNumeric ? "" : String(value).replace(/[\d.-]/g, "");
@@ -67,7 +66,7 @@ const MetricCard: React.FC<{
   const animated = useCountUp(numericValue);
 
   return (
-    <div className="rounded-xl bg-white p-5 shadow-sm border border-gray-100">
+    <div className={`rounded-xl bg-white border border-gray-100 ${compact ? "p-3 shadow-none border-0" : "p-5 shadow-sm"}`}>
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
@@ -117,7 +116,7 @@ const SectionCard: React.FC<{ title: string; children: React.ReactNode; icon?: R
   tooltip,
   className = "",
 }) => (
-  <div className={`min-w-0 rounded-xl bg-white p-5 shadow-sm border border-gray-100 ${className}`}>
+  <div className={`min-w-0 h-full rounded-xl bg-white p-5 shadow-sm border border-gray-100 ${className}`}>
     <div className="mb-4 flex items-center gap-2">
       {icon && <span className="text-gray-500">{icon}</span>}
       <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500">{title}</h3>
@@ -131,107 +130,130 @@ const SectionCard: React.FC<{ title: string; children: React.ReactNode; icon?: R
   </div>
 );
 
-const OccupationProfileBreakdown: React.FC<{ data: OccupationProfileMetrics }> = ({ data }) => {
-  const [rolesOpen, setRolesOpen] = useState(false);
-  const [companiesOpen, setCompaniesOpen] = useState(false);
+const ProfilePieChart: React.FC<{ title: string; items: { label: string; count: number; percentage: number }[]; color: string; donut?: boolean; innerRadius?: number }> = ({ title, items, color, donut = true, innerRadius = 58 }) => {
+  const chartDiv = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!chartDiv.current || !window.am4core || items.length === 0) return;
+    const chart = window.am4core.create(chartDiv.current, window.am4charts.PieChart);
+    if (donut) chart.innerRadius = window.am4core.percent(innerRadius);
+    chart.paddingBottom = 12;
+    chart.data = items.map((item) => ({ ...item, value: item.count }));
+
+    const series = chart.series.push(new window.am4charts.PieSeries());
+    series.dataFields.value = "value";
+    series.dataFields.category = "label";
+    series.labels.template.disabled = true;
+    series.ticks.template.disabled = true;
+    series.slices.template.tooltipText = "{category}: {value} ({percentage}%)";
+    series.slices.template.stroke = window.am4core.color("#ffffff");
+    series.slices.template.strokeWidth = 2;
+    series.colors.list = [window.am4core.color(color), window.am4core.color("#7dd3fc"), window.am4core.color("#c4b5fd"), window.am4core.color("#a7f3d0"), window.am4core.color("#fcd34d")];
+    chart.legend = new window.am4charts.Legend();
+    chart.legend.position = "bottom";
+    chart.legend.labels.template.text = "{name}";
+    chart.legend.valueLabels.template.text = "{value} ({percentage}%)";
+    chart.legend.labels.template.maxWidth = 130;
+    chart.legend.labels.template.wrap = true;
+    chart.legend.fontSize = 10;
+    series.appear(700, 80);
+
+    return () => chart.dispose();
+  }, [items, color, donut, innerRadius]);
 
   return (
-    <div className="min-w-0">
-      <div className="mb-4 flex items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Distribución general
-          </p>
-          <p className="mt-1 text-2xl font-bold text-gray-900">{data.total_devices}</p>
-        </div>
-        <span className="text-xs text-gray-400">dispositivos</span>
-      </div>
-
-      {data.audiences.map((item, index) => (
-        <div key={item.label}>
-          <ProgressBar
-            label={item.label}
-            count={item.count}
-            percentage={item.percentage}
-            color={index === 0 ? "bg-blue-600" : "bg-emerald-500"}
-          />
-
-          {item.label === "Especialistas" && data.specialist_roles.length > 0 && (
-            <div className="mb-4 ml-0 rounded-lg border-l-2 border-blue-200 bg-slate-50 p-3 pl-3 sm:ml-2 sm:pl-4">
-              <button
-                type="button"
-                onClick={() => setRolesOpen((value) => !value)}
-                className="mb-3 flex w-full items-center justify-between gap-3 text-left"
-              >
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                  Especialistas por cargo
-                </p>
-                <ChevronDown
-                  className={`h-4 w-4 shrink-0 transition-transform duration-200 ${rolesOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-              {data.specialist_roles
-                .slice(0, rolesOpen ? data.specialist_roles.length : 2)
-                .map((role) => (
-                  <div key={role.label} className="mb-3 min-w-0 last:mb-0">
-                    <div className="mb-1 flex flex-wrap items-start gap-2 text-xs">
-                      <span className="min-w-0 flex-1 break-words font-medium leading-tight text-gray-700">
-                        {role.label}
-                      </span>
-                      <span className="shrink-0 text-gray-500">
-                        {role.count} ({role.percentage}%)
-                      </span>
-                    </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-                      <div
-                        className="h-full rounded-full bg-cyan-500"
-                        style={{ width: `${Math.min(role.percentage, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-
-          {item.label === "Empresas" && data.company_names.length > 0 && (
-            <div className="mb-4 ml-0 rounded-lg border-l-2 border-emerald-200 bg-emerald-50 p-3 pl-3 sm:ml-2 sm:pl-4">
-              <button
-                type="button"
-                onClick={() => setCompaniesOpen((value) => !value)}
-                className="mb-3 flex w-full items-center justify-between gap-3 text-left"
-              >
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                  Empresas registradas
-                </p>
-                <ChevronDown
-                  className={`h-4 w-4 shrink-0 transition-transform duration-200 ${companiesOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-              {data.company_names
-                .slice(0, companiesOpen ? data.company_names.length : 2)
-                .map((company) => (
-                  <div key={company.label} className="mb-3 min-w-0 last:mb-0">
-                    <div className="mb-1 flex flex-wrap items-start gap-2 text-xs">
-                      <span className="min-w-0 flex-1 break-words font-medium leading-tight text-gray-700">
-                        {company.label}
-                      </span>
-                      <span className="shrink-0 text-gray-500">
-                        {company.count} ({company.percentage}%)
-                      </span>
-                    </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-                      <div
-                        className="h-full rounded-full bg-emerald-500"
-                        style={{ width: `${Math.min(company.percentage, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
-      ))}
+    <div className="flex min-w-0 flex-col justify-center rounded-lg bg-slate-50 p-3">
+      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{title}</p>
+      {items.length > 0 ? <div ref={chartDiv} style={{ width: "100%", aspectRatio: "1.15" }} /> : <p className="py-12 text-center text-sm text-gray-400">Sin datos</p>}
     </div>
+  );
+};
+
+const OccupationProfileBreakdown: React.FC<{ data: OccupationProfileMetrics }> = ({ data }) => (
+  <div className="min-w-0">
+    <div className="mb-4 flex items-end justify-between gap-3">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Distribución general</p>
+        <p className="mt-1 text-2xl font-bold text-gray-900">{data.total_devices}</p>
+      </div>
+      <span className="text-xs text-gray-400">dispositivos</span>
+    </div>
+    <div className="grid grid-cols-1 items-center gap-4 pt-6 xl:grid-cols-2">
+      <ProfilePieChart title="Especialistas por cargo" items={data.specialist_roles} color="#2563eb" donut={false} />
+      <ProfilePieChart title="Empresas registradas" items={data.company_names} color="#10b981" innerRadius={48} />
+    </div>
+  </div>
+);
+
+const KapitalFunnelOverview: React.FC<{ data: DashboardData }> = ({ data }) => {
+  const funnel = data.kapital_funnel;
+  const stages = [
+    { label: "Visitantes que inician", value: funnel?.users_started ?? 0, color: "#2563eb" },
+    { label: "Cálculos iniciados", value: funnel?.started ?? 0, color: "#06b6d4" },
+    { label: "Cálculos completados", value: funnel?.completed ?? 0, color: "#10b981" },
+  ];
+  const maxValue = Math.max(...stages.map((stage) => stage.value), 1);
+
+  return (
+    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500">Actividad de Kapital</h3>
+          <p className="mt-1 text-xs text-gray-400">Conversión de visitantes a cálculos completados.</p>
+        </div>
+        <div className="flex gap-4 text-right text-xs">
+          <div><span className="block font-bold text-gray-900">{funnel?.activation_rate ?? 0}%</span><span className="text-gray-400">activación</span></div>
+          <div><span className="block font-bold text-gray-900">{funnel?.completion_rate ?? 0}%</span><span className="text-gray-400">finalización</span></div>
+        </div>
+      </div>
+      <div className="mb-5 flex h-3 overflow-hidden rounded-full bg-gray-100">
+        {stages.map((stage) => (
+          <div key={stage.label} style={{ width: `${Math.max((stage.value / maxValue) * 100, stage.value ? 8 : 0)}%`, backgroundColor: stage.color }} title={`${stage.label}: ${stage.value}`} />
+        ))}
+      </div>
+      <div className="space-y-3">
+        {stages.map((stage) => (
+          <div key={stage.label} className="flex items-center gap-3 text-sm">
+            <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: stage.color }} />
+            <span className="min-w-0 flex-1 truncate text-gray-700">{stage.label}</span>
+            <span className="font-medium text-gray-500">{stage.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const SessionsSummaryBar: React.FC<{ items: { label: string; value: string | number; subtitle?: string; tooltip: string; icon: React.ReactNode; color: string }[] }> = ({ items }) => {
+  const segmentWeight = (value: string | number) => {
+    const numericValue = Number.parseFloat(String(value).replace(/[^0-9.-]/g, "")) || 0;
+    return Math.max(Math.log1p(Math.max(numericValue, 0)), 0.25);
+  };
+
+  return (
+    <SectionCard title="Resumen de sesiones" icon={<Activity className="h-4 w-4" />} tooltip="Resumen de los indicadores principales del periodo seleccionado.">
+      {items.length === 0 ? <p className="text-sm text-gray-400">Sin datos</p> : (
+        <>
+          <div className="mb-5 flex h-3 overflow-hidden rounded-full bg-gray-100">
+            {items.map((item) => (
+              <div key={item.label} className="min-w-[8px]" style={{ flex: segmentWeight(item.value), backgroundColor: item.color }} title={`${item.label}: ${item.value}`} />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-3">
+            {items.map((item) => (
+              <div key={item.label} className="flex min-w-0 items-center gap-2 text-sm">
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
+                <Tooltip id={`summary-${item.label}`} content={item.tooltip}>
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center text-gray-400">{item.icon}</span>
+                </Tooltip>
+                <span className="min-w-0 flex-1 truncate text-gray-700" title={item.subtitle}>{item.label}</span>
+                <span className="font-medium text-gray-500">{item.value}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </SectionCard>
   );
 };
 
@@ -273,7 +295,7 @@ const SessionsChart: React.FC<{ data: { date: string; count: number }[] }> = ({ 
     chart.cursor.lineY.disabled = true;
 
     chart.data = data.map((d) => ({
-      date: d.date,
+      date: new Date(d.date.includes("T") ? d.date : `${d.date}T00:00:00`),
       count: d.count,
     }));
 
@@ -289,7 +311,7 @@ const SessionsChart: React.FC<{ data: { date: string; count: number }[] }> = ({ 
     };
   }, [data]);
 
-  return <div ref={chartDiv} style={{ width: "100%", height: "300px" }} />;
+  return <div ref={chartDiv} style={{ width: "100%", aspectRatio: "3" }} />;
 };
 
 const AnalyticsPage: React.FC = () => {
@@ -482,134 +504,48 @@ const AnalyticsPage: React.FC = () => {
 
           {!loading && data && (
             <Skeleton>
-            <div className="space-y-6">
-              {/* KPIs */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                <MetricCard
-                  title="Sesiones Activas"
-                  value={activeSessions}
-                  icon={<Activity className="h-5 w-5 text-emerald-600" />}
-                  subtitle="En los últimos 15 min"
-                  tooltip="Cantidad de usuarios que están navegando en este momento. Se considera activa una sesión que no ha cerrado la pestaña en los últimos 15 minutos."
-                />
-                <MetricCard
-                  title="Total Sesiones"
-                  value={data.summary.total_sessions}
-                  icon={<Users className="h-5 w-5" />}
-                  subtitle={`${data.summary.unique_visitors} visitantes únicos`}
-                  tooltip="Número total de visitas realizadas en el periodo seleccionado. Un usuario puede generar múltiples sesiones si entra varias veces."
-                />
-                <MetricCard
-                  title="Páginas Vistas"
-                  value={data.summary.total_page_views}
-                  icon={<Eye className="h-5 w-5" />}
-                  tooltip="Cantidad total de páginas cargadas. Incluye recargas y navegación entre /kapital y el landing."
-                />
-                <MetricCard
-                  title="Captación WhatsApp"
-                  value={data.cta_clicks}
-                  icon={<MousePointerClick className="h-5 w-5" />}
-                  subtitle="Clics a links de WhatsApp"
-                  tooltip="Número de veces que los usuarios hicieron clic en botones de WhatsApp (CTA, productos, footer o chat flotante)."
-                />
-                <MetricCard
-                  title="Tiempo Promedio"
-                  value={data.summary.avg_duration_seconds !== null && data.summary.avg_duration_seconds > 0
-                    ? `${data.summary.avg_duration_seconds}s`
-                    : `${data.avg_time_on_page ?? 0}s`}
-                  icon={<Clock className="h-5 w-5" />}
-                  subtitle="Duración promedio por sesión"
-                  tooltip="Tiempo medio que un usuario permanece en el sitio por sesión. Si no hay sesiones cerradas, muestra el tiempo promedio en página."
-                />
-              </div>
-
-              <section className="space-y-3">
-                <div>
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
-                    Embudo de Kapital
-                  </h2>
-                  <p className="text-xs text-gray-500">
-                    Uso efectivo de la calculadora en el periodo seleccionado.
-                  </p>
+            <div className="flex flex-col space-y-6">
+              {/* Sesiones resumidas + Perfil */}
+              <div className="order-3 grid grid-cols-1 gap-6 lg:grid-cols-5">
+                <div className="self-start lg:col-span-3">
+                  <SessionsSummaryBar items={[
+                    { label: "Sesiones activas", value: activeSessions, subtitle: "En los últimos 15 min", tooltip: "Cantidad de usuarios que están navegando en este momento. Se considera activa una sesión que no ha cerrado la pestaña en los últimos 15 minutos.", icon: <Activity className="h-4 w-4 text-emerald-600" />, color: "#10b981" },
+                    { label: "Total sesiones", value: data.summary.total_sessions, subtitle: `${data.summary.unique_visitors} visitantes únicos`, tooltip: "Número total de visitas realizadas en el periodo seleccionado. Un usuario puede generar múltiples sesiones si entra varias veces.", icon: <Users className="h-4 w-4 text-blue-600" />, color: "#2563eb" },
+                    { label: "Páginas vistas", value: data.summary.total_page_views, tooltip: "Cantidad total de páginas cargadas. Incluye recargas y navegación entre /kapital y el landing.", icon: <Eye className="h-4 w-4 text-blue-600" />, color: "#06b6d4" },
+                    { label: "Captación WhatsApp", value: data.cta_clicks, subtitle: "Clics a links de WhatsApp", tooltip: "Número de veces que los usuarios hicieron clic en botones de WhatsApp (CTA, productos, footer o chat flotante).", icon: <MousePointerClick className="h-4 w-4 text-blue-600" />, color: "#8b5cf6" },
+                    { label: "Tiempo promedio", value: data.summary.avg_duration_seconds !== null && data.summary.avg_duration_seconds > 0 ? `${data.summary.avg_duration_seconds}s` : `${data.avg_time_on_page ?? 0}s`, subtitle: "Duración promedio por sesión", tooltip: "Tiempo medio que un usuario permanece en el sitio por sesión. Si no hay sesiones cerradas, muestra el tiempo promedio en página.", icon: <Clock className="h-4 w-4 text-blue-600" />, color: "#f59e0b" },
+                  ]} />
+                  <div className="mt-6">
+                    <SectionCard title="Dispositivos" icon={<Monitor className="h-4 w-4" />} tooltip="Distribución del tráfico según el tipo de dispositivo.">
+                      {data.devices.length === 0 ? <p className="text-sm text-gray-400">Sin datos</p> : data.devices.map((d) => (
+                        <div key={d.label} className="mb-3 flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50 text-gray-500">{deviceIcon(d.label)}</div>
+                          <div className="min-w-0 flex-1"><div className="mb-1 flex items-center justify-between text-sm"><span className="truncate font-medium text-gray-700 capitalize">{d.label}</span><span className="text-gray-500">{d.count}</span></div><div className="h-2 w-full overflow-hidden rounded-full bg-gray-100"><div className={`h-full rounded-full ${deviceColor(d.label)}`} style={{ width: `${Math.min(d.percentage, 100)}%` }} /></div></div>
+                        </div>
+                      ))}
+                    </SectionCard>
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                  <MetricCard
-                    title="Visitantes que inician"
-                    value={data.kapital_funnel?.users_started ?? 0}
-                    icon={<Users className="h-5 w-5" />}
-                    subtitle="Primera interacción manual"
-                    tooltip="Visitantes únicos, identificados por cuenta o IP, que modificaron al menos un campo de la calculadora Kapital en el periodo seleccionado."
-                  />
-                  <MetricCard
-                    title="Tasa de activación"
-                    value={`${data.kapital_funnel?.activation_rate ?? 0}%`}
-                    icon={<Percent className="h-5 w-5 text-cyan-600" />}
-                    subtitle="Iniciaron entre visitantes"
-                    tooltip="Porcentaje de visitantes únicos que modificaron al menos un campo respecto de quienes visitaron Kapital."
-                  />
-                  <MetricCard
-                    title="Cálculos iniciados"
-                    value={data.kapital_funnel?.started ?? 0}
-                    icon={<PlayCircle className="h-5 w-5" />}
-                    subtitle="Intentos iniciales validados"
-                    tooltip="Cantidad de cálculos iniciales de Kapital enviados después de completar los campos obligatorios. No incluye sensibilizaciones."
-                  />
-                  <MetricCard
-                    title="Cálculos completados"
-                    value={data.kapital_funnel?.completed ?? 0}
-                    icon={<CheckCircle2 className="h-5 w-5 text-emerald-600" />}
-                    subtitle="Sensibilizaciones realizadas"
-                    tooltip="Cantidad de cálculos iniciales que alcanzaron una sensibilización procesada correctamente."
-                  />
-                  <MetricCard
-                    title="Tasa de finalización"
-                    value={`${data.kapital_funnel?.completion_rate ?? 0}%`}
-                    icon={<Percent className="h-5 w-5 text-amber-600" />}
-                    subtitle="Completados entre iniciados"
-                    tooltip="Porcentaje de cálculos iniciados que alcanzaron una sensibilización procesada correctamente."
-                  />
-                </div>
-              </section>
-
-              {/* Chart + Dispositivos */}
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-                {/* Chart */}
-                <div className="lg:col-span-3">
-                  <SectionCard title="Sesiones en el tiempo" icon={<TrendingUp className="h-4 w-4" />} tooltip="Evolución diaria del tráfico en el periodo seleccionado. Permite identificar picos de actividad y tendencias de crecimiento.">
-                    <SessionsChart data={data.sessions_over_time} />
-                  </SectionCard>
-                </div>
-
-                {/* Devices */}
-                <SectionCard title="Dispositivos" icon={<Monitor className="h-4 w-4" />} tooltip="Distribución del tráfico según el tipo de dispositivo (desktop, mobile, tablet)." className="lg:col-span-2">
-                  {data.devices.length === 0 ? (
-                    <p className="text-sm text-gray-400">Sin datos</p>
+                <SectionCard title="Perfil de usuarios" icon={<Users className="h-4 w-4" />} tooltip="Cada dispositivo se cuenta una sola vez según su elección más reciente dentro del periodo seleccionado." className="lg:col-span-2">
+                  {!data.occupation_profiles || data.occupation_profiles.total_devices === 0 ? (
+                    <p className="text-sm text-gray-400">Aún no hay perfiles registrados</p>
                   ) : (
-                    data.devices.map((d) => (
-                      <div key={d.label} className="mb-3 flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50 text-gray-500">
-                          {deviceIcon(d.label)}
-                        </div>
-                        <div className="flex-1">
-                          <div className="mb-1 flex items-center justify-between text-sm">
-                            <span className="font-medium text-gray-700 capitalize">{d.label}</span>
-                            <span className="text-gray-500">{d.count}</span>
-                          </div>
-                          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                            <div
-                              className={`h-full rounded-full ${deviceColor(d.label)}`}
-                              style={{ width: `${Math.min(d.percentage, 100)}%` }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))
+                    <OccupationProfileBreakdown data={data.occupation_profiles} />
                   )}
                 </SectionCard>
               </div>
 
+              {/* Sesiones en el tiempo + Dispositivos */}
+              <div className="order-4 grid grid-cols-1 gap-6">
+                <div>
+                  <SectionCard title="Sesiones en el tiempo" icon={<TrendingUp className="h-4 w-4" />} tooltip="Evolución diaria del tráfico en el periodo seleccionado.">
+                    <SessionsChart data={data.sessions_over_time} />
+                  </SectionCard>
+                </div>
+              </div>
+
               {/* Ciudades + Navegadores + Páginas */}
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="order-5 grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {/* Cities */}
                 <SectionCard title="Ciudades principales" icon={<MapPin className="h-4 w-4" />} tooltip="Top 10 ciudades desde donde acceden los usuarios. Se obtiene mediante la IP del visitante.">
                   {data.cities.length === 0 ? (
@@ -636,59 +572,43 @@ const AnalyticsPage: React.FC = () => {
                 </SectionCard>
               </div>
 
-              {/* Retención + Perfil */}
-              <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-                <section className="space-y-3">
-                  <div>
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
-                      Retención de Kapital
-                    </h2>
-                    <p className="text-xs text-gray-500">
-                      Personas identificadas por su cuenta o IP que llegan por primera vez o regresan a Kapital.
-                    </p>
-                  </div>
-                  <div className="space-y-4">
-                    <MetricCard
+              <section className="order-1 space-y-3">
+                <div>
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">Embudo de Kapital</h2>
+                  <p className="text-xs text-gray-500">Uso efectivo de la calculadora en el periodo seleccionado.</p>
+                </div>
+                <div className="grid grid-cols-1 gap-2 rounded-xl border border-gray-100 bg-white p-2 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
+                  <MetricCard title="Visitantes que inician" value={data.kapital_funnel?.users_started ?? 0} icon={<Users className="h-5 w-5" />} subtitle="Primera interacción manual" tooltip="Visitantes únicos que modificaron al menos un campo de Kapital." compact />
+                  <MetricCard title="Tasa de activación" value={`${data.kapital_funnel?.activation_rate ?? 0}%`} icon={<Activity className="h-5 w-5 text-cyan-600" />} subtitle="Iniciaron entre visitantes" tooltip="Porcentaje de visitantes que iniciaron un cálculo." compact />
+                  <MetricCard title="Cálculos iniciados" value={data.kapital_funnel?.started ?? 0} icon={<PlayCircle className="h-5 w-5" />} subtitle="Intentos iniciales validados" tooltip="Cálculos iniciales enviados correctamente." compact />
+                  <MetricCard title="Cálculos completados" value={data.kapital_funnel?.completed ?? 0} icon={<CheckCircle2 className="h-5 w-5 text-emerald-600" />} subtitle="Sensibilizaciones realizadas" tooltip="Cálculos que alcanzaron una sensibilización correcta." compact />
+                  <MetricCard title="Tasa de finalización" value={`${data.kapital_funnel?.completion_rate ?? 0}%`} icon={<Activity className="h-5 w-5 text-amber-600" />} subtitle="Completados entre iniciados" tooltip="Porcentaje de cálculos iniciados que terminaron correctamente." compact />
+                </div>
+              </section>
+
+              {/* Retención */}
+              <div className="order-2 grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+                <div className="lg:col-span-2">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">Retención de Kapital</h2>
+                  <p className="text-xs text-gray-500">Personas identificadas por su cuenta o IP que llegan por primera vez o regresan a Kapital.</p>
+                </div>
+                <MetricCard
                       title="Visitantes nuevos"
                       value={data.kapital_retention?.new_users ?? 0}
                       icon={<UserPlus className="h-5 w-5 text-blue-600" />}
                       subtitle="Primera visita a Kapital"
                       tooltip="Cuentas o direcciones IP cuya primera visita histórica a Kapital ocurrió dentro del periodo seleccionado."
-                    />
-                    <MetricCard
+                />
+                <MetricCard
                       title="Visitantes recurrentes"
                       value={data.kapital_retention?.recurring_users ?? 0}
                       icon={<RefreshCw className="h-5 w-5 text-emerald-600" />}
                       subtitle="Regresaron durante el periodo"
                       tooltip="Cuentas o direcciones IP que visitaron Kapital en el periodo seleccionado y ya tenían una visita anterior."
-                    />
-                  </div>
-                </section>
-
-                <section className="min-w-0 space-y-3">
-                  <div>
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
-                      Perfil de usuarios
-                    </h2>
-                    <p className="text-xs text-gray-500">
-                      Elección más reciente por dispositivo que completó el formulario de Kapital.
-                    </p>
-                  </div>
-                  <SectionCard
-                    title="Ocupación declarada"
-                    icon={<Users className="h-4 w-4" />}
-                    tooltip="Cada dispositivo se cuenta una sola vez según su elección más reciente dentro del periodo seleccionado."
-                  >
-                    {!data.occupation_profiles || data.occupation_profiles.total_devices === 0 ? (
-                      <p className="text-sm text-gray-400">Aún no hay perfiles registrados</p>
-                    ) : (
-                      <OccupationProfileBreakdown data={data.occupation_profiles} />
-                    )}
-                  </SectionCard>
-                </section>
+                />
               </div>
 
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div className="order-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {/* Hourly */}
                 <SectionCard title="Distribución por hora" icon={<Clock className="h-4 w-4" />} tooltip="Horas del día con mayor tráfico. Se agrupa por hora de inicio de sesión (hora de Lima, UTC-5).">
                   <div className="grid grid-cols-6 gap-2 sm:grid-cols-8 md:grid-cols-12">
