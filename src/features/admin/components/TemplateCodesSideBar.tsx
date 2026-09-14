@@ -44,27 +44,59 @@ export const FieldItem: React.FC<{
   field: TemplateCodeBasic;
   largeImage?: boolean;
   onCodeClick?: (codeObj: TemplateCodeBasic) => void;
-}> = ({ field, largeImage = false, onCodeClick }) => (
-  <div
-    draggable
-    onDragStart={(e) => {
-      e.dataTransfer.setData("text/plain", field.code);
-      e.dataTransfer.effectAllowed = "copy";
-    }}
-    onClick={() => onCodeClick?.(field)}
-    className="flex cursor-grab active:cursor-grabbing items-center gap-3 rounded-lg border border-transparent px-3 py-2 transition-[border-color,background-color] hover:border-blue-100 hover:bg-blue-50"
-  >
-    {/** show thumbnail if available */}
-    {((field as any).template_code_image_url as string) && (
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center bg-blue-100 overflow-hidden">
-        <img
-          src={(field as any).template_code_image_url}
-          alt={field.code}
-          className="h-14 w-14 object-fill"
-        />
-      </div>
-    )}
-    <div className="min-w-0 flex-1">
+}> = ({ field, largeImage = false, onCodeClick }) => {
+  const imageUrl = (field as any).template_code_image_url as string | undefined;
+  const [blobSrc, setBlobSrc] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!imageUrl) return;
+    const isProtected = (() => {
+      try {
+        const u = new URL(imageUrl, window.location.origin);
+        return u.origin === window.location.origin && u.pathname.startsWith("/api/");
+      } catch {
+        return imageUrl.startsWith("/api/");
+      }
+    })();
+    if (!isProtected) {
+      setBlobSrc(imageUrl);
+      return;
+    }
+    let revoked = false;
+    const token = localStorage.getItem("auth_token");
+    fetch(imageUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then((r) => (r.ok ? r.blob() : Promise.reject()))
+      .then((blob) => {
+        if (revoked) return;
+        setBlobSrc(URL.createObjectURL(blob));
+      })
+      .catch(() => {});
+    return () => {
+      revoked = true;
+    };
+  }, [imageUrl]);
+
+  return (
+    <div
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData("text/plain", field.code);
+        e.dataTransfer.effectAllowed = "copy";
+      }}
+      onClick={() => onCodeClick?.(field)}
+      className="flex cursor-grab active:cursor-grabbing items-center gap-3 rounded-lg border border-transparent px-3 py-2 transition-[border-color,background-color] hover:border-blue-100 hover:bg-blue-50"
+    >
+      {/** show thumbnail if available */}
+      {blobSrc && (
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center bg-blue-100 overflow-hidden">
+          <img
+            src={blobSrc}
+            alt={field.code}
+            className="h-14 w-14 object-fill"
+          />
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
       {largeImage ? (
         <div className="flex flex-col">
           <p className="truncate font-mono text-[10px] font-semibold text-blue-500">
@@ -92,7 +124,8 @@ export const FieldItem: React.FC<{
       )}
     </div>
   </div>
-);
+  );
+};
 
 interface TemplateCodesSideBarProps {
   templateCodes: TemplateCodeBasic[];

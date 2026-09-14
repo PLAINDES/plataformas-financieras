@@ -166,14 +166,18 @@ export const CodesModal = ({
             });
 
             if (!response.ok) {
-              nextMap[key] = rawUrl;
+              console.warn(`[CodesModal] Media fetch failed ${response.status} for ${normalizedUrl}`);
               continue;
             }
 
             const blob = await response.blob();
+            if (blob.size === 0) {
+              console.warn(`[CodesModal] Empty blob for ${normalizedUrl}`);
+              continue;
+            }
             nextMap[key] = URL.createObjectURL(blob);
-          } catch {
-            nextMap[key] = rawUrl;
+          } catch (err) {
+            console.warn(`[CodesModal] Media fetch error for ${normalizedUrl}:`, err);
           }
         }
       }
@@ -230,14 +234,18 @@ export const CodesModal = ({
             });
 
             if (!response.ok) {
-              nextMap[key] = rawUrl;
+              console.warn(`[CodesModal] Media fetch failed ${response.status} for ${rawUrl}`);
               continue;
             }
 
             const blob = await response.blob();
+            if (blob.size === 0) {
+              console.warn(`[CodesModal] Empty blob for ${rawUrl}`);
+              continue;
+            }
             nextMap[key] = URL.createObjectURL(blob);
-          } catch {
-            nextMap[key] = rawUrl;
+          } catch (err) {
+            console.warn(`[CodesModal] Media fetch error for ${rawUrl}:`, err);
           }
         }
       }
