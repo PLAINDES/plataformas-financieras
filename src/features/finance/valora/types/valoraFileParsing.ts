@@ -159,7 +159,7 @@ export const parseFinancialTablesFromFile = async (
 
       if (date !== null || kd !== null || debt !== null || shares !== null) {
         customInputs = {
-          ...customInputs,
+          ...(customInputs || {}),
           ...(date !== null && !customInputs?.date ? { date } : {}),
           ...(kd !== null && !customInputs?.kd ? { kd } : {}),
           ...(debt !== null && !customInputs?.debt ? { debt } : {}),
