@@ -104,6 +104,8 @@ export function LoginModal({
           <img
             src="/images/login-design.jpg"
             alt="Ilustración de crecimiento financiero"
+            fetchPriority="high"
+            decoding="async"
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-slate-950/20" />

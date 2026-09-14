@@ -95,6 +95,7 @@ export function useKapitalCalculation({
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
       : null;
+    const calculationCode = currentCalculation?.code || generateCalculationCode();
 
     if (attemptId) {
       sessionStorage.setItem(ACTIVE_KAPITAL_ATTEMPT_KEY, attemptId);
@@ -107,13 +108,39 @@ export function useKapitalCalculation({
 
     try {
       const nativeInput = enrichCalculationInputPayload(dataToSubmit) as unknown as Record<string, unknown>;
+      const betaOverride = nativeInput.beta_subsector ??
+        nativeInput.beta_unlevered_industry ??
+        nativeInput.beta_desapalancado ??
+        nativeInput.beta_unlevered;
       const previousInputs = (currentCalculation?.data as Record<string, unknown> | undefined)?.inputs;
       const previousInput = Array.isArray(previousInputs) && previousInputs[0]
         ? previousInputs[0]
         : nativeInput;
       const nativeBaseInput = isBetaUpdate
-        ? (previousInput as Record<string, unknown>)
+        ? {
+            ...(previousInput as Record<string, unknown>),
+            // El beta editado debe actualizar también el workbook base;
+            // antes se enviaba únicamente como sensibilidad y F24/F40
+            // conservaban el valor anterior.
+            ...(nativeInput.beta_subsector !== undefined
+              ? { beta_subsector: nativeInput.beta_subsector }
+              : {}),
+            ...(nativeInput.beta_unlevered_industry !== undefined
+              ? { beta_unlevered_industry: nativeInput.beta_unlevered_industry }
+              : {}),
+            ...(nativeInput.beta_desapalancado !== undefined
+              ? { beta_desapalancado: nativeInput.beta_desapalancado }
+              : {}),
+            ...(nativeInput.beta_unlevered !== undefined
+              ? { beta_unlevered: nativeInput.beta_unlevered }
+              : {}),
+            ...(betaOverride !== undefined
+              ? { beta_desapalancado: betaOverride }
+              : {}),
+          }
         : nativeInput;
+      nativeBaseInput.calculation_debug_id =
+        calculationCode;
       const nativeSensitivity = isBetaUpdate ? nativeInput : null;
       const nativeResult = await calculateKapitalNative(nativeBaseInput, nativeSensitivity);
       const nativeBase = (nativeResult.base_results || {}) as Record<string, unknown>;
@@ -163,7 +190,7 @@ export function useKapitalCalculation({
         persistedCalculation = await MainService.createNativeCalculation({
           calculation_file_id: null,
           user_id: currentUserId ? Number(currentUserId) : null,
-          code: generateCalculationCode(),
+          code: calculationCode,
           type: "kapital",
           data: {
             ...buildCalculationDataPayload(),
