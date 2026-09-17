@@ -50,21 +50,25 @@ export const FieldItem: React.FC<{
 
   useEffect(() => {
     if (!imageUrl) return;
+    const apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
+    const resolvedImageUrl = /^https?:\/\//i.test(imageUrl)
+      ? imageUrl
+      : `${apiUrl}${imageUrl}`;
     const isProtected = (() => {
       try {
-        const u = new URL(imageUrl, window.location.origin);
-        return u.origin === window.location.origin && u.pathname.startsWith("/api/");
+        const u = new URL(resolvedImageUrl, window.location.origin);
+        return u.pathname.startsWith("/api/");
       } catch {
         return imageUrl.startsWith("/api/");
       }
     })();
     if (!isProtected) {
-      setBlobSrc(imageUrl);
+      setBlobSrc(resolvedImageUrl);
       return;
     }
     let revoked = false;
     const token = localStorage.getItem("auth_token");
-    fetch(imageUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+    fetch(resolvedImageUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
       .then((r) => (r.ok ? r.blob() : Promise.reject()))
       .then((blob) => {
         if (revoked) return;
@@ -212,7 +216,7 @@ export const TemplateCodesSideBar: React.FC<TemplateCodesSideBarProps> = ({
                 Cargando...
               </div>
             ) : filteredFields.length > 0 ? (
-              <div className="space-y-1">
+              <div className="max-h-[min(46vh,28rem)] space-y-1 overflow-y-auto pr-1">
                 {fieldsVisible.map((tc) => (
                   <FieldItem
                     key={tc.id + tc.code}
@@ -276,7 +280,7 @@ export const TemplateCodesSideBar: React.FC<TemplateCodesSideBarProps> = ({
                 Cargando...
               </div>
             ) : filteredCharts.length > 0 ? (
-              <div className="space-y-1">
+              <div className="max-h-[min(46vh,28rem)] space-y-1 overflow-y-auto pr-1">
                 {chartsVisible.map((tc) => (
                   <FieldItem
                     key={tc.id + tc.code}
