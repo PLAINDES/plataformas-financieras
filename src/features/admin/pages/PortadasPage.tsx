@@ -107,9 +107,18 @@ const PortadasPage: React.FC = () => {
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [galleryIndex, setGalleryIndex] = useState(0);
 
-  const openGallery = (images: string[], start = 0) => {
+  const openGallery = async (images: string[], start = 0) => {
     if (!images || images.length === 0) return;
-    setGalleryImages(images);
+    const resolvedImages = await Promise.all(
+      images.map(async (image) => {
+        try {
+          return await fetchCoverImage(image);
+        } catch {
+          return image;
+        }
+      })
+    );
+    setGalleryImages(resolvedImages);
     setGalleryIndex(start);
     setGalleryOpen(true);
   };
@@ -213,7 +222,7 @@ const PortadasPage: React.FC = () => {
                         c.logo_inferior?.url,
                         c.imagen_fondo?.url,
                       ].filter(Boolean) as string[];
-                      openGallery(imgs, 0);
+                      void openGallery(imgs, 0);
                     }}
                   >
                     {c.imagen_central && c.imagen_central.url ? (

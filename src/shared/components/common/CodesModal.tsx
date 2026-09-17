@@ -60,10 +60,16 @@ const imageUrlFromName = (image: string) => {
   return `/api/v1/main/master-templates/chart-file/${encodeURIComponent(filename)}`;
 };
 
+const resolveApiUrl = (url: string) => {
+  if (/^https?:\/\//i.test(url)) return url;
+  const apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
+  return `${apiUrl}${url.startsWith("/") ? url : `/${url}`}`;
+};
+
 const isProtectedApiUrl = (value: string) => {
   try {
-    const url = new URL(value, window.location.origin);
-    return url.origin === window.location.origin && url.pathname.startsWith("/api/");
+    const url = new URL(resolveApiUrl(value), window.location.origin);
+    return url.pathname.startsWith("/api/");
   } catch {
     return value.startsWith("/api/");
   }
@@ -156,7 +162,7 @@ export const CodesModal = ({
             continue;
           }
 
-          const normalizedUrl = rawUrl.startsWith("/") ? rawUrl : `/${rawUrl}`;
+          const normalizedUrl = resolveApiUrl(rawUrl);
 
           try {
             const response = await fetch(normalizedUrl, {
@@ -227,7 +233,7 @@ export const CodesModal = ({
           }
 
           try {
-            const response = await fetch(rawUrl, {
+            const response = await fetch(resolveApiUrl(rawUrl), {
               headers: {
                 ...(token ? { Authorization: `Bearer ${token}` } : {}),
               },

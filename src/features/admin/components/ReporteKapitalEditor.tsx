@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronUp, ChevronDown, BarChart2, Home } from "lucide-react";
 import Breadcrumbs from "@/shared/components/Breadcrumbs";
@@ -46,6 +46,37 @@ export const ReporteKapitalEditor: React.FC = () => {
 
   const [info, setInfo] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedCoverUrl) {
+      setCoverPreviewUrl(null);
+      return;
+    }
+
+    let cancelled = false;
+    const apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
+    const mediaUrl = /^https?:\/\//i.test(selectedCoverUrl)
+      ? selectedCoverUrl
+      : `${apiUrl}${selectedCoverUrl}`;
+    const token = localStorage.getItem("auth_token");
+
+    fetch(mediaUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then((response) => {
+        if (!response.ok) throw new Error("No se pudo cargar la portada");
+        return response.blob();
+      })
+      .then((blob) => {
+        if (!cancelled) setCoverPreviewUrl(URL.createObjectURL(blob));
+      })
+      .catch(() => {
+        if (!cancelled) setCoverPreviewUrl(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCoverUrl]);
 
   const breadcrumbItems = [
     {
@@ -81,13 +112,13 @@ export const ReporteKapitalEditor: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       {/* Lightbox */}
-      {lightboxOpen && selectedCoverUrl && (
+      {lightboxOpen && coverPreviewUrl && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 ease-out"
           onClick={() => setLightboxOpen(false)}
         >
           <img
-            src={selectedCoverUrl!}
+            src={coverPreviewUrl}
             alt={"portada"}
             className="max-h-[90vh] max-w-[90vw] rounded-xl shadow-2xl object-contain animate-in fade-in zoom-in-95 duration-200 ease-out"
             onClick={(e) => e.stopPropagation()}
@@ -322,11 +353,11 @@ export const ReporteKapitalEditor: React.FC = () => {
                 {/* Cover thumbnail */}
                 <div
                   className="relative flex h-24 w-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-blue-200 shadow-sm bg-linear-to-br from-blue-600 to-blue-800"
-                  onClick={() => selectedCoverUrl && setLightboxOpen(true)}
+                  onClick={() => coverPreviewUrl && setLightboxOpen(true)}
                 >
-                  {selectedCoverUrl ? (
+                  {coverPreviewUrl ? (
                     <img
-                      src={selectedCoverUrl}
+                      src={coverPreviewUrl}
                       alt={"portada"}
                       className="h-full w-full object-cover"
                     />
