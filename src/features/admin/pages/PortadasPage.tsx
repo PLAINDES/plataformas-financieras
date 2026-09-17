@@ -26,8 +26,10 @@ const fetchCoverImage = (url: string): Promise<string> => {
   if (cached) return cached;
 
   const request = (async () => {
+    const apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
+    const mediaUrl = /^https?:\/\//i.test(url) ? url : `${apiUrl}${url}`;
     const token = localStorage.getItem("auth_token");
-    const response = await fetch(url, {
+    const response = await fetch(mediaUrl, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (!response.ok) throw new Error(`Image request failed with ${response.status}`);
