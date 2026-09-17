@@ -12,6 +12,8 @@ interface ValoraComparisonResultsBlockProps {
   toolbar?: React.ReactNode;
   baseResults?: ValoraCalculationResults;
   sensitizedResults?: ValoraCalculationResults;
+  formCurrency?: string | null;
+  localCurrency?: string | null;
 }
 
 interface ComparisonMethodData {
@@ -329,10 +331,11 @@ const GeneralComparisonChart = ({
   const maxOverall = getMaxAbs(activo, pasivo, patrimonio, conceptosPatrimonioEsperado, conceptosPatrimonioSensibilizado, integradoPatrimonioEsperado, integradoPatrimonioSensibilizado);
   const maxVal = maxOverall;
   const { activoRowSpan, pasivoRowSpan, patrimonioRowSpan } = getBalanceRowSpans(activo, pasivo, patrimonio, maxOverall, TOTAL_ROWS);
-  const conceptosEspRowSpan = getProportionalRowSpan(conceptosPatrimonioEsperado, maxBalance, TOTAL_ROWS);
-  const conceptosSensRowSpan = getProportionalRowSpan(conceptosPatrimonioSensibilizado, maxBalance, TOTAL_ROWS);
-  const integradoEspRowSpan = getProportionalRowSpan(integradoPatrimonioEsperado, maxBalance, TOTAL_ROWS);
-  const integradoSensRowSpan = getProportionalRowSpan(integradoPatrimonioSensibilizado, maxVal, TOTAL_ROWS);
+  // Altura mínima reforzada: el valor menor debe seguir visible sobre la línea base.
+  const conceptosEspRowSpan = getProportionalRowSpan(conceptosPatrimonioEsperado, maxBalance, TOTAL_ROWS, 20);
+  const conceptosSensRowSpan = getProportionalRowSpan(conceptosPatrimonioSensibilizado, maxBalance, TOTAL_ROWS, 20);
+  const integradoEspRowSpan = getProportionalRowSpan(integradoPatrimonioEsperado, maxBalance, TOTAL_ROWS, 20);
+  const integradoSensRowSpan = getProportionalRowSpan(integradoPatrimonioSensibilizado, maxVal, TOTAL_ROWS, 20);
 
   const gridRef = useRef<HTMLDivElement>(null);
   const patrimonioRef = useRef<HTMLDivElement>(null);
@@ -345,8 +348,10 @@ const GeneralComparisonChart = ({
     <div className="relative flex h-[480px] min-h-[480px] flex-col overflow-hidden rounded-lg bg-white pt-10 shadow">
       <select
         value={currency}
+        disabled={availableCurrencies.length <= 1}
+        title={availableCurrencies.length <= 1 ? `Moneda de los EEFF: ${currency}` : "Moneda de resultados"}
         onChange={(event) => onCurrencyChange(event.target.value)}
-        className="absolute right-6 top-6 z-10 min-w-24 rounded-md border border-gray-300 bg-white px-3.5 py-1.5 text-sm font-semibold text-gray-800 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+        className={`absolute right-6 top-6 z-10 min-w-24 rounded-md border border-gray-300 px-3.5 py-1.5 text-sm font-semibold text-gray-800 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 ${availableCurrencies.length <= 1 ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white"}`}
         aria-label="Moneda de resultados"
       >
         {availableCurrencies.map((option) => (
@@ -378,7 +383,7 @@ const GeneralComparisonChart = ({
         {/* Activo - DINÁMICO proporcional al máximo global (ancho intacto: col-start-1) */}
         <div
           className="z-10 col-start-1 mr-[3px] border-[3px] border-[#a62cad] bg-white rounded-l-xl relative flex flex-col items-center justify-center"
-          style={{ gridRowStart: TOTAL_ROWS - activoRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - activoRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">Activo</span>
           <span className="text-lg font-bold text-gray-800 text-center px-2">{formatNumber(activo)}</span>
@@ -387,7 +392,7 @@ const GeneralComparisonChart = ({
         {/* Pasivo - DINÁMICO proporcional al máximo global (ancho intacto: col-start-2) */}
         <div
           className="z-10 col-start-2 border-[3px] border-green-500 bg-white rounded-tr-xl relative flex flex-col items-center justify-center"
-          style={{ gridRowStart: TOTAL_ROWS - patrimonioRowSpan - pasivoRowSpan + 1, gridRowEnd: TOTAL_ROWS - patrimonioRowSpan + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioRowSpan - pasivoRowSpan, gridRowEnd: TOTAL_ROWS - patrimonioRowSpan }}
         >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">Pasivo</span>
           <span className="text-base font-bold text-gray-800 text-center px-2">{formatNumber(pasivo)}</span>
@@ -397,7 +402,7 @@ const GeneralComparisonChart = ({
         <div
           ref={patrimonioRef}
           className="z-10 col-start-2 border-[3px] border-blue-500 bg-white rounded-br-xl relative flex flex-col items-center justify-center"
-          style={{ gridRowStart: TOTAL_ROWS - patrimonioRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">Patrimonio</span>
           <span className="text-base font-bold text-gray-800 text-center px-2">{formatNumber(patrimonio)}</span>
@@ -407,7 +412,7 @@ const GeneralComparisonChart = ({
         <div
           ref={conceptosEspRef}
           className="z-10 col-start-3 border-[3px] border-orange-400 bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 ml-4"
-          style={{ gridRowStart: TOTAL_ROWS - conceptosEspRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - conceptosEspRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
           <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
             <span className="text-[10px] font-bold text-center text-gray-800 leading-tight">
@@ -423,7 +428,7 @@ const GeneralComparisonChart = ({
         <div
           ref={integradoEspRef}
           className="z-10 col-start-4 border-[3px] border-orange-400 bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 ml-3"
-          style={{ gridRowStart: TOTAL_ROWS - integradoEspRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - integradoEspRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
           <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
             <span className="text-[10px] font-bold text-center text-gray-800 leading-tight">
@@ -439,7 +444,7 @@ const GeneralComparisonChart = ({
         <div
           ref={conceptosSensRef}
           className="z-10 col-start-5 border-[3px] border-[#0101ff] bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 ml-4"
-          style={{ gridRowStart: TOTAL_ROWS - conceptosSensRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - conceptosSensRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
           <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
             <span className="text-[10px] font-bold text-center text-gray-800 leading-tight">
@@ -455,7 +460,7 @@ const GeneralComparisonChart = ({
         <div
           ref={integradoSensRef}
           className="z-10 col-start-6 border-[3px] border-[#0101ff] bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 ml-3"
-          style={{ gridRowStart: TOTAL_ROWS - integradoSensRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - integradoSensRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
           <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
             <span className="text-[10px] font-bold text-center text-gray-800 leading-tight">
@@ -501,10 +506,10 @@ const MethodComparisonChart = ({
   const maxBalance = getMaxAbs(activo, pasivo, patrimonio, empresaEsperado, patrimonioEsperado);
   const maxVal = getMaxAbs(activo, pasivo, patrimonio, empresaEsperado, empresaSensibilizado, patrimonioEsperado, patrimonioSensibilizado);
   const { activoRowSpan, pasivoRowSpan, patrimonioRowSpan: patrimonioContableRowSpan } = getBalanceRowSpans(activo, pasivo, patrimonio, maxVal, TOTAL_ROWS);
-  const empresaSensRowSpan = getProportionalRowSpan(empresaSensibilizado, maxVal, TOTAL_ROWS);
-  const empresaEspRowSpan = getProportionalRowSpan(empresaEsperado, maxBalance, TOTAL_ROWS);
-  const patrimonioEspRowSpan = getProportionalRowSpan(patrimonioEsperado, maxBalance, TOTAL_ROWS);
-  const patrimonioSensRowSpan = getProportionalRowSpan(patrimonioSensibilizado, maxVal, TOTAL_ROWS);
+  const empresaSensRowSpan = getProportionalRowSpan(empresaSensibilizado, maxVal, TOTAL_ROWS, 20);
+  const empresaEspRowSpan = getProportionalRowSpan(empresaEsperado, maxBalance, TOTAL_ROWS, 20);
+  const patrimonioEspRowSpan = getProportionalRowSpan(patrimonioEsperado, maxBalance, TOTAL_ROWS, 20);
+  const patrimonioSensRowSpan = getProportionalRowSpan(patrimonioSensibilizado, maxVal, TOTAL_ROWS, 20);
 
   const gridRef = useRef<HTMLDivElement>(null);
   const empSensRef = useRef<HTMLDivElement>(null);
@@ -518,8 +523,10 @@ const MethodComparisonChart = ({
     <div className="relative flex h-[480px] min-h-[480px] flex-col overflow-hidden rounded-lg bg-white pt-10 shadow">
       <select
         value={currency}
+        disabled={availableCurrencies.length <= 1}
+        title={availableCurrencies.length <= 1 ? `Moneda de los EEFF: ${currency}` : "Moneda de resultados"}
         onChange={(event) => onCurrencyChange(event.target.value)}
-        className="absolute right-6 top-6 z-10 min-w-24 rounded-md border border-gray-300 bg-white px-3.5 py-1.5 text-sm font-semibold text-gray-800 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+        className={`absolute right-6 top-6 z-10 min-w-24 rounded-md border border-gray-300 px-3.5 py-1.5 text-sm font-semibold text-gray-800 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 ${availableCurrencies.length <= 1 ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white"}`}
         aria-label="Moneda de resultados"
       >
         {availableCurrencies.map((option) => (
@@ -555,17 +562,13 @@ const MethodComparisonChart = ({
         <div
           ref={empSensRef}
           className="z-10 col-start-1 border-[3px] border-[#a43598] bg-white rounded-l-xl relative flex flex-col items-center justify-center p-2 gap-1"
-          style={{ gridRowStart: TOTAL_ROWS - empresaSensRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - empresaSensRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
-          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">
-            Valor Financiero
-          </span>
-          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">
-            de la Empresa
-          </span>
-          <span className="text-[10px] font-black text-center text-gray-900 leading-tight">
-            Sensibilizado
-          </span>
+          <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
+            <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">Valor Financiero</span>
+            <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">de la Empresa</span>
+            <span className="text-[10px] font-black text-center text-gray-900 leading-tight">Sensibilizado</span>
+          </div>
           <span className="text-lg font-bold text-gray-800">
             {formatNumber(empresaSensibilizado)}
           </span>
@@ -575,17 +578,13 @@ const MethodComparisonChart = ({
         <div
           ref={empEspRef}
           className="z-10 col-start-2 border-[3px] border-[#a43598] bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 ml-4 gap-1"
-          style={{ gridRowStart: TOTAL_ROWS - empresaEspRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - empresaEspRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
-          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">
-            Valor Financiero
-          </span>
-          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">
-            de la Empresa
-          </span>
-          <span className="text-[10px] font-black text-center text-gray-900 leading-tight">
-            Esperado
-          </span>
+          <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
+            <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">Valor Financiero</span>
+            <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">de la Empresa</span>
+            <span className="text-[10px] font-black text-center text-gray-900 leading-tight">Esperado</span>
+          </div>
           <span className="text-lg font-bold text-gray-800">
             {formatNumber(empresaEsperado)}
           </span>
@@ -597,7 +596,7 @@ const MethodComparisonChart = ({
         <div
           ref={activoRef}
           className="z-10 col-start-3 ml-4 mr-[3px] border-[3px] border-[#28a7fd] bg-white rounded-l-xl relative flex flex-col items-center justify-center"
-          style={{ gridRowStart: TOTAL_ROWS - activoRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - activoRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">Activo</span>
           <span className="text-lg font-bold text-gray-800 text-center px-2">{formatNumber(activo)}</span>
@@ -606,7 +605,7 @@ const MethodComparisonChart = ({
         {/* Pasivo - DINÁMICO proporcional al máximo global (ancho intacto: col-start-4) */}
         <div
           className="z-10 col-start-4 border-[3px] border-[#28a7fd] bg-white rounded-tr-xl relative flex flex-col items-center justify-center"
-          style={{ gridRowStart: TOTAL_ROWS - patrimonioContableRowSpan - pasivoRowSpan + 1, gridRowEnd: TOTAL_ROWS - patrimonioContableRowSpan + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioContableRowSpan - pasivoRowSpan, gridRowEnd: TOTAL_ROWS - patrimonioContableRowSpan }}
         >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">Pasivo</span>
           <span className="text-base font-bold text-gray-800 text-center px-2">{formatNumber(pasivo)}</span>
@@ -616,7 +615,7 @@ const MethodComparisonChart = ({
         <div
           ref={patrimonioRef}
           className="z-10 col-start-4 border-[3px] border-[#28a7fd] bg-white rounded-br-xl relative flex flex-col items-center justify-center"
-          style={{ gridRowStart: TOTAL_ROWS - patrimonioContableRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioContableRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
           <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">Patrimonio</span>
           <span className="text-base font-bold text-gray-800 text-center px-2">{formatNumber(patrimonio)}</span>
@@ -628,14 +627,12 @@ const MethodComparisonChart = ({
         <div
           ref={patEspRef}
           className="z-10 col-start-5 border-[3px] border-[#47d358] bg-white rounded-l-xl relative flex flex-col items-center justify-center p-2 ml-4 gap-1"
-          style={{ gridRowStart: TOTAL_ROWS - patrimonioEspRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioEspRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
-          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">
-            Valor del patrimonio
-          </span>
-          <span className="text-[10px] font-black text-center text-gray-900 leading-tight">
-            Esperado
-          </span>
+          <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
+            <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">Valor del patrimonio</span>
+            <span className="text-[10px] font-black text-center text-gray-900 leading-tight">Esperado</span>
+          </div>
           <span className="text-lg font-bold text-gray-800">
             {formatNumber(patrimonioEsperado)}
           </span>
@@ -645,14 +642,12 @@ const MethodComparisonChart = ({
         <div
           ref={patSensRef}
           className="z-10 col-start-6 border-[3px] border-[#47d358] bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 ml-3 gap-1"
-          style={{ gridRowStart: TOTAL_ROWS - patrimonioSensRowSpan + 1, gridRowEnd: TOTAL_ROWS + 1 }}
+          style={{ gridRowStart: TOTAL_ROWS - patrimonioSensRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
-          <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">
-            Valor del patrimonio
-          </span>
-          <span className="text-[10px] font-black text-center text-gray-900 leading-tight">
-            Sensibilizado
-          </span>
+          <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
+            <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">Valor del patrimonio</span>
+            <span className="text-[10px] font-black text-center text-gray-900 leading-tight">Sensibilizado</span>
+          </div>
           <span className="text-lg font-bold text-gray-800">
             {formatNumber(patrimonioSensibilizado)}
           </span>
@@ -665,13 +660,15 @@ const MethodComparisonChart = ({
 
 export const ValoraComparisonResultsBlock: React.FC<
   ValoraComparisonResultsBlockProps
-> = ({ toolbar, baseResults, sensitizedResults }) => {
+> = ({ toolbar, baseResults, sensitizedResults, formCurrency, localCurrency }) => {
   const [selectedView, setSelectedView] = useState<ComparisonView>("none");
   const [companyType, setCompanyType] = useState<"empresa" | "emergente">("empresa");
 
   const sourceCurrency = (
     baseResults?.source_currency ??
     baseResults?.inputs?.moneda ??
+    formCurrency ??
+    localCurrency ??
     "USD"
   ).toUpperCase();
   const [resultCurrency, setResultCurrency] = useState(sourceCurrency);

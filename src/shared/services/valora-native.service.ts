@@ -6,6 +6,8 @@ export interface NativeValoraResponse {
   calculation_id?: string | null;
   wacc?: number | string | null;
   wacc_emergente?: number | string | null;
+  capex_income_rate?: number | string | null;
+  cto_income_rate?: number | string | null;
   price_per_share?: number | string | null;
   enterprise_value?: number | string | null;
   equity_value?: number | string | null;
@@ -28,7 +30,8 @@ const NATIVE_TIMEOUT_MS = 900000; // 15 min: Excel COM + CalculateFull tarda min
 
 export async function calculateValoraNative(
   input: Record<string, unknown>,
-  sensitivity?: Record<string, unknown> | null
+  sensitivity?: Record<string, unknown> | null,
+  templateS3Key?: string | null
 ): Promise<NativeValoraResponse> {
   const controller = new AbortController();
   let timedOut = false;
@@ -41,7 +44,7 @@ export async function calculateValoraNative(
     const response = await fetch(`${WEB_SERVICE_URL}/api/v1/valora/calculate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ input, sensitivity: sensitivity ?? null }),
+      body: JSON.stringify({ input, sensitivity: sensitivity ?? null, template_s3_key: templateS3Key ?? null }),
       signal: controller.signal,
     });
 

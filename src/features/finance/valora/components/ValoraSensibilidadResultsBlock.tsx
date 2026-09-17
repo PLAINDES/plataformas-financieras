@@ -14,6 +14,8 @@ export interface ValoraSensibilidadResultsBlockProps {
   results?: ValoraCalculationResults;
   toolbar?: React.ReactNode;
   coverUrl?: string;
+  formCurrency?: string | null;
+  localCurrency?: string | null;
 }
 
 type ChartMode = "default" | "conceptos" | "integrado";
@@ -61,7 +63,9 @@ export const ValoraSensibilidadResultsBlock: React.FC<
    results,
     toolbar,
     coverUrl,
- }) => {
+    formCurrency,
+    localCurrency,
+  }) => {
   const [chartMode, setChartMode] = useState<ChartMode>("default");
   const [companyType, setCompanyType] = useState<"empresa" | "emergente">("empresa");
   const sourceCurrency = (
@@ -69,6 +73,8 @@ export const ValoraSensibilidadResultsBlock: React.FC<
     originalResults?.source_currency ??
     results?.inputs?.moneda ??
     originalResults?.inputs?.moneda ??
+    formCurrency ??
+    localCurrency ??
     "USD"
   ).toUpperCase();
   const [resultCurrency, setResultCurrency] = useState(sourceCurrency);

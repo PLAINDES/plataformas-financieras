@@ -13,6 +13,11 @@ export interface ValoraGeneralResultsBlockProps {
   results?: ValoraCalculationResults;
   toolbar?: React.ReactNode;
   coverUrl?: string;
+  // Igual que Kapital (KapitalPage -> activeSavedCurrency via COUNTRY_LOCAL_CURRENCIES):
+  // se usa como fallback para no caer a "USD" cuando el cálculo persistido
+  // aún no trae source_currency (cálculos antiguos).
+  formCurrency?: string | null;
+  localCurrency?: string | null;
 }
 
 type ChartMode = "default" | "conceptos" | "integrado";
@@ -24,10 +29,19 @@ export const ValoraGeneralResultsBlock: React.FC<ValoraGeneralResultsBlockProps>
   results,
   toolbar,
   coverUrl,
+  formCurrency,
+  localCurrency,
 }) => {
   const [chartMode, setChartMode] = useState<ChartMode>("default");
   const [companyType, setCompanyType] = useState<"empresa" | "emergente">("empresa");
-  const sourceCurrency = (results?.source_currency ?? results?.inputs?.moneda ?? "USD").toUpperCase();
+  // Prioridad Kapital-style: dato persistido > moneda del formulario > moneda local del país > USD.
+  const sourceCurrency = (
+    results?.source_currency ??
+    results?.inputs?.moneda ??
+    formCurrency ??
+    localCurrency ??
+    "USD"
+  ).toUpperCase();
   const [resultCurrency, setResultCurrency] = useState(sourceCurrency);
   const fxToUsd = sourceCurrency === "USD" ? 1 : results?.fx_to_usd;
   const availableCurrencies = sourceCurrency === "USD" || !fxToUsd

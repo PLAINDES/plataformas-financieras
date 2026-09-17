@@ -5,9 +5,10 @@ export interface TooltipProps {
     id?: string;
     content: string;
     children: React.ReactNode;
+    contentClassName?: string;
 }
 
-export const Tooltip: React.FC<TooltipProps> = ({ content, children }) => {
+export const Tooltip: React.FC<TooltipProps> = ({ content, children, contentClassName = "" }) => {
     const [visible, setVisible] = useState(false);
     const [pos, setPos] = useState({ top: 0, left: 0 });
     const anchorRef = useRef<HTMLSpanElement | null>(null);
@@ -34,7 +35,7 @@ export const Tooltip: React.FC<TooltipProps> = ({ content, children }) => {
                 ref={anchorRef}
                 onMouseEnter={handleEnter}
                 onMouseLeave={() => setVisible(false)}
-                className="cursor-help"
+                className="inline-flex self-center cursor-help items-center"
             >
                 {children}
             </span>
@@ -50,7 +51,7 @@ export const Tooltip: React.FC<TooltipProps> = ({ content, children }) => {
                             transform: "translateY(-50%)",
                             zIndex: 99999,
                         }}
-                        className="w-[320px] max-w-[calc(100vw-32px)] rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-700 shadow-xl"
+                        className={`w-[320px] max-w-[calc(100vw-32px)] rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-700 shadow-xl ${contentClassName}`}
                     >
                         <div className="leading-relaxed">{content}</div>
                         <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white border-l border-t border-gray-200 rotate-45"></div>

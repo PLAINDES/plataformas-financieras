@@ -31,6 +31,8 @@ export interface FormData {
   revenue_forecast_rate: string;
   fdc_forecast_rate: string;
   perpetual_growth_rate: string;
+  capex_income_rate: string;
+  cto_income_rate: string;
   beta_unlevered_sensitivity: string;
 }
 

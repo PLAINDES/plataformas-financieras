@@ -326,6 +326,12 @@ const ValoraPage: React.FC = () => {
           resultados?.tasa_perpetua ??
           resultados?.perpetual_growth_rate ??
           (rawData as any)?.inputs?.[0]?.perpetual_growth_rate;
+        const capex =
+          resultados?.capex_income_rate ??
+          (rawData as any)?.inputs?.[0]?.capex_income_rate;
+        const cto =
+          resultados?.cto_income_rate ??
+          (rawData as any)?.inputs?.[0]?.cto_income_rate;
         setFormData((prev) => {
           const updates: Partial<typeof prev> = {};
           if (!prev.revenue_forecast_rate && ing != null && String(ing).trim() !== "") {
@@ -339,6 +345,14 @@ const ValoraPage: React.FC = () => {
           if (!prev.perpetual_growth_rate && perp != null && String(perp).trim() !== "") {
             const v = parseRate(perp);
             if (v) updates.perpetual_growth_rate = v;
+          }
+          if (!prev.capex_income_rate && capex != null && String(capex).trim() !== "") {
+            const v = parseRate(capex);
+            if (v) updates.capex_income_rate = v;
+          }
+          if (!prev.cto_income_rate && cto != null && String(cto).trim() !== "") {
+            const v = parseRate(cto);
+            if (v) updates.cto_income_rate = v;
           }
           return Object.keys(updates).length ? { ...prev, ...updates } : prev;
         });
@@ -643,6 +657,12 @@ const ValoraPage: React.FC = () => {
     }
   };
 
+   // Igual que Kapital (KapitalPage -> activeSavedCurrency):
+   // moneda local derivada del país para etiquetar el select de resultados.
+   const activeLocalCurrency = formData.country
+     ? COUNTRY_LOCAL_CURRENCIES[formData.country] || null
+     : null;
+
    const mainContent = showResults ? (
      <div className="flex flex-col min-h-[calc(100vh-4rem)]">
        {isReportViewerOpen ? (
@@ -666,6 +686,8 @@ const ValoraPage: React.FC = () => {
              valoraCalc.selectedSensIdx
            )}
            formData={formData}
+           formCurrency={formData.currency}
+           localCurrency={activeLocalCurrency}
            resultView={valoraCalc.resultView}
            hasSensitized={Boolean(getValoraCalculationResults(
              valoraCalc.currentCalculation?.data,
@@ -758,6 +780,8 @@ const ValoraPage: React.FC = () => {
           forecast_ingresos_1er_periodo: rates.forecast_ingresos_1er_periodo?.recommendation_source,
           forecast_fde_1er_periodo: rates.forecast_fde_1er_periodo?.recommendation_source,
           crecimiento_perpetuo: rates.crecimiento_perpetuo?.recommendation_source,
+          capex_income_rate: rates.capex_income_rate?.recommendation_source,
+          cto_income_rate: rates.cto_income_rate?.recommendation_source,
         });
 
         const ai = recommendations?.ai_analysis as ValoraAiAnalysis | undefined;
@@ -801,6 +825,13 @@ const ValoraPage: React.FC = () => {
           } else {
             console.warn("[VALORA FRONTEND] Perpetuo recommendation inválida o vacía:", perp);
           }
+
+          const capex = rates.capex_income_rate?.recommendation;
+          if (capex !== undefined && capex !== null && !Number.isNaN(Number(capex)))
+            updates.capex_income_rate = String(Math.round(Number(capex) * 10000) / 100);
+          const cto = rates.cto_income_rate?.recommendation;
+          if (cto !== undefined && cto !== null && !Number.isNaN(Number(cto)))
+            updates.cto_income_rate = String(Math.round(Number(cto) * 10000) / 100);
 
           return updates;
         });

@@ -23,6 +23,8 @@ const RESULT_TABS = [
 
 export interface ValoraResultsProps {
   formData: FormData;
+  formCurrency?: string | null;
+  localCurrency?: string | null;
   section: ValoraResultsSectionKey;
   balanceTable: FinancialTable | null;
   resultsTable: FinancialTable | null;
@@ -42,6 +44,8 @@ export interface ValoraResultsProps {
 
 export const ValoraResults: React.FC<ValoraResultsProps> = ({
   formData,
+  formCurrency,
+  localCurrency,
   section,
   balanceTable,
   resultsTable,
@@ -111,34 +115,40 @@ export const ValoraResults: React.FC<ValoraResultsProps> = ({
              </div>
            )}
            */}
-            {section === "resultados" && resultView === "original" && (
-             <ValoraGeneralResultsBlock
-               onOpenFormPanel={onOpenFormPanel}
-                onOpenReport={undefined}
-               showPromptButton={!showTabs}
-               results={calculationResults}
-               toolbar={controls}
-             />
-           )}
+             {section === "resultados" && resultView === "original" && (
+              <ValoraGeneralResultsBlock
+                onOpenFormPanel={onOpenFormPanel}
+                 onOpenReport={undefined}
+                showPromptButton={!showTabs}
+                results={calculationResults}
+                toolbar={controls}
+                formCurrency={formCurrency ?? formData.currency}
+                localCurrency={localCurrency}
+              />
+            )}
 
-           {section === "resultados" && resultView === "sensibilidad" && (
-             <ValoraSensibilidadResultsBlock
-               onOpenFormPanel={onOpenFormPanel}
-                onOpenReport={undefined}
+            {section === "resultados" && resultView === "sensibilidad" && (
+              <ValoraSensibilidadResultsBlock
+                onOpenFormPanel={onOpenFormPanel}
+                 onOpenReport={undefined}
                 sector={formData.sector}
-               originalResults={calculationResults}
-               results={sensitizedResults}
+                originalResults={calculationResults}
+                results={sensitizedResults}
+                toolbar={controls}
+                formCurrency={formCurrency ?? formData.currency}
+                localCurrency={localCurrency}
+              />
+            )}
+
+           {section === "resultados" && resultView === "comparacion" && (
+             <ValoraComparisonResultsBlock
                toolbar={controls}
+               baseResults={calculationResults}
+               sensitizedResults={sensitizedResults}
+               formCurrency={formCurrency ?? formData.currency}
+               localCurrency={localCurrency}
              />
            )}
-
-          {section === "resultados" && resultView === "comparacion" && (
-            <ValoraComparisonResultsBlock
-              toolbar={controls}
-              baseResults={calculationResults}
-              sensitizedResults={sensitizedResults}
-            />
-          )}
 
           {section === "estados" && (
             <ValoraEstadosSection
