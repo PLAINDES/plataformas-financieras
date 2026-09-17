@@ -2,6 +2,7 @@
 
 import { IconActionButton } from "../../../../shared/components/ui/IconActionButton";
 import { Tooltip } from "@/shared/components/common/Tooltip";
+import { HelpCircle } from "lucide-react";
 import { FormField } from "../../components/FormField";
 import { FormSection } from "../../components/FormSection";
 import { cn } from "@/lib/utils";
@@ -601,7 +602,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                   </p>
 
                   {onGetAIRecommendations && (
-                    <div className="flex flex-col items-end gap-1.5 relative">
+                    <div className="flex items-start gap-2 relative">
                       <button
                         type="button"
                         onClick={onGetAIRecommendations}
@@ -630,9 +631,19 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                         )}
                       </button>
 
+                      <Tooltip
+                        content="La recomendación considera variables macroeconómicas y sectoriales relevantes para la empresa, incluyendo el país de operación, sector y subsector económico, inflación esperada, perspectivas de crecimiento y condiciones del mercado. Con esta información, la IA propone tasas de sensibilización consistentes con el entorno de la empresa y su valorización."
+                        contentClassName="w-[450px] text-center"
+                      >
+                        <HelpCircle
+                          aria-label="Información sobre la recomendación de IA"
+                          className="self-center h-4 w-4 text-slate-400 transition-colors hover:text-valora-primary"
+                        />
+                      </Tooltip>
+
                       {/* Indicador Thinking */}
                       {isLoadingAI && (
-                        <div className="ai-thinking-indicator">
+                        <div className="ai-thinking-indicator absolute right-0 top-full mt-1">
                           <div className="ai-thinking-dot" />
                           <span>Pensando...</span>
                         </div>
@@ -642,7 +653,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                 </div>
 
                 {/* Inputs de sensibilidad */}
-                <div className="space-y-4 pt-1">
+                <div className="space-y-4 pt-1 pb-2">
                   <SensitivityRow
                     label="Tasa Forecast Ingresos"
                     name="revenue_forecast_rate"
@@ -680,6 +691,32 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                       aiAnalysis,
                       "crecimiento_perpetuo",
                       rateSources.crecimiento_perpetuo
+                    )}
+                  />
+                  <SensitivityRow
+                    label="Razón CAPEX/Ingresos"
+                    name="capex_income_rate"
+                    suffix="%"
+                    value={formData.capex_income_rate || ""}
+                    onChange={onInputChange}
+                    isLoadingAI={isLoadingAI}
+                    aiTooltip={buildAiTooltip(
+                      aiAnalysis,
+                      "capex_income_rate",
+                      rateSources.capex_income_rate
+                    )}
+                  />
+                  <SensitivityRow
+                    label="Razón CTO/Ingresos"
+                    name="cto_income_rate"
+                    suffix="%"
+                    value={formData.cto_income_rate || ""}
+                    onChange={onInputChange}
+                    isLoadingAI={isLoadingAI}
+                    aiTooltip={buildAiTooltip(
+                      aiAnalysis,
+                      "cto_income_rate",
+                      rateSources.cto_income_rate
                     )}
                   />
                 </div>

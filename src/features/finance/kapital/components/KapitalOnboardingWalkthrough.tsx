@@ -42,6 +42,7 @@ const waitForSelector = (
   });
 
 const STORAGE_KEY_BASE = "kapital_tour_completed_v1";
+const SENSITIVITY_STORAGE_KEY_BASE = "kapital_sensitivity_tour_completed_v1";
 const DEVICE_ID_KEY = "analytics_device_id";
 
 function getOrCreateDeviceId(): string {
@@ -56,6 +57,7 @@ function getOrCreateDeviceId(): string {
   return deviceId;
 }
 const getTourKey = () => `${STORAGE_KEY_BASE}:${getOrCreateDeviceId()}`;
+const getSensitivityTourKey = () => `${SENSITIVITY_STORAGE_KEY_BASE}:${getOrCreateDeviceId()}`;
 
 interface TourStep {
   id: string;
@@ -216,7 +218,10 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     abortRef.current?.abort();
     advancingRef.current = false;
     if (!sensitivityMode) localStorage.setItem(getTourKey(), "true");
-    else onSensitivityTourEnd?.();
+    else {
+      localStorage.setItem(getSensitivityTourKey(), "true");
+      onSensitivityTourEnd?.();
+    }
     setActive(false);
     setSensitivityMode(false);
   }, [sensitivityMode, onSensitivityTourEnd]);
@@ -225,7 +230,10 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     abortRef.current?.abort();
     advancingRef.current = false;
     if (!sensitivityMode) localStorage.setItem(getTourKey(), "true");
-    else onSensitivityTourEnd?.();
+    else {
+      localStorage.setItem(getSensitivityTourKey(), "true");
+      onSensitivityTourEnd?.();
+    }
     setActive(false);
     setSensitivityMode(false);
   }, [sensitivityMode, onSensitivityTourEnd]);
@@ -293,6 +301,11 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
   // Decide if tour should start — protocol: wait for paint, not fixed timeout.
   useEffect(() => {
     if (startSensitivityTour) {
+      // Misma condicional que el tour de bienvenida: 1 vez por dispositivo.
+      if (localStorage.getItem(getSensitivityTourKey()) === "true") {
+        onSensitivityTourEnd?.();
+        return;
+      }
       setSensitivityMode(true);
       setCurrent(0);
       setHighlightSubsectorIdx(null);

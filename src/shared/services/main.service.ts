@@ -146,6 +146,48 @@ export const MainService = {
     return api.post<Calculation>("main/calculations/native", data);
   },
 
+  calculateKapitalExcel: async (
+    input: Record<string, unknown>,
+    sensitivity?: Record<string, unknown> | null,
+    userId?: number | string | null
+  ): Promise<Record<string, unknown>> => {
+    // Proxy API (enriquece con macros de BD: F6/F7/F8/F9/F11/Damodaran/riesgo
+    // y resuelve la plantilla PREDETERMINADA) en vez de llamar directo al
+    // web-service, que no tiene acceso a la BD.
+    return api.post<Record<string, unknown>>("main/kapital/calculate-excel", {
+      input,
+      sensitivity: sensitivity ?? null,
+      user_id: userId ?? null,
+    });
+  },
+
+  calculateValoraExcel: async (
+    input: Record<string, unknown>,
+    sensitivity?: Record<string, unknown> | null,
+    userId?: number | string | null,
+    calculationCode?: string | null
+  ): Promise<Record<string, unknown>> => {
+    return api.post<Record<string, unknown>>("main/valora/calculate-excel", {
+      input,
+      sensitivity: sensitivity ?? null,
+      user_id: userId ?? null,
+      calculation_code: calculationCode ?? null,
+    });
+  },
+
+  getDefaultMasterTemplate: async (
+    userId?: number | string | null
+  ): Promise<{ id: number; nombre: string; s3_object_key: string | null } | null> => {
+    try {
+      const params = userId ? `?user_id=${userId}` : "";
+      return await api.get<{ id: number; nombre: string; s3_object_key: string | null }>(
+        `main/master-templates/default${params}`
+      );
+    } catch {
+      return null;
+    }
+  },
+
   updateNativeCalculation: async (
     id: number,
     data: CalculationUpdate

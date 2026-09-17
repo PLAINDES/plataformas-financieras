@@ -40,6 +40,8 @@ const INITIAL_FORM_DATA: FormData = {
   revenue_forecast_rate: "",
   fdc_forecast_rate: "",
   perpetual_growth_rate: "",
+  capex_income_rate: "",
+  cto_income_rate: "",
   beta_unlevered_sensitivity: "",
 };
 

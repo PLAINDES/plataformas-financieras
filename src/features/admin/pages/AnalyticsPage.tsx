@@ -158,7 +158,12 @@ const ProfilePieChart: React.FC<{ title: string; items: { label: string; count: 
     chart.legend.fontSize = 10;
     series.appear(700, 80);
 
-    return () => chart.dispose();
+    return () => {
+      // amCharts sigue procesando eventos durante la animación. Detenerlo
+      // antes de liberar el gráfico evita callbacks sobre EventDispatcher ya
+      // destruido al cambiar de página o de periodo.
+      chart.dispose();
+    };
   }, [items, color, donut, innerRadius]);
 
   return (
@@ -262,12 +267,20 @@ const SessionsChart: React.FC<{ data: { date: string; count: number }[] }> = ({ 
 
     // Animación de dibujado de línea de izquierda a derecha
     series.hide();
-    setTimeout(() => {
-      series.show();
-      series.appear(1500, 100);
+    let disposed = false;
+    const animationTimer = window.setTimeout(() => {
+      if (disposed || chart.isDisposed()) return;
+      try {
+        series.show();
+        series.appear(1500, 100);
+      } catch {
+        // El componente puede desmontarse mientras amCharts finaliza su ciclo.
+      }
     }, 200);
 
     return () => {
+      disposed = true;
+      window.clearTimeout(animationTimer);
       chart.dispose();
     };
   }, [data]);

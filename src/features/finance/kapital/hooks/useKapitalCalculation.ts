@@ -1,7 +1,6 @@
 // src/features/kapital/hooks/useKapitalCalculation.ts
 import { useState } from "react";
 import { MainService } from "@/shared/services/main.service";
-import { calculateKapitalNative } from "@/shared/services/valora-native.service";
 import {
   computeResultsFromCalculationData,
   extractSensibilizaciones,
@@ -142,14 +141,17 @@ export function useKapitalCalculation({
       nativeBaseInput.calculation_debug_id =
         calculationCode;
       const nativeSensitivity = isBetaUpdate ? nativeInput : null;
-      const nativeResult = await calculateKapitalNative(nativeBaseInput, nativeSensitivity);
+      // Proxy API: enriquece con macros de BD (F6/F7/F8/F9/F11/Damodaran/riesgo)
+      // antes de calcular en el web-service. Devuelve además enriched_input.
+      const nativeResult = await MainService.calculateKapitalExcel(nativeBaseInput, nativeSensitivity, currentUserId);
+      const enrichedBaseInput = (nativeResult.enriched_input || nativeBaseInput) as Record<string, unknown>;
       const nativeBase = (nativeResult.base_results || {}) as Record<string, unknown>;
       const baseResults = {
         ...((nativeBase.resultados || {}) as Record<string, unknown>),
         boa: nativeBase.boa,
         boa_sector: nativeBase.boa_sector,
         boa_subsector: nativeBase.boa_subsector,
-        inputs: nativeBaseInput,
+        inputs: enrichedBaseInput,
       };
       const sensitivityResults = (Array.isArray(nativeResult.sensitivity_results)
         ? nativeResult.sensitivity_results
@@ -178,7 +180,7 @@ export function useKapitalCalculation({
           currentCalculation!.id,
           {
             data: {
-              inputs: [nativeBaseInput],
+              inputs: [enrichedBaseInput],
               resultados: [baseResults],
               sensibilizacion: persistedSensibilizaciones,
               active_session_id: prewarmedSessionId,
@@ -194,7 +196,7 @@ export function useKapitalCalculation({
           type: "kapital",
           data: {
             ...buildCalculationDataPayload(),
-            inputs: [nativeBaseInput],
+            inputs: [enrichedBaseInput],
             resultados: [baseResults],
             sensibilizacion: persistedSensibilizaciones,
             prewarmed_session_id: prewarmedSessionId,

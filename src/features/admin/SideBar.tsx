@@ -114,10 +114,10 @@ const Sidebar: React.FC<SidebarProps> = ({
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
           ${isMinimized ? "w-18.75" : "w-62.5"}
         `}
-        style={{ backgroundColor: "#0c1524" }}
+        style={{ backgroundColor: "#081426" }}
       >
         {/* Logo Section */}
-        <div className="relative flex items-center justify-center border-b border-white/10 border-dashed px-4 py-7">
+        <div className="relative flex h-[104px] items-center justify-center overflow-hidden border-b border-white/10 border-dashed px-0 py-5">
           {/* Radial glow behind logo */}
           <div
             className="absolute inset-0 pointer-events-none"
@@ -127,19 +127,15 @@ const Sidebar: React.FC<SidebarProps> = ({
                 : "radial-gradient(ellipse 80% 70% at center, rgba(255,255,255,0.06) 0%, transparent 70%)",
             }}
           />
-          <Link to="/admin" className="relative flex items-center justify-center">
-            {isMinimized ? (
-              <span className="text-sm font-bold tracking-wide" style={{ color: "#2dd4bf" }}>
-                PF
-              </span>
-            ) : (
-              <img
-                src="/images/logo-profinance.png"
-                alt="ProFinance"
-                className="h-7 w-auto object-contain"
-                style={{ filter: "brightness(1.1) contrast(1.05)" }}
-              />
-            )}
+          <Link to="/admin" className="relative flex h-full w-full items-center justify-center">
+            {/* Tarjeta blanca integrada: el logo conserva sus proporciones y no se recorta. */}
+            <span className="absolute inset-x-4 inset-y-1 overflow-hidden rounded-xl bg-white shadow-[0_4px_18px_rgba(0,0,0,0.16)]">
+            </span>
+            <img
+              src="/images/logo.png"
+              alt="Pro Ideas"
+              className={`${isMinimized ? "h-11 w-16 object-cover object-left" : "h-16 w-[84%] object-contain"} relative z-10`}
+            />
           </Link>
           {/* Toggle Button - Desktop Only */}
           <button
@@ -156,7 +152,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {/* Menu Heading */}
           <div className="mb-2 px-3 pt-5">
             {!isMinimized && (
-              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#4a6a8a" }}>
+              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#79a4d4" }}>
                 Módulos
               </span>
             )}
@@ -178,15 +174,15 @@ const Sidebar: React.FC<SidebarProps> = ({
                 className={`${!hasAnimated.current ? "sidebar-item-enter" : ""} group flex items-center rounded-lg px-3 py-2 transition-all duration-150 ease-out
                   ${
                     isActive(item.href)
-                      ? "text-[#5eead4]"
-                      : "text-gray-400 hover:text-white"
+                      ? "text-[#8bbcff]"
+                      : "text-[#9bb7d8] hover:text-white"
                   }
                   ${isMinimized ? "justify-center" : ""}
                 `}
                 style={{
                   animationDelay: `${index * 80}ms`,
                   background: isActive(item.href)
-                    ? "linear-gradient(135deg, rgba(45, 212, 191, 0.12) 0%, rgba(45, 212, 191, 0.04) 100%)"
+                    ? "linear-gradient(135deg, rgba(43, 127, 255, 0.20) 0%, rgba(43, 127, 255, 0.08) 100%)"
                     : undefined,
                 }}
                 onAnimationEnd={() => {
@@ -199,7 +195,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 {/* Icon */}
                 <span
                   className={`shrink-0 flex justify-center transition-colors duration-150 ${isMinimized ? "" : "mr-3"}`}
-                  style={{ color: isActive(item.href) ? "#2dd4bf" : undefined }}
+                  style={{ color: isActive(item.href) ? "#2b7fff" : undefined }}
                 >
                   <span className="inline-block h-4 w-4">{item.icon}</span>
                 </span>
@@ -211,7 +207,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                 {/* Active Indicator */}
                 {isActive(item.href) && !isMinimized && (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#2dd4bf" }} />
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#2b7fff" }} />
                 )}
               </Link>
             ))}

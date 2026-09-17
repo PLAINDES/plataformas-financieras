@@ -17,8 +17,53 @@ type Cover = {
   imagen_fondo?: { id: number; url?: string } | null;
 };
 
+// Cachea las imágenes protegidas durante la sesión del panel. El Bearer solo
+// viaja en fetch y nunca forma parte de la URL ni del HTML.
+const coverImageCache = new Map<string, Promise<string>>();
+
+const fetchCoverImage = (url: string): Promise<string> => {
+  const cached = coverImageCache.get(url);
+  if (cached) return cached;
+
+  const request = (async () => {
+    const token = localStorage.getItem("auth_token");
+    const response = await fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!response.ok) throw new Error(`Image request failed with ${response.status}`);
+    const blob = await response.blob();
+    if (!blob.size) throw new Error("Image response was empty");
+    return URL.createObjectURL(blob);
+  })();
+
+  coverImageCache.set(url, request);
+  request.catch(() => coverImageCache.delete(url));
+  return request;
+};
+
 const CoverImage: React.FC<{ url: string; alt: string }> = ({ url, alt }) => {
   const [hasError, setHasError] = useState(false);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setHasError(false);
+    setImageSrc(null);
+
+    const loadImage = async () => {
+      try {
+        const objectUrl = await fetchCoverImage(url);
+        if (!cancelled) setImageSrc(objectUrl);
+      } catch {
+        if (!cancelled) setHasError(true);
+      }
+    };
+
+    void loadImage();
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
 
   if (hasError) {
     return (
@@ -26,9 +71,11 @@ const CoverImage: React.FC<{ url: string; alt: string }> = ({ url, alt }) => {
     );
   }
 
+  if (!imageSrc) return null;
+
   return (
     <img
-      src={url}
+      src={imageSrc}
       alt={alt}
       className="object-cover h-full w-full"
       onError={() => setHasError(true)}
