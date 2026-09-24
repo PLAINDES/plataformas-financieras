@@ -1,5 +1,5 @@
 // useReportEditor.ts
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MainService } from "@/shared/services/main.service";
 import {
   replaceCodesWithValues,
@@ -162,6 +162,21 @@ export function useReportEditor(id?: string) {
     : undefined;
   const selectedCoverUrl = selectedCover?.portada?.url ?? portadaUrl ?? null;
 
+  const compatibleCovers = useMemo(
+    () => covers.filter((cover) => cover.producto === form.type),
+    [covers, form.type]
+  );
+
+  useEffect(() => {
+    if (compatibleCovers.length === 0) return;
+    const current = compatibleCovers.find(
+      (cover) => cover.id === form.portadaId
+    );
+    if (!current) {
+      setForm((prev) => ({ ...prev, portadaId: compatibleCovers[0].id }));
+    }
+  }, [form.type, form.portadaId, compatibleCovers]);
+
   const handleAddCode = (codeObj: TemplateCodeBasic) => {
     let displayValue = "N/D";
     if (codeObj.value !== undefined && codeObj.value !== null) {
@@ -189,6 +204,7 @@ export function useReportEditor(id?: string) {
 
   const handleSave = async () => {
     setSaving(true);
+    let createdReportId: number | undefined;
     try {
       let reportId = id ? Number(id) : undefined;
       const reportPayload = {
@@ -200,6 +216,7 @@ export function useReportEditor(id?: string) {
       if (!reportId) {
         const created = await MainService.createReport(reportPayload);
         reportId = created.id;
+        createdReportId = created.id;
       } else {
         await MainService.updateReport(Number(reportId), reportPayload);
       }
@@ -219,6 +236,13 @@ export function useReportEditor(id?: string) {
       return true; // Retorna verdadero si tiene éxito
     } catch (err: any) {
       console.error(err);
+      if (createdReportId) {
+        try {
+          await MainService.deleteReport(createdReportId);
+        } catch (cleanupError) {
+          console.error("No se pudo revertir el reporte creado", cleanupError);
+        }
+      }
       return false; // Retorna falso si falla
     } finally {
       setSaving(false);
@@ -243,7 +267,7 @@ export function useReportEditor(id?: string) {
   return {
     isEdit,
     form,
-    covers,
+    covers: compatibleCovers,
     loading,
     saving,
     error,

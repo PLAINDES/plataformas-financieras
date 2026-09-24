@@ -59,6 +59,11 @@ export interface OccupationProfileMetrics {
   audiences: TopItem[];
   specialist_roles: TopItem[];
   company_names: TopItem[];
+  /** Nuevos agregados del backend (sector / cargo). Opcionales hasta
+   * que el backend los exponga; el frontend usa specialist_roles y
+   * company_names como fallback. */
+  sectors?: TopItem[];
+  cargos?: TopItem[];
 }
 
 export interface DashboardData {

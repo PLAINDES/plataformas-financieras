@@ -116,8 +116,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         `}
         style={{ backgroundColor: "#081426" }}
       >
-        {/* Logo Section */}
-        <div className="relative flex h-[104px] items-center justify-center overflow-hidden border-b border-white/10 border-dashed px-0 py-5">
+        {/* Logo Section (overflow visible para no recortar el toggle flotante) */}
+        <div className="relative flex h-[104px] items-center justify-center border-b border-white/10 border-dashed px-0 py-5">
           {/* Radial glow behind logo */}
           <div
             className="absolute inset-0 pointer-events-none"
@@ -127,20 +127,24 @@ const Sidebar: React.FC<SidebarProps> = ({
                 : "radial-gradient(ellipse 80% 70% at center, rgba(255,255,255,0.06) 0%, transparent 70%)",
             }}
           />
-          <Link to="/admin" className="relative flex h-full w-full items-center justify-center">
-            {/* Tarjeta blanca integrada: el logo conserva sus proporciones y no se recorta. */}
-            <span className="absolute inset-x-4 inset-y-1 overflow-hidden rounded-xl bg-white shadow-[0_4px_18px_rgba(0,0,0,0.16)]">
+          <Link to="/admin" className="relative z-10 flex h-full w-full items-center justify-center px-3">
+            {/* Tarjeta blanca integrada: en modo reducido es cuadrada y el
+                img recorta solo el isotipo (46% izquierdo, aspect 3.39)
+                para que no se asome ninguna letra del texto. */}
+            <span
+              className={`flex items-center justify-center overflow-hidden rounded-xl bg-white shadow-[0_4px_18px_rgba(0,0,0,0.16)] ${isMinimized ? "h-12 w-[52px] shrink-0" : "h-full w-full"}`}
+            >
+              <img
+                src="/images/logo.png"
+                alt="Pro Ideas"
+                className={isMinimized ? "h-7 w-[44px] object-cover object-left" : "h-13 w-[84%] object-contain"}
+              />
             </span>
-            <img
-              src="/images/logo.png"
-              alt="Pro Ideas"
-              className={`${isMinimized ? "h-11 w-16 object-cover object-left" : "h-16 w-[84%] object-contain"} relative z-10`}
-            />
           </Link>
           {/* Toggle Button - Desktop Only */}
           <button
             onClick={onToggleMinimize}
-            className="absolute -right-3.75 top-1/2 hidden h-7.5 w-7.5 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-[1.02] lg:flex cursor-pointer"
+            className="absolute -right-3.75 top-1/2 z-20 hidden h-7.5 w-7.5 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-[1.02] lg:flex cursor-pointer"
             aria-label="Toggle sidebar"
           >
             <ArrowIcon rotated={!isMinimized} />

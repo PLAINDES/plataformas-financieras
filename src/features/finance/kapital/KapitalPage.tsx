@@ -346,14 +346,19 @@ const KapitalPage: React.FC = () => {
                     onStartSensitivityTour={() => setStartSensitivityTour(true)}
                 />
             )}
-            <MainPageFooter brandName="Valora" brandHref="/valora" />
+            <MainPageFooter
+                brandName="Kapital"
+                brandHref="/kapital"
+                logoSrc="/images/logo-kapital.png"
+            />
         </div>
     ) : (
         <FinancePageTemplate
-            brandName="Valora"
-            brandHref="/valora"
+            brandName="Kapital"
+            brandHref="/kapital"
             heroTitle="Bienvenido a Kapital"
             btnText="Kapital"
+            logoSrc="/images/logo-kapital.png"
             onOpenForm={() => setIsFormOpen((prev) => !prev)}
         />
     );
@@ -401,7 +406,7 @@ const KapitalPage: React.FC = () => {
             />
 
             <main
-                className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} h-screen transition-[padding] duration-300 ${isFormOpen ? "lg:pl-90" : "lg:pl-0"}`}
+                className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} h-screen transition-[padding] duration-300 ${isFormOpen ? "lg:pl-105" : "lg:pl-0"}`}
             >
                 {mainContent}
             </main>
@@ -409,7 +414,7 @@ const KapitalPage: React.FC = () => {
             <aside
                 className={`fixed left-0 top-16 max-[540px]:z-70 z-40 h-[calc(100dvh-4rem)] flex bg-transparent transition-transform duration-200 ${isFormOpen ? "translate-x-0" : "-translate-x-full"}`}
             >
-                <div className="h-full w-full max-[540px]:w-screen sm:w-90 border-r border-gray-200 bg-white shadow-sm shrink-0">
+                <div className="h-full w-full max-[540px]:w-screen sm:w-105 border-r border-gray-200 bg-white p-4 shadow-sm shrink-0">
                     <FormSidebar
                         formData={form.formData}
                         onInputChange={handleTrackedInputChange}

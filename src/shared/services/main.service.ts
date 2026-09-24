@@ -142,7 +142,9 @@ export const MainService = {
     return api.get<Calculation>(`main/calculations/by-code/${code}`);
   },
 
-  createNativeCalculation: async (data: CalculationCreate): Promise<Calculation> => {
+  createNativeCalculation: async (
+    data: CalculationCreate
+  ): Promise<Calculation> => {
     return api.post<Calculation>("main/calculations/native", data);
   },
 
@@ -177,12 +179,18 @@ export const MainService = {
 
   getDefaultMasterTemplate: async (
     userId?: number | string | null
-  ): Promise<{ id: number; nombre: string; s3_object_key: string | null } | null> => {
+  ): Promise<{
+    id: number;
+    nombre: string;
+    s3_object_key: string | null;
+  } | null> => {
     try {
       const params = userId ? `?user_id=${userId}` : "";
-      return await api.get<{ id: number; nombre: string; s3_object_key: string | null }>(
-        `main/master-templates/default${params}`
-      );
+      return await api.get<{
+        id: number;
+        nombre: string;
+        s3_object_key: string | null;
+      }>(`main/master-templates/default${params}`);
     } catch {
       return null;
     }
@@ -191,7 +199,8 @@ export const MainService = {
   updateNativeCalculation: async (
     id: number,
     data: CalculationUpdate
-  ): Promise<Calculation> => api.put<Calculation>(`main/calculations/${id}/native`, data),
+  ): Promise<Calculation> =>
+    api.put<Calculation>(`main/calculations/${id}/native`, data),
 
   deleteCalculation: async (id: number): Promise<void> => {
     return api.delete<void>(`main/calculations/${id}`);
@@ -231,6 +240,10 @@ export const MainService = {
     return api.post<Report>("main/reports", data);
   },
 
+  deleteReport: async (id: number): Promise<void> => {
+    return api.delete<void>(`main/reports/${id}`);
+  },
+
   getReportContent: async (id: number): Promise<string> => {
     const res = await api.get<{ html: string }>(`main/reports/${id}/content`);
     return res.html;
@@ -259,15 +272,12 @@ export const MainService = {
     const timestamp = new Date().getTime();
     const url = `${baseUrl}/main/reports/${reportId}/generate?calculation_id=${calculationId}&is_preview=${isPreview}&_t=${timestamp}`;
 
-    const response = await fetch(
-      url,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
@@ -474,17 +484,26 @@ export const MainService = {
     return api.post<any>("chatbot/chat", payload);
   },
 
-  analyzeCompanies: async (tickers: string[], onProgress?: (result: any) => void): Promise<any> => {
-    const { job_id } = await api.post<any>("chatbot/calculate-subsectores-boa", { tickers });
+  analyzeCompanies: async (
+    tickers: string[],
+    onProgress?: (result: any) => void
+  ): Promise<any> => {
+    const { job_id } = await api.post<any>(
+      "chatbot/calculate-subsectores-boa",
+      { tickers }
+    );
     while (true) {
       const progress = await api.get<any>(`chatbot/boa-progress/${job_id}`);
-      if (progress.result?.valid_companies?.length && progress.status === "running") {
+      if (
+        progress.result?.valid_companies?.length &&
+        progress.status === "running"
+      ) {
         onProgress?.(progress.result);
       }
       if (progress.status === "completed" || progress.status === "error") {
         return progress.result || { success: false, valid_companies: [] };
       }
-      await new Promise(r => setTimeout(r, 1500));
+      await new Promise((r) => setTimeout(r, 1500));
     }
   },
 
@@ -594,7 +613,11 @@ export const MainService = {
 
   // ==================== VALORA DEBUG COPIES ====================
 
-  getValoraCopies: async (env?: string, includeKapital?: boolean, token?: string): Promise<{
+  getValoraCopies: async (
+    env?: string,
+    includeKapital?: boolean,
+    token?: string
+  ): Promise<{
     items: Array<{
       id: string;
       name: string;
@@ -617,32 +640,51 @@ export const MainService = {
     });
   },
 
-  getValoraCopyDownloadUrl: async (itemId: string, token?: string): Promise<{
+  getValoraCopyDownloadUrl: async (
+    itemId: string,
+    token?: string
+  ): Promise<{
     download_url: string;
     item_id: string;
   }> => {
-    return api.get<any>(`main/master-templates/valora-copies/${encodeURIComponent(itemId)}/download-url`, {
-      token: getAuthToken(token),
-    });
+    return api.get<any>(
+      `main/master-templates/valora-copies/${encodeURIComponent(itemId)}/download-url`,
+      {
+        token: getAuthToken(token),
+      }
+    );
   },
 
-  deleteValoraCopy: async (itemId: string, token?: string): Promise<{
+  deleteValoraCopy: async (
+    itemId: string,
+    token?: string
+  ): Promise<{
     success: boolean;
     deleted_id: string;
   }> => {
-    return api.delete<any>(`main/master-templates/valora-copies/${encodeURIComponent(itemId)}`, {
-      token: getAuthToken(token),
-    });
+    return api.delete<any>(
+      `main/master-templates/valora-copies/${encodeURIComponent(itemId)}`,
+      {
+        token: getAuthToken(token),
+      }
+    );
   },
 
-  deleteValoraCopiesBatch: async (ids: string[], token?: string): Promise<{
+  deleteValoraCopiesBatch: async (
+    ids: string[],
+    token?: string
+  ): Promise<{
     success: boolean;
     deleted: string[];
     failed: { id: string; error: string }[];
   }> => {
-    return api.post<any>("main/master-templates/valora-copies/delete-batch", { ids }, {
-      token: getAuthToken(token),
-    });
+    return api.post<any>(
+      "main/master-templates/valora-copies/delete-batch",
+      { ids },
+      {
+        token: getAuthToken(token),
+      }
+    );
   },
 
   // ==================== VALORA TEMPLATE ====================
@@ -664,7 +706,9 @@ export const MainService = {
     }
   },
 
-  uploadValoraTemplate: async (file: File): Promise<{
+  uploadValoraTemplate: async (
+    file: File
+  ): Promise<{
     templates: Array<{
       url: string;
       filename: string;
@@ -681,7 +725,9 @@ export const MainService = {
     });
   },
 
-  setValoraTemplateDefault: async (objectKey: string): Promise<{
+  setValoraTemplateDefault: async (
+    objectKey: string
+  ): Promise<{
     templates: Array<{
       url: string;
       filename: string;
@@ -691,12 +737,17 @@ export const MainService = {
       is_current?: boolean;
     }>;
   }> => {
-    return api.post("main/valora-template/set-default", { object_key: objectKey });
+    return api.post("main/valora-template/set-default", {
+      object_key: objectKey,
+    });
   },
 
   // ==================== VALORA PDF TO TEMPLATE ====================
 
-  uploadValoraPdf: async (file: File, signal?: AbortSignal): Promise<{
+  uploadValoraPdf: async (
+    file: File,
+    signal?: AbortSignal
+  ): Promise<{
     status: string;
     metadata: any;
     balance_table: any;
@@ -723,10 +774,15 @@ export const MainService = {
 
   // ==================== VALORA RECOMMENDATIONS ====================
 
-  getValoraRecommendations: async (payload: Record<string, unknown>): Promise<any> => {
+  getValoraRecommendations: async (
+    payload: Record<string, unknown>
+  ): Promise<any> => {
     console.info("[VALORA FRONTEND] Fetching native Valora recommendations");
     try {
-      const result = await api.post<any>("analytics/valora-recommendations", payload);
+      const result = await api.post<any>(
+        "analytics/valora-recommendations",
+        payload
+      );
       console.info("[VALORA FRONTEND] Recommendations received:", result);
       return result;
     } catch (error) {
@@ -753,7 +809,9 @@ export const MainService = {
     }
   },
 
-  uploadBvlCotizacion: async (file: File): Promise<{
+  uploadBvlCotizacion: async (
+    file: File
+  ): Promise<{
     items: Array<{
       empresa: string;
       id: string;

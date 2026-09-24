@@ -13,6 +13,7 @@ const PortadaCreatePage: React.FC = () => {
   const [coverId] = useState<string | null>(null);
   const [showTextReport, setShowTextReport] = useState(true);
   const [typeId, setTypeId] = useState<number>(1); // 1 = Imagen Adjuntada, 2 = Personalizada
+  const [producto, setProducto] = useState<"kapital" | "valora">("kapital");
   const [name, setName] = useState("");
 
   const [footerOne, setFooterOne] = useState<File | null>(null);
@@ -65,6 +66,7 @@ const PortadaCreatePage: React.FC = () => {
         "tipo",
         typeId === 1 ? "imagen_adjuntada" : "personalizada"
       );
+      formData.append("producto", producto);
 
       if (footerOne) formData.append("primer_imagen_footer", footerOne);
       if (footerTwo) formData.append("segundo_imagen_footer", footerTwo);
@@ -196,6 +198,13 @@ const PortadaCreatePage: React.FC = () => {
                 </div>
               </div>
 
+              <div className="grid grid-cols-12 gap-4 items-center border-t border-gray-100 pt-6">
+                <label className="col-span-12 sm:col-span-3 text-sm font-medium text-gray-700">Producto</label>
+                <select value={producto} onChange={(e) => setProducto(e.target.value as "kapital" | "valora")} className="col-span-12 sm:col-span-9 h-10 rounded-md border border-gray-300 px-3 text-sm">
+                  <option value="kapital">Kapital</option>
+                  <option value="valora">Valora</option>
+                </select>
+              </div>
               <div className="grid grid-cols-12 gap-4 items-center border-t border-gray-100 pt-6">
                 <label className="col-span-12 sm:col-span-3 text-sm font-medium text-gray-700">
                   Nombre

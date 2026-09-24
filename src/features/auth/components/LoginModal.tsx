@@ -13,6 +13,43 @@ interface LoginModalProps {
   onSwitchToRegister: () => void;
 }
 
+const LOGIN_IMAGE_SRC = "/images/login-design.jpg";
+
+// Caché a nivel de módulo: una vez descargada, los siguientes
+// montajes del modal la muestran al instante sin destello.
+let loginImageCached = false;
+let loginImagePromise: Promise<void> | null = null;
+
+export function preloadLoginImage(): Promise<void> {
+  if (typeof globalThis === "undefined" || typeof Image === "undefined")
+    return Promise.resolve();
+  if (loginImageCached) return Promise.resolve();
+  if (loginImagePromise) return loginImagePromise;
+  loginImagePromise = new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      loginImageCached = true;
+      resolve();
+    };
+    img.onerror = () => resolve();
+    img.src = LOGIN_IMAGE_SRC;
+  });
+  return loginImagePromise;
+}
+
+// Arranca la descarga en cuanto el bundle JS se evalúa (mucho antes
+// de que el usuario abra el modal), sin esperar al <link rel="preload">.
+try {
+  const w = globalThis as any;
+  if (w && typeof w.requestIdleCallback === "function") {
+    w.requestIdleCallback(() => preloadLoginImage());
+  } else if (w && typeof w.setTimeout === "function") {
+    w.setTimeout(() => preloadLoginImage(), 1000);
+  }
+} catch {
+  /* entorno sin window: no precargar */
+}
+
 export function LoginModal({
   isOpen,
   onClose,
@@ -28,6 +65,18 @@ export function LoginModal({
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [isExiting, setIsExiting] = useState(false);
   const [isEntering, setIsEntering] = useState(isOpen);
+  const [imageReady, setImageReady] = useState(loginImageCached);
+
+  // Asegura la precarga aunque el modal aún no se haya montado antes.
+  useEffect(() => {
+    let cancelled = false;
+    preloadLoginImage().then(() => {
+      if (!cancelled) setImageReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -59,9 +108,15 @@ export function LoginModal({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!email.trim() || !password) {
+      setError("Debes rellenar tu email y contraseña para continuar.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await onLogin({ email, password });
+      await onLogin({ email: email.trim(), password });
       if (rememberMe) {
         localStorage.setItem("remembered_email", email);
       } else {
@@ -101,12 +156,26 @@ export function LoginModal({
 
       <div className={`relative flex w-full h-auto sm:h-[36rem] sm:max-h-[calc(100vh-2rem)] sm:max-w-[64rem] bg-white rounded-2xl shadow-2xl overflow-hidden transition-[opacity,transform] duration-250 ease-out ${isExiting ? "opacity-0 translate-y-1" : "opacity-100 translate-y-0"} ${isEntering ? "animate-in fade-in zoom-in duration-300 ease-out" : ""}`}>
         <div className="hidden md:flex md:w-[34%] h-full relative overflow-hidden bg-slate-900">
+          {/* Placeholder con shimmer: visible solo mientras la foto
+              (1.7MB) termina de decodificar. Evita el bloque azul
+              vacío de la captura. */}
+          <div
+            aria-hidden
+            className={`absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-blue-950 transition-opacity duration-500 ${imageReady ? "opacity-0" : "opacity-100"}`}
+          >
+            <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          </div>
           <img
-            src="/images/login-design.jpg"
+            src={LOGIN_IMAGE_SRC}
             alt="Ilustración de crecimiento financiero"
             fetchPriority="high"
-            decoding="async"
-            className="absolute inset-0 w-full h-full object-cover object-center"
+            loading="eager"
+            decoding="sync"
+            onLoad={() => {
+              loginImageCached = true;
+              setImageReady(true);
+            }}
+            className={`absolute inset-0 w-full h-full object-cover object-center transition-[opacity,transform,filter] duration-500 ease-out ${imageReady ? "opacity-100 scale-100 blur-0" : "opacity-0 scale-[1.02] blur-sm"}`}
           />
           <div className="absolute inset-0 bg-slate-950/20" />
         </div>
