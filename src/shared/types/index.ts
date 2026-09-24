@@ -204,6 +204,7 @@ export type CoverTipo = "imagen_adjuntada" | "personalizada";
 export interface Cover {
   id: number;
   nombre: string;
+  producto?: "kapital" | "valora" | null;
   tipo: CoverTipo;
   portada: MediaBasic | null;
   primer_imagen_footer: MediaBasic | null;

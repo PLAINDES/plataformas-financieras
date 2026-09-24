@@ -9,6 +9,7 @@ import type { ValoraResultsSectionKey } from "./ValoraResults";
 interface NavBarProps {
   user: User | null;
   onLogout: () => void;
+  onLoginClick: () => void;
   onToggleForm: () => void;
   isFormOpen: boolean;
   hasResults: boolean;
@@ -23,6 +24,7 @@ interface NavBarProps {
 export const NavBar: React.FC<NavBarProps> = ({
   user,
   onLogout,
+  onLoginClick,
   onToggleForm,
   isFormOpen,
   hasResults,
@@ -165,15 +167,25 @@ l347 -2 4 -472 c4 -533 6 -547 78 -696 76 -157 229 -281 404 -327 49 -12 137
             Curso de capacitación
             <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 my-auto" />
           </a>
-          <UserMenu user={user} onLogout={onLogout}>
-            <a
-              href={projectsHref}
-              className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+          {user ? (
+            <UserMenu user={user} onLogout={onLogout}>
+              <a
+                href={projectsHref}
+                className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                <FolderKanban className="w-4 h-4 text-gray-400" strokeWidth={1.8} />
+                Mis proyectos
+              </a>
+            </UserMenu>
+          ) : (
+            <button
+              type="button"
+              onClick={onLoginClick}
+              className="flex items-center justify-center px-4 sm:px-4 py-1.5 sm:py-2 max-sm:text-[10px] text-xs sm:text-sm font-semibold max-sm:w-fit max-sm:text-center text-valora-primary bg-white border border-valora-primary rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
             >
-              <FolderKanban className="w-4 h-4 text-gray-400" strokeWidth={1.8} />
-              Mis proyectos
-            </a>
-          </UserMenu>
+              Iniciar sesión
+            </button>
+          )}
         </>
       }
     />

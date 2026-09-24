@@ -58,8 +58,15 @@ class APIClient {
       try {
         const errorData: any = await response.json();
         console.error("[API Error Response Data]:", errorData);
+        const detail = errorData.detail;
         errorMessage =
-          errorData.detail || JSON.stringify(errorData) || errorMessage;
+          typeof detail === "string"
+            ? detail
+            : Array.isArray(detail)
+              ? detail.map((item) => item?.msg || item?.message).filter(Boolean).join(". ") || errorMessage
+              : detail && typeof detail === "object"
+                ? detail.msg || detail.message || JSON.stringify(detail)
+                : JSON.stringify(errorData) || errorMessage;
       } catch {
         console.error("[API Error Response Text]: Could not parse JSON");
       }

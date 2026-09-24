@@ -130,7 +130,7 @@ const SectionCard: React.FC<{ title: string; children: React.ReactNode; icon?: R
   </div>
 );
 
-const ProfilePieChart: React.FC<{ title: string; items: { label: string; count: number; percentage: number }[]; color: string; donut?: boolean; innerRadius?: number }> = ({ title, items, color, donut = true, innerRadius = 58 }) => {
+const ProfilePieChart: React.FC<{ title?: string; items: { label: string; count: number; percentage: number }[]; color: string; donut?: boolean; innerRadius?: number; showLegend?: boolean; chartHeight?: number; withBackground?: boolean }> = ({ title, items, color, donut = true, innerRadius = 58, showLegend = true, chartHeight, withBackground = false }) => {
   const chartDiv = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -149,13 +149,15 @@ const ProfilePieChart: React.FC<{ title: string; items: { label: string; count: 
     series.slices.template.stroke = window.am4core.color("#ffffff");
     series.slices.template.strokeWidth = 2;
     series.colors.list = [window.am4core.color(color), window.am4core.color("#7dd3fc"), window.am4core.color("#c4b5fd"), window.am4core.color("#a7f3d0"), window.am4core.color("#fcd34d")];
-    chart.legend = new window.am4charts.Legend();
-    chart.legend.position = "bottom";
-    chart.legend.labels.template.text = "{name}";
-    chart.legend.valueLabels.template.text = "{value} ({percentage}%)";
-    chart.legend.labels.template.maxWidth = 130;
-    chart.legend.labels.template.wrap = true;
-    chart.legend.fontSize = 10;
+    if (showLegend) {
+      chart.legend = new window.am4charts.Legend();
+      chart.legend.position = "bottom";
+      chart.legend.labels.template.text = "{name}";
+      chart.legend.valueLabels.template.text = "{value} ({percentage}%)";
+      chart.legend.labels.template.maxWidth = 130;
+      chart.legend.labels.template.wrap = true;
+      chart.legend.fontSize = 10;
+    }
     series.appear(700, 80);
 
     return () => {
@@ -164,28 +166,84 @@ const ProfilePieChart: React.FC<{ title: string; items: { label: string; count: 
       // destruido al cambiar de página o de periodo.
       chart.dispose();
     };
-  }, [items, color, donut, innerRadius]);
+  }, [items, color, donut, innerRadius, showLegend, chartHeight, withBackground]);
 
   return (
-    <div className="flex min-w-0 flex-col justify-center rounded-lg bg-slate-50 p-3">
-      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{title}</p>
-      {items.length > 0 ? <div ref={chartDiv} style={{ width: "100%", aspectRatio: "1.15" }} /> : <p className="py-12 text-center text-sm text-gray-400">Sin datos</p>}
+    <div className={`flex min-w-0 flex-col justify-center rounded-lg p-3 ${withBackground ? "bg-slate-50" : ""}`}>
+      {title && <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{title}</p>}
+      {items.length > 0 ? <div ref={chartDiv} style={chartHeight ? { width: "100%", height: chartHeight } : { width: "100%", aspectRatio: "1.15" }} /> : <p className="py-12 text-center text-sm text-gray-400">Sin datos</p>}  
     </div>
   );
 };
 
+// Pie SVG nativo relleno para el encabezado: amCharts sobredimensiona
+// el gráfico en contenedores pequeños y deja su marca de agua. Aquí
+// solo se ve el círculo y al pasar el mouse muestra nombre y porcentaje.
+const AudienceDonut: React.FC<{ items: { label: string; count: number; percentage: number }[] }> = ({ items }) => {
+  const total = items.reduce((sum, item) => sum + item.count, 0);
+  const RADIUS = 48;
+  const COLORS = ["#8b5cf6", "#7dd3fc", "#c4b5fd", "#a7f3d0", "#fcd34d"];
+  const point = (angle: number): [number, number] => [
+    50 + RADIUS * Math.cos(angle),
+    50 + RADIUS * Math.sin(angle),
+  ];
+  let acc = 0;
+  return (
+    <svg viewBox="0 0 100 100" className="h-20 w-20 sm:h-24 sm:w-24" role="img">
+      <circle cx="50" cy="50" r={RADIUS} fill="#e5e7eb" />
+      {total > 0 &&
+        items.map((item, index) => {
+          if (item.count <= 0) return null;
+          const fraction = item.count / total;
+          const startAngle = -Math.PI / 2 + acc * 2 * Math.PI;
+          acc += fraction;
+          const endAngle = -Math.PI / 2 + acc * 2 * Math.PI;
+          if (fraction >= 1) {
+            return (
+              <circle key={item.label} cx="50" cy="50" r={RADIUS} fill={COLORS[index % COLORS.length]}>
+                <title>{`${item.label}: ${item.count} (${item.percentage}%)`}</title>
+              </circle>
+            );
+          }
+          const [x1, y1] = point(startAngle);
+          const [x2, y2] = point(endAngle);
+          return (
+            <path
+              key={item.label}
+              d={`M 50 50 L ${x1} ${y1} A ${RADIUS} ${RADIUS} 0 ${fraction > 0.5 ? 1 : 0} 1 ${x2} ${y2} Z`}
+              fill={COLORS[index % COLORS.length]}
+              stroke="#ffffff"
+              strokeWidth="1"
+            >
+              <title>{`${item.label}: ${item.count} (${item.percentage}%)`}</title>
+            </path>
+          );
+        })}
+    </svg>
+  );
+};
+
 const OccupationProfileBreakdown: React.FC<{ data: OccupationProfileMetrics }> = ({ data }) => (
-  <div className="min-w-0">
-    <div className="mb-4 flex items-end justify-between gap-3">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Distribución general</p>
-        <p className="mt-1 text-2xl font-bold text-gray-900">{data.total_devices}</p>
-      </div>
-      <span className="text-xs text-gray-400">dispositivos</span>
+  <div className="relative min-w-0">
+    {/* Fuera del flujo, anclado a la esquina superior derecha de la
+        sección (a la altura del título), sin empujar los textos. */}
+    <div className="absolute -top-8 right-2">
+      <AudienceDonut items={data.audiences} />
     </div>
-    <div className="grid grid-cols-1 items-center gap-4 pt-6 xl:grid-cols-2">
-      <ProfilePieChart title="Especialistas por cargo" items={data.specialist_roles} color="#2563eb" donut={false} />
-      <ProfilePieChart title="Empresas registradas" items={data.company_names} color="#10b981" innerRadius={48} />
+    <div className="mb-4 pr-24 sm:pr-28">
+      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Distribución general</p>
+      <p className="mt-1 text-2xl font-bold text-gray-900">
+        {data.total_devices}{" "}
+        <span className="text-sm font-medium text-gray-400">dispositivos</span>
+      </p>
+    </div>
+    <div className="mx-auto grid w-full max-w-3xl grid-cols-1 items-center justify-items-center gap-4 pt-6 md:grid-cols-2">
+      <div className="w-full">
+        <ProfilePieChart title="Trabajadores por cargo" items={data.cargos ?? data.specialist_roles} color="#2563eb" donut={false} withBackground />
+      </div>
+      <div className="w-full">
+        <ProfilePieChart title="Trabajadores por sector" items={data.sectors ?? data.company_names} color="#10b981" innerRadius={48} withBackground />
+      </div>
     </div>
   </div>
 );
@@ -388,21 +446,21 @@ const AnalyticsPage: React.FC = () => {
     const wsProfiles = XLSX.utils.json_to_sheet(profileData);
     XLSX.utils.book_append_sheet(wb, wsProfiles, "Perfiles de Usuario");
 
-    const specialistRolesData = (data.occupation_profiles?.specialist_roles ?? []).map((item) => ({
+    const specialistRolesData = (data.occupation_profiles?.cargos ?? data.occupation_profiles?.specialist_roles ?? []).map((item) => ({
       Cargo: item.label,
-      Especialistas: item.count,
+      Trabajadores: item.count,
       Porcentaje: `${item.percentage}%`,
     }));
     const wsSpecialistRoles = XLSX.utils.json_to_sheet(specialistRolesData);
-    XLSX.utils.book_append_sheet(wb, wsSpecialistRoles, "Cargos Especialistas");
+    XLSX.utils.book_append_sheet(wb, wsSpecialistRoles, "Cargos Trabajadores");
 
-    const companyNamesData = (data.occupation_profiles?.company_names ?? []).map((item) => ({
-      Empresa: item.label,
+    const companyNamesData = (data.occupation_profiles?.sectors ?? data.occupation_profiles?.company_names ?? []).map((item) => ({
+      Sector: item.label,
       Registros: item.count,
       Porcentaje: `${item.percentage}%`,
     }));
     const wsCompanyNames = XLSX.utils.json_to_sheet(companyNamesData);
-    XLSX.utils.book_append_sheet(wb, wsCompanyNames, "Empresas Registradas");
+    XLSX.utils.book_append_sheet(wb, wsCompanyNames, "Sectores Registrados");
 
     // 5. Páginas más vistas
     const pagesData = data.pages.map((p) => ({ Página: formatPageLabel(p.label), Vistas: p.count, Porcentaje: `${p.percentage}%` }));

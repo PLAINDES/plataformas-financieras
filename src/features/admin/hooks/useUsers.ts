@@ -13,16 +13,40 @@ interface UserFormState {
   lastname: string;
   phone_number: string;
   email: string;
+  birth_date: string;
+  document_type: "dni" | "ruc" | "ce";
+  document_number: string;
+  ruc: string;
   password?: string;
   role: "admin" | "master" | "user";
   is_active: boolean;
 }
+
+const validateDocument = (
+  type: UserFormState["document_type"],
+  number: string
+): string | null => {
+  if (type === "dni" && !/^\d{8}$/.test(number)) {
+    return "El DNI debe contener exactamente 8 dígitos";
+  }
+  if (type === "ruc" && !/^\d{11}$/.test(number)) {
+    return "El RUC debe contener exactamente 11 dígitos";
+  }
+  if (type === "ce" && !(number.length >= 8 && number.length <= 20)) {
+    return "El CE debe contener entre 8 y 20 caracteres";
+  }
+  return null;
+};
 
 const defaultForm: UserFormState = {
   name: "",
   lastname: "",
   phone_number: "",
   email: "",
+  birth_date: "",
+  document_type: "dni",
+  document_number: "",
+  ruc: "",
   password: "",
   role: "user",
   is_active: true,
@@ -138,6 +162,10 @@ export const useUsers = () => {
       lastname: user.lastname || "",
       phone_number: user.phone_number || "",
       email: user.email,
+      birth_date: user.birth_date || "",
+      document_type: (user.document_type as UserFormState["document_type"]) || "dni",
+      document_number: user.document_number || "",
+      ruc: user.ruc || "",
       password: "", // Vacío intencionalmente por seguridad
       role: user.role,
       is_active: user.is_active,
@@ -157,6 +185,19 @@ export const useUsers = () => {
       return;
     }
 
+    const docError = validateDocument(
+      form.document_type,
+      form.document_number.trim()
+    );
+    if (!form.birth_date) {
+      addToast("La fecha de nacimiento es requerida", "error");
+      return;
+    }
+    if (docError) {
+      addToast(docError, "error");
+      return;
+    }
+
     setSaving(true);
     try {
       if (editingId === null) {
@@ -165,8 +206,8 @@ export const useUsers = () => {
           setSaving(false);
           return;
         }
-        if (!form.password || form.password.length < 6) {
-          addToast("La contraseña debe tener al menos 6 caracteres", "error");
+        if (!form.password || form.password.length < 8) {
+          addToast("La contraseña debe tener al menos 8 caracteres", "error");
           setSaving(false);
           return;
         }
@@ -175,7 +216,12 @@ export const useUsers = () => {
           lastname: form.lastname,
           phone_number: form.phone_number.trim(),
           email: form.email,
+          birth_date: form.birth_date,
+          document_type: form.document_type,
+          document_number: form.document_number.trim(),
+          ruc: form.ruc.trim() || undefined,
           password: form.password,
+          password_confirmation: form.password,
           role: form.role,
         });
         addToast("Usuario creado correctamente", "success");
@@ -185,6 +231,10 @@ export const useUsers = () => {
           lastname: form.lastname,
           phone_number: form.phone_number.trim() || null,
           email: form.email,
+          birth_date: form.birth_date || null,
+          document_type: form.document_type,
+          document_number: form.document_number.trim() || null,
+          ruc: form.ruc.trim() || null,
           role: form.role,
           is_active: form.is_active,
         };

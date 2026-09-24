@@ -24,6 +24,26 @@ const formatDate = (dateString: string) => {
   });
 };
 
+const formatDateTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleString("es-PE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const formatBirthDate = (birthDate?: string | null) => {
+  if (!birthDate) return "—";
+  // birth_date llega como YYYY-MM-DD: formateo manual para evitar
+  // desfases de zona horaria al construir el Date.
+  const [year, month, day] = birthDate.split("-");
+  if (year && month && day) return `${day}/${month}/${year}`;
+  return formatDate(birthDate);
+};
+
 export const UsersPage = () => {
   const {
     users,
@@ -128,7 +148,19 @@ export const UsersPage = () => {
                       Rol
                     </th>
                     <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Estado
+                    </th>
+                    <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Nacimiento
+                    </th>
+                    <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Registro
+                    </th>
+                    <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actualización
+                    </th>
+                    <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Última actividad
                     </th>
                     <th className="px-4 py-2 sm:px-6 sm:py-3 text-center text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Acciones
@@ -196,7 +228,25 @@ export const UsersPage = () => {
                         </span>
                       </td>
                       <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-center text-xs sm:text-sm text-gray-500">
-                        {formatDate(u.created_at)}
+                        {formatBirthDate(u.birth_date)}
+                        {u.document_number && (
+                          <div className="text-[11px] text-gray-400">
+                            {u.document_type?.toUpperCase()}: {u.document_number}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-center text-xs sm:text-sm text-gray-500">
+                        {formatDateTime(u.created_at)}
+                      </td>
+                      <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-center text-xs sm:text-sm text-gray-500">
+                        {u.updated_at ? formatDateTime(u.updated_at) : "—"}
+                      </td>
+                      <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-center text-xs sm:text-sm text-gray-500">
+                        {u.last_activity_at ? (
+                          formatDateTime(u.last_activity_at)
+                        ) : (
+                          <span className="text-gray-400">Sin actividad</span>
+                        )}
                       </td>
                       <td className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
                         <div className="flex justify-end gap-2">
@@ -362,6 +412,78 @@ export const UsersPage = () => {
                     }
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Fecha de nacimiento
+                    </label>
+                    <input
+                      type="date"
+                      value={form.birth_date}
+                      max={new Date().toISOString().split("T")[0]}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, birth_date: e.target.value }))
+                      }
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tipo documento
+                    </label>
+                    <select
+                      value={form.document_type}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          document_type: e.target.value as
+                            | "dni"
+                            | "ruc"
+                            | "ce",
+                          document_number: "",
+                        }))
+                      }
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="dni">DNI</option>
+                      <option value="ruc">RUC</option>
+                      <option value="ce">CE</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      N° documento
+                    </label>
+                    <input
+                      type="text"
+                      value={form.document_number}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          document_number: e.target.value,
+                        }))
+                      }
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      RUC (opcional)
+                    </label>
+                    <input
+                      type="text"
+                      value={form.ruc}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, ruc: e.target.value }))
+                      }
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
 
                 <div>

@@ -19,6 +19,83 @@ export interface ValoraBalanceSheetBlockProps {
   variant?: "default" | "conceptos" | "integrado";
 }
 
+// Umbrales en filas del grid (240 filas, ~1.6px/fila a 480px de alto).
+// Estrategia: conservar título y valor DENTRO del bloque siempre que
+// sea posible. Solo cuando ni siquiera la versión compacta cabe, se
+// dibujan como epígrafe encima (sin inflar la altura, que deformaría
+// las proporciones contables).
+const MIN_INSIDE_LABEL_ROWS = 52;
+const COMPACT_LABEL_ROWS = 28;
+const MIN_VALUE_ROWS = 28;
+const TINY_VALUE_ROWS = 16;
+
+type LabelMode = "inside" | "compact" | "outside";
+type ValueMode = "normal" | "small" | "outside";
+
+const labelMode = (rowSpan: number): LabelMode =>
+  rowSpan < COMPACT_LABEL_ROWS
+    ? "outside"
+    : rowSpan < MIN_INSIDE_LABEL_ROWS
+      ? "compact"
+      : "inside";
+
+const valueMode = (rowSpan: number): ValueMode =>
+  rowSpan < TINY_VALUE_ROWS
+    ? "outside"
+    : rowSpan < MIN_VALUE_ROWS
+      ? "small"
+      : "normal";
+
+// Título + valor de un bloque contable. En modo compact se apilan y
+// centran juntos dentro del bloque con texto menor; solo en outside
+// salen como epígrafe encima.
+function BlockLabels({
+  title,
+  value,
+  mode,
+  valueClassName = "text-lg",
+}: {
+  title: string;
+  value: string;
+  mode: LabelMode;
+  valueClassName?: string;
+}) {
+  if (mode === "outside") {
+    return (
+      <div className="absolute bottom-full mb-2 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
+        <span className="text-sm font-black uppercase tracking-widest text-gray-800 text-center">
+          {title}
+        </span>
+        <span className="text-base font-bold text-gray-800 text-center">
+          {value}
+        </span>
+      </div>
+    );
+  }
+  if (mode === "compact") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-0.5 px-1 text-center">
+        <span className="text-[14px] font-black uppercase tracking-widest text-gray-800 leading-tight">
+          {title}
+        </span>
+        <span className="text-sm font-bold text-gray-800 leading-tight">
+          {value}
+        </span>
+      </div>
+    );
+  }
+  return (
+    <>
+      <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
+        {title}
+      </span>
+      <span className={`${valueClassName} font-bold text-gray-800 text-center px-2`}>
+        {value}
+      </span>
+    </>
+  );
+}
+
 const DefaultBalanceChart = ({
   activo,
   pasivo,
@@ -35,9 +112,15 @@ const DefaultBalanceChart = ({
   const TOTAL_ROWS = 240;
   const maxVal = getMaxAbs(activo, pasivo, patrimonio, conceptosPatrimonio, integradoPatrimonio);
   const { activoRowSpan, pasivoRowSpan, patrimonioRowSpan: patrimonioContableRowSpan } = getBalanceRowSpans(activo, pasivo, patrimonio, maxVal, TOTAL_ROWS);
-  // Altura mínima reforzada: el valor menor debe seguir visible sobre la línea base.
-  const conceptosPatRowSpan = getProportionalRowSpan(conceptosPatrimonio, maxVal, TOTAL_ROWS, 20);
-  const integradoPatRowSpan = getProportionalRowSpan(integradoPatrimonio, maxVal, TOTAL_ROWS, 20);
+  // Mínimo bajo para no deformar proporciones: la legibilidad de los
+  // bloques pequeños la resuelve el epígrafe exterior (ver abajo).
+  const conceptosPatRowSpan = getProportionalRowSpan(conceptosPatrimonio, maxVal, TOTAL_ROWS, 12);
+  const integradoPatRowSpan = getProportionalRowSpan(integradoPatrimonio, maxVal, TOTAL_ROWS, 12);
+  const activoMode = labelMode(activoRowSpan);
+  const pasivoMode = labelMode(pasivoRowSpan);
+  const patrimonioContableMode = labelMode(patrimonioContableRowSpan);
+  const conceptosValueMode = valueMode(conceptosPatRowSpan);
+  const integradoValueMode = valueMode(integradoPatRowSpan);
 
   const gridRef = useRef<HTMLDivElement>(null);
   const patrimonioRef = useRef<HTMLDivElement>(null);
@@ -63,12 +146,7 @@ const DefaultBalanceChart = ({
           className="z-10 col-span-4 mr-[3px] border-[3px] border-[#a62cad] bg-white rounded-l-xl relative flex flex-col items-center justify-center"
           style={{ gridRowStart: TOTAL_ROWS - activoRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
-          <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
-            Activo
-          </span>
-          <span className="text-lg font-bold text-gray-800 text-center px-2">
-            {formatNumber(activo)}
-          </span>
+          <BlockLabels title="Activo" value={formatNumber(activo)} mode={activoMode} />
         </div>
 
         {/* Pasivo - DINÁMICO proporcional al máximo global (ancho intacto) */}
@@ -76,12 +154,7 @@ const DefaultBalanceChart = ({
           className="z-10 col-span-4 col-start-5 border-[3px] border-green-600 bg-white rounded-tr-xl relative flex flex-col items-center justify-center"
           style={{ gridRowStart: TOTAL_ROWS - patrimonioContableRowSpan - pasivoRowSpan, gridRowEnd: TOTAL_ROWS - patrimonioContableRowSpan }}
         >
-          <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
-            Pasivo
-          </span>
-          <span className="text-base font-bold text-gray-800 text-center px-2">
-            {formatNumber(pasivo)}
-          </span>
+          <BlockLabels title="Pasivo" value={formatNumber(pasivo)} mode={pasivoMode} valueClassName="text-base" />
         </div>
 
         {/* Patrimonio - DINÁMICO proporcional al máximo global (ancho intacto) */}
@@ -90,12 +163,7 @@ const DefaultBalanceChart = ({
           className="z-10 col-span-4 col-start-5 border-[3px] border-blue-400 bg-white rounded-br-xl relative flex flex-col items-center justify-center"
           style={{ gridRowStart: TOTAL_ROWS - patrimonioContableRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
-          <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
-            Patrimonio
-          </span>
-          <span className="text-base font-bold text-gray-800 text-center px-2">
-            {formatNumber(patrimonio)}
-          </span>
+          <BlockLabels title="Patrimonio" value={formatNumber(patrimonio)} mode={patrimonioContableMode} valueClassName="text-base" />
         </div>
 
         {/* Conceptos Patrimonio - DINÁMICO (NARANJA, título arriba como en comparación) */}
@@ -104,17 +172,24 @@ const DefaultBalanceChart = ({
           className="z-10 col-span-4 border-[3px] border-orange-500 bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 col-start-10"
           style={{ gridRowStart: TOTAL_ROWS - conceptosPatRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
-          <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
+          <div className="absolute bottom-full mb-2 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
             <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">
               Valor Financiero del Patrimonio
             </span>
             <span className="text-sm font-black text-center text-gray-900 leading-tight">
               Método Por Conceptos
             </span>
+            {conceptosValueMode === "outside" && (
+              <span className="text-base font-bold text-center text-gray-800 leading-tight">
+                {formatNumber(conceptosPatrimonio)}
+              </span>
+            )}
           </div>
-          <span className="text-lg font-bold text-gray-800">
-            {formatNumber(conceptosPatrimonio)}
-          </span>
+          {conceptosValueMode !== "outside" && (
+            <span className={`font-bold text-gray-800 ${conceptosValueMode === "small" ? "text-sm" : "text-lg"}`}>
+              {formatNumber(conceptosPatrimonio)}
+            </span>
+          )}
         </div>
 
         {/* Integrado Patrimonio - DINÁMICO (AZUL, título arriba como en comparación) */}
@@ -123,17 +198,24 @@ const DefaultBalanceChart = ({
           className="z-10 col-span-4 border-[3px] border-blue-600 bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 col-start-15"
           style={{ gridRowStart: TOTAL_ROWS - integradoPatRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
-          <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
+          <div className="absolute bottom-full mb-2 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
             <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">
               Valor Financiero del Patrimonio
             </span>
             <span className="text-sm font-black text-center text-gray-900 leading-tight">
               Método Integrado
             </span>
+            {integradoValueMode === "outside" && (
+              <span className="text-base font-bold text-center text-gray-800 leading-tight">
+                {formatNumber(integradoPatrimonio)}
+              </span>
+            )}
           </div>
-          <span className="text-lg font-bold text-gray-800">
-            {formatNumber(integradoPatrimonio)}
-          </span>
+          {integradoValueMode !== "outside" && (
+            <span className={`font-bold text-gray-800 ${integradoValueMode === "small" ? "text-sm" : "text-lg"}`}>
+              {formatNumber(integradoPatrimonio)}
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -156,8 +238,13 @@ const MethodBalanceChart = ({
   const TOTAL_ROWS = 240;
   const maxVal = getMaxAbs(activo, pasivo, patrimonio, valorFinancieroPatrimonio, valorFinancieroEmpresa);
   const { activoRowSpan, pasivoRowSpan, patrimonioRowSpan: patrimonioContableRowSpan } = getBalanceRowSpans(activo, pasivo, patrimonio, maxVal, TOTAL_ROWS);
-  const empresaRowSpan = getProportionalRowSpan(valorFinancieroEmpresa, maxVal, TOTAL_ROWS, 20);
-  const patrimonioRowSpan = getProportionalRowSpan(valorFinancieroPatrimonio, maxVal, TOTAL_ROWS, 20);
+  const empresaRowSpan = getProportionalRowSpan(valorFinancieroEmpresa, maxVal, TOTAL_ROWS, 12);
+  const patrimonioRowSpan = getProportionalRowSpan(valorFinancieroPatrimonio, maxVal, TOTAL_ROWS, 12);
+  const activoMode = labelMode(activoRowSpan);
+  const pasivoMode = labelMode(pasivoRowSpan);
+  const patrimonioContableMode = labelMode(patrimonioContableRowSpan);
+  const empresaValueMode = valueMode(empresaRowSpan);
+  const patrimonioValueMode = valueMode(patrimonioRowSpan);
 
   const gridRef = useRef<HTMLDivElement>(null);
   const empresaRef = useRef<HTMLDivElement>(null);
@@ -185,14 +272,21 @@ const MethodBalanceChart = ({
           className="z-10 col-span-4 border-[3px] border-[#a12d94] bg-white rounded-l-xl relative flex flex-col items-center justify-center p-2 col-start-1"
           style={{ gridRowStart: TOTAL_ROWS - empresaRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
-          <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
+          <div className="absolute bottom-full mb-2 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
             <span className="text-sm font-bold text-center text-gray-800 leading-tight">
               Valor Financiero de la Empresa
             </span>
+            {empresaValueMode === "outside" && (
+              <span className="text-base font-bold text-center text-gray-800 leading-tight">
+                {formatNumber(valorFinancieroEmpresa)}
+              </span>
+            )}
           </div>
-          <span className="text-lg font-bold text-gray-800">
-            {formatNumber(valorFinancieroEmpresa)}
-          </span>
+          {empresaValueMode !== "outside" && (
+            <span className={`font-bold text-gray-800 ${empresaValueMode === "small" ? "text-sm" : "text-lg"}`}>
+              {formatNumber(valorFinancieroEmpresa)}
+            </span>
+          )}
         </div>
 
         {/* Activo - DINÁMICO proporcional al máximo global (ancho intacto: col-span-4 col-start-6) */}
@@ -201,12 +295,7 @@ const MethodBalanceChart = ({
           className="z-10 col-span-4 col-start-6 mr-[3px] border-[3px] border-blue-500 bg-white rounded-xl relative flex flex-col items-center justify-center"
           style={{ gridRowStart: TOTAL_ROWS - activoRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
-          <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
-            Activo
-          </span>
-          <span className="text-lg font-bold text-gray-800 text-center px-2">
-            {formatNumber(activo)}
-          </span>
+          <BlockLabels title="Activo" value={formatNumber(activo)} mode={activoMode} />
         </div>
 
         {/* Pasivo - DINÁMICO proporcional al máximo global (ancho intacto) */}
@@ -214,12 +303,7 @@ const MethodBalanceChart = ({
           className="z-10 col-span-4 col-start-10 border-[3px] border-blue-500 bg-white rounded-t-xl relative flex flex-col items-center justify-center"
           style={{ gridRowStart: TOTAL_ROWS - patrimonioContableRowSpan - pasivoRowSpan, gridRowEnd: TOTAL_ROWS - patrimonioContableRowSpan }}
         >
-          <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
-            Pasivo
-          </span>
-          <span className="text-base font-bold text-gray-800 text-center px-2">
-            {formatNumber(pasivo)}
-          </span>
+          <BlockLabels title="Pasivo" value={formatNumber(pasivo)} mode={pasivoMode} valueClassName="text-base" />
         </div>
 
         {/* Patrimonio - DINÁMICO proporcional al máximo global (ancho intacto) */}
@@ -228,12 +312,7 @@ const MethodBalanceChart = ({
           className="z-10 col-span-4 col-start-10 border-[3px] border-blue-500 bg-white rounded-br-xl relative flex flex-col items-center justify-center"
           style={{ gridRowStart: TOTAL_ROWS - patrimonioContableRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
-          <span className="absolute top-3 text-sm font-black uppercase tracking-widest text-gray-800">
-            Patrimonio
-          </span>
-          <span className="text-base font-bold text-gray-800 text-center px-2">
-            {formatNumber(patrimonio)}
-          </span>
+          <BlockLabels title="Patrimonio" value={formatNumber(patrimonio)} mode={patrimonioContableMode} valueClassName="text-base" />
         </div>
 
         {/* Patrimonio - DINÁMICO (MORADO, DERECHA, título arriba como en comparación) */}
@@ -242,14 +321,21 @@ const MethodBalanceChart = ({
           className="z-10 col-span-4 border-[3px] border-[#00b050] bg-white rounded-br-xl relative flex flex-col items-center justify-center p-2 col-start-15"
           style={{ gridRowStart: TOTAL_ROWS - patrimonioRowSpan, gridRowEnd: TOTAL_ROWS }}
         >
-          <div className="absolute bottom-full mb-1 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
+          <div className="absolute bottom-full mb-2 left-0 right-0 flex flex-col items-center gap-0.5 px-1">
             <span className="text-[11px] font-bold text-center text-gray-800 leading-tight">
               Valor Financiero del Patrimonio
             </span>
+            {patrimonioValueMode === "outside" && (
+              <span className="text-base font-bold text-center text-gray-800 leading-tight">
+                {formatNumber(valorFinancieroPatrimonio)}
+              </span>
+            )}
           </div>
-          <span className="text-lg font-bold text-gray-800">
-            {formatNumber(valorFinancieroPatrimonio)}
-          </span>
+          {patrimonioValueMode !== "outside" && (
+            <span className={`font-bold text-gray-800 ${patrimonioValueMode === "small" ? "text-sm" : "text-lg"}`}>
+              {formatNumber(valorFinancieroPatrimonio)}
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -274,7 +360,7 @@ export const ValoraBalanceSheetBlock: React.FC<ValoraBalanceSheetBlockProps> = (
   variant = "default",
 }) => {
   return (
-    <div className="relative flex h-[480px] min-h-[480px] flex-col overflow-hidden rounded-lg bg-white pt-10 shadow">
+    <div className="relative flex h-[480px] min-h-[480px] flex-col overflow-hidden rounded-lg bg-white pt-16 shadow">
       <select
         value={currency}
         onChange={(event) => onCurrencyChange(event.target.value)}

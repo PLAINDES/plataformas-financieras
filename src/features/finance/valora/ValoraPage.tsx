@@ -26,6 +26,8 @@ import { REPORT_PRODUCTS } from "@/shared/constants/kapital";
 import { useValoraForm } from "./hooks/useValoraForm";
 import { useValoraCalculation } from "./hooks/useValoraCalculation";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
+import { useAuthModal } from "@/features/auth/hooks/useAuthModal";
+import { LoginModal } from "@/features/auth/components/LoginModal";
 
 import {
   INSTRUMENTS,
@@ -74,7 +76,8 @@ export interface ValoraAiAnalysis {
 }
 
 const ValoraPage: React.FC = () => {
-  const { user, logout } = useAuthContext();
+  const { user, login, logout } = useAuthContext();
+  const { isLoginOpen, openLogin, closeModal } = useAuthModal();
   const {
     formData,
     setFormData,
@@ -861,6 +864,7 @@ const ValoraPage: React.FC = () => {
       <NavBar
         user={user}
         onLogout={handleLogout}
+        onLoginClick={openLogin}
         onToggleForm={() => setIsDesktopFormOpen((prev) => !prev)}
         isFormOpen={isDesktopFormOpen}
         hasResults={showResults}
@@ -870,6 +874,13 @@ const ValoraPage: React.FC = () => {
         projectsHref="/usuario/proyectos"
         selected={getSelectedView()}
         onNavigate={handleResultsSectionChange}
+      />
+
+      <LoginModal
+        isOpen={isLoginOpen}
+        onClose={closeModal}
+        onLogin={login}
+        onSwitchToRegister={closeModal}
       />
 
       <NavigationTabs

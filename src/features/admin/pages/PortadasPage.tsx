@@ -1,348 +1,376 @@
-import { MainService } from "@/shared/services/main.service";
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Layers, Plus, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { MainService } from "@/shared/services/main.service";
 import { ConfirmationModal } from "@/shared/components/common/ConfirmationModal";
 import { CardGallerySkeleton } from "../components/Skeleton";
 
+type Product = "kapital" | "valora";
 type Cover = {
   id: number;
   nombre: string;
+  producto?: Product | null;
   tipo: string;
-  portada?: { id: number; url?: string; filename?: string } | null;
-  primer_imagen_footer?: { id: number; url?: string } | null;
-  segundo_imagen_footer?: { id: number; url?: string } | null;
-  logo_superior?: { id: number; url?: string } | null;
-  imagen_central?: { id: number; url?: string } | null;
-  logo_inferior?: { id: number; url?: string } | null;
-  imagen_fondo?: { id: number; url?: string } | null;
+  portada?: { url?: string } | null;
+  imagen_central?: { url?: string } | null;
+  primer_imagen_footer?: { url?: string } | null;
+  segundo_imagen_footer?: { url?: string } | null;
+  logo_superior?: { url?: string } | null;
+  logo_inferior?: { url?: string } | null;
+  imagen_fondo?: { url?: string } | null;
 };
-
-// Cachea las imágenes protegidas durante la sesión del panel. El Bearer solo
-// viaja en fetch y nunca forma parte de la URL ni del HTML.
-const coverImageCache = new Map<string, Promise<string>>();
-
-const fetchCoverImage = (url: string): Promise<string> => {
-  const cached = coverImageCache.get(url);
+const imageCache = new Map<string, Promise<string>>();
+const getCoverImage = (url: string) => {
+  const cached = imageCache.get(url);
   if (cached) return cached;
-
   const request = (async () => {
-    const apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
-    const mediaUrl = /^https?:\/\//i.test(url) ? url : `${apiUrl}${url}`;
-    const token = localStorage.getItem("auth_token");
-    const response = await fetch(mediaUrl, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    if (!response.ok) throw new Error(`Image request failed with ${response.status}`);
-    const blob = await response.blob();
-    if (!blob.size) throw new Error("Image response was empty");
-    return URL.createObjectURL(blob);
+    const base = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
+    const response = await fetch(
+      /^https?:\/\//i.test(url) ? url : `${base}${url}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}`,
+        },
+      }
+    );
+    if (!response.ok) throw new Error("No se pudo cargar la portada");
+    return URL.createObjectURL(await response.blob());
   })();
-
-  coverImageCache.set(url, request);
-  request.catch(() => coverImageCache.delete(url));
+  imageCache.set(url, request);
+  request.catch(() => imageCache.delete(url));
   return request;
 };
-
-const CoverImage: React.FC<{ url: string; alt: string }> = ({ url, alt }) => {
-  const [hasError, setHasError] = useState(false);
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
-
+const CoverImage = ({ url, alt }: { url?: string; alt: string }) => {
+  const [src, setSrc] = useState<string>();
   useEffect(() => {
     let cancelled = false;
-    setHasError(false);
-    setImageSrc(null);
-
-    const loadImage = async () => {
-      try {
-        const objectUrl = await fetchCoverImage(url);
-        if (!cancelled) setImageSrc(objectUrl);
-      } catch {
-        if (!cancelled) setHasError(true);
-      }
-    };
-
-    void loadImage();
+    if (!url) return;
+    void getCoverImage(url).then((value) => {
+      if (!cancelled) setSrc(value);
+    });
     return () => {
       cancelled = true;
     };
   }, [url]);
-
-  if (hasError) {
-    return (
-      <div className="text-gray-400 text-sm">Error al cargar la imagen</div>
-    );
-  }
-
-  if (!imageSrc) return null;
-
-  return (
-    <img
-      src={imageSrc}
-      alt={alt}
-      className="object-cover h-full w-full"
-      onError={() => setHasError(true)}
-    />
+  return src ? (
+    <img src={src} alt={alt} className="h-full w-full object-cover" />
+  ) : (
+    <div className="flex h-full items-center justify-center text-sm text-slate-400">
+      Cargando...
+    </div>
   );
 };
+const coverImageUrl = (cover: Cover) =>
+  cover.imagen_central?.url ||
+  cover.portada?.url ||
+  cover.primer_imagen_footer?.url ||
+  cover.imagen_fondo?.url;
 
-const PortadasPage: React.FC = () => {
-  const [covers, setCovers] = useState<Cover[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [deletingIds, setDeletingIds] = useState<number[]>([]);
-  const [modalState, setModalState] = useState<{
-    isOpen: boolean;
-    title: string;
-    description?: string;
-    onConfirm?: () => Promise<void> | void;
-    confirmText?: string;
-    cancelText?: string;
-    variant?: "default" | "destructive";
-    isLoading?: boolean;
-  }>({ isOpen: false, title: "" });
+const coverImages = (cover: Cover) =>
+  [
+    cover.portada?.url,
+    cover.imagen_central?.url,
+    cover.primer_imagen_footer?.url,
+    cover.segundo_imagen_footer?.url,
+    cover.logo_superior?.url,
+    cover.logo_inferior?.url,
+    cover.imagen_fondo?.url,
+  ].filter(Boolean) as string[];
 
-  const closeModal = () =>
-    setModalState((prev) => ({ ...prev, isOpen: false }));
-  // Gallery state for carousel
-  const [galleryOpen, setGalleryOpen] = useState(false);
-  const [galleryImages, setGalleryImages] = useState<string[]>([]);
-  const [galleryIndex, setGalleryIndex] = useState(0);
-
-  const openGallery = async (images: string[], start = 0) => {
-    if (!images || images.length === 0) return;
-    const resolvedImages = await Promise.all(
-      images.map(async (image) => {
-        try {
-          return await fetchCoverImage(image);
-        } catch {
-          return image;
-        }
-      })
-    );
-    setGalleryImages(resolvedImages);
-    setGalleryIndex(start);
-    setGalleryOpen(true);
-  };
-
-  const closeGallery = () => setGalleryOpen(false);
+function CoverPreview({
+  cover,
+  onClose,
+}: {
+  cover: Cover;
+  onClose: () => void;
+}) {
+  const images = coverImages(cover);
+  const [index, setIndex] = useState(0);
+  const [sources, setSources] = useState<string[]>([]);
 
   useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
-      try {
-        // la API expone /main/covers
-        const data = await MainService.getCovers();
-        setCovers(data || []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    load();
-  }, []);
-
-  const navigate = useNavigate();
-
-  const handleDelete = (id: number) => {
-    setModalState({
-      isOpen: true,
-      title: "¿Eliminar portada?",
-      description: "Esta acción no se puede deshacer.",
-      onConfirm: async () => {
-        setModalState((prev) => ({ ...prev, isLoading: true }));
-        setDeletingIds((s) => [...s, id]);
-        try {
-          await MainService.deleteCover(id);
-          setCovers((prev) => prev.filter((c) => c.id !== id));
-        } catch (e) {
-          console.error("Error eliminando portada:", e);
-          alert(
-            "No se pudo eliminar la portada. Revisa la consola para más detalles."
-          );
-        } finally {
-          setDeletingIds((s) => s.filter((x) => x !== id));
-          setModalState((prev) => ({ ...prev, isLoading: false }));
-          closeModal();
-        }
-      },
-      confirmText: "Eliminar",
-      variant: "destructive",
+    let cancelled = false;
+    Promise.all(images.map((image) => getCoverImage(image))).then((values) => {
+      if (!cancelled) setSources(values);
     });
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, [cover.id]);
 
   return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black p-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative flex h-full w-full flex-col items-center justify-center gap-4"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-2 top-2 z-10 cursor-pointer rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+        >
+          <X className="h-5 w-5" />
+        </button>
+        <div className="flex min-h-0 max-w-full flex-1 items-center justify-center overflow-hidden">
+          {sources[index] && (
+            <img
+              src={sources[index]}
+              alt={cover.nombre}
+              className="max-h-[calc(100vh-96px)] max-w-full rounded-xl object-contain"
+            />
+          )}
+        </div>
+        {sources.length > 1 && (
+          <div className="flex max-w-full items-center gap-3 overflow-x-auto pb-1">
+            {sources.map((source, thumbnailIndex) => (
+              <button
+                key={source}
+                type="button"
+                onClick={() => setIndex(thumbnailIndex)}
+                className={`h-16 w-24 shrink-0 cursor-pointer overflow-hidden rounded-lg border-2 bg-slate-900 ${thumbnailIndex === index ? "border-white" : "border-transparent opacity-70 hover:opacity-100"}`}
+              >
+                <img
+                  src={source}
+                  alt={`Vista ${thumbnailIndex + 1}`}
+                  className="h-full w-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ProductCarousel({
+  product,
+  covers,
+  onEdit,
+  onDelete,
+  onPreview,
+}: {
+  product: Product;
+  covers: Cover[];
+  onEdit: (cover: Cover) => void;
+  onDelete: (cover: Cover) => void;
+  onPreview: (cover: Cover) => void;
+}) {
+  const [index, setIndex] = useState(0);
+  const current = covers[index];
+  const color = product === "kapital" ? "blue" : "violet";
+  const productLogo =
+    product === "kapital"
+      ? "/images/logo-kapital.png"
+      : "/images/logo-valora.png";
+  if (!current)
+    return (
+      <section
+        className={`rounded-2xl border border-${color}-200 bg-${color}-50/60 p-6`}
+      >
+        <img
+          src={productLogo}
+          alt={`Logo ${product}`}
+          className="h-14 max-w-[220px] object-contain object-left"
+        />
+        <div className="mt-5 flex min-h-[390px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/70 text-sm text-slate-500">
+          Aún no hay portadas registradas.
+        </div>
+      </section>
+    );
+  return (
+    <section
+      className={`overflow-hidden rounded-2xl border border-${color}-200 bg-gradient-to-br from-${color}-50/70 via-white to-slate-50 p-5 shadow-sm`}
+    >
+      <div className="mb-5 flex items-center justify-between">
+        <img
+          src={productLogo}
+          alt={`Logo ${product}`}
+          className="h-14 max-w-[220px] object-contain object-left"
+        />
+        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
+          {index + 1} / {covers.length}
+        </span>
+      </div>
+      <div className="flex min-h-[clamp(560px,62vw,800px)] items-center justify-center">
+        <div className="relative h-[clamp(520px,54vw,680px)] w-full">
+          <div className="pointer-events-none absolute inset-x-0 top-8 z-20 h-[clamp(470px,49vw,620px)] bg-gradient-to-r from-white via-transparent to-white" />
+          {covers
+            .slice(index)
+            .concat(covers.slice(0, index))
+            .slice(0, 3)
+            .map((cover, layer) => (
+              <div
+                key={cover.id}
+                className={`absolute left-1/2 top-0 h-[clamp(520px,54vw,680px)] w-[clamp(270px,30vw,390px)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl transition-all duration-300 ${layer === 0 ? "z-30" : "z-10 opacity-45 blur-[2px]"}`}
+                style={{
+                  transform:
+                    layer === 0
+                      ? "translateX(-50%) scale(1)"
+                      : covers.length === 2
+                        ? "translateX(-50%) translateY(24px) scale(.86)"
+                        : `translateX(calc(-50% + ${layer === 1 ? "-250px" : "250px"})) translateY(24px) scale(.82)`,
+                }}
+              >
+                <div
+                  className="h-[clamp(390px,43vw,550px)] cursor-pointer bg-slate-100"
+                  onClick={() => onPreview(cover)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(event) =>
+                    event.key === "Enter" && onPreview(cover)
+                  }
+                >
+                  <CoverImage url={coverImageUrl(cover)} alt={cover.nombre} />
+                </div>
+                <div className="p-4">
+                  <h3 className="truncate text-sm font-bold text-slate-900">
+                    {cover.nombre}
+                  </h3>
+                  <p className="mt-1 text-xs capitalize text-slate-500">
+                    {cover.tipo.replace("_", " ")}
+                  </p>
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={() => onEdit(cover)}
+                      className="flex-1 cursor-pointer rounded-lg bg-blue-50 py-2 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => onDelete(cover)}
+                      className="flex-1 cursor-pointer rounded-lg bg-red-50 py-2 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+        </div>
+      </div>
+      {covers.length > 1 && (
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={() =>
+              setIndex((value) => (value - 1 + covers.length) % covers.length)
+            }
+            className="cursor-pointer rounded-full border border-slate-200 bg-white p-2 text-slate-600 shadow-sm transition-transform hover:scale-105"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-xs text-slate-500">Explora las portadas</span>
+          <button
+            onClick={() => setIndex((value) => (value + 1) % covers.length)}
+            className="cursor-pointer rounded-full border border-slate-200 bg-white p-2 text-slate-600 shadow-sm transition-transform hover:scale-105"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+export default function PortadasPage() {
+  const navigate = useNavigate();
+  const [covers, setCovers] = useState<Cover[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modal, setModal] = useState<Cover | null>(null);
+  const [previewCover, setPreviewCover] = useState<Cover | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const grouped = useMemo(
+    () => ({
+      kapital: covers.filter((cover) => cover.producto === "kapital"),
+      valora: covers.filter((cover) => cover.producto === "valora"),
+    }),
+    [covers]
+  );
+  useEffect(() => {
+    MainService.getCovers()
+      .then(setCovers)
+      .finally(() => setLoading(false));
+  }, []);
+  const deleteCover = async () => {
+    if (!modal || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      const deletedId = modal.id;
+      await MainService.deleteCover(deletedId);
+      setCovers((items) => items.filter((item) => item.id !== deletedId));
+      setModal(null);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  return (
     <>
-      <header className="border-b border-slate-200 bg-white px-4 py-3 md:px-6 flex justify-between">
+      <header className="flex justify-between border-b border-slate-200 bg-white px-4 py-3 md:px-6">
         <div>
-          <h1 className="text-xs font-bold tracking-widest text-slate-800 uppercase">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-800 sm:text-xs">
             Portadas
-          </h1>
-          <h3 className="text-sm font-medium text-gray-500">
+          </p>
+          <p className="text-xs font-medium text-gray-500 sm:text-sm">
             Administración de portadas
-          </h3>
+          </p>
         </div>
         <button
           onClick={() => navigate("/admin/portadas/nuevo")}
-          className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700"
         >
+          <Plus className="h-4 w-4" />
           Crear
         </button>
       </header>
-      <div className="p-6 pb-0">
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
-          <div className="p-4 bg-gray-50 border-b border-gray-200">
-            <h3 className="text-sm font-medium text-gray-700">
-              Galería de Portadas
-            </h3>
-          </div>
-
-          {isLoading ? (
-            <CardGallerySkeleton count={4} />
-          ) : covers.length === 0 ? (
-            <div className="flex items-center justify-center py-12 text-sm text-gray-500">
-              No hay portadas
-            </div>
-          ) : (
-            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 bg-gray-50/50">
-              {covers.map((c) => (
-                <div
-                  key={c.id}
-                  className="relative rounded-lg overflow-hidden bg-white border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col"
-                >
-                  <div
-                    className="w-full aspect-[1/1.414] bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer"
-                    onClick={() => {
-                      // Collect all image urls for the carousel in a consistent order
-                      const imgs = [
-                        c.portada?.url,
-                        c.imagen_central?.url,
-                        c.primer_imagen_footer?.url,
-                        c.segundo_imagen_footer?.url,
-                        c.logo_superior?.url,
-                        c.logo_inferior?.url,
-                        c.imagen_fondo?.url,
-                      ].filter(Boolean) as string[];
-                      void openGallery(imgs, 0);
-                    }}
-                  >
-                    {c.imagen_central && c.imagen_central.url ? (
-                      <CoverImage url={c.imagen_central.url} alt={c.nombre} />
-                    ) : c.portada && c.portada.url ? (
-                      <CoverImage url={c.portada.url} alt={c.nombre} />
-                    ) : c.primer_imagen_footer && c.primer_imagen_footer.url ? (
-                      <CoverImage url={c.primer_imagen_footer.url} alt={c.nombre} />
-                    ) : c.imagen_fondo && c.imagen_fondo.url ? (
-                      <CoverImage url={c.imagen_fondo.url} alt={c.nombre} />
-                    ) : (
-                      <div className="text-gray-400 text-sm">Sin imagen</div>
-                    )}
-                  </div>
-                  <div className="p-4 border-t border-gray-100 flex flex-col justify-between gap-3 grow">
-                    <div>
-                      <div
-                        className="text-sm font-bold text-gray-900 line-clamp-1"
-                        title={c.nombre}
-                      >
-                        {c.nombre}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1 capitalize">
-                        {c.tipo.replace("_", " ")}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <button
-                        onClick={() =>
-                          navigate(`/admin/portadas/${c.id}/editar`)
-                        }
-                        className="text-xs font-medium px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md transition-colors w-full"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(c.id)}
-                        disabled={deletingIds.includes(c.id)}
-                        className="text-xs font-medium px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-md transition-colors w-full"
-                      >
-                        {deletingIds.includes(c.id)
-                          ? "Eliminando..."
-                          : "Eliminar"}
-                      </button>
-                    </div>
-                  </div>
-                  {modalState.isOpen && (
-                    <ConfirmationModal
-                      isOpen={modalState.isOpen}
-                      onClose={closeModal}
-                      onConfirm={async () => {
-                        if (modalState.onConfirm) {
-                          setModalState((prev) => ({
-                            ...prev,
-                            isLoading: true,
-                          }));
-                          try {
-                            await modalState.onConfirm();
-                          } finally {
-                            setModalState((prev) => ({
-                              ...prev,
-                              isLoading: false,
-                            }));
-                          }
-                        }
-                      }}
-                      title={modalState.title}
-                      description={modalState.description}
-                      confirmText={modalState.confirmText}
-                      variant={modalState.variant}
-                      isLoading={modalState.isLoading}
-                    />
-                  )}
-                  {galleryOpen && (
-                    <div
-                      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 ease-out"
-                      onClick={closeGallery}
-                    >
-                      <div className="relative max-h-[90vh] max-w-[90vw] flex items-center animate-in fade-in zoom-in-95 duration-200 ease-out">
-                        <img
-                          src={galleryImages[galleryIndex]}
-                          alt={`Imagen ${galleryIndex + 1}`}
-                          className="rounded-xl object-contain max-h-[90vh] max-w-[80vw]"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-
-                      {/* Thumbnails */}
-                      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 ">
-                        {galleryImages.map((src, i) => (
-                          <button
-                            key={src}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setGalleryIndex(i);
-                            }}
-                            className={`rounded-md overflow-hidden border-2 p-1 ${
-                              i === galleryIndex
-                                ? "border-white"
-                                : "border-transparent hover:border-gray-300"
-                            }`}
-                          >
-                            <img
-                              src={src}
-                              className="h-12 w-20 object-cover rounded"
-                              alt={`thumb-${i}`}
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+      <main className="bg-slate-100/80 p-4 md:p-8">
+        <div className="mb-6 flex items-center gap-3">
+          <Layers className="h-5 w-5 text-slate-500" />
+          <p className="text-sm text-slate-600">
+            Selecciona y administra las portadas disponibles para cada producto.
+          </p>
         </div>
-      </div>
+        {loading ? (
+          <CardGallerySkeleton count={2} />
+        ) : (
+          <div className="grid gap-6 xl:grid-cols-2">
+            <ProductCarousel
+              product="kapital"
+              covers={grouped.kapital}
+              onEdit={(cover) => navigate(`/admin/portadas/${cover.id}/editar`)}
+              onDelete={setModal}
+              onPreview={setPreviewCover}
+            />
+            <ProductCarousel
+              product="valora"
+              covers={grouped.valora}
+              onEdit={(cover) => navigate(`/admin/portadas/${cover.id}/editar`)}
+              onDelete={setModal}
+              onPreview={setPreviewCover}
+            />
+          </div>
+        )}
+      </main>
+      {modal && (
+        <ConfirmationModal
+          isOpen={true}
+          onClose={() => setModal(null)}
+          onConfirm={deleteCover}
+          title="¿Eliminar portada?"
+          description="Esta acción no se puede deshacer."
+          confirmText="Eliminar"
+          variant="destructive"
+          isLoading={isDeleting}
+        />
+      )}
+      {previewCover && (
+        <CoverPreview
+          cover={previewCover}
+          onClose={() => setPreviewCover(null)}
+        />
+      )}
     </>
   );
-};
-
-export default PortadasPage;
+}
