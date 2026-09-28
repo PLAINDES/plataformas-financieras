@@ -582,19 +582,19 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
     : [];
 
   return createPortal(
-    <div className="fixed inset-0 z-[130] pointer-events-auto" aria-modal="true" role="dialog">
+    <div className="fixed inset-0 z-[130] pointer-events-none" aria-modal="true" role="dialog">
       {targetRect ? (
         <>
           {overlayPieces.map((p, i) => (
-            <div key={i} className="absolute bg-[#0b1a33]/[0.14] backdrop-blur-[1.2px]" style={{ top: typeof p.top === "number" ? p.top : (p.top as string), left: typeof p.left === "number" ? p.left : (p.left as string), width: typeof p.width === "number" ? p.width : (p.width as string), height: typeof p.height === "number" ? p.height : (p.height as string), backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.22) 1px, transparent 0)", backgroundSize: "18px 18px" }} />
+            <div key={i} className="absolute bg-[#0b1a33]/[0.14] backdrop-blur-[1.2px] pointer-events-none" style={{ top: typeof p.top === "number" ? p.top : (p.top as string), left: typeof p.left === "number" ? p.left : (p.left as string), width: typeof p.width === "number" ? p.width : (p.width as string), height: typeof p.height === "number" ? p.height : (p.height as string), backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.22) 1px, transparent 0)", backgroundSize: "18px 18px" }} />
           ))}
           <div className="absolute rounded-[14px] border-[2.5px] border-[#2563eb] shadow-[0_0_0_4px_rgba(37,99,235,0.14),0_10px_30px_rgba(2,12,36,0.18)] pointer-events-none transition-[top,left,width,height] duration-75 ease-out" style={{ top: targetRect.top, left: targetRect.left, width: targetRect.width, height: targetRect.height, background: "transparent" }} />
         </>
       ) : (
-        <div className="absolute inset-0 bg-[#0b1a33]/[0.14] backdrop-blur-[1.2px]" />
+        <div className="absolute inset-0 bg-[#0b1a33]/[0.14] backdrop-blur-[1.2px] pointer-events-none" />
       )}
       {tooltipPos && (
-        <div ref={tooltipRef} className="fixed w-[360px] max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,0.18),0_4px_12px_rgba(15,23,42,0.10)] border border-slate-200/70 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[calc(100dvh-32px)] overflow-y-auto" style={{ top: tooltipPos.top, left: tooltipPos.left, width: `min(360px, calc(100vw - 32px))` }}>
+        <div ref={tooltipRef} className="fixed pointer-events-auto w-[360px] max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,0.18),0_4px_12px_rgba(15,23,42,0.10)] border border-slate-200/70 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[calc(100dvh-32px)] overflow-y-auto" style={{ top: tooltipPos.top, left: tooltipPos.left, width: `min(360px, calc(100vw - 32px))` }}>
           <div className="px-5 pt-5 pb-3">
             <div className="flex items-center justify-between gap-3 mb-2.5">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eff6ff] border border-[#dbeafe] px-2.5 py-1 text-[11px] font-bold tracking-wider uppercase text-[#2563eb]">
@@ -625,7 +625,7 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
           </div>
         </div>
       )}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/30">
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/30 pointer-events-none">
         <div className="h-full bg-[#2563eb] transition-[width] duration-300" style={{ width: `${((current + 1) / totalSteps) * 100}%` }} />
       </div>
     </div>,
