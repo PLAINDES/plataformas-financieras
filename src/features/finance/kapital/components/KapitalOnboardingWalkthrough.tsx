@@ -175,7 +175,6 @@ interface Rect { top: number; left: number; width: number; height: number; }
 interface KapitalOnboardingWalkthroughProps {
   isFormOpen: boolean;
   setIsFormOpen: (open: boolean) => void;
-  showResults: boolean;
   startSensitivityTour?: boolean;
   onSensitivityTourEnd?: () => void;
 }
@@ -183,7 +182,6 @@ interface KapitalOnboardingWalkthroughProps {
 export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthroughProps> = ({
   isFormOpen,
   setIsFormOpen,
-  showResults,
   startSensitivityTour = false,
   onSensitivityTourEnd,
 }) => {
@@ -317,11 +315,14 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
       });
       return () => { cancelAnimationFrame(raf); window.clearTimeout(tid); };
     }
-    if (showResults) return;
+    // El tour solo desaparece al completar todos los pasos (finish) o con
+    // "Omitir tour" (skip): ambos persisten la llave en localStorage.
+    // Ni el reload, ni los resultados restaurados, ni calcular en pleno
+    // tour lo cierran.
     if (localStorage.getItem(getTourKey()) === "true") return;
     const startSoon = () => {
       window.setTimeout(() => {
-        if (localStorage.getItem(getTourKey()) !== "true" && window.location.pathname === "/kapital" && !showResults) {
+        if (localStorage.getItem(getTourKey()) !== "true" && window.location.pathname === "/kapital") {
           setSensitivityMode(false);
           setCurrent(0);
           setActive(true);
@@ -358,7 +359,7 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
       window.clearInterval(fallback);
       window.clearTimeout(safety);
     };
-  }, [showResults, startSensitivityTour, setIsFormOpen]);
+  }, [startSensitivityTour, setIsFormOpen]);
 
   const isFormOpenRef = useRef(isFormOpen);
   useEffect(() => { isFormOpenRef.current = isFormOpen; }, [isFormOpen]);
@@ -565,9 +566,6 @@ export const KapitalOnboardingWalkthrough: React.FC<KapitalOnboardingWalkthrough
   }, [active, next, skip]);
 
   if (!active) return null;
-  if (showResults && !startSensitivityTour) return null;
-  // sensitivity tour should show even with results
-  if (!sensitivityMode && showResults) return null;
 
   const visibleStep = stepRaw;
   const totalSteps = activeSteps.length;

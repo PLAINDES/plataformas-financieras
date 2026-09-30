@@ -369,7 +369,6 @@ const KapitalPage: React.FC = () => {
             <KapitalOnboardingWalkthrough
                 isFormOpen={isFormOpen}
                 setIsFormOpen={setIsFormOpen}
-                showResults={showResults}
                 startSensitivityTour={startSensitivityTour}
                 onSensitivityTourEnd={() => setStartSensitivityTour(false)}
             />
