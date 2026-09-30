@@ -6,7 +6,10 @@ import type {
 } from "@shared/services/analytics.service";
 import { Tooltip } from "@shared/components/common/Tooltip";
 import { useCountUp } from "./useCountUp";
+import { getBrowserMeta, formatBrowserLabel } from "../components/BrowserBrand";
 import { Skeleton, MetricsSkeleton } from "../components/Skeleton";
+import UtmLinkGenerator from "../components/UtmLinkGenerator";
+import { TRAFFIC_LABEL_COLORS, TRAFFIC_FALLBACK_COLORS } from "../components/PlatformColors";
 import * as XLSX from "xlsx";
 import {
   Users,
@@ -28,6 +31,7 @@ import {
   RefreshCw,
   HelpCircle,
   Download,
+  Share2,
 } from "lucide-react";
 
 declare global {
@@ -90,24 +94,31 @@ const MetricCard: React.FC<{
   );
 };
 
-const ProgressBar: React.FC<{ label: string; count: number; percentage: number; color?: string }> = ({
+const ProgressBar: React.FC<{ label: string; count: number; percentage: number; color?: string; icon?: React.ReactNode; barStyle?: React.CSSProperties }> = ({
   label,
   count,
   percentage,
   color = "bg-blue-500",
+  icon,
+  barStyle,
 }) => (
   <div className="mb-3 min-w-0">
     <div className="mb-1 flex min-w-0 items-center gap-2 text-sm">
+      {icon && <span className="flex h-4 w-4 shrink-0 items-center justify-center">{icon}</span>}
       <span className="min-w-0 flex-1 truncate font-medium text-gray-700" title={label}>{label}</span>
       <span className="shrink-0 text-gray-500">
         {count} ({percentage}%)
       </span>
     </div>
     <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-      <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(percentage, 100)}%` }} />
+      <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(percentage, 100)}%`, ...barStyle }} />
     </div>
   </div>
 );
+
+const sourceBarColor = (label: string, index: number) =>
+  TRAFFIC_LABEL_COLORS[label] ??
+  TRAFFIC_FALLBACK_COLORS[index % TRAFFIC_FALLBACK_COLORS.length];
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode; icon?: React.ReactNode; tooltip?: string; className?: string }> = ({
   title,
@@ -225,6 +236,13 @@ const AudienceDonut: React.FC<{ items: { label: string; count: number; percentag
 
 const OccupationProfileBreakdown: React.FC<{ data: OccupationProfileMetrics }> = ({ data }) => (
   <div className="relative min-w-0">
+    <style>{`
+      .perfil-charts-scroll { scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9; }
+      .perfil-charts-scroll::-webkit-scrollbar { height: 8px; }
+      .perfil-charts-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 9999px; }
+      .perfil-charts-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+      .perfil-charts-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    `}</style>
     {/* Fuera del flujo, anclado a la esquina superior derecha de la
         sección (a la altura del título), sin empujar los textos. */}
     <div className="absolute -top-8 right-2">
@@ -237,12 +255,18 @@ const OccupationProfileBreakdown: React.FC<{ data: OccupationProfileMetrics }> =
         <span className="text-sm font-medium text-gray-400">dispositivos</span>
       </p>
     </div>
-    <div className="mx-auto grid w-full max-w-3xl grid-cols-1 items-center justify-items-center gap-4 pt-6 md:grid-cols-2">
-      <div className="w-full">
+    {/* Los 3 gráficos en una sola fila con desplazamiento horizontal:
+        la barra inferior permite deslizar para verlos todos. El ancho
+        fijo por tarjeta evita que la dona crezca sin límite. */}
+    <div className="perfil-charts-scroll flex w-full gap-4 overflow-x-auto pb-3 pt-6">
+      <div className="w-[270px] shrink-0 sm:w-[300px]">
         <ProfilePieChart title="Trabajadores por cargo" items={data.cargos ?? data.specialist_roles} color="#2563eb" donut={false} withBackground />
       </div>
-      <div className="w-full">
+      <div className="w-[270px] shrink-0 sm:w-[300px]">
         <ProfilePieChart title="Trabajadores por sector" items={data.sectors ?? data.company_names} color="#10b981" innerRadius={48} withBackground />
+      </div>
+      <div className="w-[270px] shrink-0 sm:w-[300px]">
+        <ProfilePieChart title="Estudiantes por especialidad" items={data.especialidades ?? []} color="#8b5cf6" innerRadius={48} withBackground />
       </div>
     </div>
   </div>
@@ -434,7 +458,7 @@ const AnalyticsPage: React.FC = () => {
     XLSX.utils.book_append_sheet(wb, wsCities, "Ciudades");
 
     // 4. Navegadores
-    const browsersData = data.browsers.map((b) => ({ Navegador: b.label === "Unknown" ? "Otro / no identificado" : b.label, Cantidad: b.count, Porcentaje: `${b.percentage}%` }));
+    const browsersData = data.browsers.map((b) => ({ Navegador: formatBrowserLabel(b.label), Cantidad: b.count, Porcentaje: `${b.percentage}%` }));
     const wsBrowsers = XLSX.utils.json_to_sheet(browsersData);
     XLSX.utils.book_append_sheet(wb, wsBrowsers, "Navegadores");
 
@@ -461,6 +485,22 @@ const AnalyticsPage: React.FC = () => {
     }));
     const wsCompanyNames = XLSX.utils.json_to_sheet(companyNamesData);
     XLSX.utils.book_append_sheet(wb, wsCompanyNames, "Sectores Registrados");
+
+    const especialidadesData = (data.occupation_profiles?.especialidades ?? []).map((item) => ({
+      Especialidad: item.label,
+      Estudiantes: item.count,
+      Porcentaje: `${item.percentage}%`,
+    }));
+    const wsEspecialidades = XLSX.utils.json_to_sheet(especialidadesData);
+    XLSX.utils.book_append_sheet(wb, wsEspecialidades, "Especialidades Estudiantes");
+
+    const trafficSourcesData = (data.traffic_sources ?? []).map((item) => ({
+      Fuente: item.label,
+      Sesiones: item.count,
+      Porcentaje: `${item.percentage}%`,
+    }));
+    const wsTrafficSources = XLSX.utils.json_to_sheet(trafficSourcesData);
+    XLSX.utils.book_append_sheet(wb, wsTrafficSources, "Fuentes de Tráfico");
 
     // 5. Páginas más vistas
     const pagesData = data.pages.map((p) => ({ Página: formatPageLabel(p.label), Vistas: p.count, Porcentaje: `${p.percentage}%` }));
@@ -591,9 +631,20 @@ const AnalyticsPage: React.FC = () => {
 
                 {/* Browsers */}
                 <SectionCard title="Navegadores" icon={<Globe className="h-4 w-4" />} tooltip="Desglose de navegadores usados por los visitantes.">
-                  {data.browsers.map((b) => (
-                    <ProgressBar key={b.label} label={b.label === "Unknown" ? "Otro / no identificado" : b.label} count={b.count} percentage={b.percentage} color="bg-cyan-500" />
-                  ))}
+                  {data.browsers.map((b) => {
+                    const meta = getBrowserMeta(b.label);
+                    return (
+                      <ProgressBar
+                        key={b.label}
+                        label={formatBrowserLabel(b.label)}
+                        count={b.count}
+                        percentage={b.percentage}
+                        color={meta.barClass}
+                        barStyle={meta.barStyle}
+                        icon={meta.icon}
+                      />
+                    );
+                  })}
                 </SectionCard>
 
                 {/* Pages */}
@@ -640,10 +691,28 @@ const AnalyticsPage: React.FC = () => {
                 />
               </div>
 
-              <div className="order-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {/* Origen + distribuciones en una misma fila */}
+              <div className="order-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <SectionCard title="Fuentes de tráfico" icon={<Share2 className="h-4 w-4" />} tooltip="Sesiones según su origen de llegada. Prioriza el utm_source del link de entrada (first-touch por sesión); sin UTM usa el dominio de referencia.">
+                  {(data.traffic_sources ?? []).length === 0 ? (
+                    <p className="text-sm text-gray-400">Sin datos de origen</p>
+                  ) : (
+                    data.traffic_sources.map((s, i) => (
+                      <ProgressBar
+                        key={s.label}
+                        label={s.label}
+                        count={s.count}
+                        percentage={s.percentage}
+                        color=""
+                        barStyle={{ backgroundColor: sourceBarColor(s.label, i) }}
+                      />
+                    ))
+                  )}
+                </SectionCard>
+
                 {/* Hourly */}
                 <SectionCard title="Distribución por hora" icon={<Clock className="h-4 w-4" />} tooltip="Horas del día con mayor tráfico. Se agrupa por hora de inicio de sesión (hora de Lima, UTC-5).">
-                  <div className="grid grid-cols-6 gap-2 sm:grid-cols-8 md:grid-cols-12">
+                  <div className="grid grid-cols-6 gap-2">
                     {data.hourly_distribution.map((h) => (
                       <div key={h.label} className="text-center">
                         <div className="mx-auto mb-1 flex h-16 w-full items-end justify-center rounded-md bg-gray-50 px-1">
@@ -680,6 +749,8 @@ const AnalyticsPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      <UtmLinkGenerator />
     </>
   );
 };
