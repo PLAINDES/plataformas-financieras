@@ -163,7 +163,7 @@ export const FormSidebar: React.FC<FormSidebarProps> = ({
                                     )}
 
                                     {isWaccCalculated && canSensibilizeBeta && (
-                                      <div className="absolute right-0 top-0 bottom-0 w-[27%] flex items-center justify-end">
+                                      <div className="absolute right-0 top-0 bottom-0 w-[25%] flex items-center justify-end">
                                         <button
                                           data-tour="kapital-beta-sensitivity-btn"
                                           type="button"
