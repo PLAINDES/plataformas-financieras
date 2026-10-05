@@ -140,7 +140,16 @@ export function useKapitalCalculation({
         : nativeInput;
       nativeBaseInput.calculation_debug_id =
         calculationCode;
-      const nativeSensitivity = isBetaUpdate ? nativeInput : null;
+      // B20/Custom: enrich ya deja subsector_sensibilizacion en "" cuando es
+      // beta manual; se conserva la key para que el Excel escriba "Custom".
+      const nativeSensitivity = isBetaUpdate
+        ? {
+            ...((nativeInput as unknown) as Record<string, unknown>),
+            subsector: (nativeInput as unknown as Record<string, unknown>).subsector_sensibilizacion ?? "",
+            subsector_sensibilizacion:
+              (nativeInput as unknown as Record<string, unknown>).subsector_sensibilizacion ?? "",
+          }
+        : null;
       // Proxy API: enriquece con macros de BD (F6/F7/F8/F9/F11/Damodaran/riesgo)
       // antes de calcular en el web-service. Devuelve además enriched_input.
       const nativeResult = await MainService.calculateKapitalExcel(nativeBaseInput, nativeSensitivity, currentUserId);

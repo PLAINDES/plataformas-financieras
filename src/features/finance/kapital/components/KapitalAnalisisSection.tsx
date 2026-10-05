@@ -10,7 +10,7 @@ import type {
 import { formatToPeruTime } from "../services/kapital.utils";
 import { ArrowRight, Sparkles, ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { INDUSTRY_TRANSLATIONS } from "@/shared/constants/kapital";
-import { Book } from "./Book";
+// import { Book } from "./Book"; // DESHABILITADO: portada del reporte oculta temporalmente
 
 const translateIndustry = (industry?: string | null) => {
   if (!industry) return industry;
@@ -280,7 +280,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
   showComparison,
   onToggleComparison,
   sensibilizaciones,
-  onOpenReport,
+  // onOpenReport, // DESHABILITADO: reporte oculto temporalmente
   localCurrency,
   shouldShowChatbot,
   onToggleForm,
@@ -528,6 +528,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
           </div>
         </div>
 
+        {/* TEMPORALMENTE DESHABILITADO: portada + botón Reporte de Costo de Capital
         {onOpenReport && (
           <div className="flex min-h-[190px] w-full items-center justify-center xl:justify-end">
             <section className="flex w-full max-w-105 flex-col items-center justify-center overflow-visible rounded-[24px] xl:w-fit">
@@ -551,6 +552,7 @@ export const KapitalAnalisisSection: React.FC<KapitalAnalisisSectionProps> = ({
             </section>
           </div>
         )}
+        */}
       </header>
 
 

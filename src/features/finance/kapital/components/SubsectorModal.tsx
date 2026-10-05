@@ -96,7 +96,7 @@ export const SubsectorModal: React.FC<SubsectorModalProps> = ({
                                         const boa = subsectorDetail.empresas_boa[emp];
                                         const info = subsectorDetail.ticker_info?.[emp];
                                         const isInactive = inactiveTickers.includes(emp);
-                                        const activoMercado = info?.activo_mercado ?? info?.total_activos ?? null;
+                                        const activoMercado = info?.activo_mercado ?? null;
                                         return (
                                             <div
                                                 key={i}

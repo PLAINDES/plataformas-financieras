@@ -11,6 +11,20 @@ const DEVICE_ID_KEY = "analytics_device_id";
 const UTM_SESSION_KEY = "analytics_entry_utm";
 const UTM_KEYS = ["utm_source"] as const;
 
+// Códigos opacos generados por UtmLinkGenerator (md5 "proideas-utm:<id>").
+// Se resuelven a la plataforma real para que la atribución siga funcionando;
+// los valores en texto plano antiguos se aceptan tal cual.
+const UTM_CODE_TO_SOURCE: Record<string, string> = {
+  "476a655311a802792c48a559228694df": "linkedin",
+  "ad4f8d797ed88637758ec9dcef2183fe": "whatsapp",
+  "dfe1dbd607948ec62198cc531db1aa21": "facebook",
+  "34003e7d0dab8b22b2868feb7ad2ccf4": "youtube",
+  "f26869a21dcda4c0136a3904ef31f8ec": "instagram",
+  "6f109b4d8b401902aa7496e996d18ff4": "tiktok",
+  "1295949cec8ccaec602cfb0cd83c07fe": "x",
+  "a454df4840d08a266c332a0e20012e4a": "telegram",
+};
+
 // Variables globales a nivel de módulo para dedup global entre múltiples componentes que usan useAnalytics()
 let globalLastTrackedPath: string | null = null;
 let globalLastTrackedTime = 0;
@@ -127,8 +141,8 @@ function captureEntryUtm(): void {
     const params = new URLSearchParams(window.location.search);
     const utm: Record<string, string> = {};
     for (const key of UTM_KEYS) {
-      const value = (params.get(key) || "").trim().toLowerCase();
-      if (value) utm[key] = value;
+      const raw = (params.get(key) || "").trim().toLowerCase();
+      if (raw) utm[key] = UTM_CODE_TO_SOURCE[raw] ?? raw;
     }
     sessionStorage.setItem(UTM_SESSION_KEY, JSON.stringify(utm));
   } catch {

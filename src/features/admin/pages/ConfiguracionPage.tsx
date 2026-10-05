@@ -592,7 +592,7 @@ export const ConfiguracionPage = () => {
               beta_apalancado: c.beta_levered ?? null,
               total_activos: c.total_assets ?? null,
               fx: c.fx_rate ?? null,
-              activo_mercado: c.total_assets ?? null,
+              activo_mercado: c.activo_mercado ?? null,
               sector: c.sector ?? null,
               subsector: c.subsector ?? null,
               country: c.country ?? null,

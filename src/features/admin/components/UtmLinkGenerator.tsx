@@ -8,6 +8,7 @@ type Platform = {
   id: string;
   label: string;
   source: string;
+  code: string;
   color: string;
   icon: ReactNode;
 };
@@ -26,14 +27,14 @@ const whatsappIcon = (
 );
 
 const PLATFORMS: Platform[] = [
-  { id: "linkedin", label: "LinkedIn", source: "linkedin", color: PLATFORM_COLORS.linkedin, icon: <Linkedin className="h-[18px] w-[18px]" /> },
-  { id: "whatsapp", label: "WhatsApp", source: "whatsapp", color: PLATFORM_COLORS.whatsapp, icon: whatsappIcon },
-  { id: "facebook", label: "Facebook", source: "facebook", color: PLATFORM_COLORS.facebook, icon: <Facebook className="h-[18px] w-[18px]" /> },
-  { id: "youtube", label: "YouTube", source: "youtube", color: PLATFORM_COLORS.youtube, icon: <Youtube className="h-[18px] w-[18px]" /> },
-  { id: "instagram", label: "Instagram", source: "instagram", color: PLATFORM_COLORS.instagram, icon: <Instagram className="h-[18px] w-[18px]" /> },
-  { id: "tiktok", label: "TikTok", source: "tiktok", color: PLATFORM_COLORS.tiktok, icon: brandIcon(PATHS.tiktok) },
-  { id: "x", label: "X", source: "x", color: PLATFORM_COLORS.x, icon: <span className="text-[13px] font-bold leading-none text-white">X</span> },
-  { id: "telegram", label: "Telegram", source: "telegram", color: PLATFORM_COLORS.telegram, icon: brandIcon(PATHS.telegram) },
+  { id: "linkedin", label: "LinkedIn", source: "linkedin", code: "476a655311a802792c48a559228694df", color: PLATFORM_COLORS.linkedin, icon: <Linkedin className="h-[18px] w-[18px]" /> },
+  { id: "whatsapp", label: "WhatsApp", source: "whatsapp", code: "ad4f8d797ed88637758ec9dcef2183fe", color: PLATFORM_COLORS.whatsapp, icon: whatsappIcon },
+  { id: "facebook", label: "Facebook", source: "facebook", code: "dfe1dbd607948ec62198cc531db1aa21", color: PLATFORM_COLORS.facebook, icon: <Facebook className="h-[18px] w-[18px]" /> },
+  { id: "youtube", label: "YouTube", source: "youtube", code: "34003e7d0dab8b22b2868feb7ad2ccf4", color: PLATFORM_COLORS.youtube, icon: <Youtube className="h-[18px] w-[18px]" /> },
+  { id: "instagram", label: "Instagram", source: "instagram", code: "f26869a21dcda4c0136a3904ef31f8ec", color: PLATFORM_COLORS.instagram, icon: <Instagram className="h-[18px] w-[18px]" /> },
+  { id: "tiktok", label: "TikTok", source: "tiktok", code: "6f109b4d8b401902aa7496e996d18ff4", color: PLATFORM_COLORS.tiktok, icon: brandIcon(PATHS.tiktok) },
+  { id: "x", label: "X", source: "x", code: "1295949cec8ccaec602cfb0cd83c07fe", color: PLATFORM_COLORS.x, icon: <span className="text-[13px] font-bold leading-none text-white">X</span> },
+  { id: "telegram", label: "Telegram", source: "telegram", code: "a454df4840d08a266c332a0e20012e4a", color: PLATFORM_COLORS.telegram, icon: brandIcon(PATHS.telegram) },
 ];
 
 const DESTINATIONS = [
@@ -56,7 +57,9 @@ const UtmLinkGenerator = () => {
   const destination = DESTINATIONS.find((d) => d.id === destinationId) ?? DESTINATIONS[0];
 
   const params = new URLSearchParams();
-  params.set("utm_source", platform.source);
+  // Código opaco en la URL (no expone el nombre de la plataforma).
+  // El backend y useAnalytics lo resuelven a la plataforma real.
+  params.set("utm_source", platform.code);
   const url = `${window.location.origin}${destination.path}?${params.toString()}`;
 
   useEffect(() => {
