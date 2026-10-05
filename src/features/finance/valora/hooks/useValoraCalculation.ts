@@ -357,11 +357,15 @@ export function useValoraCalculation({
       };
       const hasRates = Object.values(sensRates).some((v) => v !== undefined);
       if (sensBeta !== undefined) {
+        // B20/Custom: normalizar a "" cuando no hay subsector elegido (beta manual).
+        // Así el backend escribe "Custom" en WACC!B20 en vez de omitir la key.
+        const sensSubsector = (formData as any).subsector_sensibilizacion ?? "";
         sensitivity = {
           beta_desapalancado: sensBeta,
           beta_subsector: (formData as any).beta_subsector,
-          subsector: (formData as any).subsector_sensibilizacion,
-          tickers: (formData as any).tickers_subsector_sensibilizacion,
+          subsector: sensSubsector,
+          subsector_sensibilizacion: sensSubsector,
+          tickers: (formData as any).tickers_subsector_sensibilizacion ?? "",
           industria: (formData as any).sector,
         };
         if (hasRates) {

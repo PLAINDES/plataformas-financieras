@@ -102,29 +102,11 @@ export function OccupationOnboardingModal() {
   const [sectorInput, setSectorInput] = useState("");
   const [cargoInput, setCargoInput] = useState("");
   const [especialidadInput, setEspecialidadInput] = useState("");
-  const [showSectorDropdown, setShowSectorDropdown] = useState(false);
-  const [showCargoDropdown, setShowCargoDropdown] = useState(false);
-  const [sectorActivated, setSectorActivated] = useState(false);
-  const [cargoActivated, setCargoActivated] = useState(false);
-  const sectorInputRef = useRef<HTMLInputElement>(null);
-  const cargoInputRef = useRef<HTMLInputElement>(null);
-  const sectorDropdownRef = useRef<HTMLDivElement>(null);
-  const cargoDropdownRef = useRef<HTMLDivElement>(null);
   // Payload pendiente de confirmación y timer del loading (2 s).
   const pendingPayloadRef = useRef<Record<string, string | null> | null>(null);
   const loadingTimerRef = useRef<number | null>(null);
 
-  // Los inputs son editables: el usuario puede escribir libremente o
-  // elegir una sugerencia. El dropdown filtra por lo escrito.
-  const normalize = (value: string) =>
-    value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const filteredSectors = sectorInput.trim().length === 0
-    ? [...SECTORES]
-    : [...SECTORES].filter((item) => normalize(item).includes(normalize(sectorInput)));
-  const filteredCargos = cargoInput.trim().length === 0
-    ? [...CARGOS]
-    : [...CARGOS].filter((item) => normalize(item).includes(normalize(cargoInput)));
-
+  // Los inputs son texto libre: se registra lo que el usuario escriba.
   const resetState = () => {
     setStep("motivo");
     setMotivo(null);
@@ -136,10 +118,6 @@ export function OccupationOnboardingModal() {
       window.clearTimeout(loadingTimerRef.current);
       loadingTimerRef.current = null;
     }
-    setShowSectorDropdown(false);
-    setShowCargoDropdown(false);
-    setSectorActivated(false);
-    setCargoActivated(false);
   };
 
   // Texto libre: lo que se registra en métricas es lo escrito/seleccionado.
@@ -161,29 +139,6 @@ export function OccupationOnboardingModal() {
     const timeout = window.setTimeout(() => setStepTransition("idle"), 260);
     return () => window.clearTimeout(timeout);
   }, [stepTransition]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        sectorDropdownRef.current &&
-        !sectorDropdownRef.current.contains(event.target as Node) &&
-        sectorInputRef.current &&
-        !sectorInputRef.current.contains(event.target as Node)
-      ) {
-        setShowSectorDropdown(false);
-      }
-      if (
-        cargoDropdownRef.current &&
-        !cargoDropdownRef.current.contains(event.target as Node) &&
-        cargoInputRef.current &&
-        !cargoInputRef.current.contains(event.target as Node)
-      ) {
-        setShowCargoDropdown(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Limpia el timer del loading si el modal se desmonta.
   useEffect(() => {
@@ -281,10 +236,6 @@ export function OccupationOnboardingModal() {
 
   const inputClassName =
     "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 sm:py-3.5 sm:text-base";
-  const dropdownClassName =
-    "absolute left-0 top-full z-[99999] mt-2 max-h-56 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white py-1 shadow-lg [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
-  const optionClassName =
-    "flex w-full cursor-pointer items-center px-4 py-2.5 text-left text-sm text-gray-700 transition hover:bg-blue-50 hover:text-blue-700 sm:text-base";
 
   return (
     <Dialog
@@ -453,53 +404,16 @@ export function OccupationOnboardingModal() {
                   </label>
                   <div className="relative">
                     <input
-                      ref={sectorInputRef}
                       id="sector-input"
                       type="text"
                       value={sectorInput}
                       onChange={(event) => {
                         setSectorInput(event.target.value);
-                        setSectorActivated(true);
-                        setShowSectorDropdown(true);
-                      }}
-                      onClick={() => {
-                        setSectorActivated(true);
-                        setShowSectorDropdown(true);
-                      }}
-                      onFocus={() => {
-                        setSectorActivated(true);
-                        setShowSectorDropdown(true);
                       }}
                       placeholder="Ej.: banca, consultoría, educación"
                       autoComplete="off"
                       className={inputClassName}
                     />
-                    {sectorActivated &&
-                      showSectorDropdown &&
-                      filteredSectors.length > 0 && (
-                        <div
-                          ref={sectorDropdownRef}
-                          className={dropdownClassName}
-                        >
-                          {filteredSectors.map((item) => (
-                            <button
-                              key={item}
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                              }}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setSectorInput(item);
-                                setShowSectorDropdown(false);
-                              }}
-                              className={optionClassName}
-                            >
-                              {item}
-                            </button>
-                          ))}
-                        </div>
-                      )}
                   </div>
                   {sectorInput.trim().length > 0 && (
                     <div className="mt-4">
@@ -512,53 +426,16 @@ export function OccupationOnboardingModal() {
                       </label>
                       <div className="relative">
                         <input
-                          ref={cargoInputRef}
                           id="cargo-input"
                           type="text"
                           value={cargoInput}
                           onChange={(event) => {
                             setCargoInput(event.target.value);
-                            setCargoActivated(true);
-                            setShowCargoDropdown(true);
-                          }}
-                          onClick={() => {
-                            setCargoActivated(true);
-                            setShowCargoDropdown(true);
-                          }}
-                          onFocus={() => {
-                            setCargoActivated(true);
-                            setShowCargoDropdown(true);
                           }}
                           placeholder="Ej.: analista financiero, gerente, estudiante"
                           autoComplete="off"
                           className={inputClassName}
                         />
-                        {cargoActivated &&
-                          showCargoDropdown &&
-                          filteredCargos.length > 0 && (
-                            <div
-                              ref={cargoDropdownRef}
-                              className={dropdownClassName}
-                            >
-                              {filteredCargos.map((item) => (
-                                <button
-                                  key={item}
-                                  type="button"
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                  }}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    setCargoInput(item);
-                                    setShowCargoDropdown(false);
-                                  }}
-                                  className={optionClassName}
-                                >
-                                  {item}
-                                </button>
-                              ))}
-                            </div>
-                          )}
                       </div>
                     </div>
                   )}

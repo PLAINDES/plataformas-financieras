@@ -4,7 +4,7 @@ import type { KapitalResults } from "@/shared/types";
 import { ArrowRight, Sparkles, ChevronDown } from "lucide-react";
 import { INDUSTRY_TRANSLATIONS } from "@/shared/constants/kapital";
 import { useEffect, useState } from "react";
-import { Book } from "./Book";
+// import { Book } from "./Book"; // DESHABILITADO: portada del reporte oculta temporalmente
 
 const translateIndustry = (industry?: string | null) => {
   if (!industry) return industry;
@@ -192,7 +192,7 @@ export const KapitalResultadosSection: React.FC<
   onResultCurrencyChange,
   emergentCurrency,
   onEmergentCurrencyChange,
-  onOpenReport,
+  // onOpenReport, // DESHABILITADO: reporte oculto temporalmente
   localCurrency,
   shouldShowChatbot,
   onToggleForm,
@@ -269,6 +269,7 @@ export const KapitalResultadosSection: React.FC<
         </div>
 
         <div className="flex min-h-[190px] w-full items-center justify-center xl:justify-end">
+          {/* TEMPORALMENTE DESHABILITADO: portada + botón Reporte de Costo de Capital
           {onOpenReport && (
             <section className="flex w-full max-w-105 flex-col items-center justify-center overflow-visible rounded-[24px] xl:w-fit">
               <div onClick={onOpenReport} className="w-fit h-fit cursor-pointer">
@@ -290,6 +291,7 @@ export const KapitalResultadosSection: React.FC<
               </div>
             </section>
           )}
+          */}
         </div>
       </header>
       <section className="mx-auto flex w-full max-w-[1600px] flex-col items-center justify-center gap-4 lg:flex-row lg:flex-wrap">
