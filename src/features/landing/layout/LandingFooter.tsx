@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { WhatsAppIcon } from "@/features/landing/sections/CTASection";
 import { Pencil } from "lucide-react";
 import { EditableText } from "@/shared/components/editable/EditableText";
@@ -66,10 +66,10 @@ export function LandingFooter({
       {isAdmin && (
         <button
           onClick={() => setEditModalOpen(true)}
-          className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white text-xs font-semibold transition-all shadow-sm cursor-pointer"
+          className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white text-xs font-semibold transition-colors shadow-sm cursor-pointer"
           title="Editar footer"
         >
-          <Pencil size={12} strokeWidth={2.5} />
+          <Pencil size={12} strokeWidth={2} />
           Editar Menús
         </button>
       )}
@@ -110,14 +110,14 @@ export function LandingFooter({
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@email.com"
                 required
-                className="w-full bg-white border border-slate-400 shadow-sm rounded-full pl-5 pr-12 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                className="w-full bg-white border border-slate-400 shadow-sm rounded-full pl-5 pr-12 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-[border-color,box-shadow]"
               />
               <button
                 type="submit"
                 className="absolute right-1.5 top-1.5 bottom-1.5 w-9 h-9 flex items-center justify-center bg-valora-primary hover:bg-valora-secondary text-white rounded-full transition-colors cursor-pointer"
                 title="Suscribirse"
               >
-                <ArrowRight size={16} strokeWidth={2.5} />
+                <ArrowRight size={16} strokeWidth={2} />
               </button>
             </form>*/}
           </div>

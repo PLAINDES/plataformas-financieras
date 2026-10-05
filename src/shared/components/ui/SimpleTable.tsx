@@ -22,6 +22,7 @@ interface SimpleTableProps<T> {
   onSearchChange?: (query: string) => void;
   onRowClick?: (item: T) => void;
   children?: React.ReactNode;
+  className?: string;
 
   yearFilterOptions?: Array<string | number>;
   selectedYear?: string;
@@ -46,6 +47,7 @@ export function SimpleTable<T extends object>({
   searchQuery = "",
   onSearchChange,
   children,
+  className = "",
 }: SimpleTableProps<T>) {
   const [pageInputValue, setPageInputValue] = useState(String(currentPage));
 
@@ -70,7 +72,9 @@ export function SimpleTable<T extends object>({
   };
 
   return (
-    <div className="bg-white shadow-sm rounded-lg border border-gray-200 flex flex-col">
+    <div
+      className={`w-full bg-white shadow-sm rounded-lg border border-gray-200 flex flex-col ${className}`}
+    >
       <header className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row gap-3 sm:items-start">
         {onSearchChange && (
           <input

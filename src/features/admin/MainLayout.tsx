@@ -23,7 +23,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
       {/* Main Content Area */}
       <div
-        className={`flex h-dvh min-h-0 overflow-hidden flex-1 flex-col transition-all duration-300 ${
+        className={`flex h-dvh min-h-0 overflow-hidden flex-1 flex-col transition-[margin] duration-300 ${
           isSidebarMinimized ? "lg:ml-18.75" : "lg:ml-62.5"
         }`}
       >

@@ -8,6 +8,22 @@ const SESSION_START_KEY = "analytics_session_start";
 const LAST_PAGE_KEY = "analytics_last_page";
 const LAST_PAGE_TIME_KEY = "analytics_last_page_time";
 const DEVICE_ID_KEY = "analytics_device_id";
+const UTM_SESSION_KEY = "analytics_entry_utm";
+const UTM_KEYS = ["utm_source"] as const;
+
+// Códigos opacos generados por UtmLinkGenerator (md5 "proideas-utm:<id>").
+// Se resuelven a la plataforma real para que la atribución siga funcionando;
+// los valores en texto plano antiguos se aceptan tal cual.
+const UTM_CODE_TO_SOURCE: Record<string, string> = {
+  "476a655311a802792c48a559228694df": "linkedin",
+  "ad4f8d797ed88637758ec9dcef2183fe": "whatsapp",
+  "dfe1dbd607948ec62198cc531db1aa21": "facebook",
+  "34003e7d0dab8b22b2868feb7ad2ccf4": "youtube",
+  "f26869a21dcda4c0136a3904ef31f8ec": "instagram",
+  "6f109b4d8b401902aa7496e996d18ff4": "tiktok",
+  "1295949cec8ccaec602cfb0cd83c07fe": "x",
+  "a454df4840d08a266c332a0e20012e4a": "telegram",
+};
 
 // Variables globales a nivel de módulo para dedup global entre múltiples componentes que usan useAnalytics()
 let globalLastTrackedPath: string | null = null;
@@ -48,19 +64,60 @@ function getOS(): string {
   return "Unknown";
 }
 
+function getChromiumBrand(): string | null {
+  // Client Hints: algunos forks Chromium no dejan huella en el UA pero
+  // sí se identifican en userAgentData.brands.
+  try {
+    const brands = (navigator as any).userAgentData?.brands as
+      | { brand: string }[]
+      | undefined;
+    if (!Array.isArray(brands)) return null;
+    const names = brands.map((b) => String(b?.brand || "").toLowerCase());
+    if (names.some((n) => n.includes("opera"))) return "Opera";
+    if (names.some((n) => n.includes("edge"))) return "Edge";
+    if (names.some((n) => n.includes("vivaldi"))) return "Vivaldi";
+    if (names.some((n) => n.includes("arc"))) return "Arc";
+    if (names.some((n) => n.includes("yandex"))) return "Yandex";
+    if (names.some((n) => n.includes("samsung"))) return "Samsung Internet";
+    if (names.some((n) => n.includes("whale"))) return "Whale";
+    if (names.some((n) => n.includes("brave"))) return "Brave";
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 function getBrowser(): string {
   const ua = navigator.userAgent;
   // Detect Brave (expone navigator.brave.isBrave)
   if ((navigator as any).brave && typeof (navigator as any).brave.isBrave === "function") return "Brave";
-  if (/EdgA|EdgiOS|Edg\//i.test(ua)) return "Edge";
+  // Navegadores dentro de apps: usan el motor del sistema pero con su propio UA.
+  // Deben ir antes de Chrome/Safari porque contienen esos tokens.
+  if (/MicroMessenger/i.test(ua)) return "WeChat";
+  if (/Instagram/i.test(ua)) return "Instagram";
+  if (/FBAN|FBAV|FB_IAB|FB4A|FBIOS|FBDV/i.test(ua)) return "Facebook";
+  if (/Telegram/i.test(ua)) return "Telegram";
+  if (/\bLine\//i.test(ua)) return "LINE";
+  if (/musical_ly|musically|Bytedance/i.test(ua) || /TikTok/i.test(ua)) return "TikTok";
+  if (/UCBrowser|UC /i.test(ua)) return "UC Browser";
+  if (/QQBrowser|QQ\//i.test(ua)) return "QQ Browser";
+  if (/baiduboxapp|Baidu/i.test(ua)) return "Baidu";
+  if (/HuaweiBrowser/i.test(ua)) return "Huawei Browser";
+  if (/MiuiBrowser/i.test(ua)) return "Mi Browser";
   if (/SamsungBrowser/i.test(ua)) return "Samsung Internet";
-  if (/OPR|Opera/i.test(ua)) return "Opera";
-  if (/Vivaldi/i.test(ua)) return "Vivaldi";
+  if (/Whale/i.test(ua)) return "Whale";
   if (/YaBrowser/i.test(ua)) return "Yandex";
+  if (/coc_coc_browser/i.test(ua)) return "Coc Coc";
+  if (/Vivaldi/i.test(ua)) return "Vivaldi";
+  if (/Arc\/[\d.]+/i.test(ua)) return "Arc";
+  if (/OPR\/|Opera|OPiOS|Opera Mini|OPTMini/i.test(ua)) return "Opera";
+  if (/Edg\/|EdgA|EdgiOS/i.test(ua)) return "Edge";
+  if (/DuckDuckGo/i.test(ua)) return "DuckDuckGo";
   if (/; wv\)|\bwv\b/i.test(ua)) return "Android WebView";
-  if (/CriOS|Chrome|Chromium/i.test(ua)) return "Chrome";
-  if (/FxiOS|Firefox/i.test(ua)) return "Firefox";
+  if (/CriOS|Chrome|Chromium/i.test(ua)) return getChromiumBrand() ?? "Chrome";
+  if (/FxiOS|Firefox|Focus\//i.test(ua)) return "Firefox";
   if (/Safari/i.test(ua)) return "Safari";
+  if (/MSIE|Trident/i.test(ua)) return "Internet Explorer";
   return "Otro";
 }
 
@@ -70,8 +127,42 @@ function getOrCreateSessionId(): string {
     sessionId = generateSessionId();
     sessionStorage.setItem(SESSION_KEY, sessionId);
     sessionStorage.setItem(SESSION_START_KEY, Date.now().toString());
+    captureEntryUtm();
   }
   return sessionId;
+}
+
+// Atribución first-touch por sesión: el UTM se captura una sola vez al
+// crear la sesión (página de entrada) y nunca se sobrescribe por
+// navegación interna. Así cada sesión cuenta para el origen que la trajo.
+function captureEntryUtm(): void {
+  try {
+    if (sessionStorage.getItem(UTM_SESSION_KEY)) return;
+    const params = new URLSearchParams(window.location.search);
+    const utm: Record<string, string> = {};
+    for (const key of UTM_KEYS) {
+      const raw = (params.get(key) || "").trim().toLowerCase();
+      if (raw) utm[key] = UTM_CODE_TO_SOURCE[raw] ?? raw;
+    }
+    sessionStorage.setItem(UTM_SESSION_KEY, JSON.stringify(utm));
+  } catch {
+    // Sin almacenamiento: se reintenta en el próximo track.
+  }
+}
+
+function getStoredUtm(): { utm_source?: string } {
+  try {
+    const raw = sessionStorage.getItem(UTM_SESSION_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const out: Record<string, string> = {};
+    for (const key of UTM_KEYS) {
+      if (typeof parsed[key] === "string" && parsed[key]) out[key] = parsed[key] as string;
+    }
+    return out;
+  } catch {
+    return {};
+  }
 }
 
 export function useAnalytics() {
@@ -117,6 +208,7 @@ export function useAnalytics() {
         os: getOS(),
         browser: getBrowser(),
         referrer: document.referrer || undefined,
+        ...getStoredUtm(),
       };
 
       try {
@@ -140,6 +232,7 @@ export function useAnalytics() {
         os: getOS(),
         browser: getBrowser(),
         referrer: document.referrer || undefined,
+        ...getStoredUtm(),
         event_metadata: {
           ...eventMetadata,
           device_id: getOrCreateDeviceId(),

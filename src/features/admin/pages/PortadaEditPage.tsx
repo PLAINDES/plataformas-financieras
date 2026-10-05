@@ -15,6 +15,7 @@ const PortadaEditPage: React.FC = () => {
 
   const [showTextReport, setShowTextReport] = useState(true);
   const [typeId, setTypeId] = useState<number>(1); // 1 = Imagen Adjuntada, 2 = Personalizada
+  const [producto, setProducto] = useState<"kapital" | "valora">("kapital");
   const [name, setName] = useState("");
 
   const [footerOne, setFooterOne] = useState<File | null>(null);
@@ -30,6 +31,19 @@ const PortadaEditPage: React.FC = () => {
     null
   );
   const [centerPreview, setCenterPreview] = useState<string | null>(null);
+
+  const openProtectedMedia = async (url: string) => {
+    const apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
+    const mediaUrl = /^https?:\/\//i.test(url) ? url : `${apiUrl}${url}`;
+    const token = localStorage.getItem("auth_token");
+    const response = await fetch(mediaUrl, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!response.ok) throw new Error("No se pudo abrir la portada");
+    const objectUrl = URL.createObjectURL(await response.blob());
+    window.open(objectUrl, "_blank", "noopener,noreferrer");
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+  };
 
   // existing remote URLs
   const [existingPortadaUrl, setExistingPortadaUrl] = useState<string | null>(
@@ -92,6 +106,7 @@ const PortadaEditPage: React.FC = () => {
         const c = await MainService.getCover(coverId);
         setName(c.nombre ?? "");
         setTypeId(c.tipo === "imagen_adjuntada" ? 1 : 2);
+        if (c.producto === "kapital" || c.producto === "valora") setProducto(c.producto);
 
         // set existing image urls for previews
         setExistingPortadaUrl(c.portada?.url ?? null);
@@ -127,6 +142,7 @@ const PortadaEditPage: React.FC = () => {
         "tipo",
         typeId === 1 ? "imagen_adjuntada" : "personalizada"
       );
+      formData.append("producto", producto);
 
       if (footerOne) formData.append("primer_imagen_footer", footerOne);
       if (footerTwo) formData.append("segundo_imagen_footer", footerTwo);
@@ -211,6 +227,13 @@ const PortadaEditPage: React.FC = () => {
                 </div>
               </div>
 
+              <div className="grid grid-cols-12 gap-4 items-start border-t border-gray-100 pt-6">
+                <label className="col-span-12 sm:col-span-3 text-sm font-medium text-gray-700">Producto</label>
+                <select value={producto} onChange={(e) => setProducto(e.target.value as "kapital" | "valora")} className="col-span-12 sm:col-span-9 h-10 rounded-md border border-gray-300 px-3 text-sm">
+                  <option value="kapital">Kapital</option>
+                  <option value="valora">Valora</option>
+                </select>
+              </div>
               <div className="grid grid-cols-12 gap-4 items-start border-t border-gray-100 pt-6">
                 <label className="col-span-12 sm:col-span-3 text-sm font-medium text-gray-700 pt-2">
                   Tipo de Portada
@@ -331,14 +354,13 @@ const PortadaEditPage: React.FC = () => {
                       {existingPortadaUrl && (
                         <p className="text-xs text-gray-500 mt-2">
                           Actual:{" "}
-                          <a
-                            href={existingPortadaUrl}
-                            target="_blank"
-                            rel="noreferrer"
+                          <button
+                            type="button"
+                            onClick={() => void openProtectedMedia(existingPortadaUrl)}
                             className="text-blue-600"
                           >
                             Ver portada actual
-                          </a>
+                          </button>
                         </p>
                       )}
                     </div>

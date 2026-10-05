@@ -15,9 +15,6 @@ export type ReportViewerProps = {
   onClose: () => void;
   reportProductId: string;
   calculationId?: number | string | null;
-  isSessionFresh?: boolean;
-  setIsSessionFresh: (val: boolean) => void;
-  prewarmedSessionId?: string | null;
 };
 
 export const ReportViewer: React.FC<ReportViewerProps> = ({
@@ -25,9 +22,6 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
   onClose,
   reportProductId,
   calculationId,
-  isSessionFresh = false,
-  setIsSessionFresh,
-  prewarmedSessionId = null,
 }) => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +35,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
   const isAuthenticated = !!user;
   const paymentWindowRef = useRef<Window | null>(null);
   const paymentWindowTimerRef = useRef<number | null>(null);
+  const paymentIdRef = useRef<number | null>(null);
 
   const buildLauncherUrl = (checkoutUrl: string) => {
     const params = new URLSearchParams({ checkout: checkoutUrl });
@@ -52,6 +47,36 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
       window.clearInterval(paymentWindowTimerRef.current);
       paymentWindowTimerRef.current = null;
     }
+  };
+
+  const confirmPaymentStatus = async (paymentId: number) => {
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      try {
+        const payment = await PaymentService.getStatus(paymentId);
+        if (payment.status === "paid") {
+          setPaymentState("paid");
+          setPaymentMessage("Pago confirmado. El informe está desbloqueado.");
+          return;
+        }
+        if (payment.status === "failed" || payment.status === "expired") {
+          setPaymentState("cancelled");
+          setPaymentMessage(
+            payment.status === "expired"
+              ? "La sesión de pago expiró. Intenta nuevamente."
+              : "El pago no fue aprobado. Intenta nuevamente."
+          );
+          return;
+        }
+      } catch {
+        // Keep polling briefly because the webhook may still be processing.
+      }
+      await new Promise((resolve) => window.setTimeout(resolve, 1500));
+    }
+
+    setPaymentState("cancelled");
+    setPaymentMessage(
+      "No pudimos confirmar el pago todavía. Revisa tu estado de cuenta o intenta nuevamente."
+    );
   };
 
   useEffect(
@@ -71,15 +96,6 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
         setError(null);
         setPaymentState("idle");
         setPaymentMessage(null);
-
-        if (!isSessionFresh) {
-          if (!ignore) setLoaderState("refreshing");
-          await MainService.refreshCalculation(
-            Number(calculationId),
-            prewarmedSessionId
-          );
-          if (!ignore) setIsSessionFresh(true);
-        }
 
         if (!ignore) setLoaderState("generating");
         const blob = await MainService.generateReportPdf(
@@ -118,9 +134,6 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
     isOpen,
     calculationId,
     reportProductId,
-    isSessionFresh,
-    prewarmedSessionId,
-    setIsSessionFresh,
   ]);
 
   const handleCulqiPayment = async () => {
@@ -170,6 +183,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
         report_id: reportId,
         calculation_id: currentCalculationId,
       });
+      paymentIdRef.current = session.payment_id;
       paymentWindow.location.replace(buildLauncherUrl(session.checkout_url));
       setPaymentState("waiting");
       setPaymentMessage("Procediendo con el pago...");
@@ -178,10 +192,14 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
         if (!paymentWindow.closed) return;
         stopPaymentWindowWatch();
         paymentWindowRef.current = null;
-        setPaymentState("cancelled");
-        setPaymentMessage(
-          "La ventana de pago fue cerrada. El pago no fue confirmado."
-        );
+        if (paymentIdRef.current) {
+          setPaymentState("waiting");
+          setPaymentMessage("Confirmando el resultado del pago...");
+          void confirmPaymentStatus(paymentIdRef.current);
+        } else {
+          setPaymentState("cancelled");
+          setPaymentMessage("La ventana de pago fue cerrada.");
+        }
       }, 500);
     } catch (paymentError) {
       paymentWindow.close();
@@ -231,8 +249,10 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
             className={`border-b px-4 py-2 text-xs font-medium ${
               paymentState === "error"
                 ? "border-red-100 bg-red-50 text-red-700"
-                : paymentState === "cancelled"
+              : paymentState === "cancelled"
                   ? "border-amber-100 bg-amber-50 text-amber-700"
+                  : paymentState === "paid"
+                    ? "border-green-100 bg-green-50 text-green-700"
                   : "border-blue-100 bg-blue-50 text-blue-700"
             }`}
           >
@@ -321,12 +341,12 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
 
       {paymentInProgress && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-[1px]"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-[1px] animate-in fade-in duration-200 ease-out"
           role="dialog"
           aria-modal="true"
           aria-label="Pago en proceso"
         >
-          <div className="flex min-w-64 flex-col items-center rounded-2xl bg-white px-10 py-9 shadow-2xl">
+          <div className="flex min-w-64 flex-col items-center rounded-2xl bg-white px-10 py-9 shadow-2xl animate-in fade-in zoom-in-95 duration-200 ease-out">
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
             <p className="mt-5 text-sm font-semibold text-slate-800">
               Procediendo con el pago...
@@ -348,7 +368,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
           const loggedUser = await login(credentials);
           if (pendingPaymentAfterLogin && calculationId && loggedUser?.id) {
             try {
-              await MainService.updateCalculation(Number(calculationId), {
+              await MainService.updateNativeCalculation(Number(calculationId), {
                 user_id: Number(loggedUser.id),
               });
             } catch {

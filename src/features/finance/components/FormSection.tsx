@@ -1,4 +1,4 @@
-import { Info, Lock } from "lucide-react";
+﻿import { Info, Lock } from "lucide-react";
 
 type FormSectionProps = {
     step: number;
@@ -88,7 +88,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
             </div>
 
             <div
-                className={`flex flex-col pl-2 gap-3 transition-all duration-300 ease-in-out overflow-visible relative
+                className={`flex flex-col pl-2 gap-3 transition-[max-height,opacity,padding] duration-300 ease-in-out overflow-visible relative
           ${isVisible ? "max-h-[2000px] opacity-100 pt-2" : "max-h-0 opacity-0 py-0 overflow-hidden"}
           ${disabled ? "opacity-40" : ""}`}
             >

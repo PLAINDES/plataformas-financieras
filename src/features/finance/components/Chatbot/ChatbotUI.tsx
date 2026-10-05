@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { type CompanyData, type YahooFinanceData } from "./chatbot.interfaces";
 import { useState, useEffect } from "react";
 import { ConfirmationModal } from "@/shared/components/common/ConfirmationModal";
@@ -106,7 +106,7 @@ export const BetaUpdateCard: React.FC<BetaUpdateCardProps> = ({
             <button
                 type="button"
                 onClick={() => onUpdate(newBeta)}
-                className="shrink-0 text-xs font-semibold text-white bg-linear-to-r from-sky-400 to-blue-600 px-4 py-2 rounded-lg transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                className="shrink-0 text-xs font-semibold text-white bg-linear-to-r from-sky-400 to-blue-600 px-4 py-2 rounded-lg transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg"
             >
                 Actualizar Beta
             </button>
@@ -156,7 +156,7 @@ export const ChatEmptyState = ({
                     key={s}
                     type="button"
                     onClick={() => onSuggestionClick(s)}
-                    className="group flex w-full cursor-pointer items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-left text-xs font-medium text-gray-700 shadow-sm transition-all hover:border-valora-primary/50 hover:shadow-md"
+                    className="group flex w-full cursor-pointer items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-left text-xs font-medium text-gray-700 shadow-sm transition-[border-color,box-shadow] hover:border-valora-primary/50 hover:shadow-md"
                 >
                     {s}
                 </button>
@@ -204,7 +204,7 @@ export const ChatInputArea = ({
     sendMessage: () => void;
 }) => (
     <div className="px-4 py-2">
-        <div className="flex items-end gap-2 rounded-full border border-gray-400 bg-white p-1.5 pr-2 shadow-sm transition-all focus-within:border-valora-primary/80 focus-within:shadow-md">
+        <div className="flex items-end gap-2 rounded-full border border-gray-400 bg-white p-1.5 pr-2 shadow-sm transition-[border-color,box-shadow] focus-within:border-valora-primary/80 focus-within:shadow-md">
             <textarea
                 ref={inputRef}
                 value={input}
@@ -223,7 +223,7 @@ export const ChatInputArea = ({
                 type="button"
                 onClick={sendMessage}
                 disabled={!input.trim() || loading}
-                className="mb-0.5 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-gray-200 text-gray-500 transition-all hover:bg-gray-300 active:scale-95 disabled:opacity-50 disabled:hover:bg-gray-200 not-disabled:bg-valora-primary not-disabled:text-white not-disabled:hover:bg-valora-primary/90"
+                className="mb-0.5 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-gray-200 text-gray-500 transition-[background-color,color,transform,opacity] hover:bg-gray-300 active:scale-[0.96] disabled:opacity-50 disabled:hover:bg-gray-200 not-disabled:bg-valora-primary not-disabled:text-white not-disabled:hover:bg-valora-primary/90"
             >
                 <ArrowUp className="h-4 w-4" />
             </button>
@@ -276,7 +276,7 @@ export const ChatbotToggler = ({
         type="button"
         onClick={onClick}
         aria-label={isOpen ? "Cerrar chat" : "Abrir chat"}
-        className={`px-4 py-2.5 flex items-center justify-between gap-3 text-left font-semibold transition-all shadow-md w-full sm:w-auto cursor-pointer ${isOpen
+        className={`px-4 py-2.5 flex items-center justify-between gap-3 text-left font-semibold transition-[background-color,border-color] shadow-md w-full sm:w-auto cursor-pointer ${isOpen
             ? "bg-gray-900 text-white rounded-t-xl rounded-b-none border border-b-0 border-gray-200"
             : "bg-valora-primary text-white rounded-xl hover:bg-valora-secondary"
             }`}
@@ -432,8 +432,8 @@ export const YahooResults: React.FC<YahooResultsProps> = ({
                                 ? "Debe calcular el WACC primero"
                                 : "Insertar promedio al formulario"
                         }
-                        className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-semibold transition-all shrink-0 ${isWaccCalculated
-                            ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer shadow-md active:scale-95"
+                        className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-semibold transition-[background-color,box-shadow,transform] shrink-0 ${isWaccCalculated
+                            ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer shadow-md active:scale-[0.96]"
                             : "bg-gray-300 text-gray-500 cursor-not-allowed"
                             }`}
                     >

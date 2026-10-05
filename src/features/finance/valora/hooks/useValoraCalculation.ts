@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { MainService } from "@/shared/services/main.service";
-import { generateCalculationCode } from "../../kapital/services/kapital.utils";
+import { generateCalculationCode } from "@/features/finance/kapital/services/kapital.utils";
 import type { Calculation } from "@/shared/types";
 import type {
   FinancialTable,
@@ -8,6 +8,7 @@ import type {
   ValoraSensibilidadEntry,
 } from "@/shared/types/ValoraTypes";
 import type { ToastType } from "@/shared/types/toast.types";
+import type { NativeValoraResponse } from "@/shared/services/valora-native.service";
 
 export type ValoraResultView = "original" | "sensibilidad" | "comparacion";
 
@@ -64,7 +65,8 @@ export function useValoraCalculation({
   ui,
 }: UseValoraCalculationProps) {
   const [currentCalculation, setCurrentCalculation] = useState<Calculation | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
+  const [isNativeLoading, setIsNativeLoading] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
   const [resultView, setResultView] = useState<ValoraResultView>("original");
   const [sensibilizaciones, setSensibilizaciones] = useState<ValoraSensibilidadEntry[]>([]);
@@ -152,6 +154,8 @@ export function useValoraCalculation({
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
+    return handleNativeSubmit(e);
+    /* Legacy API calculation path retained temporarily for rollback.
     if (e) e.preventDefault();
 
     const missingFields: string[] = [];
@@ -206,13 +210,12 @@ export function useValoraCalculation({
       balance_table: normalizedBalanceTable,
       results_table: normalizedResultsTable,
     };
-
     // formData Tasas debug removed
 
     try {
       let persistedCalculation: Calculation;
       if (currentCalculation) {
-        persistedCalculation = await MainService.updateCalculation(
+        persistedCalculation = await MainService.updateNativeCalculation(
           currentCalculation.id,
           {
             data: {
@@ -221,7 +224,7 @@ export function useValoraCalculation({
           }
         );
       } else {
-        persistedCalculation = await MainService.createCalculation({
+        persistedCalculation = await MainService.createNativeCalculation({
           calculation_file_id: null,
           user_id: currentUserId ? Number(currentUserId) : null,
           code: generateCalculationCode(),
@@ -250,7 +253,7 @@ export function useValoraCalculation({
         (persistedCalculation.data as any).sensibilizacion = patchedSens;
         // Intenta guardar en backend de forma best-effort (no bloquea)
         if (currentCalculation) {
-          MainService.updateCalculation(persistedCalculation.id, {
+          MainService.updateNativeCalculation(persistedCalculation.id, {
             data: { sensibilizacion: patchedSens } as any,
           }).catch(() => {});
         }
@@ -282,8 +285,254 @@ export function useValoraCalculation({
     }
   };
 
-  const loadFromUrl = async () => {
-    if (loadFromUrlCalledRef.current) return;
+    */
+  };
+
+  const handleNativeSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+
+    const missingFields: string[] = [];
+    if (!formData.date) missingFields.push("Fecha");
+    if (!formData.country) missingFields.push("País");
+    if (!formData.currency) missingFields.push("Moneda");
+    if (!formData.sector) missingFields.push("Sector");
+    if (!fileUploaded && !hasCalculated && !formData.fileUsername) {
+      missingFields.push("Plantilla EEFF");
+    }
+
+    if (missingFields.length > 0) {
+      addToast("warn", `Completa los campos: ${missingFields.join(", ")}`);
+      return;
+    }
+
+    let currentUserId = userId;
+    if (!currentUserId) {
+      try {
+        const storedUser = localStorage.getItem("user_data");
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          currentUserId = parsed.id;
+        }
+      } catch (err) {
+        console.warn("Could not read user from storage", err);
+      }
+    }
+
+    ui.setShowResults(false);
+    setIsNativeLoading(true);
+
+    const normalizedBalanceTable =
+      normalizeTableThousandsSeparators(balanceTable);
+    const normalizedResultsTable =
+      normalizeTableThousandsSeparators(resultsTable);
+
+    const inputPayload = {
+      ...formData,
+      balance_table: normalizedBalanceTable,
+      results_table: normalizedResultsTable,
+    };
+    const calculationCode = getCodeFromUrl() ?? generateCalculationCode();
+
+    const numOrUndefined = (v: unknown): number | undefined => {
+      if (v === undefined || v === null || String(v).trim() === "") return undefined;
+      const n = Number(String(v).replace(",", "."));
+      return Number.isFinite(n) ? n : undefined;
+    };
+
+    let sensitivity: Record<string, unknown> | null = null;
+    if (hasCalculated) {
+      const sensBeta =
+        numOrUndefined((formData as any).beta_subsector) ??
+        numOrUndefined((formData as any).beta_unlevered_sensitivity) ??
+        numOrUndefined((formData as any).beta_subsector_custom) ??
+        numOrUndefined((formData as any).beta_desapalancado) ??
+        numOrUndefined((formData as any).beta_unlevered) ??
+        numOrUndefined((formData as any).beta_unlevered_industry);
+      const sensRates = {
+        revenue_forecast_rate: numOrUndefined((formData as any).revenue_forecast_rate),
+        fdc_forecast_rate: numOrUndefined((formData as any).fdc_forecast_rate),
+        perpetual_growth_rate: numOrUndefined((formData as any).perpetual_growth_rate),
+        capex_income_rate: numOrUndefined((formData as any).capex_income_rate),
+        cto_income_rate: numOrUndefined((formData as any).cto_income_rate),
+      };
+      const hasRates = Object.values(sensRates).some((v) => v !== undefined);
+      if (sensBeta !== undefined) {
+        // B20/Custom: normalizar a "" cuando no hay subsector elegido (beta manual).
+        // Así el backend escribe "Custom" en WACC!B20 en vez de omitir la key.
+        const sensSubsector = (formData as any).subsector_sensibilizacion ?? "";
+        sensitivity = {
+          beta_desapalancado: sensBeta,
+          beta_subsector: (formData as any).beta_subsector,
+          subsector: sensSubsector,
+          subsector_sensibilizacion: sensSubsector,
+          tickers: (formData as any).tickers_subsector_sensibilizacion ?? "",
+          industria: (formData as any).sector,
+        };
+        if (hasRates) {
+          if (sensRates.revenue_forecast_rate !== undefined)
+            (sensitivity as Record<string, unknown>).revenue_forecast_rate = sensRates.revenue_forecast_rate;
+          if (sensRates.fdc_forecast_rate !== undefined)
+            (sensitivity as Record<string, unknown>).fdc_forecast_rate = sensRates.fdc_forecast_rate;
+          if (sensRates.perpetual_growth_rate !== undefined)
+            (sensitivity as Record<string, unknown>).perpetual_growth_rate = sensRates.perpetual_growth_rate;
+          if (sensRates.capex_income_rate !== undefined)
+            (sensitivity as Record<string, unknown>).capex_income_rate = sensRates.capex_income_rate;
+          if (sensRates.cto_income_rate !== undefined)
+            (sensitivity as Record<string, unknown>).cto_income_rate = sensRates.cto_income_rate;
+        }
+      }
+    }
+
+    try {
+      // El proxy resuelve la plantilla predeterminada desde la BD, igual que
+      // Kapital, y la reenvía al web-service junto con el cálculo.
+      const res = (await MainService.calculateValoraExcel(
+        inputPayload as unknown as Record<string, unknown>,
+        sensitivity,
+        userId,
+        calculationCode
+      )) as unknown as NativeValoraResponse;
+
+      if (!res.success) {
+        throw new Error("El servicio nativo no devolvió éxito");
+      }
+
+      const now = new Date().toISOString();
+      const formatRateInput = (value: unknown): string => {
+        if (value == null || value === "") return "";
+        const numeric = Number(String(value).replace("%", "").replace(",", "."));
+        if (!Number.isFinite(numeric)) return "";
+        const percentage = Math.abs(numeric) < 1 && numeric !== 0
+          ? numeric * 100
+          : numeric;
+        return String(Math.round(percentage * 100) / 100);
+      };
+      // Igual que Kapital (useKapitalCalculation + COUNTRY_LOCAL_CURRENCIES):
+      // la moneda origen debe persistirse para que el select de resultados
+      // muestre PEN (u otra moneda local) en vez de caer al fallback "USD".
+      const nativeSourceCurrency = (res as any)?.source_currency as string | undefined;
+      const nativeFxToUsd = (res as any)?.fx_to_usd as number | undefined;
+      const inputCurrency = String(
+        (inputPayload as any)?.currency ?? (inputPayload as any)?.moneda ?? ""
+      ).toUpperCase();
+      const sourceCurrency = String(
+        nativeSourceCurrency ?? inputCurrency ?? "USD"
+      ).toUpperCase() || "USD";
+      const baseResultados = {
+        created_at: now,
+        wacc: res.wacc ?? (res.conceptos as any)?.wacc ?? null,
+        wacc_emergente: res.wacc_emergente ?? null,
+        capex_income_rate: res.capex_income_rate ?? null,
+        cto_income_rate: res.cto_income_rate ?? null,
+        source_currency: sourceCurrency,
+        fx_to_usd: nativeFxToUsd ?? (sourceCurrency === "USD" ? 1 : null),
+        inputs: { moneda: sourceCurrency },
+        balance: res.balance ?? {},
+        conceptos: res.conceptos ?? {},
+        integrado: res.integrado ?? {},
+        conceptos_emergente: res.conceptos_emergente ?? {},
+        integrado_emergente: res.integrado_emergente ?? {},
+      };
+      const sensEntries = (res.sensitivity_results ?? []).map((entry) => ({
+        ...entry,
+        created_at: now,
+        source_currency: (entry as any)?.source_currency ?? sourceCurrency,
+        fx_to_usd: (entry as any)?.fx_to_usd ?? baseResultados.fx_to_usd,
+      }));
+      const previousData = (currentCalculation?.data || {}) as Record<string, unknown>;
+      const previousSens = Array.isArray(previousData.sensibilizacion)
+        ? previousData.sensibilizacion
+        : Array.isArray(previousData.sensibilidad)
+          ? previousData.sensibilidad
+          : [];
+      const allSensEntries = [...previousSens, ...sensEntries];
+
+      const persistedData = {
+        inputs: [{ ...inputPayload, created_at: now }],
+        resultados: [baseResultados],
+        sensibilizacion: allSensEntries,
+      };
+      const persistedCalculation =
+        currentCalculation && currentCalculation.id > 0
+          ? await MainService.updateNativeCalculation(currentCalculation.id, {
+              data: persistedData,
+            })
+          : await MainService.createNativeCalculation({
+              calculation_file_id: null,
+              user_id: currentUserId ? Number(currentUserId) : null,
+          code: calculationCode,
+              type: "valora",
+              data: persistedData,
+            });
+
+      if (!currentCalculation || currentCalculation.id === 0) {
+        window.history.pushState({}, "", `/valora/${persistedCalculation.code}`);
+      }
+
+      const nativeCalculation = {
+        code: persistedCalculation.code,
+        id: persistedCalculation.id,
+        calculation_file_id: (res.s3_key as string) ?? null,
+        user_id: currentUserId ? Number(currentUserId) : 0,
+        type: "valora",
+        data: persistedData,
+        created_at: now,
+        updated_at: now,
+      } as unknown as Calculation;
+
+      setCurrentCalculation(nativeCalculation);
+      setFormData((prev) => ({
+        ...prev,
+        ...(prev.revenue_forecast_rate ? {} : {
+          revenue_forecast_rate: formatRateInput((res.conceptos as any)?.tasa_forecast),
+        }),
+        ...(prev.fdc_forecast_rate ? {} : {
+          fdc_forecast_rate: formatRateInput((res.integrado as any)?.tasa_forecast),
+        }),
+        ...(prev.perpetual_growth_rate ? {} : {
+          perpetual_growth_rate: formatRateInput(
+            (res.conceptos as any)?.tasa_perpetua ?? (res.integrado as any)?.tasa_perpetua,
+          ),
+        }),
+        ...(prev.capex_income_rate ? {} : {
+          capex_income_rate: formatRateInput(baseResultados.capex_income_rate),
+        }),
+        ...(prev.cto_income_rate ? {} : {
+          cto_income_rate: formatRateInput(baseResultados.cto_income_rate),
+        }),
+      }));
+      setHasCalculated(true);
+      setIsSessionFresh(true);
+
+      const sensibilizacionesData = extractSensibilizaciones(nativeCalculation.data);
+      setSensibilizaciones(sensibilizacionesData);
+      setSelectedSensIdx(Math.max(0, sensibilizacionesData.length - 1));
+
+      const hasSensitivity = sensibilizacionesData.length > 0;
+      setResultView(hasSensitivity ? "sensibilidad" : "original");
+
+      ui.setShowResults(true);
+      ui.setIsDesktopFormOpen(false);
+      ui.setResultsSection("resultados");
+
+      addToast(
+        "success",
+        res.s3_key
+          ? `Cálculo nativo listo. Copia debug en S3: ${res.s3_key}`
+          : "Cálculo nativo listo (sin espejo S3, revisa el servicio)."
+      );
+    } catch (error) {
+      console.error("Error in native Valora calculation", error);
+      addToast(
+        "error",
+        error instanceof Error ? error.message : "No se pudo calcular con Excel nativo."
+      );
+    } finally {
+      setIsNativeLoading(false);
+    }
+  };
+
+  const loadFromUrl = async () => {    if (loadFromUrlCalledRef.current) return;
     loadFromUrlCalledRef.current = true;
     try {
       const code = getCodeFromUrl();
@@ -298,10 +547,36 @@ export function useValoraCalculation({
         const latestInput = inputs[inputs.length - 1];
 
         if (latestInput) {
-          setFormData((prev) => ({
-            ...prev,
-            ...latestInput,
-          }));
+          // Igual que handleOpenFormPanel: las tasas de sensibilización se
+          // re-derivan de resultados si el input persistido las trae vacías
+          // (p. ej. cálculos creados antes de autocompletarlas).
+          const savedResultados = Array.isArray((dataObj as any)?.resultados)
+            ? (dataObj as any).resultados[0]
+            : undefined;
+          const toPct = (val: any): string | null => {
+            if (val == null || val === "") return null;
+            const num = Number(String(val).trim().replace("%", "").replace(",", "."));
+            if (!Number.isFinite(num)) return null;
+            const pct = Math.abs(num) < 1 && num !== 0
+              ? Math.round(num * 10000) / 100
+              : Math.round(num * 100) / 100;
+            return String(pct);
+          };
+          setFormData((prev) => {
+            const merged: Record<string, any> = { ...prev, ...latestInput };
+            const fill = (key: string, val: any) => {
+              if (!merged[key] && val != null && String(val).trim() !== "") {
+                const pct = toPct(val);
+                if (pct !== null) merged[key] = pct;
+              }
+            };
+            fill("revenue_forecast_rate", savedResultados?.conceptos?.tasa_forecast);
+            fill("fdc_forecast_rate", savedResultados?.integrado?.tasa_forecast);
+            fill("perpetual_growth_rate", savedResultados?.conceptos?.tasa_perpetua ?? savedResultados?.integrado?.tasa_perpetua);
+            fill("capex_income_rate", savedResultados?.capex_income_rate);
+            fill("cto_income_rate", savedResultados?.cto_income_rate);
+            return merged as typeof prev;
+          });
 
           if (latestInput.balance_table) {
             setBalanceTable(latestInput.balance_table);
@@ -346,6 +621,7 @@ export function useValoraCalculation({
   return {
     currentCalculation,
     isLoading,
+    isNativeLoading,
     hasCalculated,
     isSessionFresh,
     setIsSessionFresh,
@@ -355,6 +631,7 @@ export function useValoraCalculation({
     selectedSensIdx,
     setSelectedSensIdx,
     handleSubmit,
+    handleNativeSubmit,
     loadFromUrl,
   };
 }

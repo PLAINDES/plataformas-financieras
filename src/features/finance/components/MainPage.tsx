@@ -7,6 +7,7 @@ type FinancePageTemplateProps = {
     heroTitle: string;
     btnText: string;
     onOpenForm: () => void;
+    logoSrc?: string;
 };
 
 export const FinancePageTemplate: React.FC<FinancePageTemplateProps> = ({
@@ -15,6 +16,7 @@ export const FinancePageTemplate: React.FC<FinancePageTemplateProps> = ({
     heroTitle,
     btnText,
     onOpenForm,
+    logoSrc,
 }) => (
     <div className="flex flex-col w-full h-full">
         <MainPageHero
@@ -22,7 +24,7 @@ export const FinancePageTemplate: React.FC<FinancePageTemplateProps> = ({
             buttonText={btnText}
             onOpenForm={onOpenForm}
         />
-        <MainPageFooter brandName={brandName} brandHref={brandHref} />
+        <MainPageFooter brandName={brandName} brandHref={brandHref} logoSrc={logoSrc} />
         {/*<Chatbot geminiApiKey="" />*/}
     </div>
 );

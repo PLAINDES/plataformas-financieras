@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -44,27 +44,63 @@ export const FieldItem: React.FC<{
   field: TemplateCodeBasic;
   largeImage?: boolean;
   onCodeClick?: (codeObj: TemplateCodeBasic) => void;
-}> = ({ field, largeImage = false, onCodeClick }) => (
-  <div
-    draggable
-    onDragStart={(e) => {
-      e.dataTransfer.setData("text/plain", field.code);
-      e.dataTransfer.effectAllowed = "copy";
-    }}
-    onClick={() => onCodeClick?.(field)}
-    className="flex cursor-grab active:cursor-grabbing items-center gap-3 rounded-lg border border-transparent px-3 py-2 transition-all hover:border-blue-100 hover:bg-blue-50"
-  >
-    {/** show thumbnail if available */}
-    {((field as any).template_code_image_url as string) && (
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center bg-blue-100 overflow-hidden">
-        <img
-          src={(field as any).template_code_image_url}
-          alt={field.code}
-          className="h-14 w-14 object-fill"
-        />
-      </div>
-    )}
-    <div className="min-w-0 flex-1">
+}> = ({ field, largeImage = false, onCodeClick }) => {
+  const imageUrl = (field as any).template_code_image_url as string | undefined;
+  const [blobSrc, setBlobSrc] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!imageUrl) return;
+    const apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
+    const resolvedImageUrl = /^https?:\/\//i.test(imageUrl)
+      ? imageUrl
+      : `${apiUrl}${imageUrl}`;
+    const isProtected = (() => {
+      try {
+        const u = new URL(resolvedImageUrl, window.location.origin);
+        return u.pathname.startsWith("/api/");
+      } catch {
+        return imageUrl.startsWith("/api/");
+      }
+    })();
+    if (!isProtected) {
+      setBlobSrc(resolvedImageUrl);
+      return;
+    }
+    let revoked = false;
+    const token = localStorage.getItem("auth_token");
+    fetch(resolvedImageUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then((r) => (r.ok ? r.blob() : Promise.reject()))
+      .then((blob) => {
+        if (revoked) return;
+        setBlobSrc(URL.createObjectURL(blob));
+      })
+      .catch(() => {});
+    return () => {
+      revoked = true;
+    };
+  }, [imageUrl]);
+
+  return (
+    <div
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData("text/plain", field.code);
+        e.dataTransfer.effectAllowed = "copy";
+      }}
+      onClick={() => onCodeClick?.(field)}
+      className="flex cursor-grab active:cursor-grabbing items-center gap-3 rounded-lg border border-transparent px-3 py-2 transition-[border-color,background-color] hover:border-blue-100 hover:bg-blue-50"
+    >
+      {/** show thumbnail if available */}
+      {blobSrc && (
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center bg-blue-100 overflow-hidden">
+          <img
+            src={blobSrc}
+            alt={field.code}
+            className="h-14 w-14 object-fill"
+          />
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
       {largeImage ? (
         <div className="flex flex-col">
           <p className="truncate font-mono text-[10px] font-semibold text-blue-500">
@@ -92,7 +128,8 @@ export const FieldItem: React.FC<{
       )}
     </div>
   </div>
-);
+  );
+};
 
 interface TemplateCodesSideBarProps {
   templateCodes: TemplateCodeBasic[];
@@ -120,6 +157,8 @@ export const TemplateCodesSideBar: React.FC<TemplateCodesSideBarProps> = ({
   const isChartOrTable = (tc: TemplateCodeBasic) => {
     const text = `${tc.nombre} ${tc.code}`.toLowerCase();
     return (
+      Boolean((tc as any).template_code_image_url) ||
+      Boolean((tc as any).template_code_image_id) ||
       text.includes("grafico") ||
       text.includes("gráfico") ||
       text.includes("tabla")
@@ -177,7 +216,7 @@ export const TemplateCodesSideBar: React.FC<TemplateCodesSideBarProps> = ({
                 Cargando...
               </div>
             ) : filteredFields.length > 0 ? (
-              <div className="space-y-1">
+              <div className="max-h-[min(46vh,28rem)] space-y-1 overflow-y-auto pr-1">
                 {fieldsVisible.map((tc) => (
                   <FieldItem
                     key={tc.id + tc.code}
@@ -241,7 +280,7 @@ export const TemplateCodesSideBar: React.FC<TemplateCodesSideBarProps> = ({
                 Cargando...
               </div>
             ) : filteredCharts.length > 0 ? (
-              <div className="space-y-1">
+              <div className="max-h-[min(46vh,28rem)] space-y-1 overflow-y-auto pr-1">
                 {chartsVisible.map((tc) => (
                   <FieldItem
                     key={tc.id + tc.code}

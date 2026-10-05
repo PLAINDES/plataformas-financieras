@@ -18,6 +18,7 @@ export interface TrackPayload {
   os?: string;
   browser?: string;
   referrer?: string;
+  utm_source?: string;
   event_metadata?: Record<string, any>;
 }
 
@@ -59,6 +60,12 @@ export interface OccupationProfileMetrics {
   audiences: TopItem[];
   specialist_roles: TopItem[];
   company_names: TopItem[];
+  /** Nuevos agregados del backend (sector / cargo). Opcionales hasta
+   * que el backend los exponga; el frontend usa specialist_roles y
+   * company_names como fallback. */
+  sectors?: TopItem[];
+  cargos?: TopItem[];
+  especialidades?: TopItem[];
 }
 
 export interface DashboardData {
@@ -70,6 +77,7 @@ export interface DashboardData {
   daily_distribution: TopItem[];
   pages: TopItem[];
   sessions_over_time: TimeSeriesItem[];
+  traffic_sources: TopItem[];
   kapital_funnel?: CalculationFunnel;
   kapital_retention?: RetentionMetrics;
   occupation_profiles?: OccupationProfileMetrics;

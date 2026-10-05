@@ -10,7 +10,16 @@ export const replaceCodesWithValues = (
   let finalHtml = htmlContent;
 
   codes.forEach((codeObj) => {
-    if (finalHtml.includes(codeObj.code)) {
+    const normalizedCode = `$$${String(codeObj.code ?? "")
+      .replace(/\$\$/g, "")
+      .replace(/\s+/g, "")
+      .toUpperCase()}$$`;
+    const tokenRegex = new RegExp(
+      normalizedCode.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+      "gi"
+    );
+
+    if (tokenRegex.test(finalHtml)) {
       let replacement = "";
 
       if (codeObj.template_code_image_url) {
@@ -26,7 +35,7 @@ export const replaceCodesWithValues = (
         replacement = displayValue;
       }
 
-      const escapedCode = codeObj.code.replace(/\$/g, "\\$");
+      const escapedCode = normalizedCode.replace(/\$/g, "\\$");
       const spanRegex = new RegExp(
         `<span[^>]*>\\s*${escapedCode}\\s*</span>`,
         "gi"
@@ -35,7 +44,7 @@ export const replaceCodesWithValues = (
       if (spanRegex.test(finalHtml)) {
         finalHtml = finalHtml.replace(spanRegex, replacement);
       } else {
-        finalHtml = finalHtml.split(codeObj.code).join(replacement);
+        finalHtml = finalHtml.replace(tokenRegex, replacement);
       }
     }
   });

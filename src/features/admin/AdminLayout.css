@@ -17,7 +17,7 @@ html {
   bottom: -2px;
   left: 50%;
   background-color: currentColor;
-  transition: all 0.3s ease;
+  transition: width 0.3s ease;
 }
 
 .footer-link:hover::after {

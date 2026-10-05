@@ -118,11 +118,6 @@ export const computeResultsFromCalculationData = (
   const root = data ?? {};
   const inputs = Array.isArray(root.inputs) ? root.inputs : [];
   const latestInput = inputs[inputs.length - 1];
-  const source =
-    latestInput && typeof latestInput === "object"
-      ? (latestInput as Record<string, unknown>)
-      : root;
-
   const resultadosArray = Array.isArray(root.resultados)
     ? root.resultados
     : Array.isArray(root.resutados)
@@ -132,6 +127,12 @@ export const computeResultsFromCalculationData = (
     resultadosArray.length > 0 && typeof resultadosArray[0] === "object"
       ? (resultadosArray[0] as Record<string, unknown>)
       : null;
+  const baseInput =
+    latestResult?.inputs && typeof latestResult.inputs === "object"
+      ? (latestResult.inputs as Record<string, unknown>)
+      : latestInput;
+  const sourceInput =
+    baseInput && typeof baseInput === "object" ? baseInput : root;
 
   const developedBlock = latestResult
     ? pickBlock(latestResult, ["mercado_desarrollado", "Mercado Desarrollado"])
@@ -168,19 +169,19 @@ export const computeResultsFromCalculationData = (
   const empresa_soles = empresa_moneda_local;
   const emergent = emergentUsd;
 
-  const showCompanyCard = hasCompanyInputData(source);
+  const showCompanyCard = hasCompanyInputData(sourceInput);
 
   const betaSubsector =
-    toOptionalNumber((latestInput as Record<string, unknown>)?.beta_subsector) ??
-    toOptionalNumber((latestInput as Record<string, unknown>)?.beta_subsector_custom) ??
-    toOptionalNumber((latestInput as Record<string, unknown>)?.beta_unlevered_custom);
+    toOptionalNumber((baseInput as Record<string, unknown>)?.beta_subsector) ??
+    toOptionalNumber((baseInput as Record<string, unknown>)?.beta_subsector_custom) ??
+    toOptionalNumber((baseInput as Record<string, unknown>)?.beta_unlevered_custom);
 
   // El β del sector: se toma directo del input beta_unlevered_industry y solo
   // se cae a boa_sector/boa del backend si ese campo no existe.
   const boaSectorResolved =
-    toOptionalNumber((latestInput as Record<string, unknown>)?.beta_unlevered_industry) ??
+    toOptionalNumber((baseInput as Record<string, unknown>)?.beta_unlevered_industry) ??
     toOptionalNumber(latestResult?.boa_sector) ??
-    toOptionalNumber((latestInput as Record<string, unknown>)?.beta_desapalancado);
+    toOptionalNumber((baseInput as Record<string, unknown>)?.beta_desapalancado);
 
   // Choose which data to show in the top-level results (cppc, kd, ke, koa)
   const primary = showCompanyCard ? empresa_dolares : emergentUsd;
@@ -206,7 +207,7 @@ export const computeResultsFromCalculationData = (
       d_empresa: toRate(latestResult?.d_empresa),
       industria: latestResult?.industria as string | undefined,
       subsector: latestResult?.subsector as string | undefined,
-      pais: (latestResult?.pais || latestInput?.pais) as string | undefined,
+      pais: (latestResult?.pais || (baseInput as Record<string, unknown>)?.pais) as string | undefined,
       inputs: latestResult?.inputs,
     },
     showCompanyCard,

@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+﻿import type { LucideIcon } from "lucide-react";
 
 export interface ValoraMethodSummaryCardProps {
   headerText: string;
@@ -34,7 +34,7 @@ export const ValoraMethodSummaryCard: React.FC<ValoraMethodSummaryCardProps> = (
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-col rounded-lg shadow bg-white overflow-hidden text-left transition-all cursor-pointer w-full ${
+      className={`flex flex-col rounded-lg shadow bg-white overflow-hidden text-left transition-[box-shadow] cursor-pointer w-full ${
         selected ? "ring-2 ring-blue-600 shadow-lg" : "hover:shadow-md"
       }`}
     >

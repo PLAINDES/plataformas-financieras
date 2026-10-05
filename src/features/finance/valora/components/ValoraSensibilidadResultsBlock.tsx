@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { BarChart3, PieChart } from "lucide-react";
 import { ValoraResultsHeader } from "./ValoraResultsHeader";
 import { ValoraSensibilidadBalanceSheetBlock } from "./ValoraSensibilidadBalanceSheetBlock";
@@ -14,6 +14,8 @@ export interface ValoraSensibilidadResultsBlockProps {
   results?: ValoraCalculationResults;
   toolbar?: React.ReactNode;
   coverUrl?: string;
+  formCurrency?: string | null;
+  localCurrency?: string | null;
 }
 
 type ChartMode = "default" | "conceptos" | "integrado";
@@ -61,7 +63,9 @@ export const ValoraSensibilidadResultsBlock: React.FC<
    results,
     toolbar,
     coverUrl,
- }) => {
+    formCurrency,
+    localCurrency,
+  }) => {
   const [chartMode, setChartMode] = useState<ChartMode>("default");
   const [companyType, setCompanyType] = useState<"empresa" | "emergente">("empresa");
   const sourceCurrency = (
@@ -69,6 +73,8 @@ export const ValoraSensibilidadResultsBlock: React.FC<
     originalResults?.source_currency ??
     results?.inputs?.moneda ??
     originalResults?.inputs?.moneda ??
+    formCurrency ??
+    localCurrency ??
     "USD"
   ).toUpperCase();
   const [resultCurrency, setResultCurrency] = useState(sourceCurrency);
@@ -147,7 +153,7 @@ export const ValoraSensibilidadResultsBlock: React.FC<
           <div className="flex w-full justify-center lg:justify-end">
             <section className="flex w-full max-w-105 flex-col items-center justify-center gap-2 sm:w-fit">
               {coverUrl && <div onClick={onOpenReport} className="w-fit cursor-pointer"><Book href={coverUrl} width={95} height={130} interactive /></div>}
-              <button type="button" onClick={onOpenReport} className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-all active:scale-95 uppercase leading-tight tracking-wide cursor-pointer">
+              <button type="button" onClick={onOpenReport} className="w-full bg-[#08203e] hover:bg-[#0c2e59] text-white text-[10px] sm:text-xs font-bold py-3 px-4 rounded-xl shadow-sm transition-[background-color,box-shadow,transform] active:scale-[0.96] uppercase leading-tight tracking-wide cursor-pointer">
                 Generar reporte
               </button>
             </section>

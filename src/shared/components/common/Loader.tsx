@@ -1,4 +1,4 @@
-// src/components/ReportLoader.tsx
+﻿// src/components/ReportLoader.tsx
 import React from "react";
 
 export type ReportLoaderState =
@@ -21,7 +21,7 @@ export const ReportLoader: React.FC<ReportLoaderProps> = ({
   if (state === "idle" || state === "success" || state === "error") return null;
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 z-20 backdrop-blur-md transition-all duration-300">
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 z-20 backdrop-blur-md transition-opacity duration-300">
       <div className="w-80 p-6 bg-white rounded-xl shadow-xl border border-gray-100">
         {/* Paso 1: Rehidratación / Refresh */}
         <div

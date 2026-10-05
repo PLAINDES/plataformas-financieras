@@ -9,7 +9,9 @@ CMD ["bun", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
 
 FROM base AS build
 ARG VITE_API_URL=http://localhost:8000
+ARG VITE_WEB_SERVICE_URL=http://localhost:8080
 ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_WEB_SERVICE_URL=${VITE_WEB_SERVICE_URL}
 COPY . .
 RUN bun run build
 

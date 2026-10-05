@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { IconActionButton } from "../../../../shared/components/ui/IconActionButton";
 import { Tooltip } from "@/shared/components/common/Tooltip";
+import { HelpCircle } from "lucide-react";
 import { FormField } from "../../components/FormField";
 import { FormSection } from "../../components/FormSection";
 import { cn } from "@/lib/utils";
@@ -268,7 +269,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            strokeWidth={2.5}
+                            strokeWidth={2}
                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
@@ -285,7 +286,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                 </div>
 
               {(fileUploaded || formData.fileUsername || hasCalculated) && (
-                <div className="relative rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50/90 to-teal-50/70 p-3 shadow-sm transition-all">
+                <div className="relative rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50/90 to-teal-50/70 p-3 shadow-sm transition-[border-color,box-shadow]">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5 min-w-0 flex-1 self-center">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs self-center">
@@ -601,11 +602,11 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                   </p>
 
                   {onGetAIRecommendations && (
-                    <div className="flex flex-col items-end gap-1.5 relative">
+                    <div className="flex items-start gap-2 relative">
                       <button
                         type="button"
                         onClick={onGetAIRecommendations}
-                        disabled={isLoadingAI || !currentCalculationId}
+                        disabled={isLoadingAI || currentCalculationId == null}
                         className={cn(
                           "btn-ai-mesh px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-semibold text-xs relative z-10",
                           "disabled:cursor-not-allowed"
@@ -630,9 +631,19 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                         )}
                       </button>
 
+                      <Tooltip
+                        content="La recomendación considera variables macroeconómicas y sectoriales relevantes para la empresa, incluyendo el país de operación, sector y subsector económico, inflación esperada, perspectivas de crecimiento y condiciones del mercado. Con esta información, la IA propone tasas de sensibilización consistentes con el entorno de la empresa y su valorización."
+                        contentClassName="w-[450px] text-center"
+                      >
+                        <HelpCircle
+                          aria-label="Información sobre la recomendación de IA"
+                          className="self-center h-4 w-4 text-slate-400 transition-colors hover:text-valora-primary"
+                        />
+                      </Tooltip>
+
                       {/* Indicador Thinking */}
                       {isLoadingAI && (
-                        <div className="ai-thinking-indicator">
+                        <div className="ai-thinking-indicator absolute right-0 top-full mt-1">
                           <div className="ai-thinking-dot" />
                           <span>Pensando...</span>
                         </div>
@@ -642,7 +653,7 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                 </div>
 
                 {/* Inputs de sensibilidad */}
-                <div className="space-y-4 pt-1">
+                <div className="space-y-4 pt-1 pb-2">
                   <SensitivityRow
                     label="Tasa Forecast Ingresos"
                     name="revenue_forecast_rate"
@@ -682,6 +693,32 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
                       rateSources.crecimiento_perpetuo
                     )}
                   />
+                  <SensitivityRow
+                    label="Razón CAPEX/Ingresos"
+                    name="capex_income_rate"
+                    suffix="%"
+                    value={formData.capex_income_rate || ""}
+                    onChange={onInputChange}
+                    isLoadingAI={isLoadingAI}
+                    aiTooltip={buildAiTooltip(
+                      aiAnalysis,
+                      "capex_income_rate",
+                      rateSources.capex_income_rate
+                    )}
+                  />
+                  <SensitivityRow
+                    label="Razón CTO/Ingresos"
+                    name="cto_income_rate"
+                    suffix="%"
+                    value={formData.cto_income_rate || ""}
+                    onChange={onInputChange}
+                    isLoadingAI={isLoadingAI}
+                    aiTooltip={buildAiTooltip(
+                      aiAnalysis,
+                      "cto_income_rate",
+                      rateSources.cto_income_rate
+                    )}
+                  />
                 </div>
               </div>
             </FormSection>
@@ -689,15 +726,15 @@ export const ValoraFormPanel: React.FC<ValoraFormPanelProps> = ({
         </div>
       </div>
 
-      <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 transition-all duration-300 w-full">
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 transition-[box-shadow] duration-300 w-full space-y-2">
         <button
           type="submit"
           disabled={loading}
           className={cn(
-            "cursor-pointer w-full py-3 px-6 rounded-lg font-bold text-xs md:text-sm transition-all duration-200",
+            "cursor-pointer w-full py-3 px-6 rounded-lg font-bold text-xs md:text-sm transition-[background-color,box-shadow,transform,color] duration-200",
             loading
               ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-              : "bg-valora-primary text-white hover:bg-valora-secondary shadow-lg hover:shadow-xl active:scale-95"
+              : "bg-valora-primary text-white hover:bg-valora-secondary shadow-lg hover:shadow-xl active:scale-[0.96]"
           )}
         >
           {loading ? (
@@ -810,7 +847,7 @@ const SensitivityRow: React.FC<SensitivityRowProps> = ({
 
   return (
     <div className={cn(
-      "relative w-full transition-all duration-300",
+      "relative w-full transition-opacity duration-300",
       isLoadingAI && "opacity-80"
     )}>
         <FormField
@@ -839,7 +876,7 @@ const SensitivityRow: React.FC<SensitivityRowProps> = ({
             onClick={() => onSearchRate(name)}
             disabled={disabled || isLoadingAI}
             className={cn(
-              "text-[10px] w-full h-9 py-0.5 px-1 rounded-md text-wrap font-bold cursor-pointer flex items-center justify-center text-center leading-tight tracking-wider transition-all",
+              "text-[10px] w-full h-9 py-0.5 px-1 rounded-md text-wrap font-bold cursor-pointer flex items-center justify-center text-center leading-tight tracking-wider transition-[background-color,border-color,opacity]",
               "text-valora-primary bg-white/90 border border-valora-primary/80 focus:outline-none",
               "hover:bg-valora-primary/5 hover:border-valora-primary",
               "disabled:cursor-not-allowed disabled:opacity-40"

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 
 export interface NavTab {
   id: string;
@@ -37,7 +37,7 @@ export const FinanceNavbar: React.FC<FinanceNavbarProps> = ({
 
           <button
             onClick={onToggleForm}
-            className={`cursor-pointer p-3 rounded-lg transition-all ${isFormOpen ? "bg-blue-50 text-blue-600" : "text-gray-400 hover:bg-gray-50"}`}
+            className={`cursor-pointer p-3 rounded-lg transition-colors ${isFormOpen ? "bg-blue-50 text-blue-600" : "text-gray-400 hover:bg-gray-50"}`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -78,7 +78,7 @@ export const FinanceNavbar: React.FC<FinanceNavbarProps> = ({
               <button
                 key={tab.id}
                 onClick={() => onNavigate(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-[color,background-color,opacity] ${
                   tab.disabled
                     ? "text-gray-400 cursor-not-allowed opacity-70"
                     : selectedTabId === tab.id

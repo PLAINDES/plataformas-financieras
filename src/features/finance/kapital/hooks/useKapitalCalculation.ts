@@ -94,6 +94,7 @@ export function useKapitalCalculation({
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
       : null;
+    const calculationCode = currentCalculation?.code || generateCalculationCode();
 
     if (attemptId) {
       sessionStorage.setItem(ACTIVE_KAPITAL_ATTEMPT_KEY, attemptId);
@@ -105,28 +106,108 @@ export function useKapitalCalculation({
     }
 
     try {
+      const nativeInput = enrichCalculationInputPayload(dataToSubmit) as unknown as Record<string, unknown>;
+      const betaOverride = nativeInput.beta_subsector ??
+        nativeInput.beta_unlevered_industry ??
+        nativeInput.beta_desapalancado ??
+        nativeInput.beta_unlevered;
+      const previousInputs = (currentCalculation?.data as Record<string, unknown> | undefined)?.inputs;
+      const previousInput = Array.isArray(previousInputs) && previousInputs[0]
+        ? previousInputs[0]
+        : nativeInput;
+      const nativeBaseInput = isBetaUpdate
+        ? {
+            ...(previousInput as Record<string, unknown>),
+            // El beta editado debe actualizar también el workbook base;
+            // antes se enviaba únicamente como sensibilidad y F24/F40
+            // conservaban el valor anterior.
+            ...(nativeInput.beta_subsector !== undefined
+              ? { beta_subsector: nativeInput.beta_subsector }
+              : {}),
+            ...(nativeInput.beta_unlevered_industry !== undefined
+              ? { beta_unlevered_industry: nativeInput.beta_unlevered_industry }
+              : {}),
+            ...(nativeInput.beta_desapalancado !== undefined
+              ? { beta_desapalancado: nativeInput.beta_desapalancado }
+              : {}),
+            ...(nativeInput.beta_unlevered !== undefined
+              ? { beta_unlevered: nativeInput.beta_unlevered }
+              : {}),
+            ...(betaOverride !== undefined
+              ? { beta_desapalancado: betaOverride }
+              : {}),
+          }
+        : nativeInput;
+      nativeBaseInput.calculation_debug_id =
+        calculationCode;
+      // B20/Custom: enrich ya deja subsector_sensibilizacion en "" cuando es
+      // beta manual; se conserva la key para que el Excel escriba "Custom".
+      const nativeSensitivity = isBetaUpdate
+        ? {
+            ...((nativeInput as unknown) as Record<string, unknown>),
+            subsector: (nativeInput as unknown as Record<string, unknown>).subsector_sensibilizacion ?? "",
+            subsector_sensibilizacion:
+              (nativeInput as unknown as Record<string, unknown>).subsector_sensibilizacion ?? "",
+          }
+        : null;
+      // Proxy API: enriquece con macros de BD (F6/F7/F8/F9/F11/Damodaran/riesgo)
+      // antes de calcular en el web-service. Devuelve además enriched_input.
+      const nativeResult = await MainService.calculateKapitalExcel(nativeBaseInput, nativeSensitivity, currentUserId);
+      const enrichedBaseInput = (nativeResult.enriched_input || nativeBaseInput) as Record<string, unknown>;
+      const nativeBase = (nativeResult.base_results || {}) as Record<string, unknown>;
+      const baseResults = {
+        ...((nativeBase.resultados || {}) as Record<string, unknown>),
+        boa: nativeBase.boa,
+        boa_sector: nativeBase.boa_sector,
+        boa_subsector: nativeBase.boa_subsector,
+        inputs: enrichedBaseInput,
+      };
+      const sensitivityResults = (Array.isArray(nativeResult.sensitivity_results)
+        ? nativeResult.sensitivity_results
+        : []
+      ).map((entry) => {
+        const item = entry as Record<string, unknown>;
+        return {
+          ...((item.resultados || {}) as Record<string, unknown>),
+          boa: item.boa,
+          boa_subsector: item.boa_subsector,
+          subsector: item.subsector,
+          inputs: item.inputs,
+        };
+      });
+      const previousSensibilizaciones = currentCalculation?.data &&
+        Array.isArray((currentCalculation.data as Record<string, unknown>).sensibilizacion)
+        ? ((currentCalculation.data as Record<string, unknown>).sensibilizacion as unknown[])
+        : [];
+      const persistedSensibilizaciones = isBetaUpdate
+        ? [...previousSensibilizaciones, ...sensitivityResults]
+        : sensitivityResults;
       let persistedCalculation: Calculation;
       // Si ya hay un cálculo actual, SIEMPRE hacemos PUT
       if (currentCalculation) {
-        persistedCalculation = await MainService.updateCalculation(
+        persistedCalculation = await MainService.updateNativeCalculation(
           currentCalculation!.id,
           {
             data: {
-              inputs: [enrichCalculationInputPayload(dataToSubmit)],
+              inputs: [enrichedBaseInput],
+              resultados: [baseResults],
+              sensibilizacion: persistedSensibilizaciones,
               active_session_id: prewarmedSessionId,
             },
           }
         );
       } else {
         // CREATE new calculation
-        persistedCalculation = await MainService.createCalculation({
+        persistedCalculation = await MainService.createNativeCalculation({
           calculation_file_id: null,
           user_id: currentUserId ? Number(currentUserId) : null,
-          code: generateCalculationCode(),
+          code: calculationCode,
           type: "kapital",
           data: {
             ...buildCalculationDataPayload(),
-            inputs: [enrichCalculationInputPayload(dataToSubmit)],
+            inputs: [enrichedBaseInput],
+            resultados: [baseResults],
+            sensibilizacion: persistedSensibilizaciones,
             prewarmed_session_id: prewarmedSessionId,
           },
         });
@@ -219,9 +300,12 @@ export function useKapitalCalculation({
 
           // Reconstruir el formData con el último input guardado
           const dataObj = calculationData.data as { inputs?: any[] };
-          const latestInput = Array.isArray(dataObj.inputs)
+          const storedBaseInput =
+            Array.isArray((calculationData.data as any)?.resultados) &&
+            (calculationData.data as any).resultados[0]?.inputs;
+          const latestInput = storedBaseInput || (Array.isArray(dataObj.inputs)
             ? dataObj.inputs[0]
-            : undefined;
+            : undefined);
 
           if (latestInput) {
             setFormData((prev) => ({

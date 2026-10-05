@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import type { Calculation } from "@/shared/types";
 import { Link } from "react-router-dom";
 import { Plus, FolderKanban, Trash2, Eye } from "lucide-react";
@@ -15,13 +15,17 @@ interface Column<T> {
 
 interface ProyectosProps {
   userId?: number;
+  openCalculationsInNewTab?: boolean;
 }
 
 const PAGE_SIZE = 10;
 
 type Tab = "valora" | "kapital";
 
-export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
+export const Proyectos: React.FC<ProyectosProps> = ({
+  userId,
+  openCalculationsInNewTab = false,
+}) => {
   const navigate = useNavigate();
 
   // Estados de datos controlados por el Backend
@@ -87,6 +91,8 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
     <div className="flex items-center justify-center gap-1">
       <Link
         to={`/${c.type}/${c.code}`}
+        target={openCalculationsInNewTab ? "_blank" : undefined}
+        rel={openCalculationsInNewTab ? "noopener noreferrer" : undefined}
         className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-200 hover:text-blue-700 transition-colors"
         title="Ver proyecto"
       >
@@ -203,12 +209,12 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
   return (
     <>
       {pendingDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200 ease-out">
           <div
             className="absolute inset-0 bg-black/30 backdrop-blur-sm"
             onClick={() => setPendingDelete(null)}
           />
-          <div className="relative bg-white rounded-2xl shadow-xl ring-1 ring-gray-200 p-6 w-full max-w-sm mx-4">
+          <div className="relative bg-white rounded-2xl shadow-xl ring-1 ring-gray-200 p-6 w-full max-w-sm mx-4 animate-in fade-in zoom-in-95 duration-200 ease-out">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
                 <Trash2 size={18} className="text-red-500" strokeWidth={2} />
@@ -235,7 +241,7 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
                 onClick={() => {
                   void confirmDelete();
                 }}
-                className="px-4 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-xl shadow-sm shadow-red-200 transition-all"
+                className="px-4 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-xl shadow-sm shadow-red-200 transition-[background-color,box-shadow]"
               >
                 Eliminar
               </button>
@@ -262,9 +268,9 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
           <Link
             to={`/${tab}`}
             type="button"
-            className="cursor-pointer inline-flex items-center gap-2 bg-valora-primary hover:bg-valora-secondary active:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-md shadow-blue-200 transition-all duration-150 hover:-translate-y-px"
+            className="cursor-pointer inline-flex items-center gap-2 bg-valora-primary hover:bg-valora-secondary active:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-md shadow-blue-200 transition-[background-color,box-shadow,transform] duration-150 hover:-translate-y-px"
           >
-            <Plus size={16} strokeWidth={2.5} />
+            <Plus size={16} strokeWidth={2} />
             Nuevo
           </Link>
         </div>
@@ -278,7 +284,7 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
                     key={t}
                     type="button"
                     onClick={() => handleTabChange(t)}
-                    className={`cursor-pointer px-5 py-2.5 text-sm font-semibold capitalize rounded-t-xl transition-all duration-150 border-b-2 ${
+                    className={`cursor-pointer px-5 py-2.5 text-sm font-semibold capitalize rounded-t-xl transition-[color,background-color,border-color] duration-150 border-b-2 ${
                       tab === t
                         ? "text-blue-600 border-blue-500 bg-blue-50/60"
                         : "text-gray-400 border-transparent hover:text-gray-600 hover:bg-gray-50"
@@ -301,7 +307,13 @@ export const Proyectos: React.FC<ProyectosProps> = ({ userId }) => {
               data={data}
               columns={getActiveColumns()}
               isLoading={isLoading}
-              onRowClick={(c) => navigate(`/${c.type}/${c.code}`)}
+              onRowClick={(c) => {
+                if (openCalculationsInNewTab) {
+                  window.open(`/${c.type}/${c.code}`, "_blank", "noopener,noreferrer");
+                  return;
+                }
+                navigate(`/${c.type}/${c.code}`);
+              }}
               totalItems={totalItems}
               totalPages={totalPages}
               currentPage={page}

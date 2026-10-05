@@ -1,12 +1,10 @@
-import { useEditor, EditorContent } from "@tiptap/react";
+﻿import { useEditor, EditorContent } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
-import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import { Table } from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
@@ -187,7 +185,7 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
     disabled={disabled}
     onClick={onClick}
     className={[
-      "flex h-7 min-w-7 items-center justify-center rounded px-1.5 text-xs font-medium transition-all",
+      "flex h-7 min-w-7 items-center justify-center rounded px-1.5 text-xs font-medium transition-[background-color,color,box-shadow]",
       active
         ? "bg-blue-100 text-blue-700 shadow-inner"
         : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
@@ -225,7 +223,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
         type="button"
         title={title}
         onClick={() => inputRef.current?.click()}
-        className="flex h-7 w-7 flex-col items-center justify-center rounded transition-all hover:bg-slate-100"
+        className="flex h-7 w-7 flex-col items-center justify-center rounded transition-colors hover:bg-slate-100"
       >
         <span className="text-xs font-bold leading-none text-slate-700">
           {icon}
@@ -266,7 +264,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Underline,
       TextStyle,
       FontSize,
       FontFamilyExtension,
@@ -275,7 +272,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       TextAlign.configure({
         types: ["heading", "paragraph", "tableCell", "tableHeader"],
       }),
-      Link.configure({ openOnClick: false }),
       Image,
       Table.configure({ resizable: true }),
       TableRow,

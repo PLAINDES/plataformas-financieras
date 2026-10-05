@@ -119,6 +119,17 @@ export interface Calculation {
   updated_at: string;
 }
 
+export type CalculationTemplateValue =
+  | string
+  | number
+  | boolean
+  | null
+  | { media_id?: number | null; storage_path?: string | null; url?: string | null };
+
+export interface NativeTemplateValues {
+  [code: string]: CalculationTemplateValue;
+}
+
 export interface CalculationCreate {
   calculation_file_id?: string | null;
   user_id: number | null;
@@ -153,6 +164,7 @@ export interface CoverDetail {
 
 export interface TemplateCodeBasic {
   id: number;
+  template_code_image_id?: number | null;
   nombre: string;
   code: string;
   type: "valora" | "kapital";
@@ -192,6 +204,7 @@ export type CoverTipo = "imagen_adjuntada" | "personalizada";
 export interface Cover {
   id: number;
   nombre: string;
+  producto?: "kapital" | "valora" | null;
   tipo: CoverTipo;
   portada: MediaBasic | null;
   primer_imagen_footer: MediaBasic | null;

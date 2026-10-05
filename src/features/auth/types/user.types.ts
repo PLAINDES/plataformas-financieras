@@ -17,10 +17,16 @@ export interface User {
   name: string;
   lastname?: string;
   phone_number?: string | null;
+  birth_date?: string | null;
+  document_type?: string | null;
+  document_number?: string | null;
+  ruc?: string | null;
   role: "admin" | "master" | "user";
   is_active: boolean;
   avatar: string | null;
   created_at: string;
+  updated_at?: string | null;
+  last_activity_at?: string | null;
   // Compatibilidad con modelo legacy: 1=admin, 2=user
   perfil: 1 | 2;
 }
@@ -50,7 +56,12 @@ export interface RegisterData {
   lastname: string;
   phone_number: string;
   email: string;
+  birth_date: string;
+  document_type: "dni" | "ruc" | "ce";
+  document_number: string;
+  ruc: string;
   password: string;
+  password_confirmation: string;
 }
 
 /**
@@ -73,10 +84,16 @@ export interface UserResponse {
   name: string;
   lastname: string | null;
   phone_number: string | null;
+  birth_date?: string | null;
+  document_type?: string | null;
+  document_number?: string | null;
+  ruc?: string | null;
   role: "admin" | "master" | "user";
   is_active: boolean;
   avatar: string | null;
   created_at: string;
+  updated_at?: string | null;
+  last_activity_at?: string | null;
 }
 
 /**
@@ -96,7 +113,12 @@ export interface UserCreate {
   name: string;
   lastname?: string;
   phone_number: string;
+  birth_date: string;
+  document_type: "dni" | "ruc" | "ce";
+  document_number: string;
+  ruc?: string;
   password: string;
+  password_confirmation: string;
   role?: "admin" | "master" | "user";
 }
 
@@ -116,6 +138,10 @@ export interface UserAdminUpdate {
   lastname?: string;
   phone_number?: string | null;
   email?: string;
+  birth_date?: string | null;
+  document_type?: "dni" | "ruc" | "ce" | null;
+  document_number?: string | null;
+  ruc?: string | null;
   role?: "admin" | "master" | "user";
   is_active?: boolean;
   password?: string;
@@ -141,10 +167,16 @@ export function mapUserResponseToUser(userResponse: UserResponse): User {
     name: userResponse.name,
     lastname: userResponse.lastname ?? undefined, // Asegurar compatibilidad string | undefined
     phone_number: userResponse.phone_number,
+    birth_date: userResponse.birth_date ?? null,
+    document_type: userResponse.document_type ?? null,
+    document_number: userResponse.document_number ?? null,
+    ruc: userResponse.ruc ?? null,
     role: userResponse.role,
     is_active: userResponse.is_active,
     avatar: userResponse.avatar,
     created_at: userResponse.created_at,
+    updated_at: userResponse.updated_at ?? null,
+    last_activity_at: userResponse.last_activity_at ?? null,
     // Mapear role a perfil numérico de compatibilidad
     perfil:
       userResponse.role === "admin" || userResponse.role === "master" ? 1 : 2,

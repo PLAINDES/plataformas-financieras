@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Laptop, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditableText } from "@/shared/components/editable/EditableText";
@@ -229,7 +229,7 @@ export function ProductsSection({
               >
                 <ChevronLeft
                   className="w-5 h-5 transition-transform group-hover:-translate-x-0.5"
-                  strokeWidth={2.5}
+                  strokeWidth={2}
                 />
               </Button>
 
@@ -242,7 +242,7 @@ export function ProductsSection({
               >
                 <ChevronRight
                   className="w-5 h-5 transition-transform group-hover:translate-x-0.5"
-                  strokeWidth={2.5}
+                  strokeWidth={2}
                 />
               </Button>
             </>
@@ -291,7 +291,7 @@ export function ProductsSection({
               {[...Array(totalPages)].map((_, idx) => (
                 <button
                   key={idx}
-                  className={`h-2 rounded-full transition-all duration-300 ${idx === currentPage ? "bg-blue-600 w-8" : "bg-gray-300 w-2 hover:bg-gray-400"}`}
+                  className={`h-2 rounded-full transition-[width,background-color] duration-300 ${idx === currentPage ? "bg-blue-600 w-8" : "bg-gray-300 w-2 hover:bg-gray-400"}`}
                   onClick={() => setCurrentPage(idx)}
                   aria-label={`Ir a página ${idx + 1}`}
                 />
@@ -304,12 +304,12 @@ export function ProductsSection({
           {/* Antes color: bg-[#2FA4FF] */}
           <a
             href="#kt_body"
-            className="inline-flex items-center justify-center px-8 py-3.5 bg-valora-primary text-white font-bold rounded-full shadow-lg shadow-blue-500/20 transition-all duration-300 hover:bg-valora-secondary hover:shadow-blue-500/40 hover:-translate-y-0.5 group"
+            className="inline-flex items-center justify-center px-8 py-3.5 bg-valora-primary text-white font-bold rounded-full shadow-lg shadow-blue-500/20 transition-[background-color,box-shadow,transform] duration-300 hover:bg-valora-secondary hover:shadow-blue-500/40 hover:-translate-y-0.5 group"
           >
             Ver catálogo completo
             <ChevronRight
               className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1"
-              strokeWidth={2.5}
+              strokeWidth={2}
             />
           </a>
         </div>
@@ -389,7 +389,7 @@ function ProductCard({ product, isSingleCard, helpers }: ProductCardProps) {
           Adquirir {product.typeName || ""}
           <ChevronRight
             className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1"
-            strokeWidth={2.5}
+            strokeWidth={2}
           />
         </Button>
 
@@ -436,7 +436,7 @@ function ProductEditor({ product, onSave, onCancel }: ProductEditorProps) {
               </label>
               <input
                 type={type}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-[border-color,box-shadow]"
                 value={(formData as any)[field]}
                 onChange={(e) =>
                   setFormData({ ...formData, [field]: e.target.value })
@@ -451,7 +451,7 @@ function ProductEditor({ product, onSave, onCancel }: ProductEditorProps) {
             Descripción
           </label>
           <textarea
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-[border-color,box-shadow] resize-none"
             value={formData.caption}
             onChange={(e) =>
               setFormData({ ...formData, caption: e.target.value })
@@ -467,7 +467,7 @@ function ProductEditor({ product, onSave, onCancel }: ProductEditorProps) {
             </label>
             <input
               type="number"
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-[border-color,box-shadow]"
               value={formData.price}
               onChange={(e) =>
                 setFormData({ ...formData, price: parseFloat(e.target.value) })
@@ -483,7 +483,7 @@ function ProductEditor({ product, onSave, onCancel }: ProductEditorProps) {
             <input
               type="text"
               placeholder="Ej: Sistema, App..."
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-all"
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-[border-color,box-shadow]"
               value={formData.typeName}
               onChange={(e) =>
                 setFormData({ ...formData, typeName: e.target.value })
@@ -499,7 +499,7 @@ function ProductEditor({ product, onSave, onCancel }: ProductEditorProps) {
           <input
             type="url"
             placeholder="https://ejemplo.com"
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all disabled:bg-gray-100"
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-[border-color,box-shadow] disabled:bg-gray-100"
             value={formData.url}
             disabled={!!formData.contact}
             onChange={(e) =>
@@ -519,7 +519,7 @@ function ProductEditor({ product, onSave, onCancel }: ProductEditorProps) {
           <input
             type="tel"
             placeholder="Ej: 51999888777"
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all disabled:bg-gray-100"
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-[border-color,box-shadow] disabled:bg-gray-100"
             value={formData.contact}
             disabled={!!formData.url}
             onChange={(e) =>

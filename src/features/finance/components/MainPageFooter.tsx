@@ -6,11 +6,13 @@ import { buildWhatsAppUrl } from "@/shared/utils/whatsapp";
 type MainPageFooterProps = {
     brandName?: string;
     brandHref?: string;
+    logoSrc?: string;
 };
 
 export const MainPageFooter: React.FC<MainPageFooterProps> = ({
     brandName,
     brandHref,
+    logoSrc = "/images/logo-valora.png",
 }) => {
     const [whatsappData, setWhatsappData] = useState<{
         url: string;
@@ -50,8 +52,8 @@ export const MainPageFooter: React.FC<MainPageFooterProps> = ({
                         href={brandHref}
                     >
                         <img
-                            src="/images/logo-valora.png"
-                            className="absolute w-12 h-8 md:w-16 md:h-10 my-auto"
+                            src={logoSrc}
+                            className="absolute w-12 h-auto max-h-8 object-contain my-auto md:w-16 md:max-h-10"
                             alt={brandName || "Logo"}
                         />
                     </a>

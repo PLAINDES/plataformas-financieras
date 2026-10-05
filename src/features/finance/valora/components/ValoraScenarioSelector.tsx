@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { formatToPeruTime } from "../../kapital/services/kapital.utils";
 import type { ValoraSensibilidadEntry } from "@/shared/types/ValoraTypes";
@@ -32,7 +32,7 @@ export const ValoraScenarioSelector: React.FC<ValoraScenarioSelectorProps> = ({
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-valora-primary text-white rounded-full shadow-lg hover:bg-valora-secondary transition-all cursor-pointer"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-valora-primary text-white rounded-full shadow-lg hover:bg-valora-secondary transition-[background-color,box-shadow] cursor-pointer"
       >
         <SlidersHorizontal size={18} />
         <span className="text-sm font-bold max-w-[180px] truncate">

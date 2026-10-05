@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FinancePageTemplate } from "../components/MainPage";
 import {
   ValoraResults,
@@ -26,6 +26,8 @@ import { REPORT_PRODUCTS } from "@/shared/constants/kapital";
 import { useValoraForm } from "./hooks/useValoraForm";
 import { useValoraCalculation } from "./hooks/useValoraCalculation";
 import { useAuthContext } from "@/features/auth/hooks/useAuthContext";
+import { useAuthModal } from "@/features/auth/hooks/useAuthModal";
+import { LoginModal } from "@/features/auth/components/LoginModal";
 
 import {
   INSTRUMENTS,
@@ -74,7 +76,8 @@ export interface ValoraAiAnalysis {
 }
 
 const ValoraPage: React.FC = () => {
-  const { user, logout } = useAuthContext();
+  const { user, login, logout } = useAuthContext();
+  const { isLoginOpen, openLogin, closeModal } = useAuthModal();
   const {
     formData,
     setFormData,
@@ -91,6 +94,7 @@ const ValoraPage: React.FC = () => {
   >([]);
   const toastTimeoutsRef = useRef<Map<string, number>>(new Map());
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
+  const uploadedTemplateRef = useRef<File | null>(null);
   const [resultsSection, setResultsSection] = useState<ValoraResultsSectionKey>(
     "resultados"
   );
@@ -171,7 +175,9 @@ const ValoraPage: React.FC = () => {
     if (activeTickers.length === 0) return null;
 
     const getAsset = (emp: string) => {
-      const v = subsectorDetail.ticker_info?.[emp]?.activo_mercado;
+      const v =
+        subsectorDetail.ticker_info?.[emp]?.activo_mercado ??
+        subsectorDetail.ticker_info?.[emp]?.total_activos;
       const n = Number(v);
       return Number.isFinite(n) && n > 0 ? n : 0;
     };
@@ -240,6 +246,7 @@ const ValoraPage: React.FC = () => {
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [pdfProgress, setPdfProgress] = useState(0);
   const [pdfStage, setPdfStage] = useState("");
+  const [pdfElapsedSeconds, setPdfElapsedSeconds] = useState(0);
   const pdfControllerRef = useRef<AbortController | null>(null);
   const pdfTimeoutRef = useRef<number | null>(null);
   const pdfIntervalRef = useRef<number | null>(null);
@@ -322,6 +329,12 @@ const ValoraPage: React.FC = () => {
           resultados?.tasa_perpetua ??
           resultados?.perpetual_growth_rate ??
           (rawData as any)?.inputs?.[0]?.perpetual_growth_rate;
+        const capex =
+          resultados?.capex_income_rate ??
+          (rawData as any)?.inputs?.[0]?.capex_income_rate;
+        const cto =
+          resultados?.cto_income_rate ??
+          (rawData as any)?.inputs?.[0]?.cto_income_rate;
         setFormData((prev) => {
           const updates: Partial<typeof prev> = {};
           if (!prev.revenue_forecast_rate && ing != null && String(ing).trim() !== "") {
@@ -335,6 +348,14 @@ const ValoraPage: React.FC = () => {
           if (!prev.perpetual_growth_rate && perp != null && String(perp).trim() !== "") {
             const v = parseRate(perp);
             if (v) updates.perpetual_growth_rate = v;
+          }
+          if (!prev.capex_income_rate && capex != null && String(capex).trim() !== "") {
+            const v = parseRate(capex);
+            if (v) updates.capex_income_rate = v;
+          }
+          if (!prev.cto_income_rate && cto != null && String(cto).trim() !== "") {
+            const v = parseRate(cto);
+            if (v) updates.cto_income_rate = v;
           }
           return Object.keys(updates).length ? { ...prev, ...updates } : prev;
         });
@@ -371,6 +392,7 @@ const ValoraPage: React.FC = () => {
   };
 
   const handleUploadTemplate = (file: File) => {
+    uploadedTemplateRef.current = file;
     setUploadedFileUrl((prevUrl) => {
       if (prevUrl) {
         URL.revokeObjectURL(prevUrl);
@@ -405,7 +427,8 @@ const ValoraPage: React.FC = () => {
     console.log("[VALORA PDF] handleUploadPdf iniciado", file.name, file.size);
     setIsPdfLoading(true);
     setPdfProgress(10);
-    setPdfStage("Subiendo PDF...");
+    setPdfStage("Leyendo el PDF y preparando sus hojas...");
+    setPdfElapsedSeconds(0);
     const controller = new AbortController();
     pdfControllerRef.current = controller;
     const timeoutId = window.setTimeout(() => {
@@ -413,8 +436,22 @@ const ValoraPage: React.FC = () => {
       try { controller.abort(new DOMException("timeout 600s", "AbortError")); } catch { controller.abort(); }
     }, 600_000);
     pdfTimeoutRef.current = timeoutId;
+    const startedAt = Date.now();
     const progressInterval = window.setInterval(() => {
-      setPdfProgress((prev) => (prev < 87 ? prev + 2 : prev));
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      setPdfElapsedSeconds(elapsed);
+      const progress = Math.min(82, Math.round(16 + 68 * (1 - Math.exp(-elapsed / 55))));
+      setPdfProgress((prev) => Math.max(prev, progress));
+      const stage = elapsed < 8
+        ? "Leyendo el PDF y preparando sus hojas..."
+        : elapsed < 25
+          ? "Identificando estados financieros y periodos..."
+          : elapsed < 90
+            ? "La IA está clasificando las cuentas..."
+            : elapsed < 180
+              ? "Validando datos y completando el mapeo..."
+              : "Consolidando resultados para generar el Excel...";
+      setPdfStage(stage);
     }, 900);
     pdfIntervalRef.current = progressInterval;
     try {
@@ -422,11 +459,10 @@ const ValoraPage: React.FC = () => {
         setPdfProgress(p);
         setPdfStage(s);
       };
-      tick(20, "Extrayendo texto del PDF...");
-      tick(30, "Clasificando cuentas con IA...");
       console.log("[VALORA PDF] POST /main/valora/pdf-to-template ->", file.name);
 
-       const result = await MainService.uploadValoraPdf(file, controller.signal);
+      // ── PASO 1: Enviar PDF al backend, recibir Excel rellenado ──
+      const result = await MainService.uploadValoraPdf(file, controller.signal);
       console.log("[VALORA PDF] result status", result.status);
 
       tick(85, "Rellenando Excel ya subido con datos del PDF...");
@@ -434,7 +470,6 @@ const ValoraPage: React.FC = () => {
       const mergeTables = (existing: FinancialTable | null, incoming: FinancialTable | null): FinancialTable | null => {
         if (!incoming) return existing;
         if (!existing) return incoming;
-        // Mapa incoming: label -> periodo -> valor
         const incomingMap = new Map<string, Map<string, any>>();
         incoming.rows.forEach((r) => {
           const m = new Map<string, any>();
@@ -460,12 +495,15 @@ const ValoraPage: React.FC = () => {
       if (mergedRes) setResultsTable(mergedRes);
       else if (result.results_table) setResultsTable(result.results_table);
 
-      // Usa exclusivamente la copia de la plantilla maestra rellenada por el backend.
+      // ── PASO 2: Decodificar el Excel y parsearlo para extraer C2:C5 ──
+      let xlsxBlob: Blob;
+      let parsedFromExcel: Awaited<ReturnType<typeof parseFinancialTablesFromFile>>["customInputs"] = undefined;
+
       try {
         if (!result.xlsx_base64) {
           throw new Error("El backend no devolvió la plantilla Valora rellenada");
         }
-        const xlsxBlob = new Blob([Uint8Array.from(atob(result.xlsx_base64), (char) => char.charCodeAt(0))], {
+        xlsxBlob = new Blob([Uint8Array.from(atob(result.xlsx_base64), (char) => char.charCodeAt(0))], {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         const xlsxUrl = URL.createObjectURL(xlsxBlob);
@@ -474,8 +512,14 @@ const ValoraPage: React.FC = () => {
           return xlsxUrl;
         });
         (window as any).__lastValoraXlsxBlob = xlsxBlob;
+
+        // Parsear el Excel generado para extraer kd, debt, date, shares desde C2:C5
+        const generatedFile = new File([xlsxBlob], "generated.xlsx", { type: xlsxBlob.type });
+        const parsed = await parseFinancialTablesFromFile(generatedFile);
+        parsedFromExcel = parsed.customInputs;
+        console.log("[VALORA PDF] customInputs from generated Excel:", parsedFromExcel);
       } catch (e) {
-        console.warn("[VALORA PDF] No se pudo generar Excel rellenado", e);
+        console.warn("[VALORA PDF] No se pudo parsear el Excel generado", e);
         if (!balanceTable && !resultsTable) {
           setUploadedFileUrl((prevUrl) => {
             if (prevUrl) URL.revokeObjectURL(prevUrl);
@@ -484,18 +528,56 @@ const ValoraPage: React.FC = () => {
         }
       }
 
+      // ── PASO 3: Actualizar formData con los valores extraídos ──
+      // Helper: validar que un valor sea un porcentaje válido (0-100)
+      const validPct = (v: any): string | null => {
+        if (v === undefined || v === null || v === "") return null;
+        const n = Number(String(v).replace("%", "").replace(",", ".").trim());
+        return Number.isFinite(n) && n >= 0 && n <= 100 ? String(n) : null;
+      };
+
+      // Fuente: el Excel generado es la fuente de verdad
+      const kdRaw = validPct(parsedFromExcel?.kd);
+      const debtRaw = validPct(parsedFromExcel?.debt);
+      const dateRaw = parsedFromExcel?.date || null;
+      let sharesRaw = validPct(parsedFromExcel?.shares);
+
+      // Calcular capital = 100 - debt
+      const debtNum = debtRaw ? Number(debtRaw) : null;
+      const capitalRaw = debtNum !== null ? String(100 - debtNum) : null;
+
+      // Validar que shares no se mezcle con debt/kd
+      if (sharesRaw && (sharesRaw === kdRaw || sharesRaw === debtRaw)) {
+        sharesRaw = null;
+      }
+
+      console.log("[VALORA PDF] formData kd/debt:", kdRaw, debtRaw);
+
       setFormData((prev) => {
         const updates: any = { ...prev };
         // Mantiene nombre del Excel ya subido (no cambia a .pdf)
         if (!prev.fileUsername || prev.fileUsername.toLowerCase().endsWith(".pdf")) {
-          // Si antes no había Excel, usa nombre Excel generado
           const sourceName = file.name.replace(/\.[^.]+$/, "").replace(/\s+/g, "_");
           const detectedPeriods = (result.metadata?.periodos || []).join("-");
           updates.fileUsername = result.filename || `${sourceName}${detectedPeriods ? `_${detectedPeriods}` : ""}_rellenado.xlsx`;
         }
         if (result.metadata?.moneda) updates.currency = result.metadata.moneda;
-        const sharesVal = result.number_of_shares?.value ?? result.number_of_shares;
-        if (sharesVal !== null && sharesVal !== undefined && String(sharesVal).trim() !== "") updates.shares = String(sharesVal);
+
+        // Actualizar kd, debt, capital, date, shares desde el Excel generado
+        if (dateRaw) updates.date = dateRaw;
+        if (kdRaw) updates.kd = kdRaw;
+        if (debtRaw) {
+          updates.debt = debtRaw;
+          updates.capital = capitalRaw;
+        }
+        // shares: solo si no está vacío y es diferente a kd/debt
+        const sharesVal = sharesRaw ?? result.number_of_shares?.value ?? result.number_of_shares;
+        if (sharesVal !== null && sharesVal !== undefined && String(sharesVal).trim() !== "") {
+          const sNum = Number(String(sharesVal).replace(/,/g, ""));
+          if (Number.isFinite(sNum) && sNum > 0) {
+            updates.shares = String(sNum);
+          }
+        }
         return updates;
       });
       setFileUploaded(true);
@@ -544,6 +626,11 @@ const ValoraPage: React.FC = () => {
         setFormData((prev) => {
           const updates = { ...prev };
 
+          // C2 -> Fecha de los estados financieros (Section 2)
+          if (customInputs.date !== undefined && customInputs.date !== null && customInputs.date !== "") {
+            updates.date = customInputs.date;
+          }
+
           // C3 -> Costo de deuda (Section 4)
           if (customInputs.kd !== undefined && customInputs.kd !== null && customInputs.kd !== "") {
             updates.kd = customInputs.kd;
@@ -573,6 +660,12 @@ const ValoraPage: React.FC = () => {
     }
   };
 
+   // Igual que Kapital (KapitalPage -> activeSavedCurrency):
+   // moneda local derivada del país para etiquetar el select de resultados.
+   const activeLocalCurrency = formData.country
+     ? COUNTRY_LOCAL_CURRENCIES[formData.country] || null
+     : null;
+
    const mainContent = showResults ? (
      <div className="flex flex-col min-h-[calc(100vh-4rem)]">
        {isReportViewerOpen ? (
@@ -581,9 +674,6 @@ const ValoraPage: React.FC = () => {
            onClose={() => setIsReportViewerOpen(false)}
            reportProductId={selectedReportProductId}
            calculationId={valoraCalc.currentCalculation?.id}
-           isSessionFresh={valoraCalc.isSessionFresh}
-           setIsSessionFresh={valoraCalc.setIsSessionFresh}
-           prewarmedSessionId={null}
          />
        ) : (
          <ValoraResults
@@ -599,6 +689,8 @@ const ValoraPage: React.FC = () => {
              valoraCalc.selectedSensIdx
            )}
            formData={formData}
+           formCurrency={formData.currency}
+           localCurrency={activeLocalCurrency}
            resultView={valoraCalc.resultView}
            hasSensitized={Boolean(getValoraCalculationResults(
              valoraCalc.currentCalculation?.data,
@@ -676,18 +768,12 @@ const ValoraPage: React.FC = () => {
   };
 
   const handleGetAIRecommendations = async () => {
-    if (!valoraCalc.currentCalculation?.id) {
-      addToast("warn", "Primero guarda el cálculo para obtener recomendaciones.");
-      return;
-    }
-
     setIsLoadingAI(true);
     console.info("[VALORA FRONTEND] Solicitando recomendaciones IA...");
 
     try {
-      const recommendations = await MainService.getValoraRecommendations(
-        valoraCalc.currentCalculation.id
-      );
+      const calcData = (valoraCalc.currentCalculation?.data as Record<string, unknown> | undefined) || {};
+      const recommendations = await MainService.getValoraRecommendations(calcData);
 
       const rates = recommendations?.rates;
       if (rates) {
@@ -697,6 +783,8 @@ const ValoraPage: React.FC = () => {
           forecast_ingresos_1er_periodo: rates.forecast_ingresos_1er_periodo?.recommendation_source,
           forecast_fde_1er_periodo: rates.forecast_fde_1er_periodo?.recommendation_source,
           crecimiento_perpetuo: rates.crecimiento_perpetuo?.recommendation_source,
+          capex_income_rate: rates.capex_income_rate?.recommendation_source,
+          cto_income_rate: rates.cto_income_rate?.recommendation_source,
         });
 
         const ai = recommendations?.ai_analysis as ValoraAiAnalysis | undefined;
@@ -741,6 +829,13 @@ const ValoraPage: React.FC = () => {
             console.warn("[VALORA FRONTEND] Perpetuo recommendation inválida o vacía:", perp);
           }
 
+          const capex = rates.capex_income_rate?.recommendation;
+          if (capex !== undefined && capex !== null && !Number.isNaN(Number(capex)))
+            updates.capex_income_rate = String(Math.round(Number(capex) * 10000) / 100);
+          const cto = rates.cto_income_rate?.recommendation;
+          if (cto !== undefined && cto !== null && !Number.isNaN(Number(cto)))
+            updates.cto_income_rate = String(Math.round(Number(cto) * 10000) / 100);
+
           return updates;
         });
 
@@ -769,6 +864,7 @@ const ValoraPage: React.FC = () => {
       <NavBar
         user={user}
         onLogout={handleLogout}
+        onLoginClick={openLogin}
         onToggleForm={() => setIsDesktopFormOpen((prev) => !prev)}
         isFormOpen={isDesktopFormOpen}
         hasResults={showResults}
@@ -780,13 +876,20 @@ const ValoraPage: React.FC = () => {
         onNavigate={handleResultsSectionChange}
       />
 
+      <LoginModal
+        isOpen={isLoginOpen}
+        onClose={closeModal}
+        onLogin={login}
+        onSwitchToRegister={closeModal}
+      />
+
       <NavigationTabs
         selected={getSelectedView()}
         onNavigate={handleResultsSectionChange}
         hasResults={showResults}
       />
       <main
-        className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} transition-all h-screen duration-300 ${isDesktopFormOpen ? "lg:pl-105" : "lg:pl-0"}`}
+        className={`${showResults ? "pt-24 lg:pt-16" : "pt-12 lg:pt-16"} transition-[padding] h-screen duration-300 ${isDesktopFormOpen ? "lg:pl-105" : "lg:pl-0"}`}
       >
         {mainContent}
       </main>
@@ -816,7 +919,7 @@ const ValoraPage: React.FC = () => {
             onSearchSectorBeta={openSubsectorModal}
             isSearchingBeta={false}
             isPdfLoading={isPdfLoading}
-            loading={valoraCalc.isLoading}
+            loading={valoraCalc.isLoading || valoraCalc.isNativeLoading}
             hasCalculated={valoraCalc.hasCalculated}
             currentCalculationId={valoraCalc.currentCalculation?.id ?? null}
 isLoadingAI={isLoadingAI}
@@ -891,10 +994,14 @@ isLoadingAI={isLoadingAI}
        />
 
        <ToastStack toasts={toasts} onDismiss={removeToast} />
-      {valoraCalc.isLoading && <LoadingOverlay />}
+      {(valoraCalc.isLoading || valoraCalc.isNativeLoading) && (
+        <LoadingOverlay
+          message={valoraCalc.hasCalculated ? "Sensibilizando..." : "Calculando..."}
+        />
+      )}
       {isPdfLoading && (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="w-[480px] max-w-[90vw] bg-white rounded-2xl shadow-2xl p-6 flex flex-col gap-4">
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 ease-out">
+          <div className="w-[480px] max-w-[90vw] bg-white rounded-2xl shadow-2xl p-6 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200 ease-out">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-valora-primary/10 flex items-center justify-center">
                 <i className="fa-solid fa-file-pdf text-valora-primary"></i>
@@ -912,10 +1019,12 @@ isLoadingAI={isLoadingAI}
               </button>
             </div>
             <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-              <div className="h-2 bg-valora-primary transition-all duration-500" style={{ width: `${pdfProgress}%` }} />
+              <div className="h-2 bg-valora-primary transition-[width] duration-500" style={{ width: `${pdfProgress}%` }} />
             </div>
-            <p className="text-[11px] text-gray-400 text-center">{pdfProgress}% — La IA clasifica semánticamente cuentas, valida y mapea a plantilla</p>
-            <p className="text-[10px] text-gray-400 text-center">Si tarda &gt;180s se cancela automáticamente. Abre Consola (F12) y Network para ver POST.</p>
+            <div className="flex items-center justify-between text-[11px] text-gray-400">
+              <span>{pdfProgress}% completado</span>
+              <span>{Math.floor(pdfElapsedSeconds / 60)}:{String(pdfElapsedSeconds % 60).padStart(2, "0")} transcurridos</span>
+            </div>
           </div>
         </div>
       )}
